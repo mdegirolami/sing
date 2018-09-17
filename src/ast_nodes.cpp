@@ -9,6 +9,7 @@ namespace StayNames {
 //
 /////////////////////////
 
+
 void AstFuncPointerType::Visit(IAstVisitor *visitor)
 {
 
