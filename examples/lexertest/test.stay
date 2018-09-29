@@ -1,0 +1,30 @@
+/* single line */    // single line
+/* multiline
+*************/
+/* nested /**/*/ identifyer67876 _id+alsk_89// end id"string"
+"string with escapes \' \" \\ \? \a \b \f \n \r \t \v \x67 \u76aa" 123e3+123e-3 112.13e5 0x23i 12.1e-3i
+
+
+
+null true false package requires var const type matrix map weak int8 int16 int32 int64 uint8 uint16 uint32
+uint64 float32 float64 complex64 complex128 string rune bool size_t errcode func pure in out io if else
+while for return break continue error cleanup run bind sizeof dimof xor as typeswitch case default public
+private enum struct class finalize interface static implements bypass template argument volatile throw
+try catch()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&=|=&&=||='a''\ueeee'
+;
+'
+'f
+'fgetc
+"akldlk
+"\"
+"\x"
+"\u"
+"\k"
+"\xh"
+10e1000
+8000000000
+10e 0xat 0x10 0x1000000000000000000000000 
+0x67i 0xffk 0.003e13i+1e0h 1i 9k 3. 3.5i 3.5k 3e+ 5eh 8e-35 18446744073709551615 18446744073709551616
+1.7976931348623158e308  1.79769313486231581e308 9.99999999999999999999999999e307 1.0e309 0.0017e311
+/*
+		

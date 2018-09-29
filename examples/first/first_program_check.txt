@@ -1,0 +1,34 @@
+
+Package = Main
+Var primo with initer {
+    int32 type
+}
+Var secondo with initer {
+    int32 type
+}
+Func main {
+    Function Type is not pure has not varargs has 0 args {
+        void type
+    }
+    Block {
+        Var c with initer {
+            int32 type
+        }
+        Assignment with 1 assignee {
+            Left term #0
+            c
+            Right term #0
+            Binop + Operation {
+                primo
+                Binop second arg :
+                Binop + Operation {
+                    secondo
+                    Binop second arg :
+                    Unop sizeof Operation {
+                        c
+                    }
+                }
+            }
+        }
+    }
+}

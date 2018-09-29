@@ -16,9 +16,10 @@ void Parser::Init(Lexer *lexer)
     m_lexer = lexer;
 }
 
-void Parser::ParseAll(void)
+AstFile *Parser::ParseAll(void)
 {
-    bool done = false;
+    bool    done = false;
+    AstFile *file = NULL;
 
     if (Advance() != TOKEN_PACKAGE) {
         Error("Expected a Package declaration");
@@ -26,36 +27,43 @@ void Parser::ParseAll(void)
     if (Advance() != TOKEN_NAME) {
         Error("Expected the package name");
     } else {
-        // AstFile *file = new AstFile(m_lexer->CurrTokenString());
+        file = new AstFile(m_lexer->CurrTokenString());
     }
     Advance();
     while (m_token == TOKEN_REQUIRES) {
-        ParseDependency();
+        ParseDependency(file);
     }
     while (m_token != TOKEN_EOF) {
-        ParseDeclaration();
+        ParseDeclaration(file);
     }
+    return(file);
 }
 
-void Parser::ParseDependency(void)
+void Parser::ParseDependency(AstFile *file)
 {
+    AstDependency   *dep;
+    string          path;
+
     if (Advance() != TOKEN_STRING) {
         Error("expecting the required package path");
     } 
-    //m_builder->AddDependency(m_lexer->CurrTokenString());
+    path = m_lexer->CurrTokenString();
     if (Advance() == TOKEN_COMMA) {
         if (Advance() != TOKEN_NAME) {
             Error("expecting the required package local name");
         }
-        //m_builder->SetPackageName(m_lexer->CurrTokenString());
+        dep = new AstDependency(path.c_str(), m_lexer->CurrTokenString());
         Advance();
     } else {
-        //m_builder->SetDefaultPackageName();
+        dep = new AstDependency(path.c_str(), NULL);
     }
+    file->AddDependency(dep);
 }
 
-void Parser::ParseDeclaration(void)
+void Parser::ParseDeclaration(AstFile *file)
 {
+    IAstNode    *node = NULL;
+
     if (m_token == TOKEN_PUBLIC) {
         //m_builder
         Advance();
@@ -65,34 +73,39 @@ void Parser::ParseDeclaration(void)
         Error("type declaration not yet implemented");
         break;
     case TOKEN_VAR:
-        ParseVar();
+        node = ParseVar();
         break;
     case TOKEN_CONST:
         Error("const declaration not yet implemented");
         break;
     case TOKEN_FUNC:
-        ParseFunctionDeclaration();
+        node = ParseFunctionDeclaration();
         break;
     default:
         Error("Expected a declaration: type, var, const, func, struct, class, interface, enum");
     }
+    if (node != NULL) file->AddNode(node);
 }
 
-void Parser::ParseVar(void)
+IAstNode *Parser::ParseVar(void)
 {
+    VarDeclaration *var;
+
     if (Advance() != TOKEN_NAME) {
         Error("expecting the variable name");
     }
+    var = new VarDeclaration(m_lexer->CurrTokenString());
     Advance();
     if (m_token == TOKEN_VOLATILE) {
-        // builder..
+        var->SetVolatile();
         Advance();
     }
-    ParseTypeSpecification();
+    var->SetType(ParseTypeSpecification());
     if (m_token == TOKEN_EQUAL) {
         Advance();
-        ParseIniter();
+        var->SetIniter(ParseIniter());
     }
+    return(var);
 }
 
 /*
@@ -103,8 +116,10 @@ type_specification ::= base_type | <type_name> | <pkg_name>.<type_name> |
                         [const] [weak] ‘*’ type_specification |
                         function_type
 */
-void Parser::ParseTypeSpecification(void)
+IAstNode *Parser::ParseTypeSpecification(void)
 {
+    IAstNode *node;
+
     switch (m_token){
     case TOKEN_INT8:
     case TOKEN_INT16:
@@ -124,17 +139,25 @@ void Parser::ParseTypeSpecification(void)
     case TOKEN_SIZE_T:
     case TOKEN_ERRORCODE:
     case TOKEN_VOID:
-        // builder
+        node = new AstBaseType(m_token);
         Advance();
         break;
     case TOKEN_NAME:
-        ParseFullName();
+        {
+            string part1, part2;
+            ParseFullName(&part1, &part2);
+            if (part2.length() > 0) {
+                node = new AstQualifiedType(part1.c_str(), part2.c_str());
+            } else {
+                node = new AstNamedType(part1.c_str());
+            }
+        }
         break;
     case TOKEN_MAP:
         Error("Maps not yet supported");
         break;
     case TOKEN_SQUARE_OPEN:
-        ParseIndices(/*type declare = */true);
+        node = ParseIndices(/*ismatrix = */false);
         break;
     case TOKEN_MATRIX:
         Error("Matrices not yet supported");
@@ -151,47 +174,71 @@ void Parser::ParseTypeSpecification(void)
         Error("Invalid type declaration");
         break;
     }
+    return(node);
 }
 
-void Parser::ParseFullName(void)
+void Parser::ParseFullName(string *part1, string *part2)
 {
     if (m_token != TOKEN_NAME) {
         Error("Name expected");
     }
-    string first_name_part = m_lexer->CurrTokenString();
+    *part1 = m_lexer->CurrTokenString();
     if (Advance() == TOKEN_DOT) {
         if (Advance() == TOKEN_NAME) {
-            string second_name_part = m_lexer->CurrTokenString();
-            // builder..
+            *part2 = m_lexer->CurrTokenString();
             Advance();
         } else {
             Error("Expecting the second part of a qualifyed name");
         }
+    } else {
+        *part2 = "";
     }
 }
 
-void Parser::ParseIndices(bool type_declare)
+AstArrayOrMatrixType *Parser::ParseIndices(bool ismatrix)
 {
     Error("Arrays not yet supported");
+    return(NULL);
 }
 
-void Parser::ParseIniter(void)
+AstIniter *Parser::ParseIniter(void)
 {
     Error("Initer not yet supported");
+    return(NULL);
+}
+
+//func_definition ::= func func_fullname function_type block
+FuncDeclaration *Parser::ParseFunctionDeclaration(void)
+{
+    string          name1, name2;
+    FuncDeclaration *node;
+
+    Advance();
+    ParseFullName(&name1, &name2);
+    node = new FuncDeclaration(name1.c_str(), name2.c_str());
+    node->AddType(ParseFunctionType());
+    node->AddBlock(ParseBlock());
+    return(node);
 }
 
 //function_type ::= [pure] argsdef type_specification
-void Parser::ParseFunctionType(void)
+AstFuncType *Parser::ParseFunctionType(void)
 {
+    AstFuncType *node;
+
     if (m_token == TOKEN_PURE) {
+        node = new AstFuncType(true);
         Advance();
+    } else {
+        node = new AstFuncType(false);
     }
-    ParseArgsDef();
-    ParseTypeSpecification();
+    ParseArgsDef(node);
+    node->SetReturnType(ParseTypeSpecification());
+    return(node);
 }
 
 // argsdef ::=  ‘(’ ( single_argdef ) [',' ...] ‘)’ | '(' … ')'
-void Parser::ParseArgsDef(void)
+void Parser::ParseArgsDef(AstFuncType *desc)
 {
     if (m_token != TOKEN_ROUND_OPEN) {
         Error("Expected (");
@@ -199,11 +246,11 @@ void Parser::ParseArgsDef(void)
     if (Advance() != TOKEN_ROUND_CLOSE) {
         do {
             if (m_token == TOKEN_ETC) {
-                //builder
+                desc->SetVarArgs();
                 Advance();  // to )
                 break;      // because we dont' allow additional arguments
             } else {
-                ParseSingleArgDef();
+                desc->AddArgument(ParseSingleArgDef());
             }
         } while (m_token == TOKEN_COMMA);
         if (m_token != TOKEN_ROUND_CLOSE) {
@@ -215,34 +262,29 @@ void Parser::ParseArgsDef(void)
 
 //single_argdef :: = [arg_direction] <arg_name> type_specification[‘ = ’ initer]
 // arg_direction :: = out | io | in
-void Parser::ParseSingleArgDef(void)
+AstArgumentDecl *Parser::ParseSingleArgDef(void)
 {
+    Token direction = m_token;
+    AstArgumentDecl *node;
+
     switch (m_token) {
     case TOKEN_IN:
     case TOKEN_OUT:
     case TOKEN_IO:
-        // builder
         Advance();
         break;
     }
     if (m_token != TOKEN_NAME) {
         Error("expecting the argument name");
     }
+    node = new AstArgumentDecl(direction, m_lexer->CurrTokenString());
     Advance();
-    ParseTypeSpecification();
+    node->AddType(ParseTypeSpecification());
     if (m_token == TOKEN_EQUAL) {
         Advance();
-        ParseIniter();
+        node->AddIniter(ParseIniter());
     }
-}
-
-//func_definition ::= func func_fullname function_type block
-void Parser::ParseFunctionDeclaration(void)
-{
-    Advance();
-    ParseFullName();
-    ParseFunctionType();
-    ParseBlock();
+    return(node);
 }
 
 //block :: = ‘{ ‘{ block_item } ‘ }’
@@ -267,61 +309,73 @@ bind '{' <literal_stuff> '}'
 throw expression
 try block { catch_clause block }
 */
-void Parser::ParseBlock(void)
+AstBlock *Parser::ParseBlock(void)
 {
     if (m_token != TOKEN_CURLY_OPEN) {
-        Error("Expecting the function body starting with {");
+        Error("Expecting a block (i.e. expecting '{' )");
     }
+    AstBlock *node = new AstBlock();
     Advance();
     while (m_token != TOKEN_CURLY_CLOSE) {
         switch (m_token) {
         case TOKEN_VAR:
-            ParseVar();
+            node->AddItem(ParseVar());
             break;
         case TOKEN_CONST:
             Error("const not yet supported");
             break;
         case TOKEN_CURLY_OPEN:
-            ParseBlock();
+            node->AddItem(ParseBlock());
             break;
         default:
-            ParseLeftTermStatement();
+            node->AddItem(ParseLeftTermStatement());
             break;
             //Error("In a funcion block you can only place: statements, vars/const declarations, blocks");
         }
     }
     Advance();
+    return(node);
 }
 
 //(left_term)‘ = ’(expression) |
 //left_term update_operator expression |
 //left_term++ | left_term-- |
 //functioncall |    ====>>> i.e. a left term
-void Parser::ParseLeftTermStatement(void)
+IAstNode *Parser::ParseLeftTermStatement(void)
 {
-    bool done;
-    int num_assignee = 0;
+    bool                done;
+    vector<IAstNode*>   assignee, expressions;
+    IAstNode            *node = NULL;
+    Token               token;
 
     do {
-        ParseLeftTerm();
-        ++num_assignee;
+        assignee.push_back(ParseLeftTerm());
         if (m_token == TOKEN_COMMA) {
             Advance();
         } else {
             done = true;
         }
     } while (!done);
+    if (m_token != TOKEN_ASSIGN && assignee.size() > 1) {
+        Error("Only plain assignments can involve multiple assignee");
+    }
+    token = m_token;
     switch (m_token) {
     case TOKEN_ASSIGN:
         done = false;
         Advance();
         do {
-            ParseExpression();
-            --num_assignee;
-            if (num_assignee > 0 && m_token != TOKEN_COMMA) {
+            expressions.push_back(ParseExpression());
+            if (assignee.size() == expressions.size() && m_token == TOKEN_COMMA) {
+                Error("There are more values than variables in assignment");
+            } else if (assignee.size() != expressions.size() && m_token != TOKEN_COMMA) {
                 Error("There are more variables than values in assignment");
             }
-        } while (num_assignee > 0);
+            if (m_token == TOKEN_COMMA) {
+                Advance();
+            }
+        } while (expressions.size() < assignee.size());
+        node = new AstAssignment(&assignee, &expressions);
         break;
     case TOKEN_UPD_PLUS:
     case TOKEN_UPD_MINUS:
@@ -336,18 +390,21 @@ void Parser::ParseLeftTermStatement(void)
     case TOKEN_UPD_LOGICAL_AND:
     case TOKEN_UPD_LOGICAL_OR:
         Advance();
-        if (num_assignee > 1) {
-            Error("Update assignments must involve a single assignee");
-        }
-        ParseExpression();
+        node = new AstUpdate(token, assignee[0], ParseExpression());
         break;
     case TOKEN_INC:
     case TOKEN_DEC:
         Advance();
+        node = new AstIncDec(token, assignee[0]);
         break;
     default:
+        node = assignee[0];
+        if (node->GetType() != ANT_FUNCALL) {
+            Error("expression or part of it has no effects");
+        }
         break;      // let's assume it is a function call.
     }
+    return(node);
 }
 
 /*
@@ -364,25 +421,33 @@ binop ::=  ‘+’ | ‘-’ | ‘*’ | ‘/’ | ‘^’ | ‘%’ |
 
 unop ::= ‘-’ | ‘!’ | ‘~’ | '&' | '*'
 */
-void Parser::ParseExpression(void)
+IAstNode *Parser::ParseExpression(void)
 {
+    IAstNode    *node = NULL;
+    Token       subtype;
+
     switch (m_token) {
     case TOKEN_NULL:
     case TOKEN_FALSE:
     case TOKEN_TRUE:
+        node = new AstExpressionLeaf(m_token, "");
+        Advance();
+        break;
     case TOKEN_LITERAL_STRING:
     case TOKEN_LITERAL_UINT:
     case TOKEN_LITERAL_FLOAT:
     case TOKEN_LITERAL_IMG:
+        node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
         Advance();
         break;
     case TOKEN_SIZEOF:
     case TOKEN_DIMOF:
+        subtype = m_token;
         if (Advance() != TOKEN_ROUND_OPEN) {
             Error("Expecting (");
         }
         Advance();
-        ParseLeftTerm();
+        node = new AstUnop(subtype, ParseLeftTerm());
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expecting )");
         }
@@ -406,14 +471,15 @@ void Parser::ParseExpression(void)
         case TOKEN_RUNE:
         case TOKEN_BOOL:
         case TOKEN_SIZE_T:
+            subtype = m_token;
             if (Advance() != TOKEN_ROUND_CLOSE) {
                 Error("Expecting )");
             }
             Advance();
-            ParseExpression();
+            node = new AstUnop(subtype, ParseExpression());
             break;
         default:
-            ParseExpression();
+            node = new AstUnop(TOKEN_ROUND_OPEN, ParseExpression());
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting )");
             }
@@ -427,11 +493,12 @@ void Parser::ParseExpression(void)
     case TOKEN_AND:
     case TOKEN_NOT:
     case TOKEN_LOGICAL_NOT:
+        subtype = m_token;
         Advance();
-        ParseExpression();
+        node = new AstUnop(subtype, ParseExpression());
         break;
     default:
-        ParseLeftTerm("Expecting an expression");
+        node = ParseLeftTerm("Expecting an expression");
         break;
     }
 
@@ -456,33 +523,37 @@ void Parser::ParseExpression(void)
     case TOKEN_DIFFERENT:
     case TOKEN_LOGICAL_AND:
     case TOKEN_LOGICAL_OR:
+        subtype = m_token;
         Advance();
-        ParseExpression();
+        node = new AstBinop(subtype, node, ParseExpression());
     }
+    return(node);
 }
 
 //left_term ::= <var_name> | prefixexp ‘[’ index_or_rage ‘]’ | prefixexp ‘.’ <name> |
 //              functioncall | ‘(’ prefixexp ‘)’ | '*'left_term
-void Parser::ParseLeftTerm(const char *errmess)
+IAstNode *Parser::ParseLeftTerm(const char *errmess)
 {
+    IAstNode    *node = NULL;
+
     switch (m_token) {
     case TOKEN_MPY:
         Advance();
-        ParseLeftTerm();
+        node = new AstUnop(TOKEN_MPY, ParseLeftTerm());
         break;
     case TOKEN_ROUND_OPEN:
         Advance();
-        ParseLeftTerm();
+        node = new AstUnop(TOKEN_ROUND_OPEN, ParseLeftTerm());
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expcting )");
         }
         break;
     case TOKEN_NAME:
         {
-            ParseFullName();
+            node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
             bool done = false;
             while (!done) {
-                switch (m_token) {
+                switch (Advance()) {
                 case TOKEN_SQUARE_OPEN:
                     ParseIndices();
                     break;
@@ -490,6 +561,7 @@ void Parser::ParseLeftTerm(const char *errmess)
                     if (Advance() != TOKEN_NAME) {
                         Error("Expecting field name");
                     }
+                    node = new AstBinop(TOKEN_DOT, node, new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString()));
                     Advance();
                     break;
                 case TOKEN_ROUND_OPEN:
@@ -506,6 +578,7 @@ void Parser::ParseLeftTerm(const char *errmess)
         Error(errmess != NULL ? errmess : "Expecting a left term (an assignable expression)");
         break;
     }
+    return(node);
 }
 
 void Parser::ParseIndices(void)

@@ -209,6 +209,9 @@ public:
     Token Advance(void);
 
     void ClearError(void);
+
+    // utils
+    const char *GetTokenString(Token token) { return(token_to_string[token]); }
 };
 
 }

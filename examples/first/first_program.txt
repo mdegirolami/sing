@@ -1,0 +1,18 @@
+package Main
+
+var primo int32 //= 1
+var secondo int32 //= 2
+
+func main() void
+{
+    var c int32
+    c = primo + secondo + sizeof(c)
+    //const a = 3
+    //const b = 10
+}
+/*
+main(int32 a, int32 b) int32
+{
+    return(a+b)
+}
+*/ 

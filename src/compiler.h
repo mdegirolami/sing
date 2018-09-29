@@ -7,11 +7,13 @@
 namespace StayNames {
 
 class Compiler {
-    Lexer   lexer;
-    Parser  parser;
+    Lexer   lexer_;
+    Parser  parser_;
+
+    void TestLexer(void);
+    void TestParser(void);
 public:
     void Run(void);
-    void TestLexer(void);
 };
 
 
