@@ -5,7 +5,7 @@
 #include "string"
 #include "vector.h"
 
-namespace StayNames {
+namespace SingNames {
 
 enum Token {
     TOKEN_COMMENT,
@@ -90,6 +90,7 @@ enum Token {
     TOKEN_THROW,
     TOKEN_TRY,
     TOKEN_CATCH,
+    TOKEN_STEP,
 
     TOKEN_ROUND_OPEN,
     TOKEN_ROUND_CLOSE,
@@ -126,6 +127,7 @@ enum Token {
     TOKEN_LOGICAL_AND,
     TOKEN_LOGICAL_OR,
     TOKEN_COLON,
+    TOKEN_SEMICOLON,
 
     TOKEN_UPD_PLUS,
     TOKEN_UPD_MINUS,

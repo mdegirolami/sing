@@ -7,7 +7,7 @@
 #define MIN(a, b) ((a)>(b)?(b):(a))
 #define MAX(a, b) ((a)>(b)?(a):(b))
 
-namespace StayNames {
+namespace SingNames {
 
 
 struct ParsingException {
@@ -19,7 +19,6 @@ public:
 
     ParsingException(int n, int r, int c, const char *s) : number(n), row(r), column(c), description(s) {}
 };
-
 
 } // namespace
 

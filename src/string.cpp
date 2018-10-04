@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include "string"
 
-namespace StayNames {
+namespace SingNames {
 
 string::string(const char *c_str)
 {

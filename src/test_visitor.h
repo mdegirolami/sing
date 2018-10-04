@@ -3,7 +3,7 @@
 
 #include "ast_nodes.h"
 
-namespace StayNames {
+namespace SingNames {
 
 class TestVisitor : public IAstVisitor {
     FILE    *fd_;

@@ -1,6 +1,6 @@
 #include "test_visitor.h"
 
-namespace StayNames {
+namespace SingNames {
 
 void TestVisitor::PrintIndent(void)
 {

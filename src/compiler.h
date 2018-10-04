@@ -4,7 +4,7 @@
 #include "lexer.h"
 #include "Parser.h"
 
-namespace StayNames {
+namespace SingNames {
 
 class Compiler {
     Lexer   lexer_;

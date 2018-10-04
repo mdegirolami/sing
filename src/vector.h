@@ -9,7 +9,7 @@ typedef unsigned int URGH_SIZE_T;    // to ease the build of 64 bit apps - limit
 	#define NULL	0
 #endif
 
-namespace StayNames {
+namespace SingNames {
 
 template<class T>
 class vector {

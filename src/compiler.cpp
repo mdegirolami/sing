@@ -6,13 +6,13 @@
 
 void main(void)
 {
-    StayNames::Compiler compiler;
+    SingNames::Compiler compiler;
 
     compiler.Run();
     getchar();
 }
 
-namespace StayNames {
+namespace SingNames {
 
 void Compiler::Run(void)
 {

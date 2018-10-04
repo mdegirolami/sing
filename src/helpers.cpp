@@ -1,6 +1,6 @@
 #include "helpers.h"
 
-namespace StayNames {
+namespace SingNames {
 
 
 }

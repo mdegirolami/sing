@@ -4,12 +4,13 @@
 #include "lexer.h"
 #include "ast_nodes.h"
 
-namespace StayNames {
+namespace SingNames {
 
 class Parser {
     Lexer *m_lexer;
     Token m_token;
 
+    void    CheckSemicolon(void);
     Token   Advance(void);
     void    Error(const char *message);
 
@@ -20,12 +21,14 @@ class Parser {
     // es: ParseVar() gets called if the keyword 'var' is in m_token and a var declaration is present for sure.
     void                    ParseDependency(AstFile *file);
     void                    ParseDeclaration(AstFile *file);
-    IAstNode                *ParseVar(void);
+    VarDeclaration          *ParseVar(void);
+    ConstDeclaration        *ParseConst(void);
+    TypeDeclaration         *ParseType(void);
     IAstNode                *ParseTypeSpecification(void);
     FuncDeclaration         *ParseFunctionDeclaration(void);
     void                    ParseFullName(string *part1, string *part2);           // may be qualified
     AstArrayOrMatrixType    *ParseIndices(bool ismatrix);
-    AstIniter               *ParseIniter(void);
+    IAstNode                *ParseIniter(void);
     AstFuncType             *ParseFunctionType(void);
     void                    ParseArgsDef(AstFuncType *desc);
     AstArgumentDecl         *ParseSingleArgDef(void);
@@ -33,8 +36,11 @@ class Parser {
     IAstNode                *ParseLeftTermStatement(void);
     IAstNode                *ParseExpression(void);
     IAstNode                *ParseLeftTerm(const char *errmess = NULL);
-    void ParseIndices(void);
-    void ParseArguments(void);
+    void                    ParseRangesOrIndices(AstIndexing *node);
+    void                    ParseArguments(AstFunCall *node);
+    AstWhile                *ParseWhile(void);
+    AstIf                   *ParseIf(void);
+    AstFor                  *ParseFor(void);
 public:
     Parser();
     ~Parser();

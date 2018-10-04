@@ -6,7 +6,7 @@
 #include "lexer.h"
 #include "helpers.h"
 
-namespace StayNames {
+namespace SingNames {
 
 struct TokenDesc {
     Token       token;
@@ -91,6 +91,7 @@ TokenDesc keywords[] = {
     {TOKEN_THROW, "throw"},
     {TOKEN_TRY, "try"},
     {TOKEN_CATCH, "catch"},
+    {TOKEN_STEP, "step"},
     
     {TOKEN_ROUND_OPEN, "("},
     {TOKEN_ROUND_CLOSE, ")"},
@@ -127,6 +128,7 @@ TokenDesc keywords[] = {
     {TOKEN_LOGICAL_AND, "&&"},
     {TOKEN_LOGICAL_OR, "||"},
     {TOKEN_COLON, ":"},
+    {TOKEN_SEMICOLON, ";"},
 
     {TOKEN_UPD_PLUS, "+=" },
     {TOKEN_UPD_MINUS, "-=" },
