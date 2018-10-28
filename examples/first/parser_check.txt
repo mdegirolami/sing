@@ -39,6 +39,9 @@ Type ComplexType {
         }
     }
 }
+Type quad {
+    TypeName package1.very.deep.namespace
+}
 Func main {
     Function Type is not pure has not varargs has 0 args {
         void type

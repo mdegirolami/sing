@@ -9,7 +9,6 @@
 
 namespace SingNames {
 
-
 struct ParsingException {
 public:
     int         number;

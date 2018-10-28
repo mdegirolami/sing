@@ -24,22 +24,29 @@ void Compiler::TestParser(void)
     TestVisitor visitor;
     AstFile *ast;
     FILE    *visitor_dst;
+    const char *error;
+    int     error_idx;
 
-    if (lexer_.OpenFile("../examples/first/first_program.txt")) {
+    if (lexer_.OpenFile("../examples/first/parser_errors_check.sing")) {
         printf("\ncan't open file");
         return;
     }
     parser_.Init(&lexer_);
-    try {
-        ast = parser_.ParseAll();
-    } catch(ParsingException ex) {
-        printf("\n\nERROR !! %s at %d, %d\n", ex.description, ex.row, ex.column);
-        lexer_.ClearError();
+    ast = parser_.ParseAll();
+    if (ast == NULL) {
+        error_idx = 0;
+        do {
+            error = parser_.GetError(error_idx++);
+            if (error != NULL) {
+                printf("\nERROR !! %s", error);
+            }
+        } while (error != NULL);
+        lexer_.CloseFile();
         return;
     }
     lexer_.CloseFile();
 
-    visitor_dst = fopen("../examples/first/first_program_check.txt", "wt");
+    visitor_dst = fopen("../examples/first/parser_errors_check.txt", "wt");
     visitor.Init(visitor_dst, &lexer_);
     ast->Visit(&visitor);
     fclose(visitor_dst);

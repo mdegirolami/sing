@@ -40,6 +40,20 @@ void TestVisitor::BeginVarDeclaration(const char *name, bool isvolatile, bool ha
     ++indent_;
 }
 
+void TestVisitor::BeginConstDeclaration(const char *name)
+{
+    PrintIndent();
+    fprintf(fd_, "Const %s {", name);
+    ++indent_;
+}
+
+void TestVisitor::BeginTypeDeclaration(const char *name)
+{
+    PrintIndent();
+    fprintf(fd_, "Type %s {", name);
+    ++indent_;
+}
+
 void TestVisitor::BeginFuncDeclaration(const char *name, bool ismember, const char *classname)
 {
     PrintIndent();
@@ -48,6 +62,13 @@ void TestVisitor::BeginFuncDeclaration(const char *name, bool ismember, const ch
     } else {
         fprintf(fd_, "Func %s {", name);
     }
+    ++indent_;
+}
+
+void TestVisitor::BeginIniter(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Initer {");
     ++indent_;
 }
 
@@ -91,10 +112,79 @@ void TestVisitor::BeginIncDec(Token type)
     ++indent_;
 }
 
+void TestVisitor::BeginWhile(void)
+{
+    PrintIndent();
+    fprintf(fd_, "While {");
+    ++indent_;
+}
+
+void TestVisitor::BeginIf(void)
+{
+    PrintIndent();
+    fprintf(fd_, "If {");
+    ++indent_;
+}
+
+void TestVisitor::BeginIfClause(int num)
+{
+    PrintIndent();
+    fprintf(fd_, "If Clause %d {", num);
+    ++indent_;
+}
+
+void TestVisitor::BeginFor(const char *index, const char *iterator)
+{
+    PrintIndent();
+    fprintf(fd_, "For %s, %s {", index, iterator);
+    ++indent_;
+}
+
+void TestVisitor::BeginForSet(void)
+{
+    PrintIndent();
+    fprintf(fd_, "For Set Expression {");
+    ++indent_;
+}
+
+void TestVisitor::BeginForLow(void)
+{
+    PrintIndent();
+    fprintf(fd_, "For Low Expression {");
+    ++indent_;
+}
+
+void TestVisitor::BeginForHigh(void)
+{
+    PrintIndent();
+    fprintf(fd_, "For High Expression {");
+    ++indent_;
+}
+
+void TestVisitor::BeginForStep(void)
+{
+    PrintIndent();
+    fprintf(fd_, "For Step Expression {");
+    ++indent_;
+}
+
+void TestVisitor::SimpleStatement(Token token)
+{
+    PrintIndent();
+    fprintf(fd_, "Statement %s", lexer_->GetTokenString(token));
+}
+
+void TestVisitor::BeginReturn(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Return {");
+    ++indent_;
+}
+
 void TestVisitor::ExpLeaf(Token type, const char *value)
 {
     PrintIndent();
-    fprintf(fd_, value);
+    fprintf(fd_, "%s %s", lexer_->GetTokenString(type), value);
 }
 
 void TestVisitor::BeginUnop(Token subtype)
@@ -115,6 +205,46 @@ void TestVisitor::BeginBinopSecondArg(void)
 {
     PrintIndent();
     fprintf(fd_, "Binop second arg :");
+}
+
+void TestVisitor::BeginFunCall(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Function Call {");
+    ++indent_;
+}
+
+void TestVisitor::FunCallArg(int num)
+{
+    PrintIndent();
+    fprintf(fd_, "Arg %d", num);
+}
+
+void TestVisitor::BeginArgument(const char *name)
+{
+    PrintIndent();
+    fprintf(fd_, "Argument %s {", name);
+    ++indent_;
+}
+
+void TestVisitor::CastTypeBegin(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Cast Type {");
+    ++indent_;
+}
+
+void TestVisitor::BeginIndexing(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Indexing {");
+    ++indent_;
+}
+
+void TestVisitor::Index(int num, bool has_lower_bound, bool has_upper_bound)
+{
+    PrintIndent();
+    fprintf(fd_, "Index %d %s %s", num, has_lower_bound ? "has lower" : "", has_upper_bound ? "has upper" : "");
 }
 
 void TestVisitor::BeginFuncType(bool ispure, bool varargs, int num_args)
@@ -146,13 +276,33 @@ void TestVisitor::BeginArrayOrMatrixType(bool is_matrix_, int dimensions_count)
     ++indent_;
 }
 
-void TestVisitor::NameOfType(const char *package, const char *name)
+void TestVisitor::BeginMapType(void)
 {
     PrintIndent();
-    if (package == NULL) {
+    fprintf(fd_, "Map {");
+    ++indent_;
+}
+
+void TestVisitor::MapReturnType(void)
+{
+    PrintIndent();
+    fprintf(fd_, "Map Return Value :");
+}
+
+void TestVisitor::BeginPointerType(bool isconst, bool isweak)
+{
+    PrintIndent();
+    fprintf(fd_, "Pointer %s %s {", isconst ? "is const" : "", isweak ? "is weak" : "");
+    ++indent_;
+}
+
+void TestVisitor::NameOfType(const char *name, int component_index)
+{
+    if (component_index == 0) {
+        PrintIndent();
         fprintf(fd_, "TypeName %s", name);
     } else {
-        fprintf(fd_, "TypeName %s.%s", package, name);
+        fprintf(fd_, ".%s", name);
     }
 }
 

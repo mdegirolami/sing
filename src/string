@@ -48,6 +48,8 @@ public:
     void        toupper(void);
     URGH_SIZE_T find_from_nocase(URGH_SIZE_T first_pos, char cc) const;
     URGH_SIZE_T string_in_string_nocase(const string &tofind) const;
+    void        insert(int position, const string &toinsert);
+    void        insert(int position, const char *toinsert);
     void        utf8_decode(vector<int32_t> *dst) const;
     void        utf8_encode(const int32_t *codepoints, int len);
 };

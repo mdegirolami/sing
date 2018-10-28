@@ -3,6 +3,7 @@
 
 #include "string"
 #include "lexer.h"
+#include "NamesList.h"
 
 //
 // Adding a new node
@@ -46,6 +47,23 @@ public:
     virtual void EndIncDec(Token type) = 0;
     virtual void BeginWhile(void) = 0;
     virtual void EndWhile(void) = 0;
+    virtual void BeginIf(void) = 0;
+    virtual void EndIf(void) = 0;
+    virtual void BeginIfClause(int num) = 0;
+    virtual void EndIfClause(int num) = 0;
+    virtual void BeginFor(const char *index, const char *iterator) = 0;
+    virtual void EndFor(const char *index, const char *iterator) = 0;
+    virtual void BeginForSet(void) = 0;
+    virtual void EndForSet(void) = 0;
+    virtual void BeginForLow(void) = 0;
+    virtual void EndForLow(void) = 0;
+    virtual void BeginForHigh(void) = 0;
+    virtual void EndForHigh(void) = 0;
+    virtual void BeginForStep(void) = 0;
+    virtual void EndForStep(void) = 0;
+    virtual void SimpleStatement(Token token) = 0;
+    virtual void BeginReturn(void) = 0;
+    virtual void EndReturn(void) = 0;
 
     // expressions
     virtual void ExpLeaf(Token type, const char *value) = 0;
@@ -54,6 +72,16 @@ public:
     virtual void BeginBinop(Token subtype) = 0;
     virtual void BeginBinopSecondArg(void) = 0;
     virtual void EndBinop(Token subtype) = 0;
+    virtual void BeginFunCall(void) = 0;
+    virtual void EndFunCall(void) = 0;
+    virtual void FunCallArg(int num) = 0;
+    virtual void BeginArgument(const char *name) = 0;
+    virtual void EndArgument(const char *name) = 0;
+    virtual void CastTypeBegin(void) = 0;
+    virtual void CastTypeEnd(void) = 0;
+    virtual void BeginIndexing(void) = 0;
+    virtual void EndIndexing(void) = 0;
+    virtual void Index(int num, bool has_lower_bound, bool has_upper_bound) = 0;
 
     // types
     virtual void BeginFuncType(bool ispure_, bool varargs_, int num_args) = 0;
@@ -68,7 +96,7 @@ public:
     virtual void EndMapType(void) = 0;
     virtual void BeginPointerType(bool isconst ,bool isweak) = 0;
     virtual void EndPointerType(bool isconst, bool isweak) = 0;
-    virtual void NameOfType(const char *package, const char *name) = 0; // package may be NULL
+    virtual void NameOfType(const char *name, int component_index) = 0; // package may be NULL
     virtual void BaseType(Token token) = 0;
 };
 
@@ -77,8 +105,8 @@ enum AstNodeType {
     ANT_BASE_TYPE, ANT_NAMED_TYPE, ANT_QUALIFIED_TYPE, ANT_ARRAY_TYPE, ANT_MAP_TYPE, ANT_POINTER_TYPE, ANT_FUNC_TYPE,
     ANT_ARGUMENT_DECLARE,
     ANT_BLOCK, ANT_ASSIGNMENT, ANT_UPDATE, ANT_INCDEC,
-    ANT_INDEXING, ANT_ARGUMENT, ANT_FUNCALL, ANT_BINOP, ANT_UNOP, ANT_EXP_LEAF,
-    ANT_WHILE, ANT_IF, ANT_FOR, ANT_SIMPLE, ANT_RETURN
+    ANT_WHILE, ANT_IF, ANT_FOR, ANT_SIMPLE, ANT_RETURN,
+    ANT_INDEXING, ANT_ARGUMENT, ANT_FUNCALL, ANT_BINOP, ANT_UNOP, ANT_EXP_LEAF
 };
 
 class IAstNode {
@@ -171,13 +199,14 @@ public:
 
 class AstQualifiedType : public IAstNode {
 public:
-    string  name_;
-    string  package_;
+    NamesList  names_;
 
-    AstQualifiedType(const char *pkg, const char *name) : name_(name), package_(pkg) {}
-    virtual AstNodeType GetType(void) { return(ANT_QUALIFIED_TYPE); }
+    AstQualifiedType(const char *name) { names_.AddName(name); }
+    virtual AstNodeType GetType(void) { return(ANT_NAMED_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
     virtual bool TreesAreEqual(IAstNode *other_tree);
+    void AddNameComponent(const char *name) { names_.AddName(name); }
+    void BuildTheFullName(string *dst);
 };
 
 class AstNamedType : public IAstNode {
@@ -263,7 +292,7 @@ public:
     IAstNode    *cast_to_;
 
     virtual ~AstArgument();
-    AstArgument(IAstNode *value) : expression_(value) {}
+    AstArgument(IAstNode *value) : expression_(value), cast_to_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_ARGUMENT); }
     virtual void Visit(IAstVisitor *visitor);
     virtual bool TreesAreEqual(IAstNode *other_tree);
@@ -291,6 +320,18 @@ public:
 // STATEMENTS
 //
 /////////////////////////
+
+class AstBlock : public IAstNode {
+public:
+    vector<IAstNode*>   block_items_;
+
+    virtual ~AstBlock();
+    virtual AstNodeType GetType(void) { return(ANT_BLOCK); }
+    virtual void Visit(IAstVisitor *visitor);
+    virtual bool TreesAreEqual(IAstNode *other_tree);
+    void AddItem(IAstNode *node) { block_items_.push_back(node); }
+};
+
 class AstIncDec : public IAstNode {
 public:
     Token       operation_;
@@ -371,7 +412,7 @@ public:
     virtual ~AstFor();
     AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_FOR); }
-    virtual void Visit(IAstVisitor *visitor) {}
+    virtual void Visit(IAstVisitor *visitor);
     virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
     void SetIndexName(const char *name) { index_name_ = name; }
     void SetIteratorName(const char *name) { iterator_name_ = name; }
@@ -388,30 +429,19 @@ public:
 
     AstSimpleStatement(Token type) : subtype_(type) {}
     virtual AstNodeType GetType(void) { return(ANT_SIMPLE); }
-    virtual void Visit(IAstVisitor *visitor) {}
+    virtual void Visit(IAstVisitor *visitor);
     virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
 };
 
 class AstReturn : public IAstNode {
 public:
-    IAstNode *retvalue;
+    IAstNode *retvalue_;
 
-    virtual ~AstReturn() { if (retvalue != NULL) delete retvalue; }
-    AstReturn(IAstNode *expression) : retvalue(expression) {}
+    virtual ~AstReturn() { if (retvalue_ != NULL) delete retvalue_; }
+    AstReturn(IAstNode *expression) : retvalue_(expression) {}
     virtual AstNodeType GetType(void) { return(ANT_RETURN); }
-    virtual void Visit(IAstVisitor *visitor) {}
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
-};
-
-class AstBlock : public IAstNode {
-public:
-    vector<IAstNode*>   block_items_;
-
-    virtual ~AstBlock();
-    virtual AstNodeType GetType(void) { return(ANT_BLOCK); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
-    void AddItem(IAstNode *node) { block_items_.push_back(node); }
+    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
 };
 
 /////////////////////////

@@ -117,7 +117,7 @@ void AstArrayOrMatrixType::Visit(IAstVisitor *visitor)
     visitor->BeginArrayOrMatrixType(is_matrix_, expressions_.size());
     for (int ii = 0; ii < (int)expressions_.size(); ++ii) {
         visitor->ConstIntExpressionValue(dimensions_[ii]);
-        expressions_[ii]->Visit(visitor);
+        if (expressions_[ii] != NULL) expressions_[ii]->Visit(visitor);
     }
     element_type_->Visit(visitor);
     visitor->EndArrayOrMatrixType(is_matrix_, expressions_.size());
@@ -144,19 +144,37 @@ bool AstArrayOrMatrixType::TreesAreEqual(IAstNode *other_tree)
 
 void AstQualifiedType::Visit(IAstVisitor *visitor)
 {
-    visitor->NameOfType(package_.c_str(), name_.c_str());
+    for (int ii = 0; ii < names_.GetNamesCount(); ++ii) {
+        visitor->NameOfType(names_.GetName(ii), ii);
+    }
 }
 
 bool AstQualifiedType::TreesAreEqual(IAstNode *other_tree)
 {
     if (other_tree->GetType() != GetType()) return(false);
     AstQualifiedType *other = (AstQualifiedType*)other_tree;
-    return(name_ == other->name_ && package_ == other->package_);
+    return(names_.IsEqualTo(&other->names_));
+}
+
+void AstQualifiedType::BuildTheFullName(string *dst)
+{
+    const char *component;
+    int     ii = 0;
+
+    do {
+        component = names_.GetName(ii);
+        if (component != NULL) {
+            if (ii != 0) {
+                *dst += "::";
+            }
+            *dst += component;
+        }
+    } while (component != NULL);
 }
 
 void AstNamedType::Visit(IAstVisitor *visitor)
 {
-    visitor->NameOfType(NULL, name_.c_str());
+    visitor->NameOfType(name_.c_str(), 0);
 }
 
 bool AstNamedType::TreesAreEqual(IAstNode *other_tree)
@@ -231,6 +249,15 @@ AstFunCall::~AstFunCall()
 
 void AstFunCall::Visit(IAstVisitor *visitor)
 {
+    visitor->BeginFunCall();
+    left_term_->Visit(visitor);
+    for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
+        visitor->FunCallArg(ii);
+        if (arguments_[ii] != NULL) {
+            arguments_[ii]->Visit(visitor);
+        }
+    }
+    visitor->EndFunCall();
 }
 
 bool AstFunCall::TreesAreEqual(IAstNode *other_tree)
@@ -246,6 +273,14 @@ AstArgument::~AstArgument()
 
 void AstArgument::Visit(IAstVisitor *visitor)
 {
+    visitor->BeginArgument(name_.c_str());
+    expression_->Visit(visitor);
+    if (cast_to_ != NULL) {
+        visitor->CastTypeBegin();
+        cast_to_->Visit(visitor);
+        visitor->CastTypeEnd();
+    }
+    visitor->EndArgument(name_.c_str());
 }
 
 bool AstArgument::TreesAreEqual(IAstNode *other_tree)
@@ -266,6 +301,18 @@ AstIndexing::~AstIndexing()
 
 void AstIndexing::Visit(IAstVisitor *visitor)
 {
+    visitor->BeginIndexing();
+    left_term_->Visit(visitor);
+    for (int ii = 0; ii < (int)lower_values_.size(); ++ii) {
+        visitor->Index(ii, lower_values_[ii] != NULL, upper_values_[ii] != NULL);
+        if (lower_values_[ii] != NULL) {
+            lower_values_[ii]->Visit(visitor);
+        }
+        if (upper_values_[ii] != NULL) {
+            upper_values_[ii]->Visit(visitor);
+        }
+    }
+    visitor->EndIndexing();
 }
 
 bool AstIndexing::TreesAreEqual(IAstNode *other_tree)
@@ -360,19 +407,18 @@ AstIf::~AstIf()
 void AstIf::Visit(IAstVisitor *visitor)
 {
     int ii;
-    /*
+    
     visitor->BeginIf();
     for (ii = 0; ii < (int)expressions_.size(); ++ii) {
         visitor->BeginIfClause(ii);
-        left_terms_[ii]->Visit(visitor);
+        expressions_[ii]->Visit(visitor);
+        blocks_[ii]->Visit(visitor);
         visitor->EndIfClause(ii);
     }
-    for (ii = 0; ii < (int)left_terms_.size(); ++ii) {
-        visitor->BeginRightTerm(ii);
-        right_terms_[ii]->Visit(visitor);
+    if (default_block_ != NULL) {
+        default_block_->Visit(visitor);
     }
     visitor->EndIf();
-    */
 }
 
 AstFor::~AstFor() { 
@@ -381,6 +427,47 @@ AstFor::~AstFor() {
     if (high_ != NULL) delete high_;
     if (step_ != NULL) delete step_;
     if (block_ != NULL) delete block_;
+}
+
+void AstFor::Visit(IAstVisitor *visitor)
+{
+    visitor->BeginFor(index_name_.c_str(), iterator_name_.c_str());
+    if (set_ != NULL) {
+        visitor->BeginForSet();
+        set_->Visit(visitor);
+        visitor->EndForSet();
+    }
+    if (low_ != NULL) {
+        visitor->BeginForLow();
+        low_->Visit(visitor);
+        visitor->EndForLow();
+    }
+    if (high_ != NULL) {
+        visitor->BeginForHigh();
+        high_->Visit(visitor);
+        visitor->EndForHigh();
+    }
+    if (step_ != NULL) {
+        visitor->BeginForStep();
+        step_->Visit(visitor);
+        visitor->EndForStep();
+    }
+    block_->Visit(visitor);
+    visitor->EndFor(index_name_.c_str(), iterator_name_.c_str());
+}
+
+void AstSimpleStatement::Visit(IAstVisitor *visitor)
+{
+    visitor->SimpleStatement(subtype_);
+}
+
+void AstReturn::Visit(IAstVisitor *visitor)
+{
+    visitor->BeginReturn();
+    if (retvalue_ != NULL) {
+        retvalue_->Visit(visitor);
+    }
+    visitor->EndReturn();
 }
 
 AstBlock::~AstBlock()
@@ -434,8 +521,10 @@ bool AstIniter::TreesAreEqual(IAstNode *other_tree)
 
 void VarDeclaration::Visit(IAstVisitor *visitor)
 {
-    visitor->BeginVarDeclaration(name_.c_str(), volatile_flag_, type_spec_ != NULL);
-    type_spec_->Visit(visitor);
+    visitor->BeginVarDeclaration(name_.c_str(), volatile_flag_, initer_ != NULL);
+    if (type_spec_ != NULL) {
+        type_spec_->Visit(visitor);
+    }
     if (initer_ != NULL) {
         initer_->Visit(visitor);
     }
@@ -450,7 +539,9 @@ bool VarDeclaration::TreesAreEqual(IAstNode *other_tree)
 void ConstDeclaration::Visit(IAstVisitor *visitor)
 {
     visitor->BeginConstDeclaration(name_.c_str());
-    type_spec_->Visit(visitor);
+    if (type_spec_ != NULL) {
+        type_spec_->Visit(visitor);
+    }
     if (initer_ != NULL) {
         initer_->Visit(visitor);
     }
@@ -474,6 +565,8 @@ FuncDeclaration::FuncDeclaration(const char *name1, const char *name2)
         classname_ = name1;
         name_ = name2;
     }
+    function_type_ = NULL;
+    block_ = NULL;
 }
 
 void FuncDeclaration::Visit(IAstVisitor *visitor)

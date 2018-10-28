@@ -212,6 +212,29 @@ URGH_SIZE_T string::string_in_string_nocase(const string &tofind) const
     return(scan);
 }
 
+void string::insert(int position, const string &toinsert)
+{
+    if (toinsert.length() < 1) return;
+    if (position < 0) {
+        position = 0;
+    } else if (position >= _content.size()) {
+        position = _content.size() - 1;
+    }
+    _content.insert_range(position, toinsert.length() - 1, toinsert.data());
+}
+
+void string::insert(int position, const char *toinsert)
+{
+    int len = strlen(toinsert);
+    if (len < 1) return;
+    if (position < 0) {
+        position = 0;
+    } else if (position >= _content.size()) {
+        position = _content.size() - 1;
+    }
+    _content.insert_range(position, len, toinsert);
+}
+
 void string::utf8_decode(vector<int32_t> *dst) const
 {
     int         chars_left;

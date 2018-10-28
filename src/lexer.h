@@ -53,6 +53,7 @@ enum Token {
     TOKEN_IN,
     TOKEN_OUT,
     TOKEN_IO,
+    TOKEN_DOUBLEDOT,    // triky - used to avoid giving up the TOKEN_ETC parsing
     TOKEN_ETC,
     TOKEN_IF,
     TOKEN_ELSE,
@@ -139,8 +140,6 @@ enum Token {
     TOKEN_UPD_SHL,
     TOKEN_UPD_AND,
     TOKEN_UPD_OR,
-    TOKEN_UPD_LOGICAL_AND,
-    TOKEN_UPD_LOGICAL_OR,
 
     TOKENS_COUNT
 };
@@ -214,6 +213,9 @@ public:
 
     // utils
     const char *GetTokenString(Token token) { return(token_to_string[token]); }
+    int GetBinopPriority(Token token);
+
+    static const int max_priority = 5;
 };
 
 }

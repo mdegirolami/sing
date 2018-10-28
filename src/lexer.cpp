@@ -54,6 +54,7 @@ TokenDesc keywords[] = {
     {TOKEN_IN, "in"},
     {TOKEN_OUT, "out"},
     {TOKEN_IO, "io" },
+    {TOKEN_DOUBLEDOT , ".."},
     {TOKEN_ETC, "..."},
     {TOKEN_IF, "if"},
     {TOKEN_ELSE, "else"},
@@ -140,8 +141,6 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_SHL, "<<=" },
     {TOKEN_UPD_AND, "&=" },
     {TOKEN_UPD_OR, "|=" },
-    {TOKEN_UPD_LOGICAL_AND, "&&=" },
-    {TOKEN_UPD_LOGICAL_OR, "||=" },
 };
 
 Lexer::Lexer()
@@ -783,23 +782,66 @@ Token Lexer::AshLookUp(int ash, const char *name)
 }
 
 static const char *error_desc[] = {
-    "truncated numeric literal",
-    "unknown/wrong escape sequence",
-    "expecting \"\'\"",
-    "truncated string",
-    "expecting an hexadecimal digit",
-    "literal value too big to fit in its type",
-    "illegal name: only alpha ,digits and \'_\' are allowed.",
-    "unexpected char",
-    "unexpected end of file",
-    "numeric literals must be terminated by blank or punctuation (except \'.\')",
-    "too many digits in number",
-    "expected a digit"
+    "Truncated numeric literal",
+    "Unknown/wrong escape sequence",
+    "Expecting '\''",
+    "Truncated string",
+    "Expecting an hexadecimal digit",
+    "Literal value too big to fit in its type",
+    "Illegal name: only alpha ,digits and \'_\' are allowed.",
+    "Unexpected char",
+    "Unexpected end of file",
+    "Numeric literals must be terminated by blank or punctuation (except \'.\')",
+    "Too many digits in number",
+    "Expected a digit"
 };
 
 void Lexer::Error(LexerError error, int column)
 {
     throw(ParsingException(error, m_curline, MAX(column, 0) + 1, error_desc[error]));
 }
+
+/*
+^			        // power
+* / % >> << &   	// binaries multiplication family
++ - |  xor		    // binaries addittive fam.
+> >= == != <= <		// relationals
+&&			        // logic multiply
+||			        // logic sum
+*/
+int Lexer::GetBinopPriority(Token token)
+{
+    switch (token) {
+    case TOKEN_POWER:
+        return(0);
+    case TOKEN_MPY:
+    case TOKEN_DIVIDE:
+    case TOKEN_MOD:
+    case TOKEN_SHR:
+    case TOKEN_SHL:
+    case TOKEN_AND:
+        return(1);
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_OR:
+    case TOKEN_XOR:
+        return(2);
+    case TOKEN_ANGLE_OPEN_LT:
+    case TOKEN_ANGLE_CLOSE_GT:
+    case TOKEN_GTE:
+    case TOKEN_LTE:
+    case TOKEN_DIFFERENT:
+    case TOKEN_EQUAL:
+        return(3);
+    case TOKEN_LOGICAL_AND:
+        return(4);
+    case TOKEN_LOGICAL_OR:
+        return(5);
+    default:
+        break;
+    }
+    return(10); // not an operator: above any other (the expression is fully evaluated before anything past it is processed).
+}
+
 
 } // namespace
