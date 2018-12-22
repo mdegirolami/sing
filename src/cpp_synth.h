@@ -31,17 +31,18 @@ class CppSynth {
     void SynthSimpleStatement(AstSimpleStatement *node);
     void SynthReturn(AstReturn *node);
 
-    void SynthExpression(string *dst, IAstNode *node);
+    void SynthExpression(string *dst, IAstNode *node, int father_priority = 100);
     void SynthIndices(string *dst, AstIndexing *node);
     void SynthFunCall(string *dst, AstFunCall *node);
-    void SynthBinop(string *dst, AstBinop *node);
-    void SynthUnop(string *dst, AstUnop *node);
+    int  SynthBinop(string *dst, AstBinop *node);
+    int  SynthUnop(string *dst, AstUnop *node);
     void SynthLeaf(string *dst, AstExpressionLeaf *node);
 
     void Write(string *text, bool add_semicolon = true);
     void AddNewLine(string *dst);
     void CreateUniqueId(string *id);
     const char *GetBaseTypeName(Token token);
+    int  GetBinopCppPriority(Token token);
 public:
     CppSynth(Lexer *lexer) : lexer_(lexer) {}
     void Synthetize(FILE *fd, AstFile *root);

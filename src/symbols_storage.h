@@ -1,0 +1,36 @@
+#ifndef SYMBOLS_STORAGE_H
+#define SYMBOLS_STORAGE_H
+
+#include <unordered_map>
+#include "ast_nodes.h"
+
+namespace std {
+    template<> struct hash<SingNames::string>
+    {
+        typedef std::size_t result_type;
+        result_type operator()(SingNames::string const& str) const noexcept
+        {
+            return(std::hash<std::string>{}(str.c_str()));
+        }
+    };
+}
+
+namespace SingNames {
+
+class SymbolsStorage {
+    std::unordered_map<string, IAstDeclarationNode*>    globals_;
+    NamesList                                           locals_names_;
+    vector<IAstDeclarationNode*>                        locals_nodes_;
+    vector<int>                                         scopes_top_;
+public:
+    bool InsertName(const char *name, IAstDeclarationNode *declaration);    // returns false if the name is duplicated
+    void OpenScope(void);
+    void CloseScope(void);
+    IAstDeclarationNode *FindDeclaration(const char *name);
+    IAstDeclarationNode *FindGlobalDeclaration(const char *name);
+    IAstDeclarationNode *FindLocalDeclaration(const char *name);
+};
+
+} // namespace
+
+#endif

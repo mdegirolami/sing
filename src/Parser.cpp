@@ -96,7 +96,7 @@ void Parser::ParseDependency(AstFile *file)
 
 void Parser::ParseDeclaration(AstFile *file)
 {
-    IAstNode    *node = NULL;
+    IAstDeclarationNode *node = NULL;
 
     if (m_token == TOKEN_PUBLIC) {
         Advance();
@@ -241,9 +241,9 @@ type_specification ::= base_type | <type_name> | <pkg_name>.<type_name> |
                         [const] [weak] ‘*’ type_specification |
                         function_type
 */
-IAstNode *Parser::ParseTypeSpecification(void)
+IAstTypeNode *Parser::ParseTypeSpecification(void)
 {
-    IAstNode *node = NULL;
+    IAstTypeNode *node = NULL;
 
     try {
         switch (m_token){
@@ -462,7 +462,7 @@ AstArgumentDecl *Parser::ParseSingleArgDef(void)
     if (m_token != TOKEN_NAME) {
         Error("Expecting the argument name");
     }
-    node = new AstArgumentDecl(direction, m_lexer->CurrTokenString());
+    node = new AstArgumentDecl(Token2ParmDirection(direction), m_lexer->CurrTokenString());
     try {
         Advance();
         node->AddType(ParseTypeSpecification());
@@ -580,10 +580,10 @@ AstBlock *Parser::ParseBlock(void)
 //functioncall |    ====>>> i.e. a left term
 IAstNode *Parser::ParseLeftTermStatement(void)
 {
-    bool                done = false;
-    vector<IAstNode*>   assignee, expressions;
-    IAstNode            *node = NULL;
-    Token               token;
+    bool                    done = false;
+    vector<IAstExpNode*>    assignee, expressions;
+    IAstNode                *node = NULL;
+    Token                   token;
 
     try {
         do {
@@ -667,9 +667,9 @@ binop ::=  ‘+’ | ‘-’ | ‘*’ | ‘/’ | ‘^’ | ‘%’ |
 	  ‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’ | 
 	  xor | && | || 
 */
-IAstNode *Parser::ParseExpression(int max_priority)
+IAstExpNode *Parser::ParseExpression(int max_priority)
 {
-    IAstNode    *nodes[Lexer::max_priority + 2];
+    IAstExpNode *nodes[Lexer::max_priority + 2];
     Token       subtype[Lexer::max_priority + 2];
     int         priorities[Lexer::max_priority + 2];
     int         num_nodes = 0;
@@ -712,10 +712,10 @@ IAstNode *Parser::ParseExpression(int max_priority)
 //
 // unop :: = ‘ - ’ | ‘!’ | ‘~’ | '&' | '*'
 //
-IAstNode *Parser::ParsePrefixExpression(void)
+IAstExpNode *Parser::ParsePrefixExpression(void)
 {
-    IAstNode    *node = NULL;
-    Token       subtype;
+    IAstExpNode    *node = NULL;
+    Token           subtype;
 
     try {
         switch (m_token) {
@@ -784,7 +784,7 @@ IAstNode *Parser::ParsePrefixExpression(void)
                 node = new AstUnop(subtype, ParsePrefixExpression());
                 break;
             default:
-                node = new AstUnop(TOKEN_ROUND_OPEN, ParseExpression());
+                node = ParseExpression();
                 if (m_token != TOKEN_ROUND_CLOSE) {
                     Error("Expecting ')'");
                 }
@@ -815,9 +815,9 @@ IAstNode *Parser::ParsePrefixExpression(void)
 
 //left_term :: = <var_name> | left_term ‘[’ indices_or_rages ‘]’ | left_term ‘.’ <name> |
 //              functioncall | ‘(’ left_term ‘)’ | '*'left_term
-IAstNode *Parser::ParseLeftTerm(const char *errmess)
+IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
 {
-    IAstNode    *node = NULL;
+    IAstExpNode    *node = NULL;
 
     try {
         switch (m_token) {
@@ -827,7 +827,7 @@ IAstNode *Parser::ParseLeftTerm(const char *errmess)
             break;
         case TOKEN_ROUND_OPEN:
             Advance();
-            node = new AstUnop(TOKEN_ROUND_OPEN, ParseLeftTerm());
+            node = ParseLeftTerm();
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
             }
@@ -874,7 +874,7 @@ IAstNode *Parser::ParseLeftTerm(const char *errmess)
 
 void Parser::ParseRangesOrIndices(AstIndexing *node)
 {
-    IAstNode *lower;
+    IAstExpNode *lower;
     
     while (m_token == TOKEN_SQUARE_OPEN) {
         do {
@@ -933,7 +933,7 @@ void Parser::ParseArguments(AstFunCall *node)
 
 AstWhile *Parser::ParseWhile(void)
 {
-    IAstNode    *expression;
+    IAstExpNode    *expression;
 
     if (Advance() != TOKEN_ROUND_OPEN) {
         Error("Expecting '('");

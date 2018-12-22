@@ -19,6 +19,7 @@ public:
     int  CompareStrings(uint32_t i1, uint32_t i2);
     int  GetNamesCount(void) { return(_indices.size()); }
     void Reset(void) { _names.clear();_indices.clear(); }
+    void Erase(int first, int past_last);
     int  SortedInsert(const char *name);                                // returns the inserted position
 
     // works after DeleteDuplicated and before any other AddName
@@ -26,6 +27,7 @@ public:
     int  BinarySearchNearestHigher(const char *name);                   // may return -1 if not found, a perfect match or the nearest item.
     int  BinarySearch(const char *name);                                // returns -1 if not found
     int  BinarySearchRangeWithPrefix(int &index, const char *prefix);   // returns the number of matches
+    int  LinearSearch(const char *name);
     bool IsEqualTo(NamesList *other);
 };
 

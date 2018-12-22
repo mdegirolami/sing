@@ -37,7 +37,7 @@ class Parser {
     ConstDeclaration        *ParseConst(void);
     TypeDeclaration         *ParseType(void);
     FuncDeclaration         *ParseFunctionDeclaration(void);
-    IAstNode                *ParseTypeSpecification(void);
+    IAstTypeNode            *ParseTypeSpecification(void);
     AstArrayOrMatrixType    *ParseIndices(bool ismatrix);
     IAstNode                *ParseIniter(void);
     AstFuncType             *ParseFunctionType(void);
@@ -45,9 +45,9 @@ class Parser {
     AstArgumentDecl         *ParseSingleArgDef(void);
     AstBlock                *ParseBlock(void);
     IAstNode                *ParseLeftTermStatement(void);
-    IAstNode                *ParseExpression(int max_priority = Lexer::max_priority + 1);
-    IAstNode                *ParsePrefixExpression(void);
-    IAstNode                *ParseLeftTerm(const char *errmess = NULL);
+    IAstExpNode             *ParseExpression(int max_priority = Lexer::max_priority + 1);
+    IAstExpNode             *ParsePrefixExpression(void);
+    IAstExpNode             *ParseLeftTerm(const char *errmess = NULL);
     void                    ParseRangesOrIndices(AstIndexing *node);
     void                    ParseArguments(AstFunCall *node);
     AstWhile                *ParseWhile(void);

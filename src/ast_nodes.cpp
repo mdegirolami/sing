@@ -28,23 +28,15 @@ void AstFuncType::Visit(IAstVisitor *visitor)
     visitor->EndFuncType(ispure_, varargs_, arguments_.size());
 }
 
-bool AstFuncType::TreesAreEqual(IAstNode *other_tree)
+bool AstFuncType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstFuncType *other = (AstFuncType*)other_tree;
-    if (ispure_ != other->ispure_ || varargs_ != other->varargs_ || 
-        arguments_.size() != other->arguments_.size()) {
+    if (src_tree->GetType() != GetType()) return(false);
+    AstFuncType *other = (AstFuncType*)src_tree;
+    if (arguments_.size() != other->arguments_.size() || varargs_ != other->varargs_ || ispure_ && !other->ispure_) {
         return(false);
     }
-    for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
-        if (!arguments_[ii]->TreesAreEqual(other->arguments_[ii])) {
-            return(false);
-        }
-    }
-    if (return_type_ == NULL) {
-        if (other->return_type_ != NULL) return(false);
-    } else {
-        if (other->return_type_ == NULL || !return_type_->TreesAreEqual(other->return_type_)) return(false);
+    if (mode == FOR_EQUALITY && ispure_ != other->ispure_) {
+        return(false);
     }
     return(true);
 }
@@ -57,14 +49,14 @@ void AstArgumentDecl::Visit(IAstVisitor *visitor)
     visitor->EndArgumentDecl(direction_, name_.c_str(), initer_ != NULL);
 }
 
-bool AstArgumentDecl::TreesAreEqual(IAstNode *other_tree)
+bool AstArgumentDecl::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstArgumentDecl *other = (AstArgumentDecl*)other_tree;
+    if (src_tree->GetType() != GetType()) return(false);
+    AstArgumentDecl *other = (AstArgumentDecl*)src_tree;
     if (direction_ != other->direction_) return(false);
     assert(type_ != NULL);
     assert(other->type_ != NULL);
-    return(type_->TreesAreEqual(other->type_));
+    return(true);
 }
 
 void AstPointerType::Visit(IAstVisitor *visitor)
@@ -74,14 +66,20 @@ void AstPointerType::Visit(IAstVisitor *visitor)
     visitor->EndPointerType(isconst_, isweak_);
 }
 
-bool AstPointerType::TreesAreEqual(IAstNode *other_tree)
+bool AstPointerType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstPointerType *other = (AstPointerType*)other_tree;
-    if (isconst_ != other->isconst_) return(false);
+    if (src_tree->GetType() != GetType()) return(false);
+    AstPointerType *other = (AstPointerType*)src_tree;
+    if (!isconst_ && other->isconst_) return(false);
+    if (mode == FOR_EQUALITY && (isconst_ != other->isconst_ || isweak_ != other->isweak_)) {
+        return(false);
+    }
+    if (mode == WITH_OUTPUT_DECLARATION && isweak_ != other->isweak_) {
+        return(false);
+    }
     assert(pointed_type_ != NULL);
     assert(other->pointed_type_ != NULL);
-    return(pointed_type_->TreesAreEqual(other->pointed_type_));
+    return(true);
 }
 
 void AstMapType::Visit(IAstVisitor *visitor)
@@ -93,15 +91,15 @@ void AstMapType::Visit(IAstVisitor *visitor)
     visitor->EndMapType();
 }
 
-bool AstMapType::TreesAreEqual(IAstNode *other_tree)
+bool AstMapType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstMapType *other = (AstMapType*)other_tree;
+    if (src_tree->GetType() != GetType()) return(false);
+    AstMapType *other = (AstMapType*)src_tree;
     assert(key_type_ != NULL);
     assert(other->key_type_ != NULL);
     assert(returned_type_ != NULL);
     assert(other->returned_type_ != NULL);
-    return(key_type_->TreesAreEqual(key_type_) && returned_type_->TreesAreEqual(other->returned_type_));
+    return(true);
 }
 
 AstArrayOrMatrixType::~AstArrayOrMatrixType()
@@ -123,23 +121,25 @@ void AstArrayOrMatrixType::Visit(IAstVisitor *visitor)
     visitor->EndArrayOrMatrixType(is_matrix_, expressions_.size());
 }
 
-bool AstArrayOrMatrixType::TreesAreEqual(IAstNode *other_tree)
+bool AstArrayOrMatrixType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstArrayOrMatrixType *other = (AstArrayOrMatrixType*)other_tree;
-    if (is_matrix_ != other->is_matrix_ || dimensions_.size() != other->dimensions_.size()) {
+    if (src_tree->GetType() != GetType()) return(false);
+    AstArrayOrMatrixType *other = (AstArrayOrMatrixType*)src_tree;
+    if (expressions_.size() != other->expressions_.size()) {
         return(false);
     }
-    if (!is_matrix_) {
-        for (int ii = 0; ii < (int)dimensions_.size(); ++ii) {
-            if (dimensions_[ii] != other->dimensions_[ii]) {
+    for (int ii = 0; ii < (int)dimensions_.size(); ++ii) {
+        if (dimensions_[ii] != other->dimensions_[ii]) {
+
+            // for assignment, we fail only if both dimensions are known at compile time 
+            if (mode == FOR_EQUALITY || dimensions_[ii] * other->dimensions_[ii] > 0) {
                 return(false);
             }
         }
     }
     assert(element_type_ != NULL);
     assert(other->element_type_ != NULL);
-    return(element_type_->TreesAreEqual(other->element_type_));
+    return(true);
 }
 
 void AstQualifiedType::Visit(IAstVisitor *visitor)
@@ -149,10 +149,10 @@ void AstQualifiedType::Visit(IAstVisitor *visitor)
     }
 }
 
-bool AstQualifiedType::TreesAreEqual(IAstNode *other_tree)
+bool AstQualifiedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstQualifiedType *other = (AstQualifiedType*)other_tree;
+    if (src_tree->GetType() != GetType()) return(false);
+    AstQualifiedType *other = (AstQualifiedType*)src_tree;
     return(names_.IsEqualTo(&other->names_));
 }
 
@@ -177,10 +177,10 @@ void AstNamedType::Visit(IAstVisitor *visitor)
     visitor->NameOfType(name_.c_str(), 0);
 }
 
-bool AstNamedType::TreesAreEqual(IAstNode *other_tree)
+bool AstNamedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstNamedType *other = (AstNamedType*)other_tree;
+    if (src_tree->GetType() != GetType()) return(false);
+    AstNamedType *other = (AstNamedType*)src_tree;
     return(name_ == other->name_);
 }
 
@@ -189,13 +189,12 @@ void AstBaseType::Visit(IAstVisitor *visitor)
     visitor->BaseType(base_type_);
 }
 
-bool AstBaseType::TreesAreEqual(IAstNode *other_tree)
+bool AstBaseType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
-    if (other_tree->GetType() != GetType()) return(false);
-    AstBaseType *other = (AstBaseType*)other_tree;
+    if (src_tree->GetType() != GetType()) return(false);
+    AstBaseType *other = (AstBaseType*)src_tree;
     return(base_type_ == other->base_type_);
 }
-
 
 /////////////////////////
 //
@@ -208,21 +207,11 @@ void AstExpressionLeaf::Visit(IAstVisitor *visitor)
     visitor->ExpLeaf(subtype_, value_.c_str());
 }
 
-bool AstExpressionLeaf::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
 void AstUnop::Visit(IAstVisitor *visitor)
 {
     visitor->BeginUnop(subtype_);
     operand_->Visit(visitor);
     visitor->EndUnop(subtype_);
-}
-
-bool AstUnop::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 void AstBinop::Visit(IAstVisitor *visitor)
@@ -232,11 +221,6 @@ void AstBinop::Visit(IAstVisitor *visitor)
     visitor->BeginBinopSecondArg();
     operand_right_->Visit(visitor);
     visitor->EndBinop(subtype_);
-}
-
-bool AstBinop::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 AstFunCall::~AstFunCall()
@@ -260,11 +244,6 @@ void AstFunCall::Visit(IAstVisitor *visitor)
     visitor->EndFunCall();
 }
 
-bool AstFunCall::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
 AstArgument::~AstArgument()
 {
     if (expression_ != NULL) delete expression_;
@@ -281,11 +260,6 @@ void AstArgument::Visit(IAstVisitor *visitor)
         visitor->CastTypeEnd();
     }
     visitor->EndArgument(name_.c_str());
-}
-
-bool AstArgument::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 AstIndexing::~AstIndexing()
@@ -315,12 +289,6 @@ void AstIndexing::Visit(IAstVisitor *visitor)
     visitor->EndIndexing();
 }
 
-bool AstIndexing::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
-
 /////////////////////////
 //
 // STATEMENTS
@@ -334,11 +302,6 @@ void AstIncDec::Visit(IAstVisitor *visitor)
     visitor->EndIncDec(operation_);
 }
 
-bool AstIncDec::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
 void AstUpdate::Visit(IAstVisitor *visitor)
 {
     visitor->BeginUpdateStatement(operation_);
@@ -347,11 +310,6 @@ void AstUpdate::Visit(IAstVisitor *visitor)
     visitor->BeginRightTerm(0);
     right_term_->Visit(visitor);
     visitor->EndUpdateStatement(operation_);
-}
-
-bool AstUpdate::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 AstAssignment::~AstAssignment()
@@ -376,11 +334,6 @@ void AstAssignment::Visit(IAstVisitor *visitor)
         right_terms_[ii]->Visit(visitor);
     }
     visitor->EndAssignments(left_terms_.size());
-}
-
-bool AstAssignment::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 void AstWhile::Visit(IAstVisitor *visitor)
@@ -486,12 +439,6 @@ void AstBlock::Visit(IAstVisitor *visitor)
     visitor->EndBlock();
 }
 
-bool AstBlock::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
-
 /////////////////////////
 //
 // BASE STRUCTURE OF PACKAGE
@@ -514,11 +461,6 @@ void AstIniter::Visit(IAstVisitor *visitor)
     visitor->EndIniter();
 }
 
-bool AstIniter::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
 void VarDeclaration::Visit(IAstVisitor *visitor)
 {
     visitor->BeginVarDeclaration(name_.c_str(), volatile_flag_, initer_ != NULL);
@@ -531,10 +473,6 @@ void VarDeclaration::Visit(IAstVisitor *visitor)
     visitor->EndVarDeclaration(name_.c_str(), volatile_flag_, type_spec_ != NULL);
 }
 
-bool VarDeclaration::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
 
 void ConstDeclaration::Visit(IAstVisitor *visitor)
 {
@@ -577,11 +515,6 @@ void FuncDeclaration::Visit(IAstVisitor *visitor)
     visitor->EndFuncDeclaration(name_.c_str(), is_class_member_, classname_.c_str());
 }
 
-bool FuncDeclaration::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
-}
-
 AstDependency::AstDependency(const char *path, const char *name)
 {
     package_dir_ = path;
@@ -599,11 +532,6 @@ AstDependency::AstDependency(const char *path, const char *name)
 void AstDependency::Visit(IAstVisitor *visitor)
 {
     visitor->PackageRef(package_dir_.c_str(), package_name_.c_str());
-}
-
-bool AstDependency::TreesAreEqual(IAstNode *other_tree)
-{
-    return(false);
 }
 
 AstFile::~AstFile()
@@ -627,9 +555,15 @@ void AstFile::Visit(IAstVisitor *visitor)
     }
 }
 
-bool AstFile::TreesAreEqual(IAstNode *other_tree)
+ParmDirection Token2ParmDirection(Token token)
 {
-    return(false);
+    switch (token) {
+    case TOKEN_IN: return(PD_IN);
+    case TOKEN_OUT: return(PD_OUT);
+    case TOKEN_IO: return(PD_IO);
+    default: break;
+    }
+    return(PD_ABSENT);
 }
 
 } // namespace

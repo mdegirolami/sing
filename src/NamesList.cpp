@@ -40,6 +40,28 @@ int NamesList::CompareStrings(uint32_t i1, uint32_t i2)
     return(stricmp(&_names[i1], &_names[i2]));
 }
 
+void NamesList::Erase(int first, int past_last)
+{
+    if (first < 0) first = 0;
+    if (first >= _indices.size() || past_last < 1 || first >= past_last) return;
+
+    if (past_last >= _indices.size()) {
+        _names.erase(_indices[first], _names.size());
+        _indices.erase(first, _indices.size());
+    } else {
+        int erase_from = _indices[first];
+        int erase_to = _indices[past_last];
+        int delta = erase_to - erase_from;
+        int ii;
+
+        _names.erase(erase_from, erase_to);
+        for (ii = past_last; ii < _indices.size(); ++ii) {
+            _indices[ii] -= delta;
+        }
+        _indices.erase(first, past_last);
+    }
+}
+
 void NamesList::Sort(void)
 {
     int     count;
@@ -185,6 +207,22 @@ int NamesList::BinarySearchRangeWithPrefix(int &index, const char *prefix)
 
     // done.
     return(top - index);
+}
+
+int  NamesList::LinearSearch(const char *name)
+{
+    int         ii;
+    const char *tocompare;
+
+    for (ii = 0; ii < _indices.size(); ++ii) {
+        tocompare = &_names[_indices[ii]];
+        if (*tocompare == name[0]) {
+            if (strcmp(tocompare, name)) {
+                return(ii);
+            }
+        }
+    }
+    return(-1);
 }
 
 void NamesList::TerminateAndCreateIndices(void)

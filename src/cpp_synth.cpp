@@ -12,6 +12,9 @@ void CppSynth::Synthetize(FILE *fd, AstFile *root)
     indent_ = 0;
     id_sequence_ = 0;
     for (ii = 0; ii < root->declarations_.size(); ++ii) {
+
+        // check: verificare nome univoco, inserire in mappa.
+
         IAstNode *declaration = root->declarations_[ii];
         switch (declaration->GetType()) {
         case ANT_VAR:
@@ -95,6 +98,9 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec)
         break;
     case ANT_NAMED_TYPE:
         {
+
+        // check: verificare esistenza.
+
             const char *name = ((AstNamedType*)type_spec)->name_.c_str();
             dst->insert(0, name);
             dst->insert(strlen(name), " ");
@@ -103,6 +109,8 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec)
     case ANT_QUALIFIED_TYPE:
         {
             string      fullname;
+
+            // check: verificare esistenza.
 
             ((AstQualifiedType*)type_spec)->BuildTheFullName(&fullname);
             fullname += " ";
@@ -179,6 +187,8 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec)
                     AstArgumentDecl *arg = node->arguments_[ii];
                     string the_type(arg->name_);
 
+                    // check: if is a declaration, must specify in/out/io, else must determine scanning the lock !!
+
                     if (ii != 0) {
                         *dst += ", ";
                     }
@@ -210,6 +220,10 @@ void CppSynth::SynthIniter(string *dst, IAstNode *initer)
 
 void CppSynth::SynthIniterCore(string *dst, IAstNode *initer)
 {
+
+    // check: consistenza con tipo o ritornare, appunto, il tipo.
+
+
     if (initer->GetType() == ANT_INITER) {
         AstIniter *ast_initer = (AstIniter*)initer;
         int ii;
@@ -235,9 +249,15 @@ void CppSynth::SynthBlock(AstBlock *block, bool write_closing_bracket)
         IAstNode *node = block->block_items_[ii];
         switch (node->GetType()) {
         case ANT_VAR:
+
+            // check: duplication avoidance, insertion !!
+
             SynthVar((VarDeclaration*)node);
             break;
         case ANT_CONST:
+
+            // check: duplication avoidance, insertion !!
+
             SynthConst((ConstDeclaration*)node);
             break;
         case ANT_ASSIGNMENT:
@@ -278,6 +298,8 @@ void CppSynth::SynthAssignment(AstAssignment *node)
     int ii;
     string full, expression;
 
+    // check: types compatibility (annotate the node).
+
     if (node->left_terms_.size() == 1) {
         SynthExpression(&full, node->left_terms_[0]);
         full += " = ";
@@ -303,6 +325,8 @@ void CppSynth::SynthUpdateStatement(AstUpdate *node)
 {
     string full, expression;
 
+    // check: types compatibility (annotate the node).
+
     if (node->operation_ == TOKEN_UPD_POWER) {
 
     } else {
@@ -320,6 +344,8 @@ void CppSynth::SynthIncDec(AstIncDec *node)
 {
     string text;
 
+    // check: types compatibility (annotate the node).
+
     SynthExpression(&text, node->left_term_);
     text += lexer_->GetTokenString(node->operation_);
     Write(&text);
@@ -328,6 +354,8 @@ void CppSynth::SynthIncDec(AstIncDec *node)
 void CppSynth::SynthWhile(AstWhile *node)
 {
     string text;
+
+    // check: types compatibility (annotate the node).
 
     SynthExpression(&text, node->expression_);
     text.insert(0, "while (");
@@ -340,6 +368,8 @@ void CppSynth::SynthIf(AstIf *node)
 {
     string  text;
     int     ii;
+
+    // check: types compatibility (annotate the node).
 
     SynthExpression(&text, node->expressions_[0]);
     text.insert(0, "if (");
@@ -379,6 +409,8 @@ AstBlock    *block_;
 
 void CppSynth::SynthSimpleStatement(AstSimpleStatement *node)
 {
+    // check: is in an inner block who is continuable/breakable ?
+
     string text = lexer_->GetTokenString(node->subtype_);
     Write(&text);
 }
@@ -387,10 +419,226 @@ void CppSynth::SynthReturn(AstReturn *node)
 {
     string text;
 
+    // check: types compatibility (annotate the node).
+
     SynthExpression(&text, node->retvalue_);
     text.insert(0, "return (");
     text += ")";
     Write(&text);
+}
+
+void CppSynth::SynthExpression(string *dst, IAstNode *node, int father_priority)
+{
+    int priority = 0;
+
+    // check: return type and costness.
+
+    switch (node->GetType()) {
+    case ANT_INDEXING:
+        SynthIndices(dst, (AstIndexing*)node);
+        priority = 2;
+        break;
+    case ANT_FUNCALL:
+        SynthFunCall(dst, (AstFunCall*) node);
+        priority = 2;
+        break;
+    case ANT_BINOP:
+        priority = SynthBinop(dst, (AstBinop*)node);
+        break;
+    case ANT_UNOP:
+        priority = SynthUnop(dst, (AstUnop*)node);
+        break;
+    case ANT_EXP_LEAF:
+        SynthLeaf(dst, (AstExpressionLeaf*)node);
+        break;
+    }
+
+    // a function-like operator: needs no protection 
+    if (priority == 100) priority = 0;
+
+    // protect the priority of this branch from adjacent operators
+    if (father_priority < priority || priority > 3 && father_priority == priority ) {
+        dst->insert(0, "(");
+        *dst += ')';
+    }
+}
+
+void CppSynth::SynthIndices(string *dst, AstIndexing *node)
+{
+    int     ii;
+    string  expression;
+
+    // check: types compatibility (annotate the node).
+
+    SynthExpression(dst, node->left_term_, 2);
+    for (ii = 0; ii < node->lower_values_.size(); ++ii) {
+        expression = "";
+        SynthExpression(dst, node->lower_values_[ii]);
+        *dst += '[';
+        *dst += expression;
+        *dst += ']';
+    }
+}
+
+void CppSynth::SynthFunCall(string *dst, AstFunCall *node)
+{
+    int     ii;
+    string  expression;
+
+    // check: types compatibility (annotate the node).
+
+    SynthExpression(dst, node->left_term_, 2);
+    *dst += '(';
+    for (ii = 0; ii < node->arguments_.size(); ++ii) {
+        expression = "";
+        SynthExpression(dst, node->arguments_[ii]);
+        if (ii != 0) {
+            *dst += ' ,';
+        }
+        *dst += expression;
+    }
+    *dst += ')';
+}
+
+int CppSynth::SynthBinop(string *dst, AstBinop *node)
+{
+    int     ii, priority;
+    string  expression;
+
+    // check: types compatibility (annotate the node).
+
+    priority = GetBinopCppPriority(node->subtype_);
+    SynthExpression(dst, node->operand_left_, priority);
+    switch (node->subtype_) {
+    case TOKEN_POWER:
+        break;
+    case TOKEN_XOR:
+        *dst += " ^ ";
+        break;
+    default:
+        *dst += ' ';
+        *dst += lexer_->GetTokenString(node->subtype_);
+        *dst += ' ';
+        break;
+    }
+    SynthExpression(&expression, node->operand_right_, priority);
+    *dst += expression;
+    return(priority);
+    /*
+    switch (node->subtype_) {
+    case TOKEN_POWER:
+        return(0);
+    case TOKEN_MPY:
+    case TOKEN_DIVIDE:
+    case TOKEN_MOD:
+    case TOKEN_SHR:
+    case TOKEN_SHL:
+    case TOKEN_AND:
+        return(1);
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_OR:
+    case TOKEN_XOR:
+        return(2);
+    case TOKEN_ANGLE_OPEN_LT:
+    case TOKEN_ANGLE_CLOSE_GT:
+    case TOKEN_GTE:
+    case TOKEN_LTE:
+    case TOKEN_DIFFERENT:
+    case TOKEN_EQUAL:
+        return(3);
+    case TOKEN_LOGICAL_AND:
+        return(4);
+    case TOKEN_LOGICAL_OR:
+    }
+    */
+}
+
+int CppSynth::SynthUnop(string *dst, AstUnop *node)
+{
+
+    // check: types compatibility (annotate the node).
+
+    int priority;
+
+    if (node->subtype_ == TOKEN_SIZEOF || node->subtype_ == TOKEN_DIMOF) {
+        priority = 100;
+    } else {
+        priority = 3;
+    }
+    SynthExpression(dst, node->operand_, priority);
+
+    switch (node->subtype_) {
+    case TOKEN_SIZEOF:
+        dst->insert(0, "sizeof(");
+        *dst += ')';
+        break;
+    case TOKEN_DIMOF:
+        break;                      // TODO
+    case TOKEN_MINUS:
+    case TOKEN_PLUS:
+    case TOKEN_AND:
+    case TOKEN_NOT:
+    case TOKEN_LOGICAL_NOT:
+    case TOKEN_MPY:
+        dst->insert(0, lexer_->GetTokenString(node->subtype_));
+        break;
+        /*
+    case TOKEN_INT8:
+    case TOKEN_INT16:
+    case TOKEN_INT32:
+    case TOKEN_INT64:
+    case TOKEN_UINT8:
+    case TOKEN_UINT16:
+    case TOKEN_UINT32:
+    case TOKEN_UINT64:
+    case TOKEN_FLOAT32:
+    case TOKEN_FLOAT64:
+    case TOKEN_COMPLEX64:
+    case TOKEN_COMPLEX128:
+    case TOKEN_STRING:
+    case TOKEN_RUNE:
+    case TOKEN_BOOL:
+    case TOKEN_SIZE_T:
+    */
+    default:
+        // all the types conversions
+        char cast[20];
+
+        sprintf(cast, "(%s)", GetBaseTypeName(node->subtype_));
+        dst->insert(0, cast);
+        break;
+    }
+    return(priority);
+}
+
+void CppSynth::SynthLeaf(string *dst, AstExpressionLeaf *node)
+{
+    switch (node->subtype_) {
+    case TOKEN_NULL:
+        *dst = "nullptr";
+        break;
+    case TOKEN_FALSE:
+    case TOKEN_TRUE:
+        *dst = lexer_->GetTokenString(node->subtype_);
+        break;
+    case TOKEN_LITERAL_STRING:
+    case TOKEN_LITERAL_UINT:
+    case TOKEN_LITERAL_FLOAT:
+    case TOKEN_NAME:
+
+        // check: var existence.
+
+        *dst = node->value_;
+        break;
+    case TOKEN_LITERAL_IMG:
+
+        // check required includes
+
+        *dst = "complex<0,";
+        *dst += lexer_->GetTokenString(node->subtype_);
+        *dst += ">";
+    }
 }
 
 void CppSynth::Write(string *text, bool add_semicolon = true)
@@ -458,147 +706,43 @@ const char *CppSynth::GetBaseTypeName(Token token)
     }
 }
 
-void CppSynth::SynthExpression(string *dst, IAstNode *node)
+int  CppSynth::GetBinopCppPriority(Token token)
 {
-    switch (node->GetType()) {
-    case ANT_INDEXING:
-        SynthIndices(dst, (AstIndexing*)node);
-        break;
-    case ANT_FUNCALL:
-        SynthFunCall(dst, (AstFunCall*) node);
-        break;
-    case ANT_BINOP:
-        SynthBinop(dst, (AstBinop*)node);
-        break;
-    case ANT_UNOP:
-        SynthUnop(dst, (AstUnop*)node);
-        break;
-    case ANT_EXP_LEAF:
-        SynthLeaf(dst, (AstExpressionLeaf*)node);
-        break;
-    case ANT_ARGUMENT:
-        break;
-    }
-}
-
-void CppSynth::SynthIndices(string *dst, AstIndexing *node)
-{
-    int     ii;
-    string  expression;
-
-    SynthExpression(dst, node->left_term_);
-    for (ii = 0; ii < node->lower_values_.size(); ++ii) {
-        expression = "";
-        SynthExpression(dst, node->lower_values_[ii]);
-        *dst += '[';
-        *dst += expression;
-        *dst += ']';
-    }
-}
-
-void CppSynth::SynthFunCall(string *dst, AstFunCall *node)
-{
-    int     ii;
-    string  expression;
-
-    SynthExpression(dst, node->left_term_);
-    *dst += '(';
-    for (ii = 0; ii < node->arguments_.size(); ++ii) {
-        expression = "";
-        SynthExpression(dst, node->arguments_[ii]);
-        if (ii != 0) {
-            *dst += ' ,';
-        }
-        *dst += expression;
-    }
-    *dst += ')';
-}
-
-void CppSynth::SynthBinop(string *dst, AstBinop *node)
-{
-    int     ii;
-    string  expression;
-
-    SynthExpression(dst, node->operand_left_);
-    switch (node->subtype_) {
+    switch (token) {
     case TOKEN_POWER:
-        break;
-    case TOKEN_XOR:
-        *dst += " ^ ";
-        break;
-    default:
-        *dst += ' ';
-        *dst += lexer_->GetTokenString(node->subtype_);
-        *dst += ' ';
-        break;
-    }
-    SynthExpression(&expression, node->operand_right_);
-    *dst += expression;
-
-    /*
-    switch (node->subtype_) {
-    case TOKEN_POWER:
-        return(0);
+        return(100);      // means "doesn't require parenthesys/doesn't take precedence over parents."
+    case TOKEN_DOT:
+        return(2);
     case TOKEN_MPY:
     case TOKEN_DIVIDE:
     case TOKEN_MOD:
+        return(5);
     case TOKEN_SHR:
     case TOKEN_SHL:
+        return(7);
     case TOKEN_AND:
-        return(1);
+        return(11);
     case TOKEN_PLUS:
     case TOKEN_MINUS:
+        return(6);
     case TOKEN_OR:
+        return(13);
     case TOKEN_XOR:
-        return(2);
+        return(12);
     case TOKEN_ANGLE_OPEN_LT:
     case TOKEN_ANGLE_CLOSE_GT:
     case TOKEN_GTE:
     case TOKEN_LTE:
+        return(9);
     case TOKEN_DIFFERENT:
     case TOKEN_EQUAL:
-        return(3);
+        return(10);
     case TOKEN_LOGICAL_AND:
-        return(4);
+        return(14);
     case TOKEN_LOGICAL_OR:
+        return(15);
     }
-    */
+    return(100);
 }
-
-void CppSynth::SynthUnop(string *dst, AstUnop *node)
-{
-    SynthExpression(dst, node->operand_);
-
-    switch (node->subtype_) {
-    case TOKEN_SIZEOF:
-        dst->insert(0, "sizeof(");
-        *dst += ')';
-        break;
-    case TOKEN_DIMOF:
-        break;                      // TODO
-    case TOKEN_ROUND_OPEN:
-        dst->insert(0, "(");
-        *dst += ')';
-        break;
-    case TOKEN_MINUS:
-    case TOKEN_PLUS:
-    case TOKEN_AND:
-    case TOKEN_NOT:
-    case TOKEN_LOGICAL_NOT:
-    case TOKEN_MPY:
-        dst->insert(0, lexer_->GetTokenString(node->subtype_));
-    default:
-        // all the types conversions
-
-
-
-    }
-}
-
-void CppSynth::SynthLeaf(string *dst, AstExpressionLeaf *node)
-{
-
-}
-
 
 } // namespace

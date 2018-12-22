@@ -18,6 +18,10 @@
 // 
 namespace SingNames {
 
+enum ParmDirection { PD_IN, PD_OUT, PD_IO, PD_ABSENT };
+
+ParmDirection Token2ParmDirection(Token token);
+
 class IAstVisitor {
 public:
     // base structure
@@ -86,8 +90,8 @@ public:
     // types
     virtual void BeginFuncType(bool ispure_, bool varargs_, int num_args) = 0;
     virtual void EndFuncType(bool ispure_, bool varargs_, int num_args) = 0;
-    virtual void BeginArgumentDecl(Token direction, const char *name, bool has_initer) = 0;
-    virtual void EndArgumentDecl(Token direction, const char *name, bool has_initer) = 0;
+    virtual void BeginArgumentDecl(ParmDirection direction, const char *name, bool has_initer) = 0;
+    virtual void EndArgumentDecl(ParmDirection direction, const char *name, bool has_initer) = 0;
     virtual void BeginArrayOrMatrixType(bool is_matrix_, int dimensions_count) = 0;
     virtual void EndArrayOrMatrixType(bool is_matrix_, int dimensions_count) = 0;
     virtual void ConstIntExpressionValue(int value) = 0;
@@ -114,119 +118,144 @@ public:
     virtual ~IAstNode() {}
     virtual AstNodeType GetType(void) = 0;
     virtual void Visit(IAstVisitor *visitor) = 0;
-    virtual bool TreesAreEqual(IAstNode *other_tree) = 0;
 };
+
+enum TypeComparisonMode {FOR_ASSIGNMENT,                // return true if this can assign type src_tree to 'this'
+                         FOR_EQUALITY,                  // compare 'this' and src_tree. Just ignores very secondary stuff.
+                         WITH_OUTPUT_DECLARATION};      // 'this' can be used as argument if the argument is an output declared as src_tree ?
+
+class IAstTypeNode : public IAstNode {
+public:
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode) = 0;    // shallow compare !!
+};
+
+class IAstExpNode : public IAstNode {
+public:
+    virtual bool IsCompileTimeConstant(void) = 0;
+    virtual IAstTypeNode *GetResultType(void) = 0;
+};
+
+class IAstDeclarationNode : public IAstNode {
+public:
+    virtual IAstTypeNode *GetSingType(void) = 0;
+};
+
+class TypeDeclaration;
 
 /////////////////////////
 //
 // TYPES
 //
 /////////////////////////
-class AstArgumentDecl : public IAstNode {
+class AstArgumentDecl : public IAstTypeNode {
 public:
-    Token       direction_;
-    string      name_;
-    IAstNode    *type_;
-    IAstNode    *initer_;
+    ParmDirection   direction_;
+    string          name_;
+    IAstTypeNode    *type_;
+    IAstNode        *initer_;
 
     virtual ~AstArgumentDecl() { if (type_ != NULL) delete type_; if (initer_ != NULL) delete initer_; }
-    AstArgumentDecl(Token dir, const char *name) : direction_(dir), name_(name), type_(NULL), initer_(NULL) {}
+    AstArgumentDecl(ParmDirection dir, const char *name) : direction_(dir), name_(name), type_(NULL), initer_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_ARGUMENT_DECLARE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
-    void AddType(IAstNode *type) { type_ = type; }
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
+    void AddType(IAstTypeNode *type) { type_ = type; }
     void AddIniter(IAstNode *initer) { initer_ = initer; }
 };
 
-class AstFuncType : public IAstNode {
+class AstFuncType : public IAstTypeNode {
 public:
     bool                        ispure_;
     bool                        varargs_;
     vector<AstArgumentDecl*>    arguments_;
-    IAstNode                    *return_type_;
+    IAstTypeNode                *return_type_;
 
     virtual ~AstFuncType();
     AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL) { arguments_.reserve(8); }
     virtual AstNodeType GetType(void) { return(ANT_FUNC_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void SetVarArgs(void) { varargs_ = true; }
     void AddArgument(AstArgumentDecl *arg) { arguments_.push_back(arg); }
-    void SetReturnType(IAstNode *type) { return_type_ = type; }
+    void SetReturnType(IAstTypeNode *type) { return_type_ = type; }
 };
 
-class AstPointerType : public IAstNode {
+class AstPointerType : public IAstTypeNode {
 public:
-    bool        isconst_;
-    bool        isweak_;
-    IAstNode    *pointed_type_;
+    bool            isconst_;
+    bool            isweak_;
+    IAstTypeNode    *pointed_type_;
 
     virtual ~AstPointerType() { if (pointed_type_ != NULL) delete pointed_type_; }
-    AstPointerType(bool isconst, bool isweak, IAstNode *pointed) : isconst_(isconst), isweak_(isweak), pointed_type_(pointed) {}
+    AstPointerType(bool isconst, bool isweak, IAstTypeNode *pointed) : isconst_(isconst), isweak_(isweak), pointed_type_(pointed) {}
     virtual AstNodeType GetType(void) { return(ANT_POINTER_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
 };
 
-class AstMapType : public IAstNode {
+class AstMapType : public IAstTypeNode {
 public:
-    IAstNode    *key_type_;
-    IAstNode    *returned_type_;
+    IAstTypeNode    *key_type_;
+    IAstTypeNode    *returned_type_;
 
     virtual ~AstMapType() { if (key_type_ != NULL) delete key_type_; if (returned_type_ != NULL) delete returned_type_; }
-    AstMapType(IAstNode *key, IAstNode *rett) : key_type_(key), returned_type_(rett) {}
+    AstMapType(IAstTypeNode *key, IAstTypeNode *rett) : key_type_(key), returned_type_(rett) {}
     virtual AstNodeType GetType(void) { return(ANT_MAP_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
 };
 
-class AstArrayOrMatrixType : public IAstNode {
+class AstArrayOrMatrixType : public IAstTypeNode {
 public:
-    bool                is_matrix_;
-    vector<int>         dimensions_;
-    vector<IAstNode*>   expressions_;
-    IAstNode            *element_type_;
+    bool                    is_matrix_;
+    vector<IAstExpNode*>    expressions_;
+    IAstTypeNode            *element_type_;
+
+    vector<int>         dimensions_;    // annotation - is 0 if not computable at compile time. 
 
     virtual ~AstArrayOrMatrixType();
     AstArrayOrMatrixType(bool ismatrix) : is_matrix_(ismatrix), element_type_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_ARRAY_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void SetDimensionValue(int value) { dimensions_.push_back(value); expressions_.push_back(NULL); }
-    void SetDimensionExpression(IAstNode *exp) { dimensions_.push_back(-1); expressions_.push_back(exp); }
-    void SetElementType(IAstNode *etype) { element_type_ = etype; }
+    void SetDimensionExpression(IAstExpNode *exp) { dimensions_.push_back(-1); expressions_.push_back(exp); }
+    void SetElementType(IAstTypeNode *etype) { element_type_ = etype; }
 };
 
-class AstQualifiedType : public IAstNode {
+class AstQualifiedType : public IAstTypeNode {
 public:
-    NamesList  names_;
+    NamesList   names_;
+
+    TypeDeclaration *wp_decl_;   // annotation: the declaration the name refers to.
 
     AstQualifiedType(const char *name) { names_.AddName(name); }
-    virtual AstNodeType GetType(void) { return(ANT_NAMED_TYPE); }
+    virtual AstNodeType GetType(void) { return(ANT_QUALIFIED_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void AddNameComponent(const char *name) { names_.AddName(name); }
     void BuildTheFullName(string *dst);
 };
 
-class AstNamedType : public IAstNode {
+class AstNamedType : public IAstTypeNode {
 public:
-    string  name_;
+    string          name_;
+    TypeDeclaration *wp_decl_;   // annotation: the declaration the name refers to.
 
-    AstNamedType(const char *name) : name_(name) {}
+    AstNamedType(const char *name) : name_(name), wp_decl_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_NAMED_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
 };
 
-class AstBaseType : public IAstNode {
+class AstBaseType : public IAstTypeNode {
 public:
     Token   base_type_;
 
     AstBaseType(Token token) { base_type_ = token; }
     virtual AstNodeType GetType(void) { return(ANT_BASE_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
 };
 
 /////////////////////////
@@ -234,85 +263,117 @@ public:
 // EXPRESSIONS
 //
 /////////////////////////
-class AstExpressionLeaf : public IAstNode {
+
+class AstArgument : public IAstNode {
+public:
+    string          name_;
+    IAstExpNode     *expression_;
+    IAstTypeNode    *cast_to_;
+
+    virtual ~AstArgument();
+    AstArgument(IAstExpNode *value) : expression_(value), cast_to_(NULL) {}
+    virtual AstNodeType GetType(void) { return(ANT_ARGUMENT); }
+    virtual void Visit(IAstVisitor *visitor);
+    void AddName(const char *value) { name_ = value; }
+    void CastTo(IAstTypeNode *type) { cast_to_ = type; }
+};
+
+class AstExpressionLeaf : public IAstExpNode {
 public:
     Token   subtype_;
     string  value_;          // a literal string representation or a variable/class/package/type name
 
-    AstExpressionLeaf(Token type, const char *value) : subtype_(type), value_(value) {}
+    bool            ctc_;       // attributes
+    IAstTypeNode    *wp_type;
+
+    AstExpressionLeaf(Token type, const char *value) : subtype_(type), value_(value), wp_type(NULL), ctc_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_EXP_LEAF); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompileTimeConstant(void) { return(ctc_); }
+    virtual IAstTypeNode *GetResultType(void) { return(wp_type); }
 };
 
 // includes (), *, cast, sizeof, dimof.
-class AstUnop : public IAstNode {
+class AstUnop : public IAstExpNode {
 public:
-    Token       subtype_;
-    IAstNode    *operand_;
+    Token           subtype_;
+    IAstExpNode     *operand_;
+    IAstTypeNode    *type_;     // for sizeof(type)
+
+    bool            ctc_;       // attributes
+    IAstTypeNode    *wp_type;
 
     virtual ~AstUnop() { if (operand_ != NULL) delete operand_; }
-    AstUnop(Token type, IAstNode *operand) : operand_(operand), subtype_(type) {}
+    AstUnop(Token type, IAstExpNode *operand) : operand_(operand), subtype_(type), type_(NULL), wp_type(NULL), ctc_(false) {}
+    AstUnop(Token type, IAstTypeNode *operand) : type_(operand), subtype_(type), operand_(NULL), wp_type(NULL), ctc_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_UNOP); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompileTimeConstant(void) { return(ctc_); }
+    virtual IAstTypeNode *GetResultType(void) { return(wp_type); }
 };
 
 // includes '.' (field access, scope resolution)
-class AstBinop : public IAstNode {
+class AstBinop : public IAstExpNode {
 public:
-    Token       subtype_;
-    IAstNode    *operand_left_;
-    IAstNode    *operand_right_;
+    Token           subtype_;
+    IAstExpNode    *operand_left_;
+    IAstExpNode    *operand_right_;
+
+    bool            ctc_;       // attributes
+    IAstTypeNode    *wp_type;
 
     virtual ~AstBinop() { if (operand_left_ != NULL) delete operand_left_; if (operand_right_ != NULL) delete operand_right_; }
-    AstBinop(Token type, IAstNode *left, IAstNode*right) : subtype_(type), operand_left_(left), operand_right_(right) {}
+    AstBinop(Token type, IAstExpNode *left, IAstExpNode*right) : subtype_(type), operand_left_(left), 
+                                                                operand_right_(right), wp_type(NULL), ctc_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_BINOP); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
+    virtual bool IsCompileTimeConstant(void) { return(ctc_); }
+    virtual IAstTypeNode *GetResultType(void) { return(wp_type); }
 };
 
-class AstFunCall : public IAstNode {
+class AstFunCall : public IAstExpNode {
 public:
-    IAstNode            *left_term_;
-    vector<IAstNode*>   arguments_;
+    IAstExpNode             *left_term_;
+    vector<AstArgument*>    arguments_;
+
+    bool            ctc_;       // attributes
+    IAstTypeNode    *wp_type;
 
     virtual ~AstFunCall();
-    AstFunCall(IAstNode *left) : left_term_(left) {}
+    AstFunCall(IAstExpNode *left) : left_term_(left), wp_type(NULL), ctc_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_FUNCALL); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
-    void AddAnArgument(IAstNode *value) { arguments_.push_back(value); }
+    void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
+    virtual bool IsCompileTimeConstant(void) { return(ctc_); }
+    virtual IAstTypeNode *GetResultType(void) { return(wp_type); }
 };
 
-class AstArgument : public IAstNode {
+class AstIndexing : public IAstExpNode {
 public:
-    string      name_;
-    IAstNode    *expression_;
-    IAstNode    *cast_to_;
+    IAstExpNode            *left_term_;
+    vector<IAstExpNode*>   lower_values_;
+    vector<IAstExpNode*>   upper_values_;
+    vector<bool>           is_single_index;
 
-    virtual ~AstArgument();
-    AstArgument(IAstNode *value) : expression_(value), cast_to_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_ARGUMENT); }
-    virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
-    void AddName(const char *value) { name_ = value; }
-    void CastTo(IAstNode *type) { cast_to_ = type; }
-};
-
-class AstIndexing : public IAstNode {
-public:
-    IAstNode            *left_term_;
-    vector<IAstNode*>   lower_values_;
-    vector<IAstNode*>   upper_values_;
+    bool            ctc_;       // attributes
+    IAstTypeNode    *wp_type;
 
     virtual ~AstIndexing();
-    AstIndexing(IAstNode *left) : left_term_(left) {}
+    AstIndexing(IAstExpNode *left) : left_term_(left), wp_type(NULL), ctc_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_INDEXING); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
-    void AddAnIndex(IAstNode *value) { lower_values_.push_back(value); upper_values_.push_back(NULL); }
-    void AddARange(IAstNode *lower, IAstNode *higher) { lower_values_.push_back(lower); upper_values_.push_back(higher); }
+    void AddAnIndex(IAstExpNode *value) { 
+        lower_values_.push_back(value); 
+        upper_values_.push_back(NULL); 
+        is_single_index.push_back(true); 
+    }
+    void AddARange(IAstExpNode *lower, IAstExpNode *higher) { 
+        lower_values_.push_back(lower); 
+        upper_values_.push_back(higher); 
+        is_single_index.push_back(false);
+    }
+    virtual bool IsCompileTimeConstant(void) { return(ctc_); }
+    virtual IAstTypeNode *GetResultType(void) { return(wp_type); }
 };
 
 /////////////////////////
@@ -328,73 +389,67 @@ public:
     virtual ~AstBlock();
     virtual AstNodeType GetType(void) { return(ANT_BLOCK); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
     void AddItem(IAstNode *node) { block_items_.push_back(node); }
 };
 
 class AstIncDec : public IAstNode {
 public:
     Token       operation_;
-    IAstNode    *left_term_;
+    IAstExpNode *left_term_;
 
     virtual ~AstIncDec() { if (left_term_ != NULL) delete left_term_; }
-    AstIncDec(Token op, IAstNode *left) : operation_(op), left_term_(left) {}
+    AstIncDec(Token op, IAstExpNode *left) : operation_(op), left_term_(left) {}
     virtual AstNodeType GetType(void) { return(ANT_INCDEC); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
 };
 
 class AstUpdate : public IAstNode {
 public:
     Token       operation_;
-    IAstNode    *left_term_;
-    IAstNode    *right_term_;
+    IAstExpNode *left_term_;
+    IAstExpNode *right_term_;
 
     virtual ~AstUpdate() { if (left_term_ != NULL) delete left_term_; if (right_term_ != NULL) delete right_term_; }
-    AstUpdate(Token op, IAstNode *left, IAstNode *right) : operation_(op), left_term_(left), right_term_(right) {}
+    AstUpdate(Token op, IAstExpNode *left, IAstExpNode *right) : operation_(op), left_term_(left), right_term_(right) {}
     virtual AstNodeType GetType(void) { return(ANT_UPDATE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
 };
 
 class AstAssignment : public IAstNode {
 public:
-    vector<IAstNode*>   left_terms_;
-    vector<IAstNode*>   right_terms_;
+    vector<IAstExpNode*>   left_terms_;
+    vector<IAstExpNode*>   right_terms_;
 
     virtual ~AstAssignment();
-    AstAssignment(vector<IAstNode*> *left, vector<IAstNode*> *right) : left_terms_(*left), right_terms_(*right) {}
+    AstAssignment(vector<IAstExpNode*> *left, vector<IAstExpNode*> *right) : left_terms_(*left), right_terms_(*right) {}
     virtual AstNodeType GetType(void) { return(ANT_ASSIGNMENT); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
 };
 
 class AstWhile : public IAstNode {
 public:
-    IAstNode    *expression_;
+    IAstExpNode *expression_;
     AstBlock    *block_;
 
     virtual ~AstWhile() { if (expression_ != NULL) delete expression_;  if (block_ != NULL) delete block_; }
-    AstWhile(IAstNode *exp, AstBlock *blk) : expression_(exp), block_(blk) {}
+    AstWhile(IAstExpNode *exp, AstBlock *blk) : expression_(exp), block_(blk) {}
     virtual AstNodeType GetType(void) { return(ANT_WHILE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
     IAstNode *GetTheExpression(void) { return(expression_); }
     IAstNode *GetTheBlock(void) { return(block_); }
 };
 
 class AstIf : public IAstNode {
 public:
-    vector<IAstNode*>   expressions_;
-    vector<AstBlock*>   blocks_;
-    AstBlock            *default_block_;
+    vector<IAstExpNode*>   expressions_;
+    vector<AstBlock*>       blocks_;
+    AstBlock                *default_block_;
 
     virtual ~AstIf();
     AstIf() : default_block_(NULL) { expressions_.reserve(4); blocks_.reserve(4); }
     virtual AstNodeType GetType(void) { return(ANT_IF); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
-    void AddExpression(IAstNode *exp) { expressions_.push_back(exp); }
+    void AddExpression(IAstExpNode *exp) { expressions_.push_back(exp); }
     void AddBlock(AstBlock *blk) { blocks_.push_back(blk); }
     void SetDefaultBlock(AstBlock *blk) { default_block_ = blk;}
 };
@@ -413,7 +468,6 @@ public:
     AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_FOR); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
     void SetIndexName(const char *name) { index_name_ = name; }
     void SetIteratorName(const char *name) { iterator_name_ = name; }
     void SetTheSet(IAstNode *exp) { set_ = exp; }
@@ -430,18 +484,16 @@ public:
     AstSimpleStatement(Token type) : subtype_(type) {}
     virtual AstNodeType GetType(void) { return(ANT_SIMPLE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
 };
 
 class AstReturn : public IAstNode {
 public:
-    IAstNode *retvalue_;
+    IAstExpNode *retvalue_;
 
     virtual ~AstReturn() { if (retvalue_ != NULL) delete retvalue_; }
-    AstReturn(IAstNode *expression) : retvalue_(expression) {}
+    AstReturn(IAstExpNode *expression) : retvalue_(expression) {}
     virtual AstNodeType GetType(void) { return(ANT_RETURN); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
 };
 
 /////////////////////////
@@ -457,59 +509,66 @@ public:
     AstIniter() { elements_.reserve(4); }
     virtual AstNodeType GetType(void) { return(ANT_INITER); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
     void AddElement(IAstNode *element) { elements_.push_back(element); }
 };
 
-class VarDeclaration : public IAstNode
+class VarDeclaration : public IAstDeclarationNode
 {
 public:
-    string      name_;
-    bool        volatile_flag_;
-    IAstNode    *type_spec_;
-    IAstNode    *initer_;
+    string          name_;
+    bool            volatile_flag_;
+    IAstTypeNode    *type_spec_;
+    IAstNode        *initer_;
+
+    IAstTypeNode    *wp_sing_type_;  // attributes. 
+    bool            pointed_;
+    bool            read_;
+    bool            written_;
 
     virtual ~VarDeclaration() { if (type_spec_ != NULL) delete type_spec_; if (initer_ != NULL) delete initer_; }
-    VarDeclaration(const char *name) : name_(name), volatile_flag_(false), type_spec_(NULL), initer_(NULL) {}
+    VarDeclaration(const char *name) : name_(name), volatile_flag_(false), type_spec_(NULL), initer_(NULL), wp_sing_type_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_VAR); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
     void SetVolatile(void) { volatile_flag_ = true; }
-    void SetType(IAstNode *node) { type_spec_ = node; }
+    void SetType(IAstTypeNode *node) { type_spec_ = node; }
     void SetIniter(IAstNode *node) { initer_ = node; }
+    virtual IAstTypeNode *GetSingType(void) { return(wp_sing_type_); }
 };
 
-class ConstDeclaration : public IAstNode
+class ConstDeclaration : public IAstDeclarationNode
 {
 public:
-    string      name_;
-    IAstNode    *type_spec_;
-    IAstNode    *initer_;
+    string          name_;
+    IAstTypeNode    *type_spec_;
+    IAstNode        *initer_;
+
+    bool            pointed_;   // attributes. 
+    bool            read_;
 
     virtual ~ConstDeclaration() { if (type_spec_ != NULL) delete type_spec_; if (initer_ != NULL) delete initer_; }
     ConstDeclaration(const char *name) : name_(name), type_spec_(NULL), initer_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_CONST); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
-    void SetType(IAstNode *node) { type_spec_ = node; }
+    void SetType(IAstTypeNode *node) { type_spec_ = node; }
     void SetIniter(IAstNode *node) { initer_ = node; }
+    virtual IAstTypeNode *GetSingType(void) { return(type_spec_); }
 };
 
-class TypeDeclaration : public IAstNode
+class TypeDeclaration : public IAstDeclarationNode
 {
 public:
-    string      name_;
-    IAstNode    *type_spec_;
+    string          name_;
+    IAstTypeNode    *type_spec_;
 
     virtual ~TypeDeclaration() { if (type_spec_ != NULL) delete type_spec_; }
     TypeDeclaration(const char *name) : name_(name), type_spec_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_TYPE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree) { return(false); }
-    void SetType(IAstNode *node) { type_spec_ = node; }
+    void SetType(IAstTypeNode *node) { type_spec_ = node; }
+    virtual IAstTypeNode *GetSingType(void) { return(type_spec_); }
 };
 
-class FuncDeclaration : public IAstNode
+class FuncDeclaration : public IAstDeclarationNode
 {
 public:
     string      name_;
@@ -522,9 +581,9 @@ public:
     FuncDeclaration(const char *name1, const char *name2);
     virtual AstNodeType GetType(void) { return(ANT_FUNC); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
     void AddType(AstFuncType *type) { function_type_ = type; }
     void AddBlock(AstBlock *block) { block_ = block; }
+    virtual IAstTypeNode *GetSingType(void) { return(function_type_); }
 };
 
 class AstDependency : public IAstNode {
@@ -536,14 +595,13 @@ public:
     AstDependency(const char *path, const char *name);
     virtual AstNodeType GetType(void) { return(ANT_DEPENDENCY); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
 };
 
 class AstFile : public IAstNode {
 public:
-    string                  package_name_;
-    vector<AstDependency*>  dependencies_;
-    vector<IAstNode*>       declarations_;
+    string                          package_name_;
+    vector<AstDependency*>          dependencies_;
+    vector<IAstDeclarationNode*>    declarations_;
 
     virtual ~AstFile();
     AstFile(const char *package) : package_name_(package) {
@@ -552,9 +610,8 @@ public:
     }
     virtual AstNodeType GetType(void) { return(ANT_FILE); }
     virtual void Visit(IAstVisitor *visitor);
-    virtual bool TreesAreEqual(IAstNode *other_tree);
     void AddDependency(AstDependency *dep) { dependencies_.push_back(dep); }
-    void AddNode(IAstNode *node) { declarations_.push_back(node); }
+    void AddNode(IAstDeclarationNode *node) { declarations_.push_back(node); }
 };
 
 };
