@@ -43,9 +43,9 @@ int NamesList::CompareStrings(uint32_t i1, uint32_t i2)
 void NamesList::Erase(int first, int past_last)
 {
     if (first < 0) first = 0;
-    if (first >= _indices.size() || past_last < 1 || first >= past_last) return;
+    if (first >= (int)_indices.size() || past_last < 1 || first >= past_last) return;
 
-    if (past_last >= _indices.size()) {
+    if (past_last >= (int)_indices.size()) {
         _names.erase(_indices[first], _names.size());
         _indices.erase(first, _indices.size());
     } else {
@@ -55,7 +55,7 @@ void NamesList::Erase(int first, int past_last)
         int ii;
 
         _names.erase(erase_from, erase_to);
-        for (ii = past_last; ii < _indices.size(); ++ii) {
+        for (ii = past_last; ii < (int)_indices.size(); ++ii) {
             _indices[ii] -= delta;
         }
         _indices.erase(first, past_last);
@@ -94,7 +94,7 @@ void NamesList::DeleteDuplicated(void)
     _indices.erase(_indices.begin() + dst, _indices.end());
 }
 
-const char *NamesList::GetName(uint32_t index)
+const char *NamesList::GetName(uint32_t index) const
 {
     if (index >= _indices.size()) return(NULL);
     return(&_names[_indices[index]]);
@@ -214,10 +214,10 @@ int  NamesList::LinearSearch(const char *name)
     int         ii;
     const char *tocompare;
 
-    for (ii = 0; ii < _indices.size(); ++ii) {
+    for (ii = 0; ii < (int)_indices.size(); ++ii) {
         tocompare = &_names[_indices[ii]];
         if (*tocompare == name[0]) {
-            if (strcmp(tocompare, name)) {
+            if (strcmp(tocompare, name) == 0) {
                 return(ii);
             }
         }
@@ -248,6 +248,12 @@ bool NamesList::IsEqualTo(NamesList *other)
         return(false);
     }
     return (_indices.isequal(other->_indices) && _names.isequal(other->_names));
+}
+
+void NamesList::CopyFrom(NamesList *other)
+{
+    _names = other->_names;
+    _indices = other->_indices;
 }
 
 }

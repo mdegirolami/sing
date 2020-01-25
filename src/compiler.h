@@ -3,19 +3,28 @@
 
 #include "lexer.h"
 #include "Parser.h"
+#include "ast_checks.h"
+#include "Options.h"
+#include "cpp_synth.h"
 
 namespace SingNames {
 
 class Compiler {
-    Lexer   lexer_;
-    Parser  parser_;
+    vector<Package*> packages_;
+    AstChecker       checker_;
+    Options          options_;
+    CppSynth         cpp_synthesizer_;
 
     void TestLexer(void);
     void TestParser(void);
-public:
-    void Run(void);
-};
+    void TestChecker(void);
+    void CompileSinglePackage(void);
 
+    void PrintAllPkgErrors();
+    void PrintPkgErrors(Package *pkg);
+public:
+    void Run(int argc, char *argv[]);
+};
 
 } // namespace
 

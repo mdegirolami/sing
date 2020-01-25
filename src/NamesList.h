@@ -1,13 +1,14 @@
 #ifndef __NAMESLIST_H_
 #define __NAMESLIST_H_
 
+#include <stdint.h>
 #include "vector.h"
 
 namespace SingNames {
 
 class NamesList {
-    vector<char>    _names;
-    vector<uint32_t>   _indices;
+    vector<char>        _names;
+    vector<uint32_t>    _indices;
 
     void TerminateAndCreateIndices(void);
 public:
@@ -15,12 +16,13 @@ public:
     void AddCrLfTerminatedName(const char *name);
     void Sort(void);
     void DeleteDuplicated(void);
-    const char *GetName(uint32_t index);
+    const char *GetName(uint32_t index) const;
     int  CompareStrings(uint32_t i1, uint32_t i2);
     int  GetNamesCount(void) { return(_indices.size()); }
     void Reset(void) { _names.clear();_indices.clear(); }
     void Erase(int first, int past_last);
     int  SortedInsert(const char *name);                                // returns the inserted position
+    int  Size(void) const { return(_indices.size()); }
 
     // works after DeleteDuplicated and before any other AddName
     int  BinarySearchNearestLower(const char *name);                    // may return -1 if not found, a perfect match or the nearest item.
@@ -29,6 +31,7 @@ public:
     int  BinarySearchRangeWithPrefix(int &index, const char *prefix);   // returns the number of matches
     int  LinearSearch(const char *name);
     bool IsEqualTo(NamesList *other);
+    void CopyFrom(NamesList *other);
 };
 
 }

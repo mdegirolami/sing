@@ -2,81 +2,162 @@
 #include <float.h>
 #include "compiler.h"
 #include "helpers.h"
-#include "test_visitor.h"
+#include "ast_nodes_print.h"
+#include "FileName.h"
 
-void main(void)
+void main(int argc, char *argv[])
 {
     SingNames::Compiler compiler;
-
-    compiler.Run();
-    getchar();
+    compiler.Run(argc, argv);
 }
 
 namespace SingNames {
 
-void Compiler::Run(void)
+void Compiler::Run(int argc, char *argv[])
 {
-    TestParser();
+    if (!options_.ParseArgs(argc, argv)) {
+        return;
+    }
+    switch (options_.GetTestMode()) {
+    case 1:
+        TestLexer();
+        return;
+    case 2:
+        TestParser();
+        return;
+    case 3:
+        TestChecker();
+        return;
+    }
+    if (options_.GetMode() == CM_FULL_PROJECT) {
+        CompileSinglePackage();
+        getchar();
+    }
+}
+
+void Compiler::TestChecker(void)
+{
+    Package     *pkg = new Package;
+
+    packages_.push_back(pkg);
+    pkg->Init(options_.GetPackageName());    // -p improperly used !!
+    if (!pkg->Load(PkgStatus::FULL)) {
+        PrintPkgErrors(pkg);
+    } else if (!checker_.CheckAll(&packages_, &options_, 0, true)) {
+        PrintAllPkgErrors();
+    }
 }
 
 void Compiler::TestParser(void)
 {
-    TestVisitor visitor;
-    AstFile *ast;
-    FILE    *visitor_dst;
-    const char *error;
-    int     error_idx;
+    Package     *pkg = new Package;
 
-    if (lexer_.OpenFile("../examples/first/parser_errors_check.sing")) {
-        printf("\ncan't open file");
-        return;
-    }
-    parser_.Init(&lexer_);
-    ast = parser_.ParseAll();
-    if (ast == NULL) {
-        error_idx = 0;
-        do {
-            error = parser_.GetError(error_idx++);
-            if (error != NULL) {
-                printf("\nERROR !! %s", error);
-            }
-        } while (error != NULL);
-        lexer_.CloseFile();
-        return;
-    }
-    lexer_.CloseFile();
+    packages_.push_back(pkg);
+    pkg->Init(options_.GetPackageName());    // -p improperly used !!
+    if (!pkg->Load(PkgStatus::FULL)) {
+        PrintPkgErrors(pkg);
+        getchar();
+    } else {
+        AstNodesPrint   printer;
 
-    visitor_dst = fopen("../examples/first/parser_errors_check.txt", "wt");
-    visitor.Init(visitor_dst, &lexer_);
-    ast->Visit(&visitor);
-    fclose(visitor_dst);
+        FILE *print_dst = fopen(options_.GetOutputFile(), "wt");
+        printer.Init(print_dst);
+        printer.PrintFile(pkg->root_);
+        fclose(print_dst);
+    }
 }
 
 void Compiler::TestLexer(void)
 {
-    Token token;
-    bool  error;
+    Token  token;
+    bool   error;
+    Lexer  lexer;
 
-    if (lexer_.OpenFile("../examples/lexertest/test.stay")) {
+    if (lexer.OpenFile(options_.GetPackageName())) {   // -p improperly used !!
         printf("\ncan't open file");
         return;
     }
     do {
         try {
             error = false;
-            lexer_.Advance();
+            lexer.Advance();
         }
         catch (ParsingException ex) {
             printf("\n\nERROR !! %s at %d, %d\n", ex.description, ex.row, ex.column);
-            lexer_.ClearError();
+            lexer.ClearError();
             error = true;
         }
-        token = lexer_.CurrToken();
+        token = lexer.CurrToken();
         if (token != TOKEN_EOF && !error) {
-            printf("\n%d\t%s", token, lexer_.CurrTokenVerbatim());
+            printf("\n%d\t%s", token, lexer.CurrTokenVerbatim());
         }
     } while (token != TOKEN_EOF);
-    lexer_.CloseFile();
+    lexer.CloseFile();
+}
+
+void Compiler::CompileSinglePackage(void)
+{
+    Package     *pkg = new Package;
+
+    packages_.push_back(pkg);
+    pkg->Init(options_.GetPackageDir());    // -p improperly used !!
+    if (!pkg->Load(PkgStatus::FULL)) {
+        PrintPkgErrors(pkg);
+    } else if (!checker_.CheckAll(&packages_, &options_, 0, true)) {
+        PrintAllPkgErrors();
+    } else {
+        string output_name;
+        FILE *cppfd = nullptr;
+        FILE *hfd = nullptr;
+        bool empty_cpp;
+
+        cpp_synthesizer_.Init();
+        output_name = options_.GetOutputFile();     // -o improperly used
+
+        FileName::ExtensionSet(&output_name, "cpp");
+        cppfd = fopen(output_name.c_str(), "wb");
+        if (cppfd == NULL) {
+            printf("\ncan't open output file: %s", output_name.c_str());
+            return;
+        }
+
+        FileName::ExtensionSet(&output_name, "h");
+        hfd = fopen(output_name.c_str(), "wb");
+        if (hfd == NULL) {
+            printf("\ncan't open output file: %s", output_name.c_str());
+            fclose(cppfd);
+            return;
+        }
+
+        cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, 0, &empty_cpp);
+        fclose(cppfd);
+        fclose(hfd);
+        if (empty_cpp) {
+            FileName::ExtensionSet(&output_name, "cpp");
+            unlink(output_name.c_str());
+        }
+    }
+}
+
+void Compiler::PrintAllPkgErrors()
+{
+    int len = packages_.size();
+    for (int ii = len-1; ii >= 0; --ii) {
+        PrintPkgErrors(packages_[ii]);
+    }
+}
+
+void Compiler::PrintPkgErrors(Package *pkg)
+{
+    int         error_idx = 0;
+    const char  *error;
+
+    do {
+        error = pkg->GetError(error_idx++);
+        if (error != NULL) {
+            printf("\nERROR !! file %s: %s", pkg->fullpath_.c_str() ,error);
+        }
+    } while (error != NULL);
 }
 
 }

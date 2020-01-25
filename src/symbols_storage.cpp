@@ -13,9 +13,13 @@ IAstDeclarationNode *SymbolsStorage::FindDeclaration(const char *name)
 
 IAstDeclarationNode *SymbolsStorage::FindGlobalDeclaration(const char *name)
 {
-    auto search = globals_.find(name);
-    if (search != globals_.end()) {
-        return(search->second);
+    //auto search = globals_.find(name);
+    //if (search != globals_.end()) {
+    //    return(search->second);
+    //}
+    int position = globals_names_.LinearSearch(name);
+    if (position != -1) {
+        return(globals_nodes_[position]);
     }
     return(NULL);
 }
@@ -27,6 +31,31 @@ IAstDeclarationNode *SymbolsStorage::FindLocalDeclaration(const char *name)
         return(locals_nodes_[position]);
     }
     return(NULL);
+}
+
+IAstDeclarationNode *SymbolsStorage::EnumerateInnerDeclarations(int idx)
+{
+    int base;
+    int len = scopes_top_.size();
+    int top = locals_nodes_.size();
+
+    if (len == 0) {
+        base = 0;
+    } else {
+        base = scopes_top_[len - 1];
+    }
+    if (base + idx >= top) {
+        return(nullptr);
+    }
+    return(locals_nodes_[base + idx]);
+}
+
+IAstDeclarationNode *SymbolsStorage::EnumerateGlobalDeclarations(int idx)
+{
+    if (idx >= (int)globals_nodes_.size()) {
+        return(nullptr);
+    }
+    return(globals_nodes_[idx]);
 }
 
 bool SymbolsStorage::InsertName(const char *name, IAstDeclarationNode *declaration)
@@ -46,8 +75,11 @@ bool SymbolsStorage::InsertName(const char *name, IAstDeclarationNode *declarati
         locals_nodes_.push_back(declaration);
         locals_names_.AddName(name);
     } else {
-        globals_[name] = declaration;
+        globals_nodes_.push_back(declaration);
+        globals_names_.AddName(name);
+        //globals_[name] = declaration;
     }
+    return(true);
 }
 
 void SymbolsStorage::OpenScope(void)

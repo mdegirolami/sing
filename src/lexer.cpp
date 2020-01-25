@@ -23,33 +23,34 @@ TokenDesc keywords[] = {
     {TOKEN_FALSE, "false"},
     {TOKEN_VOID, "void"},
 
-    {TOKEN_PACKAGE, "package"},
-    {TOKEN_REQUIRES, "requires"},
+    { TOKEN_MUT, "mut"},
+    { TOKEN_REQUIRES, "requires" },
+    { TOKEN_NAMESPACE, "namespace" },
     {TOKEN_VAR, "var"},
     {TOKEN_CONST, "const"},
     {TOKEN_TYPE, "type"},
-    {TOKEN_MATRIX, "matrix"},
     {TOKEN_MAP, "map"},
     {TOKEN_WEAK, "weak"},
-    {TOKEN_INT8, "int8"},
-    {TOKEN_INT16, "int16"},
-    {TOKEN_INT32, "int32"},
-    {TOKEN_INT64, "int64"},
-    {TOKEN_UINT8, "uint8"},
-    {TOKEN_UINT16, "uint16"},
-    {TOKEN_UINT32, "uint32"},
-    {TOKEN_UINT64, "uint64"},
-    {TOKEN_FLOAT32, "float32"},
-    {TOKEN_FLOAT64, "float64"},
-    {TOKEN_COMPLEX64, "complex64"},
-    {TOKEN_COMPLEX128,"complex128"},
+    {TOKEN_INT8, "i8"},
+    {TOKEN_INT16, "i16"},
+    {TOKEN_INT32, "i32"},
+    {TOKEN_INT64, "i64"},
+    {TOKEN_UINT8, "u8"},
+    {TOKEN_UINT16, "u16"},
+    {TOKEN_UINT32, "u32"},
+    {TOKEN_UINT64, "u64"},
+    {TOKEN_FLOAT32, "f32"},
+    {TOKEN_FLOAT64, "f64"},
+    {TOKEN_COMPLEX64, "c64"},
+    {TOKEN_COMPLEX128,"c128"},
+    {TOKEN_INT, "int"},
+    {TOKEN_FLOAT, "float"},
+    {TOKEN_LET, "let"},
     {TOKEN_STRING, "string"},
-    {TOKEN_RUNE, "rune"},
     {TOKEN_BOOL, "bool"},
-    {TOKEN_SIZE_T, "size_t"},
     {TOKEN_ERRORCODE, "errcode"},
     
-    {TOKEN_FUNC, "func"},
+    {TOKEN_FUNC, "fn"},
     {TOKEN_PURE, "pure"},
     {TOKEN_IN, "in"},
     {TOKEN_OUT, "out"},
@@ -73,7 +74,7 @@ TokenDesc keywords[] = {
     {TOKEN_XOR, "xor"},
     {TOKEN_AS, "as"},
     {TOKEN_TYPESWITCH, "typeswitch"},
-    {TOKEN_CASE, "case"},
+    {TOKEN_SWITCH, "switch"},
     {TOKEN_DEFAULT, "default"},
     
     {TOKEN_PUBLIC, "public"},
@@ -81,11 +82,11 @@ TokenDesc keywords[] = {
     {TOKEN_ENUM, "enum"},
     {TOKEN_STRUCT, "struct"},
     {TOKEN_CLASS, "class"},
-    {TOKEN_FINALIZE, "finalize"},
+    { TOKEN_THIS, "this"},
     {TOKEN_INTERFACE, "interface"},
     {TOKEN_STATIC, "static"},
     {TOKEN_IMPLEMENTS, "implements"},
-    {TOKEN_BYPASS, "bypass"},
+    {TOKEN_BY, "by"},
     {TOKEN_TEMPLATE, "template"},
     {TOKEN_ARGUMENT, "argument"},
     {TOKEN_VOLATILE, "volatile"},
@@ -119,9 +120,7 @@ TokenDesc keywords[] = {
     {TOKEN_NOT, "~"},
     {TOKEN_AND, "&"},
     {TOKEN_OR, "|"},
-    //{TOKEN_GT, ">"},  // conflicts with brakets
     {TOKEN_GTE, ">="},
-    //{TOKEN_LT, "<"},
     {TOKEN_LTE, "<="},
     {TOKEN_DIFFERENT, "!="},
     {TOKEN_EQUAL, "=="},
@@ -143,56 +142,63 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_OR, "|=" },
 };
 
+int         Lexer::ash_table[TABLE_SIZE];
+int         Lexer::ash_next_item[TOKENS_COUNT];
+const char  *Lexer::token_to_string[TOKENS_COUNT];
+bool        Lexer::ash_table_inited = false;
+
 Lexer::Lexer()
 {
-    int         ii, ash;
-    int         num_tokens = sizeof(keywords) / sizeof(keywords[0]);
-    TokenDesc   *td;
-
     m_fd = NULL;
+    if (!ash_table_inited) {
+        int         ii, ash;
+        int         num_tokens = sizeof(keywords) / sizeof(keywords[0]);
+        TokenDesc   *td;
 
-    for (ii = 0; ii < TOKENS_COUNT; ++ii) {
-        ash_next_item[ii] = -1;
-        token_to_string[ii] = "";
-    }
-    for (ii = 0; ii < TABLE_SIZE; ++ii) {
-        ash_table[ii] = -1;
-    }
-
-    for (ii = 0; ii < num_tokens; ++ii) {
-
-        // token to string
-        td = &keywords[ii];
-        token_to_string[td->token] = td->token_string;
-
-        // string to ash
-        ash = ComputeAsh(td->token_string);
-
-        // ash to token
-        if (ash_table[ash] != -1) {
-            ash_next_item[td->token] = ash_table[ash];
-        } 
-        ash_table[ash] = td->token;
-    }
-
-    // just to know
-    /*
-    int max_len, len, jj
-
-    max_len = 1;
-    for (ii = 0; ii < TOKENS_COUNT; ++ii) {
-        len = 1;
-        jj = ash_next_item[ii];
-        while (jj != -1) {
-            jj = ash_next_item[jj];
-            ++len;
+        ash_table_inited = true;
+        for (ii = 0; ii < TOKENS_COUNT; ++ii) {
+            ash_next_item[ii] = -1;
+            token_to_string[ii] = "";
         }
-        if (len > max_len) {
-            max_len = len;
+        for (ii = 0; ii < TABLE_SIZE; ++ii) {
+            ash_table[ii] = -1;
         }
+
+        for (ii = 0; ii < num_tokens; ++ii) {
+
+            // token to string
+            td = &keywords[ii];
+            token_to_string[td->token] = td->token_string;
+
+            // string to ash
+            ash = ComputeAsh(td->token_string);
+
+            // ash to token
+            if (ash_table[ash] != -1) {
+                ash_next_item[td->token] = ash_table[ash];
+            } 
+            ash_table[ash] = td->token;
+        }
+
+        // just to know
+        /*
+        int max_len, len, jj
+
+        max_len = 1;
+        for (ii = 0; ii < TOKENS_COUNT; ++ii) {
+            len = 1;
+            jj = ash_next_item[ii];
+            while (jj != -1) {
+                jj = ash_next_item[jj];
+                ++len;
+            }
+            if (len > max_len) {
+                max_len = len;
+            }
+        }
+        ++max_len;  // place a breakpoint here
+        */
     }
-    ++max_len;  // place a breakpoint here
-    */
 }
 
 Lexer::~Lexer()
@@ -227,10 +233,16 @@ int Lexer::OpenFile(const char *filename)
 {
     m_fd = fopen(filename, "rb");
     if (m_fd == NULL) return(FAIL);
+    Init(m_fd);
+    return(0);
+}
+
+void Lexer::Init(FILE *fd)
+{
+    m_fd = fd;
     m_status = LS_REGULAR;
     m_curline = 0;          // as it reads the first line, advances to 1 (usually lines are numbered from 1)
     m_curcol = 0;
-    return(0);
 }
 
 void Lexer::CloseFile(void)
@@ -242,7 +254,8 @@ void Lexer::CloseFile(void)
 // all this decoding fuss to return a correct column position.
 int Lexer::GetNewLine(void)
 {
-    int ch;
+    int     ch;
+    bool    empty_lines = false;
 
     // skip empty lines
     m_curcol = 0;
@@ -284,14 +297,32 @@ int Lexer::GetNewLine(void)
                 }
             }
             ++m_curline;
+
+            if (m_tmp_line_buffer.length() == 0) {
+                empty_lines = true;
+            }
         }
 
         m_tmp_line_buffer.utf8_decode(&m_line_buffer);
 
         // pop the terminator
         m_line_buffer.pop_back();
+
+        if (IsEmptyLine(&m_line_buffer)) {
+            m_line_buffer.clear();
+            empty_lines = true;
+        }
     }
-    return(0);
+    return(empty_lines ? TOKEN_EMPTY_LINES : 0);
+}
+
+bool Lexer::IsEmptyLine(vector<int32_t> *line)
+{
+    // search for a valid character (non-blank, non-control)
+    for (int ii = 0; ii < (int)line->size(); ++ii) {
+        if ((*line)[ii] > ' ') return(false);
+    }
+    return(true);
 }
 
 Token Lexer::Advance(void)
@@ -300,11 +331,19 @@ Token Lexer::Advance(void)
 
     if (m_status == LS_EOF) return(m_curr_token);
     m_curr_token = TOKENS_COUNT;
+    m_curr_token_string = "";
+    m_curr_token_verbatim = "";
     while (m_curr_token == TOKENS_COUNT) {    // i.e. while not found/assigned
         if (m_curcol >= (int)m_line_buffer.size()) {
-            if (GetNewLine() == EOF) {
+            int retvalue = GetNewLine();
+            if (retvalue == EOF) {
                 m_curr_token = TOKEN_EOF;
                 m_status = LS_EOF;
+                return(m_curr_token);
+            } else if (retvalue == TOKEN_EMPTY_LINES) {
+                m_curr_token = TOKEN_EMPTY_LINES;
+                m_curr_token_row = m_curr_token_last_row = m_curline - 1;
+                m_curr_token_col = m_curr_token_last_col = 0;
                 return(m_curr_token);
             }
         }
@@ -312,10 +351,9 @@ Token Lexer::Advance(void)
         // optimism ! if we don't find a token gets overwritten on next iteration
         m_curr_token_row = m_curline;
         m_curr_token_col = m_curcol;
-        m_curr_token_string = "";
 
         ch = m_line_buffer[m_curcol++];
-        if (ch == '\'') {
+        if (ch == '\'') {                         // char constant unallowed. We just use one-char strings
             m_curr_token = TOKEN_LITERAL_UINT;
             ReadCharacterLiteral();
         } else if (ch == '\"') {
@@ -335,12 +373,13 @@ Token Lexer::Advance(void)
         }
     }
     if (m_curr_token != TOKEN_COMMENT) {
-        m_curr_token_verbatim = "";
         len = m_curcol - m_curr_token_col;
         if (len > 0) {
             m_curr_token_verbatim.utf8_encode(&m_line_buffer[m_curr_token_col], len);
         }
     }
+    m_curr_token_last_row = m_curline;
+    m_curr_token_last_col = m_curcol;
     return(m_curr_token);
 }
 
@@ -492,6 +531,19 @@ void Lexer::ReadDecimalLiteral(void)
             Error(LE_NUM_TOO_MANY_DIGITS, m_curcol);
         }
         ch = m_line_buffer[m_curcol++];
+
+        // check '_' : it must be preceeded/followed by a digit !
+        if (ch == '_') {
+
+            bool has_prev_and_next = m_curcol > 1 && m_curcol < (int)m_line_buffer.size();
+
+            if (!has_prev_and_next || !isdigit(m_line_buffer[m_curcol - 2]) || !isdigit(m_line_buffer[m_curcol])) {
+                --m_curcol;
+                Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+            }
+            continue;
+        }
+
         switch (state) {
         case NSM_INTEGER:
             if (ch >= '0' && ch <= '9') {
@@ -599,15 +651,21 @@ void Lexer::ReadDecimalLiteral(void)
 
     // classify and check the range
     buffer[dst_index] = 0;
-    if (decimal_point == dst_index && exponent_digits == 0 && !imaginary && strcmp(buffer, "18446744073709551616") < 0) {
-        m_curr_token = TOKEN_LITERAL_UINT;
-        return;
+    if (decimal_point == dst_index && exponent_digits == 0 && !imaginary) {
+        if (CompareIntRep(buffer, "18446744073709551616") < 0) {
+            m_curr_token = TOKEN_LITERAL_UINT;
+            return;
+        } else {
+            Error(LS_CONST_VALUE_TOO_BIG, (m_curcol + m_curr_token_col) >> 1);
+        }
     }
 
     // normalize fraction and check magnitude
     if (negative_exponent) exponent = -exponent;
     exponent += decimal_point - 1;  // leave just one digit before the point
-    if (exponent > 308 || exponent == 308 && strcmp(buffer, "17976931348623158") > 0) {
+
+    // NOTE: numbers are left-aligned, use strcmp instead of CompareIntRep
+    if (exponent > 308 || exponent == 308 && strcmp(buffer, "17976931348623158") > 0) { 
         Error(LS_CONST_VALUE_TOO_BIG, (m_curcol + m_curr_token_col) >> 1);
     }
     
@@ -623,7 +681,10 @@ uint64_t Lexer::ReadHexLiteral(void)
     int         digit, value;
     uint64_t    retval = 0;
 
+    int underscores = 1;    // can't start with an '_'
     for (digit = 0; digit < 17 && m_curcol < (int)m_line_buffer.size(); ++digit) {
+
+        // extract and examine a character
         value = m_line_buffer[m_curcol++];
         if (value >= '0' && value <= '9') {
             retval = (retval << 4) + value - '0';
@@ -631,14 +692,37 @@ uint64_t Lexer::ReadHexLiteral(void)
             retval = (retval << 4) + value + (10 - 'a');
         } else if (value >= 'A' && value <= 'F') {
             retval = (retval << 4) + value + (10 - 'A');
+        } else if (value == '_') {
+            if (underscores != 0) {
+                Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+            }
+            underscores = 1;
+            --digit;
         } else {
+
+            // any other character ends the number
             --m_curcol; // not part of the number
+
+            // 0 digits number ? !!!
             if (digit == 0) {
                 Error(LE_HEX_CONST_ERROR, m_curcol);
             }
+
+            // brake the loop to make the final checks and return
             break;
         }
+
+        // reset the double-_ check
+        if (value != '_') {
+            underscores = 0;
+        }
     }
+
+    // can't be in last position
+    if (value == '_') {
+        Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+    }
+
     if (digit == 17) {
         Error(LS_CONST_VALUE_TOO_BIG, m_curcol - 8);
     }
@@ -651,6 +735,7 @@ void Lexer::ReadName(void)
     int     numchars = ResidualCharacters();
     int     digit, ash;
     int32_t ch;
+    bool    allow_underscore = true;
 
     m_curr_token_string = "";
     m_curr_token_string += m_line_buffer[m_curcol++];
@@ -659,6 +744,14 @@ void Lexer::ReadName(void)
         if (isalpha(ch) || isdigit(ch) || ch == '_') {
             m_curr_token_string += ch;
             ++m_curcol;
+            if (ch == '_') {
+                if (!allow_underscore) {
+                    Error(LE_DOUBLE_UNDERSCORE, (m_curcol + m_curr_token_col) >> 1);
+                }
+                allow_underscore = false;
+            } else {
+                allow_underscore = true;
+            }
         } else {
             break;
         }
@@ -667,6 +760,12 @@ void Lexer::ReadName(void)
         ash = ComputeAsh(m_curr_token_string.c_str());
         m_curr_token = AshLookUp(ash, m_curr_token_string.c_str());
     } else {
+
+        // since more than one '_' in a row triggers an error, a single underscore is the only case of
+        // underscore-only symbol.
+        if (m_curr_token_string.size() == 1) {
+            Error(LE_ONLY_UNDERSCORE, (m_curcol + m_curr_token_col) >> 1);
+        }
         m_curr_token = TOKEN_NAME;
     }
 }
@@ -732,7 +831,7 @@ void Lexer::ReadComment(void)
     int     status = 0;
     int32_t ch;
 
-    m_curr_token_verbatim = "\\*";
+    m_curr_token_verbatim = "/*";
     while (depth > 0) {
         if (m_curcol == m_line_buffer.size()) {
             if (GetNewLine() == EOF) {
@@ -793,7 +892,10 @@ static const char *error_desc[] = {
     "Unexpected end of file",
     "Numeric literals must be terminated by blank or punctuation (except \'.\')",
     "Too many digits in number",
-    "Expected a digit"
+    "Expected a digit",
+    "Symbols with multiple neighboring _ characters are reserved",
+    "A symbol must have at least a character different from '_'",
+    "In numerics, underscores are allowed only between decimal/exadecimal digits"
 };
 
 void Lexer::Error(LexerError error, int column)

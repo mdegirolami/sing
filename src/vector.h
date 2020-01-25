@@ -229,6 +229,14 @@ public:
         }
     }
 
+    int find(T *element)
+    {
+        for (int ii = 0; ii < _count; ++ii) {
+            if (_first[ii] == *element) return(ii);
+        }
+        return(-1);
+    }
+
     // beware !! can use only for simple types (i.e.
     void sort_shallow_copy(URGH_SIZE_T start, URGH_SIZE_T end)
     {

@@ -152,6 +152,22 @@ URGH_SIZE_T  string::rfind(char cc) const
     return(-1);
 }
 
+void  string::erase_occurrencies_of(char cc)
+{
+    int scan, dst ,size;
+
+    if (cc == 0) return;
+    dst = 0;
+    size = _content.size();
+    for (scan = 0; scan < size; ++scan) {
+        int value = _content[scan];
+        if (value != cc) {
+            _content[dst++] = value;
+        }
+    }
+    _content.erase(dst, size);
+}
+
 string string::substr(URGH_SIZE_T first, URGH_SIZE_T last) const
 {
     string result;
@@ -217,10 +233,10 @@ void string::insert(int position, const string &toinsert)
     if (toinsert.length() < 1) return;
     if (position < 0) {
         position = 0;
-    } else if (position >= _content.size()) {
+    } else if (position >= (int)_content.size()) {
         position = _content.size() - 1;
     }
-    _content.insert_range(position, toinsert.length() - 1, toinsert.data());
+    _content.insert_range(position, toinsert.length(), toinsert.data());
 }
 
 void string::insert(int position, const char *toinsert)
@@ -229,7 +245,7 @@ void string::insert(int position, const char *toinsert)
     if (len < 1) return;
     if (position < 0) {
         position = 0;
-    } else if (position >= _content.size()) {
+    } else if (position >= (int)_content.size()) {
         position = _content.size() - 1;
     }
     _content.insert_range(position, len, toinsert);

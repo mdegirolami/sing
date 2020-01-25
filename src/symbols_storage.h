@@ -18,7 +18,10 @@ namespace std {
 namespace SingNames {
 
 class SymbolsStorage {
-    std::unordered_map<string, IAstDeclarationNode*>    globals_;
+    //std::unordered_map<string, IAstDeclarationNode*>    globals_;
+    NamesList                                           globals_names_;
+    vector<IAstDeclarationNode*>                        globals_nodes_;
+
     NamesList                                           locals_names_;
     vector<IAstDeclarationNode*>                        locals_nodes_;
     vector<int>                                         scopes_top_;
@@ -29,6 +32,9 @@ public:
     IAstDeclarationNode *FindDeclaration(const char *name);
     IAstDeclarationNode *FindGlobalDeclaration(const char *name);
     IAstDeclarationNode *FindLocalDeclaration(const char *name);
+
+    IAstDeclarationNode *EnumerateInnerDeclarations(int idx);
+    IAstDeclarationNode *EnumerateGlobalDeclarations(int idx);
 };
 
 } // namespace

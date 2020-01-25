@@ -41,6 +41,7 @@ public:
     void        setchar(URGH_SIZE_T pos, int cc);
     URGH_SIZE_T find(char cc) const;
     URGH_SIZE_T rfind(char cc) const;
+    void        erase_occurrencies_of(char cc);
     string      substr(URGH_SIZE_T index, URGH_SIZE_T len) const;
     URGH_SIZE_T begin(void) const { return(0); }
     URGH_SIZE_T end(void) const { return(_content.size() - 1); }

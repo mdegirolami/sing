@@ -6,69 +6,134 @@
 #include "numeric_value.h"
 #include "symbols_storage.h"
 #include "expression_attributes.h"
+#include "package.h"
 
 namespace SingNames {
 
-enum TypeSpecCheckMode {TSCM_STD, TSCM_RETVALUE, TSCM_FUNC_BODY};
+enum TypeSpecCheckMode {TSCM_STD, TSCM_INITEDVAR = 2, TSCM_RETVALUE = 4, TSCM_ARGUMENT};
+
+static const int TDF_INITEDVAR = 1;
+static const int TDF_RETVALUE = 2;
+static const int TDF_ALLOWIF = 4;
+static const int TDF_ALLOW_FORWARD = 8;
+
+enum class ExpressionUsage {WRITE, READ, NONE, BOTH};
 
 class AstChecker : public ITypedefSolver {
-    AstFile         *root_;
-    int             current_;
-    NamesList       errors_;
-    SymbolsStorage  symbols_;
-    int             loops_nesting;
-    ExpressionAttributes return_fake_variable_;
+    vector<Package*>        *packages_;
+    AstFile                 *root_;         // not owned !!!
+    NamesList               *errors_;       // not owned !!!
+    SymbolsStorage          *symbols_;      // not owned !!!
+    Options                 *options_;      // not owned !!!
+    NamesList               usage_errors_;
+
+    // info about the currently checked declaration
+    int                     current_;
+    bool                    current_is_public_;
+    int                     loops_nesting;
+
+    // info about the currently checked function block
+    ExpressionAttributes    return_fake_variable_;
+    bool                    in_function_block_;
+    FuncDeclaration         *current_function_;
+    AstClassType            *current_class_;
+    bool                    this_was_accessed_;
 
     // tree parser
     void CheckVar(VarDeclaration *declaration);
-    void CheckConst(ConstDeclaration *declaration);
+    void CheckMemberVar(VarDeclaration *declaration);
     void CheckType(TypeDeclaration *declaration);
     void CheckFunc(FuncDeclaration *declaration);
+    void CheckMemberFunc(FuncDeclaration *declaration);
+    void CheckFuncBody(FuncDeclaration *declaration);
 
-    bool CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode);
+    bool CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode, bool is_a_pointer = false);
     bool CheckIniter(IAstTypeNode *type_spec, IAstNode *initer);
-    bool CheckArrayIniter(AstArrayOrMatrixType *type_spec, int array_dimension, IAstNode *initer);
+    bool CheckArrayIniter(AstArrayType *type_spec, IAstNode *initer);
+    void CheckEnum(AstEnumType *declaration);
+    void CheckInterface(AstInterfaceType *declaration);
+    void CheckClass(AstClassType *declaration);
+    void CheckMemberFuncDeclaration(FuncDeclaration *declaration);
 
-    void CheckBlock(AstBlock *block);
-    void CheckAssignment(AstAssignment *node);
+    void CheckBlock(AstBlock *block, bool open_scope);
+    AstNodeType CheckStatement(IAstNode *statement);
     void CheckUpdateStatement(AstUpdate *node);
     void CheckIncDec(AstIncDec *node);
     void CheckWhile(AstWhile *node);
     void CheckIf(AstIf *node);
     void CheckFor(AstFor *node);
+    void CheckSwitch(AstSwitch *node);
+    void CheckTypeSwitch(AstTypeSwitch *node);
     void CheckSimpleStatement(AstSimpleStatement *node);
     void CheckReturn(AstReturn *node);
 
-    void CheckExpression(IAstExpNode *node, ExpressionAttributes *attr);
-    
-    void CheckIndices(AstIndexing *node, ExpressionAttributes *attr);
+    void CheckExpression(IAstExpNode *node, ExpressionAttributes *attr, ExpressionUsage usage);
+
+    void CheckIndices(AstIndexing *node, ExpressionAttributes *attr, ExpressionUsage usage);
     void CheckFunCall(AstFunCall *node, ExpressionAttributes *attr);
     void CheckBinop(AstBinop *node, ExpressionAttributes *attr);
     void CheckUnop(AstUnop *node, ExpressionAttributes *attr);
-    void CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr);
+    void CheckDotOp(AstBinop *node, ExpressionAttributes *attr, ExpressionUsage usage, bool dotop_left);
+    void CheckMemberAccess(AstExpressionLeaf *accessed, vector<FuncDeclaration*> *member_functions, vector<VarDeclaration*> *member_vars, ExpressionAttributes *attr, ExpressionUsage usage);
+    void CheckDotOpLeftLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage);
+    void CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage);
+    void CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop);
+
+    bool VerifyIndexConstness(IAstExpNode *node);
+    bool VerifyBinopForIndexConstness(AstBinop *node);
+    bool VerifyUnopForIndexConstness(AstUnop *node);
+    bool VerifyLeafForIndexConstness(AstExpressionLeaf *node);
+
+    bool IsCompileTimeConstant(IAstExpNode *node);
+    bool IsBinopCompileTimeConstant(AstBinop *node);
+    bool IsUnopCompileTimeConstant(AstUnop *node);
+    bool IsLeafCompileTimeConstant(AstExpressionLeaf *node);
+
+    void CheckNameConflictsInIfFunctions(AstNamedType *typespec,
+        vector<VarDeclaration*> *member_vars,
+        vector<FuncDeclaration*> *member_functions,
+        vector<AstNamedType*> *origins,
+        int first_inherited_fun);
 
     // symbols
     void InsertName(const char *name, IAstDeclarationNode *declaration);
-    IAstDeclarationNode *FindDeclaration(const char *name, bool search_forward = true);
-    bool FindNamespace(const char *name);               // true if found
+    IAstDeclarationNode *SearchDeclaration(const char *name, IAstNode *location);
+    int SearchAndLoadPackage(const char *name, IAstNode *location, const char *not_found_error_string);
+    IAstDeclarationNode *SearchExternDeclaration(int package_index, const char *name, bool *is_private);
 
-    bool IsALocalVariable(IAstExpNode *node);
-    bool CanAssign(ExpressionAttributes *dst, ExpressionAttributes *src);
-    bool CompareTypeTrees(IAstTypeNode *dst_tree, IAstTypeNode *src_tree);
-    IAstTypeNode *SolveTypedefs(IAstTypeNode *begin);
-    bool CompareTypesForAssignment(IAstTypeNode *dst, IAstTypeNode *src);
+    bool FlagLocalVariableAsPointed(IAstExpNode *node);
+    bool IsGoodForIndex(IAstDeclarationNode *declaration);
+    //bool IsGoodForIterator(IAstDeclarationNode *declaration, IAstTypeNode *type);
+    bool IsGoodStringIterator(IAstDeclarationNode *declaration);
+    bool IsGoodIntegerIterator(IAstDeclarationNode *declaration, Token type);
+    bool CanAssign(ExpressionAttributes *dst, ExpressionAttributes *src, IAstNode *err_location);
+    bool AreInterfaceAndClass(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
+    bool NodeIsConcrete(IAstTypeNode *tt);
+    bool BlockReturnsExplicitly(AstBlock *block);
+    void CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location);
+    void CheckIfFunCallIsLegal(AstFuncType *func, IAstNode *location);
+    void SetUsageFlags(VarDeclaration *var, ExpressionUsage usage);
+    VarDeclaration *GetIteratedVar(IAstExpNode *node);
+    void CheckInnerBlockVarUsage(void);
+    void CheckPrivateDeclarationsUsage(void);
+    void CheckPrivateVarUsage(VarDeclaration *var);
+    void CheckPrivateFuncUsage(FuncDeclaration *func);
+    void CheckPrivateTypeUsage(TypeDeclaration *tdec);
+    void CheckMemberFunctionsDeclarationsPresence(void);
+    bool IsArgTypeEligibleForAnIniter(IAstTypeNode *type);
+    AstClassType *GetLocalClassTypeDeclaration(const char *classname);
+    FuncDeclaration *SearchFunctionInClass(AstClassType *the_class, const char *name);
 
-    bool FailIfTypeDeclaration(IAstNode *node);         // true if fails
-    bool FailIfNotTypeDeclaration(IAstNode *node);      // true if fails
-    void DupSymbolError(IAstNode *old_declaration, IAstNode *new_declaration);
-    void Error(const char *message);
+    void Error(const char *message, IAstNode *location, bool use_last_location = false);
+    void UsageError(const char *message, IAstNode *location, bool use_last_location = false);
 public:
     //AstChecker() {}
-    bool CheckAll(AstFile *root);    // returns false on error
+    bool CheckAll(vector<Package*> *packages, Options *options, int pkg_index, bool fully_parsed);    // returns false on error
 
     // ITypedefSolver interface
-    IAstTypeNode *TypeFromTypeName(const char *name);
-    virtual bool CheckArrayIndices(AstArrayOrMatrixType *array) = 0;
+    virtual bool            CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode mode);
+    virtual TypeMatchResult AreTypeTreesCompatible(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
+    virtual IAstTypeNode    *SolveTypedefs(IAstTypeNode *begin);
 };
 
 }
