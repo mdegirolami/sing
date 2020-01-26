@@ -15,6 +15,7 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
     symbols_ = &pkg->symbols_;
     options_ = options;
     in_function_block_ = false;
+    in_class_declaration_ = false;
     current_function_ = nullptr;
     current_class_ = nullptr;
     usage_errors_.Reset();
@@ -232,8 +233,7 @@ void AstChecker::CheckMemberVar(VarDeclaration *declaration)
 
 void AstChecker::CheckType(TypeDeclaration *declaration)
 {
-    // note: the last parameter states that we can forward refer classes and interfaces
-    CheckTypeSpecification(declaration->type_spec_, TSCM_STD, true);
+    CheckTypeSpecification(declaration->type_spec_, TSCM_STD);
     InsertName(declaration->name_.c_str(), declaration);
 }
 
@@ -339,7 +339,7 @@ void AstChecker::CheckFuncBody(FuncDeclaration *declaration)
     }
 }
 
-bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode, bool is_a_pointer)
+bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode)
 {
     bool        success = true;
     AstNodeType node_type = type_spec->GetType();
@@ -391,26 +391,17 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                 AstNamedType *node = (AstNamedType*)type_spec;
             } else {
                 IAstDeclarationNode *decl = SearchDeclaration(name, node);
-                if (decl == NULL && is_a_pointer) {
-
-                    // forward referencing a class
-                    for (int ii = current_; ii < (int)root_->declarations_.size(); ++ii) {
-                        IAstDeclarationNode *declaration = root_->declarations_[current_];
-                        if (declaration->GetType() == ANT_TYPE) {
-                            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
-                            AstNodeType spec_type = tdecl->type_spec_->GetType();
-                            if ((spec_type == ANT_CLASS_TYPE || spec_type == ANT_INTERFACE_TYPE) && strcmp(tdecl->name_.c_str(), name) == 0) {
-                                decl = declaration;
-                                tdecl->SetForwardReferred();
-                            }
-                        }
-                    }
+                if (decl == NULL && mode == TSCM_REFERENCED && in_class_declaration_) {
+                    decl = ForwardSearchDeclaration(name, node);
                 }
-                if (decl == NULL) {
+                if (decl == nullptr) {
                     Error("Undefined type", type_spec);
                     success = false;
                 } else if (decl->GetType() != ANT_TYPE) {
                     Error("Expected a type name", type_spec);
+                    success = false;
+                } else if (mode != TSCM_REFERENCED && !NodeIsConcrete(((TypeDeclaration*)decl)->type_spec_)) {
+                    Error("An Interface type is not allowed here (only concrete types)", type_spec);
                     success = false;
                 } else {
                     ((AstNamedType*)type_spec)->wp_decl_ = (TypeDeclaration*)decl;
@@ -425,7 +416,7 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
             if (!CheckArrayIndicesInTypes(node, mode)) {
                 success = false;
             }
-            if (!CheckTypeSpecification(node->element_type_, mode)) {
+            if (!CheckTypeSpecification(node->element_type_, mode == TSCM_INITEDVAR ? TSCM_INITEDVAR : TSCM_STD)) {
                 success = false;
             }
         }
@@ -433,10 +424,10 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
     case ANT_MAP_TYPE:
         {
             AstMapType *node = (AstMapType*)type_spec;
-            if (!CheckTypeSpecification(node->key_type_, mode)) {
+            if (!CheckTypeSpecification(node->key_type_, TSCM_STD)) {
                 success = false;
             }
-            if (!CheckTypeSpecification(node->returned_type_, mode)) {
+            if (!CheckTypeSpecification(node->returned_type_, TSCM_STD)) {
                 success = false;
             }
         }
@@ -444,7 +435,7 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
     case ANT_POINTER_TYPE:
         {
             AstPointerType *node = (AstPointerType*)type_spec;
-            if (!CheckTypeSpecification(node->pointed_type_, TSCM_STD, true)) {
+            if (!CheckTypeSpecification(node->pointed_type_, TSCM_REFERENCED)) {
                 success = false;
             }
         }
@@ -459,7 +450,7 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                 if (arg->type_spec_ == NULL) {
                     Error("Unspecified type", arg);
                     success = false;
-                } else if (!CheckTypeSpecification(arg->type_spec_, TSCM_ARGUMENT, true)) {
+                } else if (!CheckTypeSpecification(arg->type_spec_, TSCM_REFERENCED)) {
                     success = false;
                 } else {
                     if (arg->initer_ != NULL) {
@@ -505,14 +496,12 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
         CheckEnum((AstEnumType*)type_spec);
         break;
     case ANT_INTERFACE_TYPE:
-        if (!is_a_pointer) {
-            Error("An Interface type is not allowed here (only concrete types)", type_spec);
-            return(false);
-        }
         CheckInterface((AstInterfaceType*)type_spec);
         break;
     case ANT_CLASS_TYPE:
+        in_class_declaration_ = true;
         CheckClass((AstClassType*)type_spec);
+        in_class_declaration_ = false;
         break;
     default:
         break;
@@ -1727,6 +1716,33 @@ IAstDeclarationNode *AstChecker::SearchDeclaration(const char *name, IAstNode *l
         Error("A public declaration cannot refer a private symbol", location);
     }
     return(node);
+}
+
+IAstDeclarationNode *AstChecker::ForwardSearchDeclaration(const char *name, IAstNode *location)
+{
+    // only allowed inside a class declaration
+    //IAstDeclarationNode *referring_decl = root_->declarations_[current_];
+    //if (referring_decl->GetType() != ANT_TYPE) return(nullptr);
+    //IAstTypeNode *referring_type = ((TypeDeclaration*)referring_decl)->type_spec_;
+    //if (referring_type->GetType() != ANT_CLASS_TYPE) return(nullptr);
+
+    // forward referencing a class
+    for (int ii = current_; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[current_];
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            AstNodeType spec_type = tdecl->type_spec_->GetType();
+            if (spec_type == ANT_CLASS_TYPE && strcmp(tdecl->name_.c_str(), name) == 0) {
+                if (!declaration->IsPublic() && current_is_public_) {
+                    Error("A public declaration cannot refer a private symbol", location);
+                    return(nullptr);
+                }
+                tdecl->SetForwardReferred(current_is_public_ ? FRT_PUBLIC : FRT_PRIVATE);
+                return(declaration);
+            }
+        }
+    }
+    return(nullptr);
 }
 
 int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const char *not_found_error_string)

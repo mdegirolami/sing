@@ -10,12 +10,11 @@
 
 namespace SingNames {
 
-enum TypeSpecCheckMode {TSCM_STD, TSCM_INITEDVAR = 2, TSCM_RETVALUE = 4, TSCM_ARGUMENT};
-
-static const int TDF_INITEDVAR = 1;
-static const int TDF_RETVALUE = 2;
-static const int TDF_ALLOWIF = 4;
-static const int TDF_ALLOW_FORWARD = 8;
+enum TypeSpecCheckMode {
+    TSCM_STD,
+    TSCM_INITEDVAR,     // allow []
+    TSCM_RETVALUE,      // allow void
+    TSCM_REFERENCED};   // allow class forward ref (if in a class) and interfaces
 
 enum class ExpressionUsage {WRITE, READ, NONE, BOTH};
 
@@ -38,6 +37,7 @@ class AstChecker : public ITypedefSolver {
     FuncDeclaration         *current_function_;
     AstClassType            *current_class_;
     bool                    this_was_accessed_;
+    bool                    in_class_declaration_;
 
     // tree parser
     void CheckVar(VarDeclaration *declaration);
@@ -47,7 +47,7 @@ class AstChecker : public ITypedefSolver {
     void CheckMemberFunc(FuncDeclaration *declaration);
     void CheckFuncBody(FuncDeclaration *declaration);
 
-    bool CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode, bool is_a_pointer = false);
+    bool CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode mode);
     bool CheckIniter(IAstTypeNode *type_spec, IAstNode *initer);
     bool CheckArrayIniter(AstArrayType *type_spec, IAstNode *initer);
     void CheckEnum(AstEnumType *declaration);
@@ -98,6 +98,7 @@ class AstChecker : public ITypedefSolver {
     // symbols
     void InsertName(const char *name, IAstDeclarationNode *declaration);
     IAstDeclarationNode *SearchDeclaration(const char *name, IAstNode *location);
+    IAstDeclarationNode *ForwardSearchDeclaration(const char *name, IAstNode *location);
     int SearchAndLoadPackage(const char *name, IAstNode *location, const char *not_found_error_string);
     IAstDeclarationNode *SearchExternDeclaration(int package_index, const char *name, bool *is_private);
 

@@ -99,6 +99,8 @@ enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can a
                          FOR_EQUALITY,              // compare 'this' and src_tree. Just ignores very secondary stuff. (this is the stricter !!)
                          FOR_REFERENCING};          // true if 'this' can be passed as argument to a function whose argument is an output declared as src_tree.
 
+enum ForwardReferenceType {FRT_NONE, FRT_PRIVATE, FRT_PUBLIC};
+
 class IAstTypeNode : public IAstNode {
 public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode) = 0;    // shallow compare !!
@@ -685,8 +687,8 @@ public:
     PositionInfo    pos_;
     bool            is_public_;
 
-    bool            is_used_;             // annotations
-    bool            is_forward_referred_;
+    bool                    is_used_;             // annotations
+    ForwardReferenceType    forward_referral_;
 
     virtual bool IsPublic(void) { return(is_public_); }
     virtual void SetPublic(bool value) { is_public_ = value; }
@@ -694,11 +696,11 @@ public:
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~TypeDeclaration() { if (type_spec_ != NULL) delete type_spec_; }
-    TypeDeclaration(const char *name) : name_(name), type_spec_(NULL), is_public_(false), is_used_(false), is_forward_referred_(false) {}
+    TypeDeclaration(const char *name) : name_(name), type_spec_(NULL), is_public_(false), is_used_(false), forward_referral_(FRT_NONE) {}
     virtual AstNodeType GetType(void) { return(ANT_TYPE); }
     void SetType(IAstTypeNode *node) { type_spec_ = node; }
     void SetUsed(void) { is_used_ = true; }
-    void SetForwardReferred(void) { is_forward_referred_ = true; }
+    void SetForwardReferred(ForwardReferenceType mode) { forward_referral_ = mode; }
 };
 
 class FuncDeclaration : public IAstDeclarationNode
