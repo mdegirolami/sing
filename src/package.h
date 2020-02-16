@@ -5,6 +5,7 @@
 #include "ast_nodes.h"
 #include "symbols_storage.h"
 #include "options.h"
+#include "helpers.h"
 
 namespace SingNames {
 
@@ -13,9 +14,9 @@ enum class PkgStatus { UNLOADED, ERROR, HEADER_ONLY, FOR_REFERENCIES, FULL };
 
 class Package {
 public:
+    ErrorList       errors_;
     AstFile         *root_;
     SymbolsStorage  symbols_;
-    NamesList       errors_;
     string          fullpath_;      // inclusive of search path
     PkgStatus       status_;
 
@@ -24,9 +25,10 @@ public:
 
     void Init(const char *filename);
     bool Load(PkgStatus wanted_status);
-    const char *GetError(int index) { return(errors_.GetName(index)); }
-    bool HasErrors(void) { return(errors_.Size() > 0); }
+    const char *GetError(int index);
+    bool HasErrors(void) { return(errors_.NumErrors() > 0); }
     void SetError(void) { status_ = PkgStatus::ERROR; }
+    void SortErrors(void) { errors_.SortByRow(); }
 };
 
 } // namespace

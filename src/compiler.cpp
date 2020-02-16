@@ -152,6 +152,7 @@ void Compiler::PrintPkgErrors(Package *pkg)
     int         error_idx = 0;
     const char  *error;
 
+    pkg->SortErrors();
     do {
         error = pkg->GetError(error_idx++);
         if (error != NULL) {

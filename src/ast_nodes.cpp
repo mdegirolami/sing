@@ -100,7 +100,14 @@ bool AstNamedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
     AstNamedType *other = (AstNamedType*)src_tree;
-    return(name_ == other->name_ && next_component->IsCompatible(other->next_component, mode));
+    if (name_ != other->name_) return(false);
+    if (next_component == nullptr || other->next_component == nullptr) {
+        if (next_component != nullptr || other->next_component != nullptr) {
+            return(false);
+        }
+        return(true);
+    }
+    return(next_component->IsCompatible(other->next_component, mode));
 }
 
 int AstNamedType::SizeOf(void)
@@ -192,9 +199,11 @@ bool AstInterfaceType::HasInterface(AstInterfaceType *intf)
         while (nt != nullptr && nt->wp_decl_ != nullptr && nt->wp_decl_->type_spec_ != nullptr) {
             IAstTypeNode *node = nt->wp_decl_->type_spec_;
             if (node->GetType() == ANT_INTERFACE_TYPE) {
-                if (((AstInterfaceType*)node)->HasInterface(intf)) {
+                AstInterfaceType *found_if = (AstInterfaceType*)node;
+                if (found_if == intf || found_if->HasInterface(intf)) {
                     return(true);
                 }
+                nt = nullptr;
             } else if (node->GetType() == ANT_NAMED_TYPE) {
                 nt = (AstNamedType*)node;
             } else {
@@ -225,9 +234,11 @@ bool AstClassType::HasInterface(AstInterfaceType *intf)
         while (nt != nullptr && nt->wp_decl_ != nullptr && nt->wp_decl_->type_spec_ != nullptr) {
             IAstTypeNode *node = nt->wp_decl_->type_spec_;
             if (node->GetType() == ANT_INTERFACE_TYPE) {
-                if (((AstInterfaceType*)node)->HasInterface(intf)) {
+                AstInterfaceType *found_if = (AstInterfaceType*)node;
+                if (found_if == intf || found_if->HasInterface(intf)) {
                     return(true);
                 }
+                nt = nullptr;
             } else if (node->GetType() == ANT_NAMED_TYPE) {
                 nt = (AstNamedType*)node;
             } else {

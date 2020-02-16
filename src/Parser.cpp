@@ -17,7 +17,7 @@ void Parser::Init(Lexer *lexer)
     m_lexer = lexer;
 }
 
-AstFile *Parser::ParseAll(NamesList *errors, bool for_reference)
+AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
 {
     has_errors_ = on_error_ = false;
     errors_ = errors;
@@ -369,6 +369,7 @@ TypeDeclaration *Parser::ParseInterface(void)
                     RecordPosition(fun);
                     fun->SetNames(m_lexer->CurrTokenString(), "");
                     fun->SetMuting(is_mutable);
+                    fun->SetPublic(true);
                     Advance();
                     fun->AddType(ParseFunctionType(false));
                     UpdateEndPosition(fun);
@@ -1773,18 +1774,19 @@ void Parser::Error(const char *message)
 
 void Parser::SetError(const char *message, int row, int column)
 {
-    char fullmessage[600];
+    //char fullmessage[600];
 
     // errors happening while trying to recover are ignored.
     if (on_error_) {
         return;
     }
-    if (strlen(message) > 512) {
-        errors_->AddName(message);
-    } else {
-        sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, column, message);
-        errors_->AddName(fullmessage);
-    }
+    errors_->AddError(message, row, column);
+    //if (strlen(message) > 512) {
+    //    errors_->AddName(message);
+    //} else {
+    //    sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, column, message);
+    //    errors_->AddName(fullmessage);
+    //}
     has_errors_ = true;
     on_error_ = true;
 }

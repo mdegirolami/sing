@@ -250,7 +250,7 @@ bool NamesList::IsEqualTo(NamesList *other)
     return (_indices.isequal(other->_indices) && _names.isequal(other->_names));
 }
 
-void NamesList::CopyFrom(NamesList *other)
+void NamesList::CopyFrom(const NamesList *other)
 {
     _names = other->_names;
     _indices = other->_indices;

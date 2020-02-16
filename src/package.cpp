@@ -50,7 +50,7 @@ bool Package::Load(PkgStatus wanted_status)
     fd = fopen(fullpath_.c_str(), "rb");
 
     if (fd == nullptr) {
-        errors_.AddName("Can't open file");
+        errors_.AddError("Can't open file", -1, -1);
         return(false);
     }
 
@@ -66,6 +66,22 @@ bool Package::Load(PkgStatus wanted_status)
     }
     status_ = wanted_status;
     return(true);
+}
+
+const char *Package::GetError(int index)
+{
+    const char *message;
+    int         row, col;
+    static char fullmessage[1024];
+
+    message = errors_.GetError(index, &row, &col);
+    if (message == nullptr) return(nullptr);
+    if (row >= 0 && col >= 0) {
+        sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, col, message);
+    } else {
+        return(message);
+    }
+    return(fullmessage);
 }
 
 } // namespace

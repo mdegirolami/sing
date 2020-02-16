@@ -31,7 +31,7 @@ public:
     int  BinarySearchRangeWithPrefix(int &index, const char *prefix);   // returns the number of matches
     int  LinearSearch(const char *name);
     bool IsEqualTo(NamesList *other);
-    void CopyFrom(NamesList *other);
+    void CopyFrom(const NamesList *other);
 };
 
 }

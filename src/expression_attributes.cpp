@@ -56,7 +56,7 @@ Token ExpBase2TokenTypes(ExpBaseTypes basetype)
 ExpressionAttributes::ExpressionAttributes()
 {
     exp_type_ = exp_pointed_type_ = BT_ERROR;
-    type_tree_ = original_tree_ = NULL;
+    type_tree_ = original_tree_ = nullptr;
     is_writable_ = false;
     is_a_variable_ = false;
     value_is_valid_ = false;
@@ -65,7 +65,7 @@ ExpressionAttributes::ExpressionAttributes()
 
 void ExpressionAttributes::InitWithTree(IAstTypeNode *tree, bool is_a_variable, bool is_writable, ITypedefSolver *solver)
 {
-    exp_type_ = tree == NULL ? BT_ERROR : BT_TREE;
+    exp_type_ = tree == nullptr ? BT_ERROR : BT_TREE;
     type_tree_ = original_tree_ = tree;
     is_a_variable_ = is_a_variable;
     is_writable_ = is_writable;
@@ -153,7 +153,7 @@ bool ExpressionAttributes::InitWithLiteral(Token literal_type, const char *value
         value_is_valid_ = is_a_literal_ = true;
         break;
     }
-    type_tree_ = original_tree_ = NULL;
+    type_tree_ = original_tree_ = nullptr;
     is_a_variable_ = is_writable_ = false;
     return(true);
 }
@@ -161,7 +161,7 @@ bool ExpressionAttributes::InitWithLiteral(Token literal_type, const char *value
 void ExpressionAttributes::InitWithInt32(int size)
 {
     exp_type_ = BT_INT32;
-    type_tree_ = original_tree_ = NULL;
+    type_tree_ = original_tree_ = nullptr;
     is_a_variable_ = is_writable_ = false;
     value_is_valid_ = is_a_literal_ = true;
     value_.InitFromInt32(size);
@@ -177,12 +177,12 @@ bool ExpressionAttributes::ApplyTheIndirectionOperator(ITypedefSolver *solver)
     }
 
     // or a pointer
-    if (exp_type_ != BT_TREE || type_tree_ == NULL || type_tree_->GetType() != ANT_POINTER_TYPE) {
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || type_tree_->GetType() != ANT_POINTER_TYPE) {
         return(false);
     }
     AstPointerType *pointer_decl = (AstPointerType*)type_tree_;
     IAstTypeNode *newtree = pointer_decl->pointed_type_;
-    if (newtree == NULL) return(false);
+    if (newtree == nullptr) return(false);
     InitWithTree(newtree, true, !pointer_decl->isconst_, solver);
     return(true);
 }
@@ -191,7 +191,7 @@ void ExpressionAttributes::Normalize(ITypedefSolver *solver)
 {
     while (exp_type_ == BT_TREE) {
         type_tree_ = solver->SolveTypedefs(type_tree_);
-        if (type_tree_ == NULL) {
+        if (type_tree_ == nullptr) {
             exp_type_ = BT_ERROR;
         } else {
             AstNodeType nodetype = type_tree_->GetType();
@@ -243,7 +243,7 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
     // if not on a string must operate on a number (NOTE: relationals and booleans are processed by other routines).
     if ((exp_type_ & BT_ALL_THE_NUMBERS) == 0 || (right_type & BT_ALL_THE_NUMBERS) == 0) {
         if (operation == TOKEN_PLUS) {
-            *error = "Operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range";
+            *error = "Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range";
         } else if (operation == TOKEN_AND || operation == TOKEN_OR) {
             *error = "Arithmetic '&' and '|' operands must be integer numbers.";
         } else {
@@ -524,6 +524,12 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ExpressionAttributes *a
         return(true);
     }
     if (IsEnum() && attr_right->IsEnum()) {
+        if (!type_tree_->IsCompatible(attr_right->type_tree_, FOR_EQUALITY)) {
+            *error = "You can't compare two enums of different type";
+            exp_type_ = BT_ERROR;
+            return(false);
+        }
+        exp_type_ = BT_BOOL;
         return(true);
     }
     *error = "You can only compare two numbers, enums, strings or bools (the latter for equality only)";
@@ -593,7 +599,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
         assert(false);
         break;                      // do nothing. in case of 'sizeof', attr is reinited with InitWithInt32().
     case TOKEN_DIMOF:
-        if (exp_type_ != BT_TREE || type_tree_ == NULL || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
+        if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
             *error = "You can apply the dimof operator only to objects of type 'map' or 'array'";
             exp_type_ = BT_ERROR;
         } else {
@@ -733,7 +739,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
     if (exp_type_ == BT_ERROR) {
         return(true);
     }
-    if (exp_type_ != BT_TREE || type_tree_ == NULL || type_tree_->GetType() != ANT_FUNC_TYPE) {
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || type_tree_->GetType() != ANT_FUNC_TYPE) {
         *error = "You can apply an argument list only to an object of type 'function'";
         exp_type_ = BT_ERROR;
         return(false);
@@ -750,8 +756,8 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         ExpressionAttributes *argvalue_attr = &(*attr_args)[ii];    // of actual argument expressions
         ExpressionAttributes argdecl_attr;                          // of a fake expression where we pretend the formal argument is a variable.
 
-        if (argvalue == NULL) {
-            if (argdecl->initer_ == NULL) {
+        if (argvalue == nullptr) {
+            if (argdecl->initer_ == nullptr) {
                 sprintf(errorbuf, "Argument %d is not specified and has no default value", ii + 1);
                 *error = errorbuf;
                 return(false);
@@ -759,7 +765,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             continue;
         }
 
-        // if we are here argvalue != NULL and argvalue_attr is inited.
+        // if we are here argvalue != nullptr and argvalue_attr is inited.
         // this check should never fail. (if an expression fails yhis function shouldn't be called.
         if (argvalue_attr->exp_type_ == BT_ERROR) {
             sprintf(errorbuf, "Argument %d has a wrong expression", ii + 1);
@@ -794,7 +800,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             ITypedefSolver::TypeMatchResult typematch = ITypedefSolver::KO;
             if (argvalue_attr->exp_type_ == argdecl_attr.exp_type_) {
                 if (argvalue_attr->exp_type_ == BT_TREE) {
-                    typematch = solver->AreTypeTreesCompatible(argvalue_attr->type_tree_, argdecl->type_spec_, FOR_REFERENCING);
+                    typematch = solver->AreTypeTreesCompatible(argdecl->type_spec_, argvalue_attr->type_tree_, FOR_REFERENCING);
                 } else {
                     typematch = ITypedefSolver::OK;
                 }
@@ -815,7 +821,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         return(false);
     }
     for (; ii < (int)typedesc->arguments_.size(); ++ii) {
-        if (typedesc->arguments_[ii]->initer_ == NULL) {
+        if (typedesc->arguments_[ii]->initer_ == nullptr) {
             sprintf(errorbuf, "Argument %d is not specified and has no default value", ii + 1);
             *error = errorbuf;
             return(false);
@@ -827,7 +833,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
 
 AstFuncType *ExpressionAttributes::GetFunCallType(void) const
 {
-    if (exp_type_ == BT_ERROR || exp_type_ != BT_TREE || type_tree_ == NULL || type_tree_->GetType() != ANT_FUNC_TYPE) {
+    if (exp_type_ == BT_ERROR || exp_type_ != BT_TREE || type_tree_ == nullptr || type_tree_->GetType() != ANT_FUNC_TYPE) {
         return(nullptr);
     }
     return((AstFuncType*)type_tree_);
@@ -839,11 +845,11 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
     value_is_valid_ = false;
     is_a_literal_ = false;
 
-    *map_typedesc = NULL;
+    *map_typedesc = nullptr;
     if (exp_type_ == BT_ERROR) {
         return(true);
     }
-    if (exp_type_ != BT_TREE || type_tree_ == NULL || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
         *error = "You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)";
         exp_type_ = BT_ERROR;
         return(false);
@@ -918,7 +924,7 @@ bool ExpressionAttributes::TakeAddress(void)
 
 IAstTypeNode *ExpressionAttributes::GetIteratorType(void) const
 {
-    if (exp_type_ != BT_TREE || type_tree_ == NULL || !is_a_variable_) return(NULL);
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || !is_a_variable_) return(nullptr);
     switch (type_tree_->GetType()) {
     case ANT_ARRAY_TYPE:
         return(((AstArrayType*)type_tree_)->element_type_);
@@ -927,7 +933,7 @@ IAstTypeNode *ExpressionAttributes::GetIteratorType(void) const
     default:
         break;
     }
-    return(NULL); 
+    return(nullptr); 
 }
 
 bool ExpressionAttributes::GetIntegerIteratorType(Token *ittype, ExpressionAttributes* low, ExpressionAttributes *high, ExpressionAttributes *step)
@@ -1037,6 +1043,7 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
         // assignment of a pointer with an address or with another pointer
         if (src->exp_type_ == BT_ADDRESS_OF || src->exp_type_ == BT_LITERAL_NULL) {
             IAstTypeNode *dst_tree = solver->SolveTypedefs(type_tree_);
+            if (dst_tree == nullptr) return(true);  // silent
             if (dst_tree->GetType() == ANT_POINTER_TYPE) {
                 if (src->exp_type_ == BT_LITERAL_NULL) {
                     can_assign = true;
@@ -1183,8 +1190,8 @@ bool ExpressionAttributes::IsAValidArraySize(size_t *value) const
 
 AstArrayType *ExpressionAttributes::GetVectorType(void) const
 {
-    if (exp_type_ != BT_TREE || type_tree_ == NULL || !is_a_variable_) return(NULL);
-    if (type_tree_->GetType() != ANT_ARRAY_TYPE) return(NULL);
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || !is_a_variable_) return(nullptr);
+    if (type_tree_->GetType() != ANT_ARRAY_TYPE) return(nullptr);
     return((AstArrayType*)type_tree_);
 }
 
@@ -1199,7 +1206,7 @@ IAstTypeNode *ExpressionAttributes::GetAutoType(void) const
 {
     // NOTE: if is_a_variable_ it was inited with InitWithTree()
     if (exp_type_ == BT_TREE || is_a_variable_) return(original_tree_);
-    return(NULL);
+    return(nullptr);
 }
 
 Token ExpressionAttributes::GetAutoBaseType(void) const
@@ -1226,7 +1233,7 @@ IAstTypeNode *ExpressionAttributes::GetTypeFromAddressOperator(bool *writable) c
         *writable = is_writable_;
         return(original_tree_);
     }
-    return(NULL);
+    return(nullptr);
 }
 
 bool ExpressionAttributes::CanAssignWithoutLoss(Token dst, Token src)

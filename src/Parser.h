@@ -4,6 +4,7 @@
 #include "lexer.h"
 #include "ast_nodes.h"
 #include "NamesList.h"
+#include "helpers.h"
 
 namespace SingNames {
 
@@ -13,7 +14,7 @@ class Parser {
 
     bool        on_error_;      // needs to recover skipping some stuff
     bool        has_errors_;    // found in previous blocks/declarations.
-    NamesList   *errors_;       // not owning !!
+    ErrorList   *errors_;       // not owning !!
     bool        for_reference_;
     AstFile     *root_;
     int         curly_indent_;  // need it for error recovery
@@ -76,7 +77,7 @@ public:
     ~Parser();
 
     void Init(Lexer *lexer);
-    AstFile *ParseAll(NamesList *errors, bool for_reference);  // for_reference: only public declarations, skipping function bodies, skipping comments
+    AstFile *ParseAll(ErrorList *errors, bool for_reference);  // for_reference: only public declarations, skipping function bodies, skipping comments
 };
 
 }

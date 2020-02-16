@@ -14,17 +14,18 @@ enum TypeSpecCheckMode {
     TSCM_STD,
     TSCM_INITEDVAR,     // allow []
     TSCM_RETVALUE,      // allow void
-    TSCM_REFERENCED};   // allow class forward ref (if in a class) and interfaces
+    TSCM_REFERENCED     // allow class forward ref (if in a class) and interfaces
+};
 
 enum class ExpressionUsage {WRITE, READ, NONE, BOTH};
 
 class AstChecker : public ITypedefSolver {
     vector<Package*>        *packages_;
     AstFile                 *root_;         // not owned !!!
-    NamesList               *errors_;       // not owned !!!
+    ErrorList               *errors_;       // not owned !!!
     SymbolsStorage          *symbols_;      // not owned !!!
     Options                 *options_;      // not owned !!!
-    NamesList               usage_errors_;
+    ErrorList               usage_errors_;
 
     // info about the currently checked declaration
     int                     current_;
