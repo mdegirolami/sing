@@ -1,0 +1,35 @@
+requires "stuff";
+requires "stuff", duplicated;       // duplicated
+requires "stuff2", stuff;           // same local name
+requires "unused";
+requires "synth_test_pkg", the_pkg; // ok
+requires "synth_test_pkg2", stpn;   // ok
+requires "assert", stpn;            // dup. local name
+requires "tests/synth_test_pkg2", unique;       // dup path (please add a shortened include path)
+
+type aa one.two.three;      // too many name components
+type bb one.two;            // unknown package
+type cc the_pkg.dummy;      // doesn't exist
+type dd the_pkg.pkg_fun;    // need a type
+type ee the_pkg.invisible2; // need to be public !!
+type ff stuff.xx;           // reference to ambiguous package
+type gg the_pkg.pkg_type;   // good !!
+
+var va [one.two] i32;           // undefined
+//var vb [(100 * 3).dummy] i32;   // field selector ?
+var vc [the_pkg.dummy] i32;     // undefined
+var vd [the_pkg.pkg_type] i32;  // need an int value
+var ve [the_pkg.pkg_fun()] i32;   // need a compile time constant
+var vf [the_pkg.pkg_ctc] i32;   // good !!
+
+fn test() void
+{
+    the_pkg.pkg_fun();
+}
+
+
+public fn test2(in p0 the_pkg.pkg_type2) void
+{
+    var tt the_pkg.pkg_type;    // needed by a public, but not in the declaration: private inclusion.
+    the_pkg.invisible();        // need to be public !!
+}

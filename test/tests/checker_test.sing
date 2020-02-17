@@ -1,0 +1,751 @@
+
+
+var uno = {5, 7};			// condition for auto 
+var due = 3;				// condition for auto
+var tre = "bella stringa";	// auto ok
+var four i32;				// var ok
+var one i32 = 18;			// initer ok
+var t0 void = 100;			// wrong use of void
+let t1 undef = 1;			// undef types
+type t2 uno;				// symbol is not a type
+type t3 [*] void;			// check of array elements
+type t4 map(void) i32;	// check of map index
+type t5 map(string) undef;	// check of map elements
+type t6 *undef;				// check of pointed element
+type t7 (in a void) i32;	// arg type check
+type t8 (in a i32 = 5, out b i32 = 10) void;	// no init on outputs
+type t10 (in a i32 = {4, 12.0}) void; // type of initer
+type t11 (in a i32 = 5) undef; // return type
+var v0 i32 = {1, 2};		// a single is needed
+var v1 [2]i32 = 2;		// needs an aggregate initializer
+var v2 i32 = "pippo";		// wrong type
+var v3 map(string) i32 = 0;	// needs an aggregate
+var v4 map(string) i32 = {"a", "b"}; // wrong type
+var v5 map(string) i32 = {1.1, 1.1}; // wrong type
+var v6 map(string) i32 = {"a", 1, "b"}; // missing a value
+var v7 map(string) i32 = {"a", 1, "b", 2}; // all right
+var v8 [*] i32;			// ok
+var v9 [100] i32;			// ok
+var v10 [] i32 = {1, 2};	// ok
+var v11 [] i32;			// ko
+var v12 [2] i32 = {1};	// ok
+var v13 [2] i32 = {1, 2, 3};	// ko too many initers
+var v14 [2,3] i32 = {1, 2};	// aggregate required at the second level
+var v15 [2,3] i32 = {{{0}}};  // too deep
+var v16 [2,3] i32 = {{0, 1, 2}, {1}}; //ok
+var v17 [2,3] i32 = {{"a", 1, 2}, {1}}; //type error
+var v18 ["a"] i32;	// wrong index type
+
+fn test() void
+{
+	var uno f32;	// conflicts
+	var a i32;
+	var b f32;
+	
+	a = "a";	// type
+	a = 5;		// ok
+	a += "a";	// can't sum
+	a++;		// ok
+	b++;		// ko
+	while (a) {	// wrong type
+	}
+	while (true) {
+		if (a) {	// wrong type
+		}
+		if (a > 0) {
+			break;		
+			continue;
+		}
+		var a i32;	// conflicts
+	}
+	break;		// shouldn't be here
+	continue;	// shouldn't be here
+	return(6);	// wrong return type
+}
+
+fn test2() i32
+{
+	return;	// should return an int
+}	
+
+fn goodret() i32
+{
+	var aa[2][v0] i32;
+	var bb[*][5,3][*,*] i8;
+	var cc map(i8) i16;
+	var dd[*]map(i8)i16;
+	var ff f32;
+	
+	aa[0]["a" + 3.0] = 0;	// wrong expressions
+	aa[0][:"a" + 3.0] = 0;
+	bau[3] = 0;			// wrong base var
+	aa[-1][-1] = 0;		// negative !!
+	aa[2][0] = 0;		// out of bounds
+	aa[0:-1][0] = 0;	// negative !
+	aa[0:2][0] = 0;		// out of bounds
+	aa[0][1:2] = 0;		// ok ??????????
+	aa[0][:] = 0;		// ok ??????????
+	bb[45,0,0,3,2] = 0;	// ok
+	cc[3,6] = 0;		// too many indices
+	cc[3:6] = 0;		// ranges unallowed on maps
+	cc[3] = 0;
+	
+	aa(5,4);			// can't pass args to a var
+	withargs(ff, "a" + 0.0, 1);	// wrong arg expression
+	withargs(ff, "a", 1);	// wrong args
+	pippo("a", 1);		// wrong name
+	withargs(ff, ,3);		// no default
+	withargs(ff, 3);		// ok
+	withargs(1,3);			// out must be left value
+	withargs(ff);
+	
+	return(5 * 3 + dd[3,6]);	// ok
+}
+
+fn withargs(out a0 f32, in a1 i32, in a2 i32 = 3) f64
+{
+	return(0);
+}
+
+fn assignments() void
+{
+	var aa string = "abc";
+	var bb i32 = 'a';
+	var cc f32 ;
+	var dd bool; 
+	var smallint i8;
+	var smallunsigned u8;
+	
+	aa = aa + u32(bb);
+	bb = bb + 1;
+	aa = aa + aa;
+	aa += cc;		// invalid !
+	dd += dd;		// invalid (can operate only on numbers)
+	aa = aa * bb;	// can only sum 
+	bb = true + 1.0;
+	bb = 1^-1;
+	bb = 1000^1;
+	bb = 1^64;
+	bb = 2^64;
+	bb = 2^-1;
+	bb = 10^3;
+	bb = 10^60;
+	bb = 10000^0;
+	cc = f64(1e300) * f64(1e100);
+	bb = i64(10000000000) * i64(10000000000);
+	cc = 0/0;
+	bb = 0^0;
+	bb = 0^-1;
+	bb = 0^100;
+	bb = 5 << 64;
+	bb = 1 << 63;
+	cc = cc | 5.3;
+	cc = 0.0 / 0.0;
+	
+	// variable + literal: the literal must fit the variable (or i32/u32)
+	var cmp128 c128;
+	var cmp64 c64;
+	var flt64 f64;
+	var flt32 f32;
+	var sgn64 i64;
+	var sgn32 i32;
+	var uns64 u64;
+	var uns32 u32;
+	
+	cmp128 += 10;
+	cmp128 += 10.0 + 1e100i;
+	cmp64 += c128(10.0 + 1e100i);
+	cmp64 += f64(1e100);
+	cmp64 += 10 + 1e10i;
+	flt64 += 10;
+	flt64 += 1i;
+	flt64 += f64(1e100);
+	flt32 += 10;
+	flt32 += f64(1e100);
+	flt32 += 1i;
+	sgn64 += 1i;
+	sgn64 += 1.0;
+	sgn64 += i64(0x100000000);
+	sgn64 += i64(-0x100000000);
+	sgn32 += 0x7fffffff;
+	sgn32 += -0x8000_0000;
+	sgn32 += i64(0x80000000);
+	sgn32 += i64(-0x80000001);
+	uns64 += 1i;
+	uns64 += 1.0;
+	uns64 += i64(0x1_0000_0000);
+	uns64 += i64(-0x1_0000_0000);
+	uns32 += u32(0xffff_ffff);
+	uns32 += -1;
+	flt32 = flt32 & 0x100;
+	uns64 &= 0x100;
+	
+	// promotions
+	cmp128 += cmp64;
+	cmp128 += flt64;
+	cmp128 += flt32;
+	cmp128 += sgn64;
+	cmp128 += sgn32;
+	cmp128 += uns64;
+	cmp128 += uns32;
+	
+	cmp64 += cmp128;
+	cmp64 += flt64;
+	cmp64 += flt32;
+	cmp64 += sgn64;
+	cmp64 += sgn32;
+	cmp64 += uns64;
+	cmp64 += uns32;
+	
+	flt64 += cmp128;
+	flt64 += cmp64;
+	flt64 += flt32;
+	flt64 += sgn64;
+	flt64 += sgn32;
+	flt64 += uns64;
+	flt64 += uns32;
+	
+	flt32 += cmp128;
+	flt32 += cmp64;
+	flt32 += flt64;
+	flt32 += sgn64;
+	flt32 += sgn32;
+	flt32 += uns64;
+	flt32 += uns32;
+	
+	sgn64 += cmp128;
+	sgn64 += cmp64;
+	sgn64 += flt64;
+	sgn64 += flt32;
+	sgn64 += sgn32;
+	sgn64 += uns64;
+	sgn64 += uns32;
+	
+	sgn32 += cmp128;
+	sgn32 += cmp64;
+	sgn32 += flt64;
+	sgn32 += flt32;
+	sgn32 += sgn64;
+	sgn32 += uns64;
+	sgn32 += uns32;
+	
+	uns64 += cmp128;
+	uns64 += cmp64;
+	uns64 += flt64;
+	uns64 += flt32;
+	uns64 += sgn64;
+	uns64 += sgn32;
+	uns64 += uns32;
+	
+	uns32 += cmp128;
+	uns32 += cmp64;
+	uns32 += flt64;
+	uns32 += flt32;
+	uns32 += sgn64;
+	uns32 += sgn32;
+	uns32 += uns64;
+	
+	sgn32 += smallint;
+	sgn32 += smallunsigned;
+
+	flt32 = flt32 & smallunsigned;
+	uns64 &= smallunsigned;
+	
+	// relationals
+	var comp bool;
+	comp = cmp64 > flt32;
+    comp = cmp64 == cmp128;
+	comp = flt64 > smallint;
+	comp = 100 > 3;
+	comp = flt64 > 3;
+	comp = (flt32 > flt64) == (uns32 > smallint);
+	comp = ("ab" > "Ab") != (aa > "x");
+	comp = (flt32 > flt64) >= (uns32 > smallint);
+	comp = "ab" > 2;
+	comp = flt32 > flt64 && uns32 > smallint;
+	comp |= flt32 > flt64 || uns32 > smallint;
+	comp &= !(flt32 > flt64) && uns32 > smallint;
+	comp = 123 && 12;
+    	
+	// unops
+	var ptr1 *()i32 = &goodret;
+	var ptr2 *string = &tre;
+	var ptr3 *bool = &comp;
+	//comp = !*&comp;           // no more accepted
+	comp = !*ptr3;
+	cmp64 = -cmp64;
+	flt64 = -flt64;
+	flt32 = -flt32;
+	sgn64 = -sgn64;
+	sgn32 = -sgn32;
+	uns64 = -uns64;
+	uns32 = -uns32;
+	aa = -aa;
+	comp = -comp;
+	flt32 = -1000.0;
+	flt64 = u64(0xffff_ffff_ffff_ffff);
+	flt32 = -1000;
+	
+	cmp64 = !cmp64;
+	flt64 = !flt64;
+	flt32 = !flt32;
+	sgn64 = !sgn64;
+	sgn32 = !sgn32;
+	uns64 = !uns64;
+	uns32 = !uns32;
+	aa = !aa;
+	comp = !comp;
+	flt32 = !1000.0;
+	flt64 = !0xff;
+	flt32 = !1000;
+	
+	cmp64 = ~cmp64;
+	flt64 = ~flt64;
+	flt32 = ~flt32;
+	sgn64 = ~sgn64;
+	sgn32 = ~sgn32;
+	uns64 = ~uns64;
+	uns32 = ~uns32;
+	aa = ~aa;
+	comp = ~comp;
+	flt32 = ~1000.0;
+	sgn64 = ~0xff;
+	flt32 = ~1000;
+	
+	// conversions
+	sgn32 = i32(123) + i32(sgn64) + i32(aa) + i32(comp) + string(ptr3) + string(100) + bool(smallint);
+	
+	// symbols references
+	sgn32 = xyzk;					// unknown ref
+	flt64 = withargs(flt32, 10);	// fn reference
+	var funref = withargs;
+	flt64 = funref(flt32, 10);
+	funref = goodret;
+
+	forward();
+	
+	for (idx, iter1 in v8) {
+		idx += u64(1);				// can't write
+		var idxt size_t = idx;
+		sgn32 = iter1;
+	}	
+	sgn32 = iter1;				// survives the loop
+	for (idx, iter1 in v8) {	// can recycle
+		idx += u64(1);
+		var idxt size_t = idx;
+		sgn32 = iter1;
+	}
+	for (idx, iter1 in v8) {	
+		for (idx, iter_in in v8) {		// but not inside
+		}
+		for (idx_in, iter1 in v8) {		// but not inside
+		}
+		for (idx_in, iter_in in v8) {	// ok
+		}
+	}
+	for (aa, comp in v8) {		// wrong index/iterator types
+	}
+	for (iter2 in sgn32) {			// aa must be an array, map or string
+	}
+	for (iter3 in v7) {			// ...a map...
+	}
+	for (iter8 in aa) {			// ..or a string.
+	}
+	for (iter8 in "Tests") {	// recycled on a string.
+	}
+	for (iter3 in "Tests") {	// wrong recycled on a string.
+	}
+	for (iter4 in aa : 10) {	// extrema must be numbers
+	}
+	for (iter5 in sgn64 : uns64) {	// can't cover the range
+	}
+	for (iter6 in 10 : 1000 step aa) {	// step must be a number
+	}
+	for (iter7 in 10 : 1000 step 3) {	// ok
+	}
+	for (iter7 in 10 : i64(0x1_0000_0000) step 3) {	// iter7 is too small (was sized for 10:1000)
+	}
+	for (iter9 in 10 : i64(0x100000000) step 3) {	// iter9 is ok
+	}
+	for (iter7 in 10 : 1000 step 3) {	// recycle
+	}
+	for (iter7 in 10 : 1000 step 0) {	// step 0 unallowed
+	}
+	
+	// assignments
+	let cantwrite i32;
+	cantwrite = 5;	// not a leftvalue
+	
+	var sgn16 i16;
+	var uns16 u16;
+	var sgn8 i8;
+	var uns8 u8;
+
+	sgn32 = sgn16;
+	sgn32 = sgn8;
+	sgn32 = uns32;
+	sgn32 = uns16;
+	sgn32 = uns8;
+
+	sgn16 = sgn32;
+	sgn16 = sgn8;
+	sgn16 = uns32;
+	sgn16 = uns16;
+	sgn16 = uns8;
+	sgn16 = 0x8000;
+	sgn16 = 0x7fff;
+	sgn16 = -0x8000;
+	sgn16 = -0x8001;
+
+	sgn8 = sgn32;
+	sgn8 = sgn16;
+	sgn8 = uns32;
+	sgn8 = uns16;
+	sgn8 = uns8;
+	sgn8 = 0x80;
+	sgn8 = 0x7f;
+	sgn8 = -0x80;
+	sgn8 = -0x81;
+
+	uns32 = sgn16;
+	uns32 = sgn8;
+	uns32 = sgn32;
+	uns32 = uns16;
+	uns32 = uns8;
+
+	uns16 = sgn16;
+	uns16 = sgn8;
+	uns16 = sgn32;
+	uns16 = uns32;
+	uns16 = uns8;
+	uns16 = 0x10000;
+	uns16 = 0xffff;
+	uns16 = 0;
+	uns16 = -1;
+
+	uns8 = sgn16;
+	uns8 = sgn8;
+	uns8 = sgn32;
+	uns8 = uns32;
+	uns8 = uns16;
+	uns8 = 0x100;
+	uns8 = 0xff;
+	uns8 = 0;
+	uns8 = -1;
+	
+	uns8 = "pippo";		// not a number
+	
+	aa = 'a';
+	aa = "ksadhfkdjsh";
+	aa = 123;
+	aa = 0x400000;		// out of range
+	aa = 0x3fffff;
+	
+	aa = 1.0;			// not an int or a string
+	
+	comp = "aaa";
+	comp = comp;
+	
+	var crazy1 [5]map(string)*(in a i32, in b i32)bool;
+	
+	var crazy2 [5]map(string)*(in a i32, in b i32)bool;	
+	crazy1 = crazy2;	// perfect match
+	
+	var crazy3 [4]map(string)*(in a i32, in b i32)bool;
+	crazy1 = crazy3;
+	
+	var crazy4 [*]map(string)*(in a i32, in b i32)bool;
+	crazy1 = crazy4;
+	
+	var ass1 [4][4] bool;
+	var ass2 [4][*] bool;
+	
+	ass1 = ass2;	// only the top level accepts some differences.
+	
+	var ass3 [4] i32;
+	var ass4 [4] i16;
+	
+	ass3 = ass4;	// only the top level accepts some differences.
+	
+	var crazy5 [5]map(i8)*(in a i32, in b i32)bool;
+	crazy1 = crazy5;
+	
+	var crazy6 [5]map(string)const*(in a i32, in b i32)bool;
+	crazy1 = crazy6;
+	
+	var crazy7[5]map(string)*(out a i32, in b i32)bool;
+	crazy1 = crazy7;
+	
+	var crazy8 [5]map(string)*(in a i16, in b i32)bool;
+	crazy1 = crazy8;
+	
+	var crazy9 [5]map(string)*(in a i32, in b i32)rune;
+	crazy1 = crazy9;
+	
+	var crazy10 [5]map(string)*(in b i32)bool;	
+	crazy1 = crazy10;
+
+	var crazy11 [5]map(string)*pure(in b i32, in a i32)bool;	
+	crazy1 = crazy11;
+	
+	// details we can ignore
+	var funp1 pure(in a i32)void;
+	var funp2 (in a i32)void;
+	funp1 = funp2;
+	funp2 = funp1;
+	
+	var ptr10 *bool;
+	var ptr11 const*bool;
+	var ptr12 weak const *bool;
+	ptr10 = ptr11;
+	ptr11 = ptr10;
+	ptr11 = ptr12;
+	ptr12 = ptr11;
+}
+
+type splitA1 *(in a i32, in b i32)bool;
+type splitA2 (in a i32, in b i32)bool;
+
+fn forward() i32 {
+	var crazy20 [5]map(string)splitA1;
+	let crazy21 [5]map(string)*splitA2;
+	crazy20 = crazy21;
+}
+
+// function must return a value !!
+fn fun1() i32 {
+	return(0);
+}
+
+fn fun2() i32 {
+	{
+		return(0);
+	}
+}
+
+fn fun3() i32 {
+	while (true) {
+	}
+}
+
+fn fun4() i32 {
+	if (true) {			// note: this make no sense and we don't bother to detect. treated like any other if: don't know if taken !!
+		return(0);
+	}
+}
+
+fn fun5() i32 {
+	if (true) {
+		return(0);
+	} else {
+		return(0);
+	}
+}
+
+fn dead_code() i32 {
+	var a1 i8;
+	var a2 i8;
+	while (a1 > a2) {
+		continue;
+		++a1;
+	}
+	while (a1 > a2) {
+		break;
+		++a1;
+	}
+	{
+		return(0);
+		++a1;	
+	}
+}
+
+// literals operations
+fn literals() void
+{
+	let c1 c64 = (123.7+13i)^(5-3i)*3/2;
+	let c2 f32 = (123.7)^5*3/2.0;
+	let c3 i32 = 123 + 1280;
+	let c4 i32 = u64(0x8000000000000000) + u64(0x8000000000000000);
+	let c5 i32 = u64(0x8000000000000000) - u64(0x8000000000000001);
+	let c6 i32 = u64(0x8000000000000001) - u64(0x8000000000000000);
+	let c7 i32 = -1 - u64(0x8000000000000000);
+	var vloca i32 = 5 + -3;
+	vloca = 5 + -8;
+	vloca = -5 + 3;
+	vloca = -5 + 8;
+	vloca = 5 - 3;
+	vloca = 5 - 8;
+	vloca = -5 - -3;
+	vloca = -5 - -8;
+	let c8 i32 = 1000 * -100;
+	let c9 i32 = i64(0x100000000) * i64(0x100000000);
+	let c10 i32 = i64(0xffffffff) * i64(0x100000000);
+	let c11 i32 = u64(0x8000000000000000)/-10;
+	let c12 i32 = -0x8000000000000001/-10;
+	let c13 i32 = i64(0x7fffffffffffffff)/-10;
+	let c14 i32 = -0x8000000000000000/-10;
+	let c15 i32 = -0x80000 % -10;
+	let c16 i32 = -1000 << 3;
+	let c17 i32 = 1000 >> 3;
+	let c18 i32 = -1000 << -3;
+	vloca = -1000 >> -3;
+	let c19 i32 = 1000 & -3;
+	let c20 i32 = 1000 | -3;
+	let c21 i32 = 1000 xor -3;
+	let c22 i32 = i64(-0x8000000000000000);
+	let c23 i32 = -0x8000000000000001;
+	let c24 i32 = - - 0x8;
+	let c25 f32 = ~2.0;
+	let c26 c64 = ~2.0i;
+	let c27 i32 = ~2;
+	let c28 i32 = ~-1;
+	let c29 c64 = ((5.0 + 3) / (5.0 - 3)) & 3i;
+	let c30 f32 = 5.0 | 1;
+	let c31 f32 = 5.0 / 0.0;
+	let c32 i32 = -3 & -5;
+	let c33 i32 = 3 | 5;
+	let c34 i32 = 3 xor 5;
+	var tstptr *i32 = null;
+	let c35 = true;
+	let c36 = false;
+	let c37 i32 = i64(0x100000000) + c33;
+	let c38 i32 = 1 & c29;
+	var vloca2 u8 = 1;
+	var vloca3 u16;
+	var vloca4 u32 = vloca2 * vloca3;
+	var vloca_bool bool = vloca2 > -(12^-1);
+	vloca2 = vloca3 + -&vloca2;
+	vloca2 = +6 + +false;
+	vloca2 = vloca4(*vloca3);
+	withargs(vloca3^-1, 1);
+	var crazy1 [5]map(string)*(in a i32, in b i32)bool;
+	crazyout(crazy1);
+	var crazy2 [5]map(string)weak*(in a i32, in b i32)bool;	
+	crazyout(crazy2);
+	var wptr weak*i8;
+	weakout(wptr);
+	var nowptr *i8;
+	weakout(nowptr);
+	weakout(wptr, 1);
+	weakout();
+	vloca2 = &123;
+	crazy1 = null;
+	for (index in vloca3:vloca3+1) {
+	}
+}
+
+fn crazyout(out theout [5]map(string)*(in a i32, in b i32)bool) void
+{
+}
+
+fn weakout(out theout weak*i8) i32
+{
+	return(12^-1);
+}
+
+fn weakout2(out theout weak*i8, out theout weak*i8) void
+{
+	var a = 2 * t6;
+}
+
+fn size_and_dimof() void
+{
+    var mm [100] i32;
+    var a i32 = sizeof(i32);
+    a = sizeof(mm);
+    a = sizeof(mm[3]);
+    a = dimof(mm);
+    a = dimof(a);
+}
+
+var f0 f32 = - -5.3;
+
+// const int treated like a constant if inited with a constant
+let arraydim i32 = 100;
+var fvec [arraydim]f32;
+var fvecdimf[10.0] f32; // size must be integer
+var fvecdimf[-10] f32;  // size must be positive
+
+fn indices() void
+{
+    fvec[0] = fvec[2.0];    // indices must be int
+    let ax0 = i64(-0x8000_0000_0000_0000);
+    let ax1 = i32(0x1_0000_0000);
+    let ax2 = -ax0;   // overflow
+    let ax3 = ~10.0;
+    let ax4 = 1000.0;
+    let ax5 = i8(ax4);
+    let ax6 = i64(-0x8000_0000_0000_0001);
+    let ax7 = f64(-100);
+    let ax8 = c64(100);
+    let ax9 = 100 >> 64;
+    let ax10 = u32(10) << 3;
+    let ax11 = ax10 | u32(13);
+    let ax12 = c64(100) / 0.0;
+    let ax13 = c128(100) / c128(0);
+    let ax14 = i16(100.1);
+    let ax16 = i16(1e20);
+    let ax17 = f64(0x20000000000001);
+    let ax18 = u32(0x10000) << 16;
+    let ax19 = u32(0x10000) << 15;
+    let ax20 = i32(0x10000) << 15;
+    let ax21 = i32(0x10000) << 14;
+    let ax22 = i64(100.0 + 1e18);
+}
+
+fn other() void
+{
+    var vint64 = i64(-0x8000_0000_0000_0001);
+    vint64 = ~10.0;
+    vint64 = i64(-0x8000_0000_0000_0000);
+    vint64 = -vint64;
+}
+
+fn reallypure pure() void
+{
+}
+
+let unwritable = 0;
+
+fn violating pure() void
+{
+    var canuse i32;
+    
+    reallypure();
+    ++canuse;
+    other();            // can't call non-pure !!
+    uno[0] = 0;         // can't access globals vars
+    canuse = arraydim;  // ok, can access global const
+    ++unwritable;       // ko
+}
+
+let unsized [] i32;
+
+type unsized_type [] i32;
+
+fn badiniters(in arg0 bool = fvec[5] > 3, arg1 [*]i32 = {0,1}, arg2 i32 = 3) void // first is not conpile time constant, second is not base type, can't omit type 
+{
+}
+
+fn loop_referenced_access() void
+{
+    var array [10]i32;
+    
+    for (it in array) {
+        ++it;
+        ++array[0];
+    }
+}
+
+type tt i32;
+
+public fn refers_private() tt   // here can't refer private (being a public)
+{
+    let rplocal = unwritable;   // here can refer privates
+}
+
+fn complex_refvalue() [*] i32
+{
+}
+
+public var forbidden i32;

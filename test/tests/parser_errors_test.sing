@@ -1,0 +1,255 @@
+
+namespace pippo.;
+requires fake/path/package1;
+requires "fake/path/package2";
+requires "fake/path/package2",;
+
+primo volatile i32;
+var i32 = 10;
+var pippo = 10;
+var pluto i8;
+var clara;
+let fisso;
+let fisso i32;
+type (a i32, b i32) const weak *matrix[3,2][5][8,]map(string) package1.ImportedType;
+type xxxx i32 = 5;
+type xxx map;
+type xxx map(i8;
+type xxx matrix;
+type xxx weak string;
+type xxx extern.;
+
+fn () void
+{
+    var c i32;
+    c = primo + secondo + sizeof(c);
+    //let a = 3;
+    //let b = 10;
+}
+
+fn myclass.chebello pure(in uno i32 = 5, out due i8, io tre string, ...) bool
+{
+	let size size_t = 3;
+	var mm[3][size f32 = {{1.0, 2.5, 3}, {3}, {3}};
+	var mm[3] f32 = {1.0;};
+}
+
+fn xxx () void {	
+	mm[0][0] = mm[0,1] + mm[0][2];
+	mm[0][1] = mm[0[2];
+	mm[0][0] += 3;
+	var pippo f32;
+	++pippo
+	pippo++;
+	pippo--;
+	--pippo;
+	fun_to_call(3, pippo);
+	while (pippo > 0) 
+		--pippo;
+	}
+	if (pippo > 10) {
+		pippo *= 2;
+	} else if (pippo > 5) {
+		pippo += 3;
+	} else {
+		pippo = 0;
+	}
+	for (it in mm[0]) {
+		it = pippo;
+	}
+	for (index, it in mm[1]) {
+		it = index;
+	}
+	for (index in 0 : size-1) {
+		if (mm[0][index] == 0) {
+			continue;
+		}
+		mm[0][index] = 0;
+	}
+	for (index in 0 : size - 1 step 2) {
+		if (mm[0][index] == 0) {
+			break;
+		}
+		mm[0][index] = 0;
+	}
+	{
+		var inner string = "is inner !!";
+		var a f32;
+		myclass.member = 10;
+		a = pippo + 10 * (mm[1,1] + package1.extvar) / myclass.member;
+		*returning_pointer(a : singlepar) = sizeof(f32) + dimof(mm[0]) + (size_t)pippo + -a;
+		var test = pippo^3 * 2 + pippo^2 * 5 > 3 && pippo < 0 || pippo > 100;
+		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5^2;
+	}
+	return(true);
+}
+
+fn varargs_func ...) void {
+}
+
+fn test (..., in a i32) void {}
+fn test(in a i32; in b i32) {}
+fn test(in i32, in b i32) {}
+fn test(in a i32, in b i32) void {
+	return(;
+	a, b += 5, 6;
+	a = 5, 6;
+	a, b = 5;
+	a+3;
+	a = sizeof;
+	a = sizeof(f32;
+	a = dimof;
+	a = dimof(a;
+	a = (i32 pippo;
+	a = (5 * 5;
+	(a = 3;
+	a = cicco.;
+	83 = a;
+	a[3 = 5;
+	test(14:, 6);
+	test(15; 7);
+	while true;
+	while (true;
+	if true;
+	if (true;
+	for ;
+	for () ;
+	for (aa,) ;
+	for (aa ) ;
+	for (aa in vector;
+	for $$$
+	for 
+}
+
+fn ff () void
+{
+	++pippo
+}
+
+fn ff () void
+{
+	while (pippo > 0) 
+		--pippo;
+	}
+}
+
+fn ff. () void
+{
+}
+
+fn test10() void
+{
+    typeswitch(v = base) {
+        0 : ++v;            // values instead of types
+        1 : --v;
+        else : return;
+    }
+    switch {}   // missing opening
+    switch (;   // missing value
+    switch (v;  // missing closing brace
+    switch (v); // missing cases
+    switch (v) {
+        else :      // missing statement!
+        0 : ++xxx;
+    }
+    switch (v) {
+        0;          // missing ':'
+    }
+    switch (v) {
+        else : a = b; // not at the end !
+        0 : ++xxx;
+    }
+    switch (v) {
+        else ; // missing ':'
+    }
+    
+    typeswitch {}   // missing swtch value
+    typeswitch ();   // missing reference
+    typeswitch (v;   // missing '='
+    typeswitch (v = ;   // missing expression
+    typeswitch (v = base; // missing closing brace
+    typeswitch (v = base); // missing cases
+    typeswitch (v = base) {
+        else :      // missing statement !
+        0 : ++xxx;  // missing ':'
+    }
+    typeswitch (v = base) {
+        pippo;          // missing ':'
+    }
+    typeswitch (v = base) {
+        else;          // missing ':'
+    }
+    typeswitch (v = base) {
+        else: ++xxx;          // not at the end
+        pippo: 
+    }
+}
+
+enum                    // missing name
+enum poo;               // missing cases
+enum pop {+}            // a name is required
+enum pop {a, b + }      // expecting }
+
+interface           // name !
+interface test_if   // members !!
+interface test_if {
+    fn  ;           // fn name ?
+public:             // disallowed
+}
+
+class               // name !!
+class the_class     // members !!
+class the_class {    
+public              // ':' ?    
+    var core far.if2_implementor;
+    var member1 [10]i64 = {3, 4, 5, 0};
+    
+    fn ;                    // fn name ?
+    fn mut;                 // fn name ?
+private                     // ':' ?    
+    var member1 [10]i64 = {3, 4, 5, 0};
+    fn fun3(in aa c128) void;
+    fn fun4 by core;      //can't delegate private 
+    interface test_if;    // private interface ?
+public:
+    fn fun4 by ;        // missing implementor
+    interface if2 by ;  // missing implementor
+    catarpippolo;       // not a declaration
+}
+
+/////////////////////////
+// resync tests
+/////////////////////////
+
+let table [][2]i32 = {{5}, {8}, {13, +/}, {1, 2}};  // decl resync after error internal to {}
+
+shouldnt' resync on // in-class declarations
+cluss the_class {    
+public:
+    fn fun3(in aa c128) void;
+}
+
+shouldnt' miss // public
+
+public var kk;  // missing type - so we know it resynced
+
+fn test10() void
+{
+    let table [][2]i32 = {{5}, {8}, {13, +/}, {1, 2}};  // statement resync after an inner error
+    if (a) {
+        /+     // skips next else too ?        
+    } else {
+        b = c;
+    }
+    
+    fn pippo() void;    // unallowed, shouldn't assume to be out of function
+    
+    shouldnt' resync on // switch ';'
+    
+    switch (a + 3*bb) {
+        0 : ++counter;
+        1                   // if emits an error here did resync on inner ;
+        else : return;
+    }        
+}
+    

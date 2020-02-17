@@ -1,0 +1,15 @@
+namespace aa.bb; 
+ 
+public type pkg_type i32;
+public let  pkg_ctc = 100;
+public type pkg_vectype [pkg_ctc]i32;
+public fn pkg_fun(in p0 pkg_vectype) i32
+{
+    return(0);
+}
+
+fn invisible() void
+{
+}
+
+type invisible2 i32;

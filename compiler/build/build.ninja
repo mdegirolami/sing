@@ -1,0 +1,36 @@
+cflags = -g -fsigned-char
+
+src = ../src
+obj = obj
+bin = ../bin
+
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = g++ -MD -MF $out.d $cflags -c $in -o $out
+
+rule ln
+  command = g++ -o $out @objslist.txt
+
+build $obj/ast_checks.o:           cc $src/ast_checks.cpp                                                                                                                                         
+build $obj/ast_nodes.o:            cc $src/ast_nodes.cpp                                                                                                                                          
+build $obj/ast_nodes_print.o:      cc $src/ast_nodes_print.cpp                                                                                                                                    
+build $obj/compiler.o:             cc $src/compiler.cpp                                                                                                                                           
+build $obj/cpp_formatter.o:        cc $src/cpp_formatter.cpp                                                                                                                                      
+build $obj/cpp_synth.o:            cc $src/cpp_synth.cpp                                                                                                                                          
+build $obj/expression_attributes.o: cc $src/expression_attributes.cpp                                                                                                                              
+build $obj/FileName.o:             cc $src/FileName.cpp                                                                                                                                           
+build $obj/helpers.o:              cc $src/helpers.cpp                                                                                                                                            
+build $obj/lexer.o:                cc $src/lexer.cpp                                                                                                                                              
+build $obj/NamesList.o:            cc $src/NamesList.cpp                                                                                                                                          
+build $obj/numeric_value.o:        cc $src/numeric_value.cpp                                                                                                                                      
+build $obj/options.o:              cc $src/options.cpp                                                                                                                                            
+build $obj/package.o:              cc $src/package.cpp                                                                                                                                            
+build $obj/Parser.o:               cc $src/Parser.cpp                                                                                                                                             
+build $obj/string.o:               cc $src/string.cpp                                                                                                                                             
+build $obj/symbols_storage.o:      cc $src/symbols_storage.cpp                                                                                                                                    
+build $obj/target.o:               cc $src/target.cpp                                                                                                                                             
+
+build $bin/sing.exe: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o
+
+default $bin/sing.exe

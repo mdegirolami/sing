@@ -1,0 +1,1 @@
+public fn assert(in p0 bool) void;

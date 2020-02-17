@@ -57,3 +57,4 @@ stay/Debug/expression_attributes.obj.enc
 stay/Debug/FileName.obj
 src/ast_checks.cpp~RF51286e9.TMP
 *.obj
+*.o

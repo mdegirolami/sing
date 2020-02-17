@@ -1,0 +1,207 @@
+
+
+type fref pure (in arg0 i32, in arg1 i32, out arg2 i32) i32;
+
+// gloabl declarations, no initer
+var gv_int32 i32;
+var gv_bool  bool;
+var gv_string string;
+var gv_fref fref;
+var gv_ptr *i32;
+var gv_array [5]i32;
+var gv_dyna [*]i32;
+var gv_stringarr [*] string;
+
+fn intsum pure (in arg0 i32, in arg1 i32, out arg2 i32) i32 
+{
+	arg2 = arg0 + arg1;
+	return(arg2);
+}
+
+// gloabl declarations, inited
+var gvi_int32 i32 = 100;
+var gvi_bool  bool = true;
+var gvi_string string = "pippi";
+var gvi_fref fref = intsum;
+//var gvi_ptr *i32;			// allowed ?
+var gvi_array [5]i32 = {1,2,3,4,5};
+var gvi_dyna [*]i32 = {6, 7, 8, 9, 10};
+var gvi_stringarr [*] string = {"minni", "clara", "ciccio"};
+
+// as parameters
+fn boolsum pure (in arg0 bool, in arg1 bool, out arg2 bool) bool
+{
+	arg2 = arg0 || arg1;
+	return(arg2);
+} 
+
+fn stringsum pure (in arg0 string, in arg1 string, out arg2 string) string
+{
+	arg2 = arg0 + arg1;
+	return(arg2);
+} 
+
+fn frefshift(in arg0 fref, io arg1 fref, io arg2 fref) fref
+{
+    var tmp = arg2;
+	arg2 = arg1;
+	arg1 = arg0;
+	return(tmp);
+}
+
+fn arrayswap(in arg0 [5]i32, out arg1 [5]i32) void
+{
+	arg1[0] = arg0[4]; 
+	arg1[1] = arg0[3]; 
+	arg1[2] = arg0[2]; 
+	arg1[3] = arg0[1]; 
+	arg1[4] = arg0[0]; 
+}
+
+fn dynaswap(in arg0 [*]i32, out arg1 [*]i32, in count i32) void
+{
+	let top = count - 1;
+	for (idx, dst in arg1) {
+		dst = arg0[top - i32(idx)];
+	}
+}
+
+fn stringswap(in arg0 [*]string, out arg1 [*]string, in count i32) void
+{
+	let top = count - 1;
+	for (idx, dst in arg1) {
+		dst = arg0[top - i32(idx)];
+	}
+}
+
+public fn test_types_and_vars() void
+{
+	// gloabl declarations, no initer
+	var lv_int32 i32;
+	var lv_bool  bool;
+	var lv_string string;
+	var lv_fref pure (in arg0 i32, in arg1 i32, out arg2 i32) i32;
+	var lv_ptr *i32;
+	var lv_array [5]i32;
+	var lv_dyna [*]i32;
+	var lv_stringarr [*] string;
+
+	// local declarations, inited
+	var lvi_int32 i32 = 100;
+	var lvi_bool  bool = true;
+	var lvi_string string = "pippi";
+	var lvi_fref pure (in arg0 i32, in arg1 i32, out arg2 i32) i32 = intsum;
+	//var lvi_ptr *i32;			// allowed ?
+	var lvi_array [5]i32 = {1,2,3,4,5};
+	var lvi_dyna [*]i32 = {6, 7, 8, 9, 10};
+	var lvi_stringarr [*] string = {"minni", "clara", "ciccio"};
+	
+	// heap declarations, no initer
+	var hv_int32 i32;
+	var hv_bool  bool;
+	var hv_string string;
+	var hv_fref pure (in arg0 i32, in arg1 i32, out arg2 i32) i32;
+	var hv_ptr *i32;
+	var hv_array [5]i32;
+	var hv_dyna [*]i32;
+	var hv_stringarr [*] string;
+
+	// heap declarations, inited
+	var hvi_int32 i32 = 100;
+	var hvi_bool  bool = true;
+	var hvi_string string = "pippi";
+	var hvi_fref fref = intsum;
+	//var lvi_ptr *i32;			// allowed ?
+	var hvi_array [5]i32 = {1,2,3,4,5};
+	var hvi_dyna [*]i32 = {6, 7, 8, 9, 10};
+	var hvi_stringarr [*] string = {"minni", "clara", "ciccio"};
+
+	// pointers to heap-allocated vars
+	var pv_int32 *i32 = &hv_int32;
+	var pv_bool  *bool = &hv_bool;
+	var pv_string *string = &hv_string;
+	var pv_fref *pure (in arg0 i32, in arg1 i32, out arg2 i32) i32 = &hv_fref;
+	var pv_ptr **i32 = &hv_ptr;
+	var pv_array *[5]i32 = &hv_array;
+	var pv_dyna *[*]i32 = &hv_dyna;
+	var pv_stringarr *[*] string = &hv_stringarr;
+	
+	pv_int32 = &hvi_int32;
+	pv_bool  = &hvi_bool;
+	pv_string = &hvi_string;
+	pv_fref = &hvi_fref;
+	//pv_ptr  = hvi_ptr;
+	pv_array = &hvi_array;
+	pv_dyna = &hvi_dyna;
+	pv_stringarr = &hvi_stringarr;
+	
+	// iterators and iterators' references: several addressings
+	for (intiterator in lvi_array) {
+		intiterator++;
+	}
+	for (intiterator in hvi_array) {
+		intiterator++;
+	}
+	for (intiterator in *pv_array) {
+		intiterator++;
+	}
+	
+	// iterators on several iterated types
+	var boolvec []bool = {false, false, true};
+	for (booliterator in boolvec) {
+		booliterator = !booliterator;
+	}
+	
+	for (stringiterator in lvi_stringarr) {
+		stringiterator += "!";
+	}
+
+	var ptrvec []*string = {&hv_string, &hvi_string};
+	for (ptriterator in ptrvec) {
+		*ptriterator += '-';
+	}
+
+	var arrvec [][]string = { {"a", "b", "c"}, {"d", "e"}, {"f", "g"} };
+	for (arrayiterator in arrvec) {
+		for (stringiterator in arrayiterator) {
+			stringiterator += "_ok";
+		}
+	}
+
+	var arrdyna [*][*]string = { {"a", "b", "c"}, {"d", "e"}, {"f", "g"} };
+	for (arrayiterator in arrdyna) {
+		for (stringiterator in arrayiterator) {
+			stringiterator += "_ok";
+		}
+	}
+
+	// assignments
+	lv_int32       =  gvi_int32;
+	lv_bool        =  gvi_bool;   
+	lv_string      =  gvi_string;   
+	lv_fref        =  gvi_fref;     
+	lv_ptr         =  pv_int32;      
+	lv_array       =  gvi_array;    
+	lv_dyna		   =  gvi_dyna;     
+	lv_stringarr   =  gvi_stringarr;
+    
+    hv_int32       =  gvi_int32;
+	hv_bool        =  gvi_bool;   
+	hv_string      =  gvi_string;   
+	hv_fref        =  gvi_fref;     
+	hv_ptr         =  pv_int32;      
+	hv_array       =  gvi_array;    
+	hv_dyna		   =  gvi_dyna;     
+	hv_stringarr   =  gvi_stringarr;
+
+    // passing arguments
+    lv_int32 = gvi_fref(lv_int32, lvi_int32, lv_int32);
+    lv_int32 = intsum(lv_int32, lvi_int32, lv_int32);
+    lv_bool = boolsum(lv_bool, lvi_bool, lv_bool);
+    lv_string = stringsum(lv_string, lvi_string, lv_string);
+    gv_fref = frefshift(hvi_fref, lv_fref, gvi_fref);
+    arrayswap(lvi_array, lv_array);
+    dynaswap(lvi_dyna, lv_dyna, 5);
+    stringswap(*pv_stringarr, lv_stringarr, 3);
+}
+

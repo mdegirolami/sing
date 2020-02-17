@@ -1,0 +1,342 @@
+/*
+ test of parts not already verified by siege.sing and types_and_vars.sing 
+ */
+var gp const * string;
+type myint i32;
+
+let mivv [*] myint;
+
+fn receiver(in vin [*][4]string, out vout [4][4]string) void
+{
+}
+
+fn get_a_string() * string
+{
+    var to_return = "the_test";
+    return(&to_return);
+}
+
+fn add_int(in val0 i32, in val1 i32 = 5) i32
+{
+    return(val0 + val1);
+}
+
+fn add_int3(in val0 i32, in val1 i32, out valout i32) void
+{
+    valout = val0 + val1;
+}
+
+public fn sinth_test() i32
+{
+    // consts declarations (heap and not-heap)
+    let cs string = "test";
+    let ci i32 = 123;
+    gp = &cs;
+    
+    // 0 initer of defined type
+    let miv myint;
+    
+    // array of array passing (the first index is wildcharted)
+    var arr [4][4] string;
+    receiver(arr, arr);
+    
+    // weak pointers
+    gp = get_a_string();
+    var wp const weak * string = gp;
+    gp = null;
+    
+    // default parms
+    let res1 = add_int(1, 2);
+    let res2 = add_int(4);
+    
+    // init with automatic or computed length.
+    var arr2 [] i32 = {1, 2, 3, 4};
+    var arr3 [5*3]i32;
+    
+    // inc and dec
+    arr2[0]++;
+    arr2[1]--;
+    while (arr2[2] > 0) {
+        --arr2[2];
+        if (arr2[2] & 1 != 0) {
+            continue;
+        }
+        ++arr2[0];
+    }
+    
+    // if else and block
+    {
+        var res i32 = 0;
+        for (idx in 0:10) {
+            if (idx == 0) {
+                res += 1;
+            } else if (idx == 1) {
+                res *= 3;
+            } else {
+                res += 2;
+            }
+        }
+    }
+    
+    // for/foreach iterations
+    // with/without count
+    // new/ not new iterator
+    // literal/not literal step
+    // positive/negative step
+    // requiring conversions or not.
+    var it i32 = 0;
+    for (count, idx in 1:10 step arr2[0]) {
+        ++it;
+    }
+    
+    it = 0;
+    for (count, idx in 10:1) {
+        ++it;
+    }
+    for (count, idx in 10:1 step -1) {
+        ++it;
+    }
+    for (count, idx in 10:1 step i64(-20000000000)/i64(10000000000)) {
+        ++it;
+    }
+    
+    it = 0;
+    for (count, iteratedint in arr2) {
+        ++it;
+    }
+    
+    expressions();
+    
+    // pointer
+    var onheap [10]i32;
+    var ohp = &onheap;
+    (*ohp)[3] = 100;
+    onheap[3] += 1;
+   
+    // sizeof and dimof
+    var v_int32 i32;
+    v_int32 = sizeof((in a1 i32) i8);
+    v_int32 = sizeof(onheap[2]);
+    v_int32 = dimof(onheap);
+      
+    // simplifying &*
+    var intonheap i32 = 10;
+    var iohp = &intonheap;
+    add_int3(3, 2, intonheap);
+    
+    forward(5);
+    
+    // using a const int to init an array size
+    let arraydim i32 = -100 / 2;
+    var fvec [-arraydim * 2] f32;
+    fvec[99] = 0;
+    
+    // automatic types
+    var autoint = 100;
+    var autofloat = 10.0;
+    var autocomplex = 10.0i;
+    var autobool = autoint < 0;
+    var autostring = "goophy";
+        
+    // return needs conversion
+    return(10.0);
+}
+
+fn forward(in val myint) void
+{
+}
+
+fn expressions() void 
+{       
+    // all the types
+    var v_int8 i8 = 1;
+    var v_uint8 u8 = 1;
+    var v_rune i32 = 2;
+    var v_size i32 = 3;
+    var v_int32 i32 = 4;
+    var v_uint32 u32 = 5;
+    var v_int64 i64 = 4;
+    var v_uint64 u64 = 5;
+    var f0 f32 = 1.0;
+    var d0 f64 = 2.0;
+    var c0 = 1.0 + 1i;
+    var c1 = c128(1.0 + 1i);
+          
+    // sum of srings
+    var s0 string = "aaa"; 
+    var s1 string = "bbb"; 
+    s0 = s0 + s1;
+    c0 = 1.0 + 1i;
+    c1 = c128(1.0 + 1i);
+    s0 = s0 + s1 + string(f0) + string(v_int32) + string(false) + string(v_int8) + string(v_uint32) + string(v_uint8) + string(c0) + string(c1);
+    s0 = s0 + 'f' + "alse" + s1 + v_int32 + v_uint8;
+    
+    // power + cases which require conversion
+    v_int32 = v_int8 ^ 2;           // ^2 integer promotion
+    v_int32 = v_int32 ^ v_int8;     // ^, <<, >> on ints, don't require the operands to be of the same type 
+    f0 = f0 ^ f0;                   // same types: no conversion needed
+    c0 = c0 ^ f0;                   // floats is like complex without a component !
+    c0 = f0 ^ c0;
+    c1 = c1 ^ d0;
+    c1 = d0 ^ c1;
+    f0 = f0 ^ 3.0;
+    f0 = 3.0 ^ f0;
+    v_int32 = v_int8 ^ v_uint32;    // integer promotion
+    
+    // power update
+    v_int32 ^= 2;
+    v_int32 ^= 3;
+    f0 ^= 2.0;
+    
+    // math operators
+    f0 = f0 + f32(34 >> 1);      // >> needs brackets and conversion
+    f0 = f32(34 >> 1) + f0;
+    v_int32 = v_int32 xor 3;
+    
+    // relationals
+    var b0 = v_int8 > 3;
+    var b1 =  v_uint32 > v_int32;   
+    b0 =  v_uint32 >= v_int32;   
+    b0 =  v_uint32 < v_int32;   
+    b0 =  v_uint32 <= v_int32;   
+    b0 =  v_uint32 == v_int32;   
+    b0 =  v_uint32 != v_int32;   
+    b0 =  v_int32 >  v_uint32;  
+    b0 =  v_int32 >= v_uint32;    
+    b0 =  v_int32 <  v_uint32;  
+    b0 =  v_int32 <= v_uint32;    
+    b0 =  v_int8 > v_uint8;
+    b0 =  v_int32 == v_uint32;   
+    b0 =  v_int32 != v_uint32;   
+    b0 = c0 == c1;
+    b0 = c0 == f0;
+    b0 = s0 > "big";
+    b0 = "big" > s0;
+    b0 = b0 != b1;
+    b0 = c1 == 10;
+    b0 = c0 == 3i;
+    b0 = c0 == 10;
+    b0 = d0 > 10;
+    b0 = f0 > 10;
+           
+    // logicals
+    if (v_int32 > 10 && v_int8 > 0 || b0) {
+        ++v_int32;
+    }
+                  
+    // casts
+    d0 = f64(c0) + f64(c0);
+    s0 = "1234";
+    v_uint32 = u32(s0);
+    s0 = "-123";
+    v_int32 = i32(s0);
+    s0 = "100e-3";
+    f0 = f32(s0);
+    c0 = c64(c1);
+    c1 = c128(c0);
+    c1 = c128(v_int32);
+    c1 = c128(v_int8);
+    c0 = c64(f0);
+    c0 = c64(v_int8);
+    c0 = c64(v_int32);
+    s0 = string(v_int32);
+    s0 = string(f0);
+    s0 = string(b0);
+    s0 = "100 + 3i";
+    c0 = c64(s0);
+    c1 = c128(s0);
+    v_int32 = i8(i32(0x1ff));
+    v_int32 = i16(i32(0x1ffff));
+    v_uint64 = u64(2e17);
+    
+    // unary
+    v_int32 += sizeof(v_int32);
+    v_int64 += i64(~2);
+    v_uint64 += u64(i64(-3));
+    v_uint64 = u32(~2);
+
+    // literal to variable automatic downcasts
+    c1 = 100;
+    c0 = 1.0 + 1i;
+    c0 = 100;
+    d0 = 1.0 + 1i - 1i;
+    f0 = 1.0;
+    v_int32 = 1.0;
+    c1 = 1.0;
+    
+    // fake casts
+    v_int32 = i32(1_000.0);
+    v_int32 = i32(-1_000e2);
+    v_int64 = i64(1_000);
+    v_int64 = i64(-0xff_ff);
+    v_uint32 = u32(1_000.0);
+    v_uint32 = u32(1_000e2);
+    v_uint64 = u64(1_000);
+    v_uint64 = u64(0xff_ff);
+    f0 = f32(1_000.0);
+    f0 = f32(-1_000e2);
+    d0 = f64(1_000);
+    d0 = f64(-0xff_ff);
+    c0 = c64(1_000.0 + 1_000i);
+    c0 = c64(-1_000e2 - 1_000e2i);
+    c1 = c128(1_000 + 1_000.0i);
+    c1 = c128(-0xff_ff);   
+    c0 = c64(100);
+    
+    // extreme values for signed ints
+    v_int32 = 0x7fff_ffff;
+    v_int32 = i32(-0x8000_0000);
+    v_int64 = i64(0x7fff_ffff_ffff_ffff);
+    v_int64 = i64(-0x8000_0000_0000_0000);
+      
+    // compile time constants checks
+    v_int32 = 5 ^ 3;
+    v_int32 = 5 + -3;
+    v_int32 = -5 + -3;
+    v_int32 = -5 + 3;
+    v_int32 = 5 + 3;
+    v_int32 = 5 - -3;
+    v_int32 = -5 - -3;
+    v_int32 = -5 - 3;
+    v_int32 = 5 - 3;
+    v_int32 = 5 * 12;
+    v_int32 = 183 / 11;
+    v_int32 = 183 % 11;
+    v_int32 = 12000 >> 3;
+    v_int32 = 12000 << 3;
+    v_int32 = -12000 >> 3;
+    v_int32 = -12000 << 3;
+    v_int32 = u32(i32(-12000)) >> 3;
+    v_int32 = 5 | 100;
+    v_int32 = -12 & 100;
+    v_int32 = -12 xor 100;
+    f0 = f64(3.0) ^ f64(2.0);
+    f0 = f64(3.0) + f64(2.0);
+    f0 = f64(3.0) - f64(2.0);
+    f0 = f64(3.0) * f64(2.0);
+    f0 = f64(3.0) / f64(2.0);
+    f0 = 3.0 ^ 2.0;
+    f0 = 3.0 + 2.0;
+    f0 = 3.0 - 2.0;
+    f0 = 3.0 * 2.0;
+    f0 = 3.0 / 2.0;
+    c1 = c128(3.0) ^ c128(2.0 + 1i);
+    c1 = c128(3.0) + c128(2.0 + 1i);
+    c1 = c128(3.0) - c128(2.0 + 1i);
+    c1 = c128(3.0) * c128(2.0 + 1i);
+    c1 = c128(3.0) / c128(2.0 + 1i);
+    c1 = 3.0 ^ (2.0 + 1i);
+    c1 = 3.0 + (2.0 + 1i);
+    c1 = 3.0 - (2.0 + 1i);
+    c1 = 3.0 * (2.0 + 1i);
+    c1 = 3.0 / (2.0 + 1i);
+}
+
+let vvv = 5;
+
+// functions with defaults
+fn funwithdefs(a0 i32 = i32(100.0), a1 string = "ciccio" + "franco", a3 bool = vvv > 2, a4 *i32 = null) void
+{
+    let aaa = "ciccio" + a1;
+    let bbb = a1 + "ciccio";
+}

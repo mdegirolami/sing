@@ -1,0 +1,58 @@
+let veryveryveryveryveryverylong1 = 100;
+let veryveryveryveryveryverylong2 = 100;
+let veryveryveryveryveryverylong3 = 100;
+let veryveryveryveryveryverylong4 = 100;
+
+fn manyargs(veryveryveryveryveryverylongarg1 c64, veryveryveryveryveryverylongarg2 c64, veryveryveryveryveryverylongarg3 c64, veryveryveryveryveryverylongarg4 c64) void
+{
+}
+
+// next
+
+// next
+
+/* must ignore this line and merge the previous and following blank line */
+
+fn fn1(a i32,   // rem1
+b i32,          // rem2
+out c i32) void // rem3
+{
+    // of statement
+    c = a + b;      // post
+    
+    c = 100 + 123 * 12^2 + 12345 / (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) - (veryveryveryveryveryverylong3 & veryveryveryveryveryverylong4); // rem
+    manyargs(12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i); // xyz
+    manyargs(12.6526546 + 12.925985478i,    // abc 
+        12.6526546 + 12.925985478i, // abc
+        12.6526546 + 12.925985478i, // abc
+        12.6526546 + 12.925985478i); // xyz
+        
+    // note: the next line has blanks but must be handled as empty
+        
+    for (it in 0:10) {  // onfor
+        ++c;
+        break;          // inner
+    }
+}
+
+fn fn2(a i32, b i32, out c i32) void  // rem1
+                                      // rem2
+                                      // rem3
+{
+}
+
+// attached to next
+let table [][] i32 = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},  // hand formatted !!
+                      {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   // following
+};
+// attached to prev
+
+let table2[][][]string = {{{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}}, {{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}},{{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}}};
+
+let table3 [][] i32 = {
+    {1, 2, 3}, {1, 2, 3}, {1, 2, 3},  
+    {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   // just one remark
+};
+
+let stest string = "kjdhfkhfdkhskdfhkshghkhl"           // rem1
+                   "hfdslkjflkjasdlkfjlksdjflkj";       // rem2

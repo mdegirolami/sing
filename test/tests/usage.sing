@@ -1,0 +1,47 @@
+type deftype i32;   // unused
+type utype i16;
+public type tt c128;
+var g0 = 0; // unused
+var g1 = 0; 
+var g2 = 0; // should be constant
+
+public fn fun1() void
+{
+    var v0 = 0;
+    var v1 = 1;         // unused 
+    var v2 utype = 2;   // should be a constant
+    var v3 = 0;
+    var v4 = 0;
+    
+    v0 = v2;   
+    g1 = g2;
+    fun3(1, v3, v4, v4);
+}
+
+fn fun2() void  // unused
+{
+}
+
+fn fun3(in p0 i32, io p1 i32, out p2 i32, out p3 i32) i32
+{
+    var arr [5]i32;
+    var arr2[5]i32; // used : referencing is like a read op.
+    var arr3[2][3]i32;
+    
+    for (vv in arr) {
+        vv = 4;
+    }
+    
+    for (vv in arr2) {      
+    }
+    
+    for (vv in arr3[0]) {
+    }
+    
+    p1++;
+    
+    p3 = 3;
+
+    return(p2 + p3);     // p2 read but not written !!
+}
+

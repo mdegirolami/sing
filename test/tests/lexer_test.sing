@@ -1,0 +1,45 @@
+/* single line */    // single line
+/* multiline
+*************/
+/* nested /**/*/ identifyer67876 _id+alsk_89// end id"string"
+"string with escapes \' \" \\ \? \a \b \f \n \r \t \v \x67 \u76aa" 123e3+123e-3 112.13e5 0x23i 12.1e-3i
+
+
+
+null true false package requires var const type matrix map weak i8 i16 i32 i64 u8 u16 u32
+u64 f32 f64 c64 c128 let string rune bool size_t errcode fn pure in out io if else
+while for return break continue error cleanup run bind sizeof dimof xor as typeswitch case default public
+private enum struct class finalize interface static implements bypass template argument volatile throw
+try catch this mut ()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&=|=&&=||='a''\ueeee'
+;
+'
+'f
+'fgetc
+"akldlk
+"\"
+"\x"
+"\u"
+"\k"
+"\xh"
+10e1000
+8000000000
+2.0
+10e 0xat 0x10 0x1000000000000000000000000 
+0x67i 0xffk 0.003e13i+1e0h 1i 9k 3. 3.5i 3.5k 3e+ 5eh 8e-35 18446744073709551615 18446744073709551616
+1.7976931348623158e308  1.79769313486231581e308 9.99999999999999999999999999e307 1.0e309 0.0017e311
+5.000_000
+1_000_000
+0x23_ff_12
+10.00_0
+10_.00
+10.00_
+10._0
+0x_0
+0x0_0
+0x0_
+id__double
+id_single_
+_
+by switch
+/*
+		

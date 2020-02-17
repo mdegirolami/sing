@@ -1,0 +1,254 @@
+requires "synth_test_pkg", pkg;
+
+enum myenum {uno, due, tre}
+enum myenum2 {uno, due, tre}
+
+fn test(in arg0 myenum = myenum.uno ) void  // anum eligible for initializations
+{
+    let e0 = myenum.uno;
+    if (e0 < myenum.due) {
+    } else if (e0 == myenum.tre) {
+    } else if (e0 == 0) {           // error - type mismatch
+    }
+    let e1 = myenum2.due;
+    if (e0 == e1) {                 // error - type mismatch
+    }
+    var myarr [myenum.due]i32;
+    myarr[myenum2.uno] = 0;
+    myarr[myenum2.tre] = 0;         // error - out of bounds
+    myarr[e0 + 1] = 0;              // error - type mismatch
+    var myarr2 [e1]i32;
+}
+
+fn pippo.one() void             // pippo undef
+{
+} 
+
+var notctc = 10;
+let ctc = 10;
+
+interface if0 {
+    fn from_if0() void;
+    fn conflicting() void;
+}
+
+interface if10 {
+}
+
+class delegated {
+public:
+    interface if0;
+    fn unimplemented() void;
+}
+
+class first {
+    fn cfy(the_other *first) void;              // forward ref to itself
+public:
+    var conflicting i32;                // conflicts with function from interface
+    var conflicting i32;                // double defined
+    var cf1 i32;                        // conflicts with fun
+
+    fn unimplemented2 by implementor;   // implementor doesn't implement !
+    fn unimplemented3 by implementorX;  // implementor doesn't exist !
+    fn unimplemented by implementor;      // ok
+    interface if0 by implementor;       // ok
+    interface if10 by implementor;       // implementor doesn't implement !
+    interface if10 by implementorX;      // implementor doesn't exist !
+    interface if0;                      // included twice
+
+    fn cf0() void;
+    fn cf0() void;              // duplicated
+    fn cf1() void;
+ 
+    fn cfx(the_other first) void;               // legal reference to itself
+    fn Finalize() void;                         // wrong case
+    fn finalize(kkk i32) void;                  // no arg allowed in destructor
+    var mv0 first;              // illegal
+    var mv1 *first;             // forward ref
+    var xxx []i32 = {0,1,2};    // only single initers allowed in classes
+    var xx2 []i32 = 1;          // can initialize only simple types
+    var pt *i32;                // ok: typed
+    var xxk = 0;                // ok: auto
+    var xxj i32 = notctc;       // not a compile time constant
+    var xxl i32 = ctc;          // ok
+    var implementor delegated;
+    fn mv0 () void;                     // conflicts with variable member
+}
+
+fn first.nonexistent() void         // class has not this function
+{
+}
+
+fn first.cf0() void // should access this !!
+{
+}
+
+fn first.cf0() void // double defined
+{
+}
+
+fn first.cf1(xx i32) void // wrong signature
+{
+}
+
+public fn first.cfy(the_other *first) void // original is private
+{
+}
+
+var initedf first = 0;    // can't init classes
+
+enum myenum3 {uno, uno, due = notctc}    // double case, not a compile time constant
+
+interface if1 {
+    fn f1 () void;
+    fn f2 () void;
+    fn f1 () void;  // duplicated
+    fn mut f3 () void;
+}
+
+interface if1B {
+    fn f1 () void;              // no conflict with if1 (same signature)
+    fn f2 (aaa i32) void;       // conflict !!
+}
+
+interface if2 {
+    interface if1;
+    interface if1;  // duplicated
+    fn f1() void;   // conflict
+    interface if1B; // if1 and if1B both have conflicting f2 signatures
+    interface myenum3;  // not an interface !!
+}
+
+class if1implementor {
+public:
+    interface if1;
+}
+
+fn switchtest(in arg0 if1) void
+{
+    var imp if1implementor;
+    var int0 = 0;
+
+    switch(imp) {   // unallowed type 
+    5: test();      
+    ctc: int0++;
+    }
+    
+    switch(int0) {
+    5: test();
+    ctc: int0++;
+    notctc: int0++; // must be ctc
+    "a": int0++;    // type mismatch
+    }
+    
+    typeswitch(int0 = arg0) {    // refname must be new    
+    }
+    
+    typeswitch(int1 = int0) {    // int0 is not an interface
+    }
+    
+    typeswitch(tref = arg0) {
+    if1implementor: int0++;
+    delegated: int0++;       // not derived from if1
+    }
+}
+
+// dot operator
+
+fn dot_test() void
+{ 
+    var int0 = 0;
+    
+    pkg.kkk = 0;                // nonexistent
+    pkg.invisible();            // private
+    pkg.pkg_type = 0;           // ok
+    var vv0 myenum = myenum.tadaa; // notexistent case
+    int0.tadaa = 0;                 // can't use '.' on ints !
+}
+
+class nearlygood {
+    fn mut fn1() void;
+    fn fn2() void;
+    var v0 = 0;
+public:
+    fn fn3() void;
+    var v1 = 0;
+}
+
+fn nearlygood.fn2() void
+{
+    fn1();      // none defined at the root scope
+    this.fn1(); // can't call mut from nonmut
+    this.fn3(); // ok
+    v0 = 3;     // none defined at the root scope
+    this.v0 = 3;    // ko (not muting)
+}
+
+fn nearlygood.fn1() void
+{
+    this.v0 = 3;     // ok
+}
+
+fn extern() void
+{
+    var instance nearlygood;
+    
+    instance.fn1();     // is private !!
+    instance.fn3();     // ok
+    instance.v0 = 3;    // is private !!
+    instance.v1 = 0;    // ok
+    instance.kkk = 0;   // doesn't exist
+    this.kkk = 0;       // this has no meaning here
+}
+
+//
+// interfaces assignments, usage
+//
+class concrete {
+public:
+    interface if1;
+}
+
+fn assignments(in arg0 if1, out arg1 if1) void
+{
+    var v0 if1;             // can't do
+    var v1 if1implementor;
+    var v2 concrete;
+    var v3 concrete;
+    
+    v1 = arg0;              // ko: assigned and assignee must be of same type !!
+    arg1 = v1;              // arg1 is not concrete
+    v1 = v2;                // different types
+    v2 = v3;                // ok
+    
+    assignments(v1, v2);
+    assignments(arg0, arg0);    // ko: arg0 is read only
+    assignments(arg0, arg1);    // ok
+    arg0.fn1();                 // ok
+    arg0.fn3();                 // ko: can't call muting !!
+    arg1.fn1();                 // ok
+    arg1.fn3();                 // ok
+}
+
+fn assignments2(in arg0 *if1, out arg1 *if1, in arg2 const *if1) void
+{
+    var v0 *if1;             // ok
+    var v1 *if1implementor;
+    var v2 *concrete;
+    var v3 *concrete;
+    
+    v1 = arg0;                  // ko: downcast
+    arg1 = v1;                  // ok: upcast
+    v1 = v2;                    // ko: different types
+    v2 = v3;                    // ok
+    
+    assignments(v1, v2);        // ok
+    assignments(arg0, arg0);    // ko: arg0 is read only
+    assignments(arg0, arg1);    // ok
+    arg0.fn1();                 // ok
+    arg0.fn3();                 // ok
+    arg1.fn1();                 // ok
+    arg1.fn3();                 // ok
+    arg2.fn1();                 // ok
+    arg2.fn3();                 // ko: pointed is const   
+}

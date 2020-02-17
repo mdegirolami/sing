@@ -1,0 +1,251 @@
+
+0	/* single line */
+1	// single line
+0	/* multiline
+*************/
+0	/* nested /**/*/
+2	identifyer67876
+2	_id
+94	+
+2	alsk_89
+1	// end id"string"
+6	"string with escapes \' \" \\ \? \a \b \f \n \r \t \v \x67 \u76aa"
+3	123e3
+94	+
+3	123e-3
+3	112.13e5
+5	0x23i
+5	12.1e-3i
+8	
+9	null
+10	true
+11	false
+2	package
+14	requires
+16	var
+17	const
+18	type
+2	matrix
+19	map
+20	weak
+21	i8
+22	i16
+23	i32
+24	i64
+25	u8
+26	u16
+27	u32
+28	u64
+29	f32
+30	f64
+31	c64
+32	c128
+35	let
+36	string
+2	rune
+37	bool
+2	size_t
+38	errcode
+39	fn
+40	pure
+41	in
+42	out
+43	io
+46	if
+47	else
+48	while
+49	for
+50	return
+51	break
+52	continue
+53	error
+54	cleanup
+55	run
+56	bind
+57	sizeof
+58	dimof
+59	xor
+60	as
+61	typeswitch
+2	case
+63	default
+64	public
+65	private
+66	enum
+67	struct
+68	class
+2	finalize
+70	interface
+71	static
+72	implements
+2	bypass
+74	template
+75	argument
+76	volatile
+77	throw
+78	try
+79	catch
+69	this
+13	mut
+81	(
+82	)
+83	[
+84	]
+85	{
+86	}
+87	<
+88	>
+89	,
+90	=
+91	++
+92	--
+93	.
+94	+
+95	-
+96	*
+97	/
+98	^
+99	%
+100	>>
+101	<<
+102	~
+103	&
+104	|
+105	>=
+106	<=
+107	!=
+108	==
+109	!
+110	&&
+111	||
+112	:
+114	+=
+115	-=
+116	*=
+117	/=
+118	^=
+119	%=
+120	>>=
+121	<<=
+122	&=
+123	|=
+110	&&
+90	=
+111	||
+90	=
+4	'a'
+4	'\ueeee'
+113	;
+
+ERROR !! Truncated numeric literal at 15, 1
+
+
+ERROR !! Truncated numeric literal at 16, 2
+
+
+ERROR !! Expecting ''' at 17, 3
+
+
+ERROR !! Truncated string at 18, 7
+
+
+ERROR !! Truncated string at 19, 3
+
+
+ERROR !! Unknown/wrong escape sequence at 20, 4
+
+
+ERROR !! Unknown/wrong escape sequence at 21, 4
+
+
+ERROR !! Unknown/wrong escape sequence at 22, 3
+
+
+ERROR !! Unknown/wrong escape sequence at 23, 4
+
+
+ERROR !! Literal value too big to fit in its type at 24, 4
+
+4	8000000000
+3	2.0
+
+ERROR !! Expected a digit at 27, 4
+
+
+ERROR !! Numeric literals must be terminated by blank or punctuation (except '.') at 27, 8
+
+4	0x10
+
+ERROR !! Literal value too big to fit in its type at 27, 26
+
+5	0x67i
+
+ERROR !! Numeric literals must be terminated by blank or punctuation (except '.') at 28, 11
+
+5	0.003e13i
+94	+
+
+ERROR !! Numeric literals must be terminated by blank or punctuation (except '.') at 28, 26
+
+5	1i
+
+ERROR !! Numeric literals must be terminated by blank or punctuation (except '.') at 28, 32
+
+
+ERROR !! Expected a digit at 28, 36
+
+5	3.5i
+
+ERROR !! Numeric literals must be terminated by blank or punctuation (except '.') at 28, 45
+
+
+ERROR !! Expected a digit at 28, 50
+
+
+ERROR !! Expected a digit at 28, 53
+
+3	8e-35
+4	18446744073709551615
+
+ERROR !! Literal value too big to fit in its type at 28, 92
+
+3	1.7976931348623158e308
+
+ERROR !! Literal value too big to fit in its type at 29, 36
+
+3	9.99999999999999999999999999e307
+
+ERROR !! Literal value too big to fit in its type at 29, 85
+
+3	0.0017e311
+3	5.000_000
+4	1_000_000
+4	0x23_ff_12
+3	10.00_0
+
+ERROR !! In numerics, underscores are allowed only between decimal/exadecimal digits at 34, 3
+
+
+ERROR !! In numerics, underscores are allowed only between decimal/exadecimal digits at 35, 6
+
+
+ERROR !! In numerics, underscores are allowed only between decimal/exadecimal digits at 36, 4
+
+
+ERROR !! In numerics, underscores are allowed only between decimal/exadecimal digits at 37, 4
+
+4	0x0_0
+
+ERROR !! In numerics, underscores are allowed only between decimal/exadecimal digits at 39, 5
+
+
+ERROR !! Symbols with multiple neighboring _ characters are reserved at 40, 3
+
+2	id_single_
+
+ERROR !! A symbol must have at least a character different from '_' at 42, 1
+
+73	by
+62	switch
+
+ERROR !! Unexpected end of file at 45, 1

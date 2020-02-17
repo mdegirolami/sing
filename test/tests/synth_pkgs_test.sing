@@ -1,0 +1,22 @@
+requires "assert";
+requires "synth_test_pkg", the_pkg;
+requires "synth_test_pkg2";        
+
+type gg the_pkg.pkg_type;   // good !!
+
+var vf [the_pkg.pkg_ctc] i32;   // good !!
+
+public let kk = c128(100.3 + 12i);
+public let table [] i32 = {100, 200, 300};
+
+fn test() void
+{
+    the_pkg.pkg_fun(vf);
+}
+
+// public inclusion of synth_test_pkg2
+public fn test2(in p0 synth_test_pkg2.pkg_type2) void
+{
+    var tt the_pkg.pkg_type;    // needed by a public, but not in the declaration: private inclusion.
+    assert.assert(true);
+}
