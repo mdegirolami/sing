@@ -1,1 +1,1 @@
-obj/ast_checks.o obj/ast_nodes.o obj/ast_nodes_print.o obj/compiler.o obj/cpp_formatter.o obj/cpp_synth.o obj/expression_attributes.o obj/FileName.o obj/helpers.o obj/lexer.o obj/NamesList.o obj/numeric_value.o obj/options.o obj/package.o obj/Parser.o obj/string.o obj/symbols_storage.o obj/target.o
+ast_checks.o ast_nodes.o ast_nodes_print.o compiler.o cpp_formatter.o cpp_synth.o expression_attributes.o FileName.o helpers.o lexer.o NamesList.o numeric_value.o options.o package.o Parser.o string.o symbols_storage.o target.o

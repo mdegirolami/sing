@@ -28,10 +28,28 @@
         {
             "type": "shell",
             "label": "ninja build",
+
             "command": "C:\\MinGW\\bin\\ninja.exe",
-            "args": ["-v"],
+            "args": ["-v", "-f", "../build_debug.ninja"],
             "options": {
-                "cwd": "${workspaceFolder}\\build"
+                "cwd": "${workspaceFolder}\\build\\obj_d"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "ninja build release",
+
+            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "args": ["-v", "-f", "../build_release.ninja"],
+            "options": {
+                "cwd": "${workspaceFolder}\\build\\obj_r"
             },
             "problemMatcher": [
                 "$gcc"

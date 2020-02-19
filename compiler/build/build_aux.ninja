@@ -1,16 +1,13 @@
-cflags = -g -fsigned-char
-
-src = ../src
-obj = obj
-bin = ../bin
+cflags = -fsigned-char
+obj = .
 
 rule cc
   deps = gcc
   depfile = $out.d
-  command = g++ -MD -MF $out.d $cflags -c $in -o $out
+  command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
 
 rule ln
-  command = g++ -o $out @objslist.txt
+  command = g++ -o $out @../objslist.txt
 
 build $obj/ast_checks.o:           cc $src/ast_checks.cpp                                                                                                                                         
 build $obj/ast_nodes.o:            cc $src/ast_nodes.cpp                                                                                                                                          
@@ -31,6 +28,6 @@ build $obj/string.o:               cc $src/string.cpp
 build $obj/symbols_storage.o:      cc $src/symbols_storage.cpp                                                                                                                                    
 build $obj/target.o:               cc $src/target.cpp                                                                                                                                             
 
-build $bin/sing.exe: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o
+build $bin_target: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o
 
-default $bin/sing.exe
+default $bin_target

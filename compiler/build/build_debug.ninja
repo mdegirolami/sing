@@ -1,0 +1,6 @@
+debug_flags = -g
+
+src = ../../src
+bin_target = ../../bin/sing_d.exe
+
+include ../build_aux.ninja
