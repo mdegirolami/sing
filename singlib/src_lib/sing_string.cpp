@@ -1,4 +1,3 @@
-#include <string.h>
 #include <stdexcept>
 #include <ctype.h>
 #include "sing_string.h"
@@ -111,7 +110,7 @@ void string::operator=(const string &other)
         content_ = other.content_;
     } else {
         discardAndgrow(other.size());
-        strcpy(content_, other.content_);
+        ::strcpy(content_, other.content_);
     }
 }
 
@@ -121,7 +120,7 @@ void string::operator=(const char *other)
         content_ = (char*)other;
     } else {
         discardAndgrow(strlen(other));
-        strcpy(content_, other);
+        ::strcpy(content_, other);
     }
 }
 
@@ -130,7 +129,7 @@ string& string::operator+=(const string& other)
     int len = size();
 
     growTo(len + other.size());
-    strcpy(content_ + len, other.content_);
+    ::strcpy(content_ + len, other.content_);
     return(*this);
 }
 
@@ -139,7 +138,7 @@ string& string::operator+=(const char *cstr)
     int len = size();
 
     growTo(len + strlen(cstr));
-    strcpy(content_ + len, cstr);
+    ::strcpy(content_ + len, cstr);
     return(*this);
 }
 
@@ -411,8 +410,8 @@ string operator+(const string& left, const string& right)
     int left_len = strlen(left.c_str());
 
     result.reserve(left_len + strlen(right.c_str()));
-    strcpy(result.content_, left.content_);
-    strcpy(result.content_ + left_len, right.content_);
+    ::strcpy(result.content_, left.content_);
+    ::strcpy(result.content_ + left_len, right.content_);
     return result;
 }
 
@@ -424,7 +423,7 @@ string operator+(uint32_t rune, const string& right)
     result.growTo(strlen(right.c_str()) + 4);
     dst = result.content_;
     string::rune_encode(&dst, rune);
-    strcpy(dst, right.c_str());
+    ::strcpy(dst, right.c_str());
     return result;
 }
 
@@ -435,7 +434,7 @@ string operator+(const string& left, uint32_t rune)
     int     left_len = left.size();
 
     result.growTo(left_len + 4);
-    strcpy(result.content_, left.content_);
+    ::strcpy(result.content_, left.content_);
     dst = result.content_ + left_len;
     string::rune_encode(&dst, rune);
     *dst = 0;

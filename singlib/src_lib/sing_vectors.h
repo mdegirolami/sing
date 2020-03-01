@@ -1,6 +1,7 @@
 #ifndef SING_VECTORS_H_
 #define SING_VECTORS_H_
 
+#include <memory.h>
 #include <initializer_list>
 #include <algorithm>
 
@@ -177,65 +178,65 @@ template<class T>
 class dvect : public vect<T> {
 public:
     dvect() {
-        _count = _allocated = 0;
-        _first = nullptr;
+        this->_count = this->_allocated = 0;
+        this->_first = nullptr;
     }
 
     // constructor with preallocated size
     dvect(size_t size) {
-        _count = _allocated = size;
-        _first = new T[size];
+        this->_count = this->_allocated = size;
+        this->_first = new T[size];
     }
 
     // constructor for initialized vector
     dvect(const std::initializer_list<T> &list) {
-        _first = new T[list.size()];
-        _count = _allocated = list.size();
+        this->_first = new T[list.size()];
+        this->_count = this->_allocated = list.size();
         const T *src = list.begin();
-        for (size_t ii = 0; ii < _count; ++ii) {
-            _first[ii] = *src++;
+        for (size_t ii = 0; ii < this->_count; ++ii) {
+            this->_first[ii] = *src++;
         }
     }
 
     // to allocate a run time sized, initialized vector
     dvect(size_t size, const std::initializer_list<T> &list) {
         size_t tocopy = list.size();
-        _count = _allocated = std::max(size, tocopy);
-        _first = new T[_count];
+        this->_count = this->_allocated = std::max(size, tocopy);
+        this->_first = new T[this->_count];
         const T *src = list.begin();
         size_t ii = 0;
         while (ii < tocopy) {
-            _first[ii++] = *src++;
+            this->_first[ii++] = *src++;
         }
         --src;
-        while (ii < _count) {
-            _first[ii++] = *src;
+        while (ii < this->_count) {
+            this->_first[ii++] = *src;
         }
     }
 
     // copy inited
     dvect(const vect<T> &right) {
-        _count = _allocated = right.size64();
-        _first = new T[_count];
-        for (size_t ii = 0; ii < _count; ++ii) {
-            _first[ii] = right.begin()[ii];
+        this->_count = this->_allocated = right.size64();
+        this->_first = new T[this->_count];
+        for (size_t ii = 0; ii < this->_count; ++ii) {
+            this->_first[ii] = right.begin()[ii];
         }
     }
     dvect(const dvect<T> &right) {
-        _count = _allocated = right.size64();
-        _first = new T[_count];
-        for (size_t ii = 0; ii < _count; ++ii) {
-            _first[ii] = right.begin()[ii];
+        this->_count = this->_allocated = right.size64();
+        this->_first = new T[this->_count];
+        for (size_t ii = 0; ii < this->_count; ++ii) {
+            this->_first[ii] = right.begin()[ii];
         }
     }
 
     // to allocate a run time sized, copy-inited vector
     dvect(size_t size, const vect<T> &right) {
         size_t tocopy = right.size64();
-        _count = _allocated = std::max(size, tocopy);
-        _first = new T[_count];
+        this->_count = this->_allocated = std::max(size, tocopy);
+        this->_first = new T[this->_count];
         for (size_t ii = 0; ii < tocopy; ++ii) {
-            _first[ii] = right.begin()[ii];
+            this->_first[ii] = right.begin()[ii];
         }
     }
 
@@ -247,26 +248,26 @@ protected:
     void GrowTo(size_t itemscount)
     {
         // are we ok ?
-        if (_allocated >= itemscount) return;
+        if (this->_allocated >= itemscount) return;
 
         // allocate a new buffer
-        size_t newsize = _allocated;
+        size_t newsize = this->_allocated;
         if (newsize == 0) newsize = 1;
         while (newsize < itemscount) newsize <<= 1;
         T *newone = new T[newsize];
 
         // copy the old values
-        for (size_t ii = 0; ii < _count; ++ii) {
-            newone[ii] = _first[ii];
+        for (size_t ii = 0; ii < this->_count; ++ii) {
+            newone[ii] = this->_first[ii];
         }
 
         // free old stuff (if owned !!)
-        delete[] _first;
+        delete[] this->_first;
 
-        _first = newone;
-        _allocated = newsize;
+        this->_first = newone;
+        this->_allocated = newsize;
     }
-    virtual void SetCount(size_t count) { _count = count; };
+    virtual void SetCount(size_t count) { this->_count = count; };
 };
 
 // dynamic vector for plain old data types
@@ -275,23 +276,23 @@ template<class T>
 class dpvect : public vect<T> {
 public:
     dpvect() {
-        _count = _allocated = 0;
-        _first = nullptr;
+        this->_count = this->_allocated = 0;
+        this->_first = nullptr;
     }
 
     dpvect(size_t size) {
-        _count = _allocated = size;
-        _first = new T[size];
-        memset(_first, 0, sizeof(T) * _count);
+        this->_count = this->_allocated = size;
+        this->_first = new T[size];
+        memset(this->_first, 0, sizeof(T) * this->_count);
     }
 
     // constructor for initialized vector
     dpvect(const std::initializer_list<T> &list) {
-        _first = new T[list.size()];
-        _count = _allocated = list.size();
+        this->_first = new T[list.size()];
+        this->_count = this->_allocated = list.size();
         const T *src = list.begin();
-        for (size_t ii = 0; ii < _count; ++ii) {
-            _first[ii] = *src++;
+        for (size_t ii = 0; ii < this->_count; ++ii) {
+            this->_first[ii] = *src++;
         }
     }
 
@@ -300,40 +301,40 @@ public:
 
         // allocate
         size_t tocopy = list.size();
-        _count = _allocated = std::max(size, tocopy);
-        _first = new T[_count];
+        this->_count = this->_allocated = std::max(size, tocopy);
+        this->_first = new T[this->_count];
 
         // copy initialized filelds
         const T *src = list.begin();
-        memcpy(_first, src, sizeof(T) * tocopy);
+        memcpy(this->_first, src, sizeof(T) * tocopy);
 
         // init the other with the last item from the list
         src += tocopy - 1;
-        for (size_t ii = tocopy; ii < _count; ++ii) {
-            _first[ii] = *src;
+        for (size_t ii = tocopy; ii < this->_count; ++ii) {
+            this->_first[ii] = *src;
         }
     }
 
     // copy inited
     dpvect(const vect<T> &right) {
-        _count = _allocated = right.size64();
-        _first = new T[_count];
-        memcpy(_first, right.begin(), sizeof(T) * _count);
+        this->_count = this->_allocated = right.size64();
+        this->_first = new T[this->_count];
+        memcpy(this->_first, right.begin(), sizeof(T) * this->_count);
     }
     dpvect(const dpvect<T> &right) {
-        _count = _allocated = right.size64();
-        _first = new T[_count];
-        memcpy(_first, right.begin(), sizeof(T) * _count);
+        this->_count = this->_allocated = right.size64();
+        this->_first = new T[this->_count];
+        memcpy(this->_first, right.begin(), sizeof(T) * this->_count);
     }
 
     // to allocate a run time sized, copy-inited vector
     dpvect(size_t size, const vect<T> &right) {
         size_t tocopy = right.size64();
-        _count = _allocated = std::max(size, tocopy);
-        _first = new T[_count];
-        memcpy(_first, right.begin(), sizeof(T) * tocopy);
-        if (_count > tocopy) {
-            memset(_first + tocopy, 0, sizeof(T) * (_count - tocopy));
+        this->_count = this->_allocated = std::max(size, tocopy);
+        this->_first = new T[this->_count];
+        memcpy(this->_first, right.begin(), sizeof(T) * tocopy);
+        if (this->_count > tocopy) {
+            memset(this->_first + tocopy, 0, sizeof(T) * (this->_count - tocopy));
         }
     }
 
@@ -345,27 +346,27 @@ protected:
     void GrowTo(size_t itemscount)
     {
         // are we ok ?
-        if (_allocated >= itemscount) return;
+        if (this->_allocated >= itemscount) return;
 
         // allocate a new buffer
-        size_t newsize = _allocated;
+        size_t newsize = this->_allocated;
         if (newsize == 0) newsize = 1;
         while (newsize < itemscount) newsize <<= 1;
         T *newone = new T[newsize];
 
         // copy the old values
-        memcpy(newone, _first, _count * sizeof(T));
+        memcpy(newone, this->_first, this->_count * sizeof(T));
 
         // init the new ones.
-        memset(newone + _count, 0, sizeof(T) * (newsize - _count));
+        memset(newone + this->_count, 0, sizeof(T) * (newsize - this->_count));
 
         // free old stuff (if owned !!)
-        delete[] _first;
+        delete[] this->_first;
 
-        _first = newone;
-        _allocated = newsize;
+        this->_first = newone;
+        this->_allocated = newsize;
     }
-    virtual void SetCount(size_t count) { _count = count; }
+    virtual void SetCount(size_t count) { this->_count = count; }
 };
 
 // static vector for objects with a constructor
@@ -376,49 +377,49 @@ class svect : public vect<T> {
 
 public:
     svect() {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
     }
 
     // constructor for initialized vector
     svect(const std::initializer_list<T> &list) {
-        _allocated = 0;
-        _first = storage;
-        _count = len;
+        this->_allocated = 0;
+        this->_first = storage;
+        this->_count = len;
         const T *src = list.begin();
         const T *end = list.end();
         size_t ii = 0;
-        while (ii < _count && src < end) {
-            _first[ii++] = *src++;      
+        while (ii < this->_count && src < end) {
+            this->_first[ii++] = *src++;      
         }
         --src;
-        while (ii < _count) {
-            _first[ii++] = *src;
+        while (ii < this->_count) {
+            this->_first[ii++] = *src;
         }
     }
 
     // copy inited
     svect(const vect<T> &right) {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
-        if (right.size64() > _count) {
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
+        if (right.size64() > this->_count) {
             throw(std::out_of_range("array index"));
         }
         for (size_t ii = 0; ii < right.size64(); ++ii) {
-            _first[ii] = right.begin()[ii];
+            this->_first[ii] = right.begin()[ii];
         }
     }
     svect(const svect<T, len> &right) {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
-        if (right.size64() > _count) {
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
+        if (right.size64() > this->_count) {
             throw(std::out_of_range("array index"));
         }
         for (size_t ii = 0; ii < right.size64(); ++ii) {
-            _first[ii] = right.begin()[ii];
+            this->_first[ii] = right.begin()[ii];
         }
     }
     void operator=(const vect<T> &right) { vect<T>::operator=(right); }
@@ -440,69 +441,69 @@ class spvect : public vect<T> {
 
 public:
     spvect() {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
         memset(storage, 0, sizeof(storage));
     }
 
     // constructor for initialized vector
     spvect(const std::initializer_list<T> &list) {
-        _allocated = 0;
-        _first = storage;
-        _count = len;
+        this->_allocated = 0;
+        this->_first = storage;
+        this->_count = len;
         const T *src = list.begin();
         const T *end = list.end();
         size_t ii = 0;
-        for (; ii < _count && src < end; ++ii) {
-            _first[ii] = *src++;
+        for (; ii < this->_count && src < end; ++ii) {
+            this->_first[ii] = *src++;
         }
         --src;
-        while (ii < _count) {
-            _first[ii++] = *src;
+        while (ii < this->_count) {
+            this->_first[ii++] = *src;
         }
     }
 
     // copy inited
     spvect(const vect<T> &right) {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
         size_t tocopy = right.size64();
-        if (tocopy > _count) {
+        if (tocopy > this->_count) {
             throw(std::out_of_range("array index"));
         }
-        memcpy(_first, right.begin(), sizeof(T) * tocopy);
-        if (_count > tocopy) {
-            memset(_first + tocopy, 0, sizeof(T) * (_count - tocopy));
+        memcpy(this->_first, right.begin(), sizeof(T) * tocopy);
+        if (this->_count > tocopy) {
+            memset(this->_first + tocopy, 0, sizeof(T) * (this->_count - tocopy));
         }
     }
     spvect(const spvect<T, len> &right) {
-        _count = len;
-        _allocated = 0;
-        _first = storage;
+        this->_count = len;
+        this->_allocated = 0;
+        this->_first = storage;
         size_t tocopy = right.size64();
-        if (tocopy > _count) {
+        if (tocopy > this->_count) {
             throw(std::out_of_range("array index"));
         }
-        memcpy(_first, right.begin(), sizeof(T) * tocopy);
-        if (_count > tocopy) {
-            memset(_first + tocopy, 0, sizeof(T) * (_count - tocopy));
+        memcpy(this->_first, right.begin(), sizeof(T) * tocopy);
+        if (this->_count > tocopy) {
+            memset(this->_first + tocopy, 0, sizeof(T) * (this->_count - tocopy));
         }
     }
 
     // = operator, optimized
     void operator=(const vect<T> &right) {
-        if (right.size64() > _count) {
+        if (right.size64() > this->_count) {
             throw(std::out_of_range("array index"));
         }
-        memcpy(_first, right.begin(), sizeof(T) * right.size64());
+        memcpy(this->_first, right.begin(), sizeof(T) * right.size64());
     }
     void operator=(const spvect<T, len> &right) { 
-        if (right.size64() > _count) {
+        if (right.size64() > this->_count) {
             throw(std::out_of_range("array index"));
         }
-        memcpy(_first, right.begin(), sizeof(T) * right.size64());
+        memcpy(this->_first, right.begin(), sizeof(T) * right.size64());
     }
 
 protected:
@@ -525,9 +526,9 @@ public:
         if (last > right.size64()) {
             throw(std::out_of_range("slice exceeds the vector size"));
         }
-        _count = last - first;
-        _allocated = 0;
-        _first = right.begin() + first;
+        this->_count = last - first;
+        this->_allocated = 0;
+        this->_first = right.begin() + first;
     }
 
     void operator=(const vect<T> &right) { vect<T>::operator=(right); }
@@ -553,9 +554,9 @@ public:
         }
         base = &right;
         size_t last = right.size64();
-        _count = last - first;
-        _allocated = 0;
-        _first = right.begin() + first;
+        this->_count = last - first;
+        this->_allocated = 0;
+        this->_first = right.begin() + first;
     }
 
     // from a vector
@@ -565,9 +566,9 @@ public:
         }
         base = nullptr;
         size_t last = right.size64();
-        _count = last - first;
-        _allocated = 0;
-        _first = right.begin() + first;
+        this->_count = last - first;
+        this->_allocated = 0;
+        this->_first = right.begin() + first;
     }
 
     void operator=(const vect<T> &right) { vect<T>::operator=(right); }
@@ -578,16 +579,16 @@ protected:
         if (base == nullptr) {
             throw(std::out_of_range("slice array index"));
         }
-        size_t first = _first - base->begin();
+        size_t first = this->_first - base->begin();
         base->reserve(itemscount + first);
-        _first = base->begin() + first;
+        this->_first = base->begin() + first;
     }
 
     void SetCount(size_t count) {
         if (base != nullptr) {
-            size_t first = _first - base->begin();
+            size_t first = this->_first - base->begin();
             base->SetCount(count + first);
-            _count = base->size() - first;
+            this->_count = base->size() - first;
         }
     }
 };

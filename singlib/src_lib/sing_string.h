@@ -2,6 +2,7 @@
 #define SING_STRING_H_
 
 #include <stdint.h>
+#include <string.h>
 #include "sing_vectors.h"
 
 namespace sing {
@@ -71,10 +72,10 @@ public:
     static const int32_t npos = -1;
 
     ~string() { if (allocated_ > 0) delete[] content_; }
-    string() : content_(""), allocated_(0) {}
+    string() : content_((char*)""), allocated_(0) {}
     string(const string &other) : content_(nullptr), allocated_(0) { *this = other; }
     string(const string *other) : content_(nullptr), allocated_(0) { *this = other; }
-    string(string &&other) : content_(other.content_), allocated_(other.allocated_) { other.allocated_ = 0; other.content_ = ""; }
+    string(string &&other) : content_(other.content_), allocated_(other.allocated_) { other.allocated_ = 0; other.content_ = (char*)""; }
     string(const char *c_str) : content_((char*)c_str), allocated_(0) {}    // to init with a literal string
 
     const char *c_str(void) const { return(&content_[0]); }
@@ -85,7 +86,7 @@ public:
     // void version avoids using = instead of == by mistake
     void    operator=(const string &other);
     void    operator=(const char *other);       // to assign with a literal string
-    void    operator=(string &&other) { content_ = other.content_; allocated_ = other.allocated_; other.allocated_ = 0; other.content_ = ""; }
+    void    operator=(string &&other) { content_ = other.content_; allocated_ = other.allocated_; other.allocated_ = 0; other.content_ = (char*)""; }
 
     string& operator+=(const string& other);
     string& operator+=(const char *cstr);
