@@ -58,5 +58,3 @@ stay/Debug/FileName.obj
 src/ast_checks.cpp~RF51286e9.TMP
 *.obj
 *.o
-.ninja_deps
-.ninja_log

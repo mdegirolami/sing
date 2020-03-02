@@ -101,7 +101,7 @@ void test_vectors(int size)
     vreceiver(vv, *vdynalloc);
     vreceiver(v2, vv);
     vreceiver(rtv, v3);
-    vreceiver(sing::slice<int>(vst_plain, 2, 3), sing::slice<int>(*vdynalloc, 0, 2));
+    //vreceiver(sing::slice<int>(vst_plain, 2, 3), sing::slice<int>(*vdynalloc, 0, 2));
 
     const int pippo = 10;
     sing::svect<sing::string, 5>  xxxxx;

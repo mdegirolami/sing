@@ -1,0 +1,8 @@
+debug_flags = -g
+
+src_b = ../../src_bench
+src_l = ../../src_lib
+bin_target = ../../bin/bench_d.exe
+lib_target = ../../bin/singlib_d.a
+
+include ../build_aux.ninja

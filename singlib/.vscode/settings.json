@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "stdexcept": "cpp",
+        "algorithm": "cpp",
+        "complex": "cpp",
+        "ios": "cpp",
+        "iosfwd": "cpp",
+        "istream": "cpp",
+        "memory": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "vector": "cpp",
+        "xiosbase": "cpp",
+        "xstring": "cpp"
+    }
+}

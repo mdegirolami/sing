@@ -1,0 +1,7 @@
+debug_flags =
+
+src = ../../tests_results
+bin_target = ../../bin/tests.exe
+
+include ../build_aux.ninja
+

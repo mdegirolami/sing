@@ -1,0 +1,21 @@
+cflags = -fsigned-char -I $src
+obj = .
+
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
+
+rule ln
+  command = g++ -o $out @../objslist.txt
+
+build main.o             : cc $src/main.cpp
+build siege.o            : cc $src/siege.cpp
+build sinth_test.o       : cc $src/sinth_test.cpp  
+build synth_pkgs_test.o  : cc $src/synth_pkgs_test.cpp  
+build synth_test_pkg.o   : cc $src/synth_test_pkg.cpp  
+build types_and_vars.o   : cc $src/types_and_vars.cpp  
+
+build $bin_target: ln main.o siege.o sinth_test.o synth_pkgs_test.o synth_test_pkg.o types_and_vars.o
+
+default $bin_target

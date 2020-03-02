@@ -221,7 +221,7 @@ string format(const char *format, ...)
             break;
         case 'b':
             total_bytes += 5;
-            va_arg(args, bool);
+            va_arg(args, int);
             break;
         case 'r':
             total_bytes += 35;
@@ -270,7 +270,7 @@ string format(const char *format, ...)
             result += va_arg(args, const char *);
             break;
         case 'b':
-            result += va_arg(args, bool) ? "true" : "false";
+            result += va_arg(args, int) ? "true" : "false";
             break;
         case 'r':
             {

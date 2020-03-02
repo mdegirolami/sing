@@ -2,7 +2,6 @@
 //#include <limits.h>
 #include "sinth_test.h"
 
-void main();
 void print_primes_to(int32_t top);
 uint32_t uint32_sqrt(uint32_t x);
 uint16_t SquareRoot(uint32_t x);
@@ -14,7 +13,7 @@ void using_strings(void);
 void test_types_and_vars();
 void test_ptr_speed();
 
-void main() {
+int main() {
     //test_types_and_vars();
     //sinth_test();
     //using_strings();
@@ -23,4 +22,5 @@ void main() {
     ptrtest();
     //print_primes_to(100);
     test_ptr_speed();
+    return(0);
 }

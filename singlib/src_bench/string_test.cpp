@@ -1,3 +1,4 @@
+#include <float.h>
 #include "sing.h"
 
 static const sing::string gs0("global");
@@ -8,7 +9,7 @@ void string_receiver(const sing::string &in_string, sing::string *out_string)
     (*out_string) = sing::add_strings(2, in_string.c_str(), in_string.c_str());
 }
 
-void string_vect_receiver(const sing::vector<sing::string> &in_string, sing::vector<sing::string> *out_string)
+void string_vect_receiver(const sing::vect<sing::string> &in_string, sing::vect<sing::string> *out_string)
 {
     (*out_string)[0] = sing::add_strings(2, in_string[0].c_str(), in_string[1].c_str());
 }
@@ -27,8 +28,8 @@ void using_strings(void)
     sing::ptr<sing::string> ds0(new sing::wrapper<sing::string>);
     *ds0 = "xxx";
 
-    sing::vector<sing::string> vs0 = { "a", "b", "c" };
-    sing::vector<sing::string> vs1 { "a", "b", "c" };
+    sing::dvect<sing::string> vs0 = { "a", "b", "c" };
+    sing::dvect<sing::string> vs1 { "a", "b", "c" };
 
     ls1 += ls0;
     vs1[2] = "kk";
