@@ -30,19 +30,31 @@ class CppSynth {
     void SynthType(TypeDeclaration *declaration);
     void SynthFunc(FuncDeclaration *declaration);
 
-    void SynthTypeSpecification(string *dst, IAstNode *type_spec, bool root_of_fun_parm = false);   // init dst with the var/const/type name
+    void SynthFunOpenBrace(string &text);
+    void SynthConstructor(string *classname, AstClassType *ctype);
+    void SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool root_of_fun_parm = false);   // init dst with the var/const/type name
     void SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, bool prototype);           // init dst with the func name
     void SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec, bool root_of_fun_parm);
+    void SynthClassDeclaration(const char *name, AstClassType *type_spec);
+    void SynthClassHeader(const char *name, vector<AstNamedType*> *bases);
+    void SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, vector<string> *implementors, 
+                                    int first_hinerited, bool public_members, bool is_interface);
+    void SynthClassMemberVariables(vector<VarDeclaration*> *d_vector, bool public_members);
+    void SynthInterfaceDeclaration(const char *name, AstInterfaceType *type_spec);
+    void SynthEnumDeclaration(const char *name, AstEnumType *type_spec);
     void SynthIniter(string *dst, IAstTypeNode *type_spec, IAstNode *initer);                       // appends to dst
     void SynthIniterCore(string *dst, IAstTypeNode *type_spec, IAstNode *initer);
     void SynthZeroIniter(string *dst, IAstTypeNode *type_spec);
 
     void SynthBlock(AstBlock *block, bool write_closing_bracket = true);    // assumes { has been written !
+    void SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype);
     void SynthUpdateStatement(AstUpdate *node);
     void SynthPowerUpdateOperator(string *dst, AstUpdate *node);
     void SynthIncDec(AstIncDec *node);
     void SynthWhile(AstWhile *node);
     void SynthIf(AstIf *node);
+    void SynthSwitch(AstSwitch *node);
+    void SynthTypeSwitch(AstTypeSwitch *node);
 
     void SynthFor(AstFor *node);
     void SynthForEachOnDyna(AstFor *node);
@@ -77,10 +89,13 @@ class CppSynth {
     int  WriteHeaders(DependencyUsage usage);
     int  WriteNamespaceOpening(void);
     void WriteNamespaceClosing(int num_levels);
+    void WriteClassForwardDeclarations(bool public_defs);
     int  WriteTypeDefinitions(bool public_defs);
     void WritePrototypes(bool public_defs);
     void WriteExternalDeclarations(void);
     int  WriteVariablesDefinitions(void);
+    int  WriteClassIdsDefinitions(void);
+    int  WriteConstructors(void);
     int  WriteFunctions(void);
 
     void ProcessStringSumOperand(string *format, string *parms, IAstExpNode *node);
@@ -110,6 +125,7 @@ class CppSynth {
     bool IsLiteralString(IAstExpNode *node);
     void AddSplitMarker(string *dst);
     void SetFormatterRemarks(IAstNode *node);
+    AstClassType *GetLocalClassTypeDeclaration(const char *classname);
 public:
     void Init() { newline_before_function_bracket_ = true; }
     void Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, int pkg_index, bool *empty_cpp);

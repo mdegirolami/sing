@@ -261,7 +261,7 @@ void AstChecker::CheckMemberFunc(FuncDeclaration *declaration)
 
     bool found = false;
     bool isok = CheckTypeSpecification(declaration->function_type_, TSCM_STD);
-    AstClassType *ctype = GetLocalClassTypeDeclaration(declaration->classname_.c_str());
+    AstClassType *ctype = GetLocalClassTypeDeclaration(declaration->classname_.c_str(), false);
     if (ctype != nullptr) {
         for (int ii = 0; ii < (int)ctype->member_functions_.size(); ++ii) {
             if (ctype->member_functions_[ii]->name_ == declaration->name_) {
@@ -317,7 +317,7 @@ void AstChecker::CheckFuncBody(FuncDeclaration *declaration)
     in_function_block_ = true;
     current_function_ = declaration;
     if (declaration->is_class_member_) {
-        current_class_ = GetLocalClassTypeDeclaration(declaration->classname_.c_str());
+        current_class_ = GetLocalClassTypeDeclaration(declaration->classname_.c_str(), true);
         this_was_accessed_ = false;
     } else {
         current_class_ = nullptr;
@@ -1174,6 +1174,12 @@ void AstChecker::CheckSwitch(AstSwitch *node)
             Error("The Switch statement requires one of the following types: numeric, enum, string, bool, pointer", node);
             unallowed_type = true;
         }
+        if (attr.IsInteger() || attr.IsEnum()) {
+            node->SetCCompatibility(true);
+            if (attr.RequiresPromotion()) {
+                attr.InitWithInt32(0);  // just done to force the type to int32.
+            }
+        }
     }
     for (int ii = 0; ii < (int)node->case_values_.size(); ++ii) {
         IAstExpNode *exp = node->case_values_[ii];
@@ -1181,12 +1187,24 @@ void AstChecker::CheckSwitch(AstSwitch *node)
             ExpressionAttributes cmp_attr;
             string error;
             CheckExpression(exp, &cmp_attr, ExpressionUsage::READ);
-            if (!cmp_attr.IsOnError()) {
-                if (!IsCompileTimeConstant(exp)) {
-                    Error("Switch cases must be compile time constants !", exp);
-                } else if (!unallowed_type && !cmp_attr.UpdateWithRelationalOperation(&attr, TOKEN_EQUAL, &error)) {
-                    Error("Switch cases must match the switch expression type", exp);
+            if (!cmp_attr.IsOnError() && !unallowed_type) {
+                if (node->c_switch_compatible) {
+                    if (!VerifyIndexConstness(exp) || !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
+                        node->SetCCompatibility(false);
+                    } 
                 }
+                if (!node->c_switch_compatible) {
+                    if (!cmp_attr.UpdateWithRelationalOperation(&attr, TOKEN_EQUAL, &error)) {
+                        Error("Switch cases must match the switch expression type", exp);
+                    }
+                }
+                // if (!IsCompileTimeConstant(exp)) {
+                //     Error("Switch cases must be compile time constants !", exp);
+                // } else if (!unallowed_type && !cmp_attr.UpdateWithRelationalOperation(&attr, TOKEN_EQUAL, &error)) {
+                //     Error("Switch cases must match the switch expression type", exp);
+                // } else if (node->c_switch_compatible && !VerifyIndexConstness(exp)) {
+                //     node->SetCCompatibility(false);
+                // }
             }
         }
         IAstNode *statement = node->case_statements_[ii];
@@ -1211,9 +1229,10 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
     bool is_interface = referenced_type != nullptr && referenced_type->GetType() == ANT_INTERFACE_TYPE;
     bool is_interface_ptr = pointed_type != nullptr && pointed_type->GetType() == ANT_INTERFACE_TYPE;
     if (!is_interface && !is_interface_ptr) {
-        Error("The expression must evaluate to an interface type", node->expression_);
+        Error("The expression must evaluate to an interface or interface pointer type", node->expression_);
         referenced_type = nullptr;
     }
+    if (is_interface_ptr) node->SetSwitchOnInterfacePointer();
 
     for (int ii = 0; ii < (int)node->case_types_.size(); ++ii) {
         IAstTypeNode *case_type = node->case_types_[ii];
@@ -1221,20 +1240,35 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
             CheckTypeSpecification(case_type, TSCM_STD);
             IAstTypeNode *solved_type = SolveTypedefs(case_type);
             if (solved_type != nullptr && referenced_type != nullptr) {
-                if (!AreInterfaceAndClass(referenced_type, solved_type, FOR_REFERENCING)) {
+                if (!AreInterfaceAndClass(referenced_type, solved_type, FOR_ASSIGNMENT)) {
                     Error("The case label type must be a class/interface implementing the typeswitch interface", case_type);
+                } else if (solved_type->GetType() == ANT_POINTER_TYPE) {
+                    if (!((AstPointerType*)t0)->CheckConstness(t1, mode)) {
+                        Error("The case label type should be a const pointer", case_type);
+                    }
                 }
             }
         }
         IAstNode *statement = node->case_statements_[ii];
-        if (statement != nullptr) {
+        if (statement != nullptr && case_type != nullptr) {
             symbols_->OpenScope();
+
+            // want to know if it is used
+            node->reference_->ClearFlags(VF_WASREAD | VF_WASWRITTEN);
+
             symbols_->InsertName(reference_name, node->reference_);
             IAstTypeNode *savetype = node->reference_->type_spec_;
             node->reference_->type_spec_ = case_type;
             CheckStatement(statement);
             node->reference_->type_spec_ = savetype;
+
+            node->SetReferenceUsage(node->reference_->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN));
             symbols_->CloseScope();
+        } else if (statement != nullptr) {
+            CheckStatement(statement);
+            node->SetReferenceUsage(false);
+        } else {
+            node->SetReferenceUsage(false);
         }
     }
 }
@@ -1509,6 +1543,7 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
         bool is_valid = false;
 
         // is a field selector operator or the case selector of an enum literal.
+        // NOTE: here attr is the attribute of the left subtree.
         IAstTypeNode *tnode = attr->GetTypeTree();
         if (tnode != nullptr) {
             AstNodeType nodetype = tnode->GetType();
@@ -1591,14 +1626,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                         Error("Can't call a muting member function on a read-only instance (input argument or constant)", accessed);
                     } 
                 }
-                //if (current_function_ != nullptr && !current_function_->is_muting_ && has_private_access) {
-
-                //    // has no right to change the members and is accessing an own member
-                //    if (decl->is_muting_) {
-                //        Error("Can't call a muting member function from a non-muting one", accessed);
-                //        attr->SetError();
-                //    }
-                //}
+                accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
             } else {
                 Error("Can't access private member", accessed);
                 attr->SetError();
@@ -1612,11 +1640,10 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 VarDeclaration *decl = (*member_vars)[var_idx];
                 if (has_private_access || decl->IsPublic()) {
                     accessed->wp_decl_ = decl;
-
-
                     attr->InitWithTree(decl->weak_type_spec_, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable(), this);
                     SetUsageFlags(decl, usage);
                     CheckIfVarReferenceIsLegal(decl, accessed);
+                    accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
                 } else {
                     Error("Can't access private member", accessed);
                     attr->SetError();
@@ -2274,24 +2301,6 @@ bool AstChecker::IsLeafCompileTimeConstant(AstExpressionLeaf *node)
     return(false);
 }
 
-IAstTypeNode *AstChecker::SolveTypedefs(IAstTypeNode *begin)
-{
-    while (begin != nullptr) {
-        if (begin->GetType() != ANT_NAMED_TYPE) {
-            break;
-        } else {
-            // TODO: Multicomponent names !!
-            TypeDeclaration *declaration = ((AstNamedType*)begin)->wp_decl_;
-            if (declaration != nullptr) {
-                begin = declaration->type_spec_;
-            } else {
-                begin = nullptr;
-            }
-        }
-    }
-    return(begin);
-}
-
 //
 // NOTE: if comparison is not for EQUALITY, t0 must be a destination, t1 a source
 //
@@ -2383,6 +2392,8 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
 bool AstChecker::AreInterfaceAndClass(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode)
 { 
     if (t0->GetType() == ANT_POINTER_TYPE) {
+
+        // must be both pointers, also checks weakness compatiblity based on mode
         if (!t0->IsCompatible(t1, mode)) {
             return(false);
         }
@@ -2581,7 +2592,7 @@ void AstChecker::CheckPrivateDeclarationsUsage(void)
 
 void AstChecker::CheckPrivateVarUsage(VarDeclaration *var)
 {
-    if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_ISFORITERATOR | VF_INVOLVED_IN_TYPE_DEFINITION)) {
+    if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_INVOLVED_IN_TYPE_DEFINITION)) {
         if (!var->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN)) {
             UsageError("Variable/Constant unused !!", var);
         } else if (!var->HasOneOfFlags(VF_READONLY) && !var->HasOneOfFlags(VF_WASWRITTEN)) {
@@ -2664,11 +2675,14 @@ bool AstChecker::IsArgTypeEligibleForAnIniter(IAstTypeNode *type)
     return(false);
 }
 
-AstClassType *AstChecker::GetLocalClassTypeDeclaration(const char *classname)
+AstClassType *AstChecker::GetLocalClassTypeDeclaration(const char *classname, bool solve_typedefs)
 {
     IAstDeclarationNode *node = symbols_->FindDeclaration(classname);
     if (node != nullptr && node->GetType() == ANT_TYPE) {
-        IAstTypeNode *ntype = SolveTypedefs(((TypeDeclaration*)node)->type_spec_);
+        IAstTypeNode *ntype = ((TypeDeclaration*)node)->type_spec_;
+        if (solve_typedefs) {
+            IAstTypeNode *ntype = SolveTypedefs(ntype);
+        }
         if (ntype != nullptr && ntype->GetType() == ANT_CLASS_TYPE) {
             return((AstClassType*)ntype);
         }

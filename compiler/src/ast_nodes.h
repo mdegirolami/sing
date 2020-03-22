@@ -105,7 +105,10 @@ class IAstTypeNode : public IAstNode {
 public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode) = 0;    // shallow compare !!
     virtual int SizeOf(void) = 0;
+    virtual bool NeedsZeroIniter(void) = 0;
 };
+
+IAstTypeNode *SolveTypedefs(IAstTypeNode *begin);
 
 class IAstExpNode : public IAstNode {
 public:
@@ -142,6 +145,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_FUNC_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
+    virtual bool NeedsZeroIniter(void) { return(true); }
     void SetVarArgs(void) { varargs_ = true; }
     void AddArgument(VarDeclaration *arg) { arguments_.push_back(arg); }
     void SetReturnType(IAstTypeNode *type) { return_type_ = type; }
@@ -163,6 +167,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_POINTER_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
+    virtual bool NeedsZeroIniter(void) { return(false); }
     bool CheckConstness(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void Set(bool isconst, bool isweak, IAstTypeNode *pointed) { isconst_ = isconst; isweak_ = isweak; pointed_type_ = pointed; }
     void SetWithRef(bool isconst, IAstTypeNode *pointed) { isconst_ = isconst; owning_ = false; pointed_type_ = pointed; }
@@ -181,6 +186,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_MAP_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
+    virtual bool NeedsZeroIniter(void) { return(false); }
     void SetKeyType(IAstTypeNode *key) { key_type_ = key; }
     void SetReturnType(IAstTypeNode *return_type) { returned_type_ = return_type; }
 };
@@ -212,6 +218,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_ARRAY_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
+    virtual bool NeedsZeroIniter(void) { return(false); }
     void SetDimensionExpression(IAstExpNode *exp) { dimension_ = 0; expression_ = exp; }
     void SetElementType(IAstTypeNode *etype) { element_type_ = etype; }
     void SetDynamic(bool dyna) { is_dynamic_ = dyna; }
@@ -234,8 +241,9 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_NAMED_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
+    virtual bool NeedsZeroIniter(void);
     void ChainComponent(AstNamedType *next) { next_component = next; }
-    void AppendFullName(string *fullname);
+    void AppendFullName(string *fullname);  // for the purpose of emitting error messages
 };
 
 class AstBaseType : public IAstTypeNode {
@@ -249,6 +257,11 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_BASE_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
+    virtual bool NeedsZeroIniter(void) { 
+        return(base_type_ != TOKEN_COMPLEX64 &&
+                base_type_ != TOKEN_COMPLEX128 &&
+                base_type_ != TOKEN_STRING);
+    }
 };
 
 class AstEnumType : public IAstTypeNode
@@ -265,6 +278,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_ENUM_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
+    virtual bool NeedsZeroIniter(void) { return(true); }
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     void AddItem(const char *name, IAstExpNode *initer) { items_.push_back(name); initers_.push_back(initer); }
 };
@@ -285,6 +299,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_INTERFACE_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
+    virtual bool NeedsZeroIniter(void) { return(false); }
     void AddAncestor(AstNamedType *anc) { ancestors_.push_back(anc); }
     void AddMember(FuncDeclaration *member) { members_.push_back(member); }
     bool HasInterface(AstInterfaceType *intf);
@@ -302,24 +317,29 @@ public:
 
     int             first_hinherited_member_;           // annotations
     vector<bool>    implemented_;
+    bool            has_destructor;
+    bool            has_constructor;                    // annotation from synthesizer
+    bool            constructor_written;                // annotation from synthesizer
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstClassType();
-    AstClassType() : first_hinherited_member_(-1) {}
+    AstClassType() : first_hinherited_member_(-1), has_destructor(false), has_constructor(false), constructor_written(false) {}
     virtual AstNodeType GetType(void) { return(ANT_CLASS_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
-    void AddMemberVar(VarDeclaration *member) { member_vars_.push_back(member); }
-    void AddMemberFun(FuncDeclaration *member, string implementor) {
-        member_functions_.push_back(member);
-        fn_implementors_.push_back(implementor);
+    virtual bool NeedsZeroIniter(void) { return(false); }
+    void AddMemberVar(VarDeclaration *member) { 
+        member_vars_.push_back(member); 
     }
+    void AddMemberFun(FuncDeclaration *member, string implementor);
     void AddMemberInterface(AstNamedType *member, string implementor) {
         member_interfaces_.push_back(member);
         if_implementors_.push_back(implementor);
     }
     bool HasInterface(AstInterfaceType *intf);
+    void SetNeedsConstructor(void) { has_constructor = true; }
+    void SetConstructorDone(void) { constructor_written = true; }
 };
 
 /////////////////////////
@@ -358,6 +378,7 @@ public:
     int                 pkg_index_; 
     IAstDeclarationNode *wp_decl_;  // annotation: if subtype == TOKEN_NAME, the declaration the name refers to. (Func or Var)
                                     // Prevents the need to build a dictionary in the synth phase
+    bool                unambiguous_member_access;
 
     ExpressionAttributes attr_;
 
@@ -369,6 +390,7 @@ public:
     void SetRealPartNfo(bool isint, bool isnegated) { real_is_int_ = isint; real_is_negated_ = isnegated; }
     virtual AstNodeType GetType(void) { return(ANT_EXP_LEAF); }
     void AppendToValue(const char *to_append) { value_ += to_append; }
+    void SetUMA(bool value) { unambiguous_member_access = value; }
 };
 
 // includes (), *, cast, sizeof, dimof.
@@ -599,33 +621,43 @@ public:
     vector<IAstNode*>       case_statements_;
     PositionInfo    pos_;
 
+    // attributes
+    bool    c_switch_compatible; // if true can be compiled into a c switch
+
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstSwitch();
-    AstSwitch() : switch_value_(NULL) {}
+    AstSwitch() : switch_value_(NULL), c_switch_compatible(false) {}
     virtual AstNodeType GetType(void) { return(ANT_SWITCH); }
     void AddSwitchValue(IAstExpNode *exp) { switch_value_ = exp; }
     void AddCase(IAstExpNode *exp, IAstNode *statement) { case_values_.push_back(exp); case_statements_.push_back(statement); }
+    void SetCCompatibility(bool value) { c_switch_compatible = value; }
 };
 
 class AstTypeSwitch : public IAstNode {
 public:
     VarDeclaration          *reference_;
     IAstExpNode             *expression_;
-    vector<AstNamedType*>   case_types_;
+    vector<IAstTypeNode*>   case_types_;
     vector<IAstNode*>       case_statements_;
     PositionInfo            pos_;
+
+    // annotations
+    bool                    on_interface_ptr_;
+    vector<bool>            uses_reference_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstTypeSwitch();
-    AstTypeSwitch() : expression_(NULL), reference_(nullptr) {}
+    AstTypeSwitch() : expression_(NULL), reference_(nullptr), on_interface_ptr_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_TYPESWITCH); }
     void Init(VarDeclaration *ref, IAstExpNode *exp) { reference_ = ref; expression_ = exp; }
-    void AddCase(AstNamedType *the_type, IAstNode *statement) {
+    void AddCase(IAstTypeNode *the_type, IAstNode *statement) {
         case_types_.push_back(the_type); 
         case_statements_.push_back(statement); 
     }
+    bool SetSwitchOnInterfacePointer(void) { on_interface_ptr_ = true; }
+    void SetReferenceUsage(bool value) { uses_reference_.push_back(value); }
 };
 
 /////////////////////////
@@ -791,7 +823,6 @@ public:
 
     //virtual bool            CheckArrayIndicesInTypes(AstArrayType *array) = 0;
     virtual TypeMatchResult AreTypeTreesCompatible(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode) = 0;
-    virtual IAstTypeNode    *SolveTypedefs(IAstTypeNode *begin) = 0;
 };
 
 };

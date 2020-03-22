@@ -112,6 +112,7 @@ public:
     bool IsAVariable(void) const { return(is_a_variable_); }
     bool IsEnum(void) const;
     bool IsWritable(void) { return(is_writable_); }
+    bool IsCaseValueCompatibleWithSwitchExpression(ExpressionAttributes *switch_expression);
 
 private:
     ExpBaseTypes    exp_type_;

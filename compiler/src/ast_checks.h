@@ -123,7 +123,7 @@ class AstChecker : public ITypedefSolver {
     void CheckPrivateTypeUsage(TypeDeclaration *tdec);
     void CheckMemberFunctionsDeclarationsPresence(void);
     bool IsArgTypeEligibleForAnIniter(IAstTypeNode *type);
-    AstClassType *GetLocalClassTypeDeclaration(const char *classname);
+    AstClassType *GetLocalClassTypeDeclaration(const char *classname, bool solve_typedefs);
     FuncDeclaration *SearchFunctionInClass(AstClassType *the_class, const char *name);
 
     void Error(const char *message, IAstNode *location, bool use_last_location = false);
@@ -135,7 +135,6 @@ public:
     // ITypedefSolver interface
     virtual bool            CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode mode);
     virtual TypeMatchResult AreTypeTreesCompatible(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
-    virtual IAstTypeNode    *SolveTypedefs(IAstTypeNode *begin);
 };
 
 }

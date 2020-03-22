@@ -190,7 +190,7 @@ bool ExpressionAttributes::ApplyTheIndirectionOperator(ITypedefSolver *solver)
 void ExpressionAttributes::Normalize(ITypedefSolver *solver)
 {
     while (exp_type_ == BT_TREE) {
-        type_tree_ = solver->SolveTypedefs(type_tree_);
+        type_tree_ = SolveTypedefs(type_tree_);
         if (type_tree_ == nullptr) {
             exp_type_ = BT_ERROR;
         } else {
@@ -1042,7 +1042,7 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
     } else if (exp_type_ == BT_TREE) {
         // assignment of a pointer with an address or with another pointer
         if (src->exp_type_ == BT_ADDRESS_OF || src->exp_type_ == BT_LITERAL_NULL) {
-            IAstTypeNode *dst_tree = solver->SolveTypedefs(type_tree_);
+            IAstTypeNode *dst_tree = SolveTypedefs(type_tree_);
             if (dst_tree == nullptr) return(true);  // silent
             if (dst_tree->GetType() == ANT_POINTER_TYPE) {
                 if (src->exp_type_ == BT_LITERAL_NULL) {
@@ -1249,6 +1249,11 @@ bool ExpressionAttributes::CanAssignWithoutLoss(Token dst, Token src)
 bool ExpressionAttributes::IsEnum(void) const
 {
     return(exp_type_ == BT_TREE && type_tree_ != nullptr && type_tree_->GetType() == ANT_ENUM_TYPE);
+}
+
+bool ExpressionAttributes::IsCaseValueCompatibleWithSwitchExpression(ExpressionAttributes *switch_expression)
+{
+    return(IsValueCompatible(switch_expression->exp_type_));
 }
 
 } // namespace

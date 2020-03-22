@@ -45,6 +45,7 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, in
     num_levels = WriteNamespaceOpening();
 
     // all public declarations by cathegory
+    WriteClassForwardDeclarations(true);
     WriteTypeDefinitions(true);
     WritePrototypes(true);
     WriteExternalDeclarations();
@@ -66,9 +67,12 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, in
     num_levels = WriteNamespaceOpening();
 
     // all public declarations by cathegory
+    WriteClassForwardDeclarations(false);
     num_items += WriteTypeDefinitions(false);
     WritePrototypes(false);
     num_items += WriteVariablesDefinitions();
+    num_items += WriteClassIdsDefinitions();
+    num_items += WriteConstructors();
     num_items += WriteFunctions();
 
     WriteNamespaceClosing(num_levels);
@@ -85,13 +89,13 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
         ) {
         text = "static ";
     }
-    if (declaration->initer_ != NULL) {
+    if (declaration->initer_ != nullptr) {
         SynthIniterCore(&initer, declaration->weak_type_spec_, declaration->initer_);
     } else if (declaration->HasOneOfFlags(VF_ISLOCAL)) {
         SynthZeroIniter(&initer, declaration->weak_type_spec_);
     }
     if (declaration->HasOneOfFlags(VF_ISPOINTED)) {
-        bool init_on_second_row = declaration->initer_ != NULL && declaration->initer_->GetType() == ANT_INITER;
+        bool init_on_second_row = declaration->initer_ != nullptr && declaration->initer_->GetType() == ANT_INITER;
 
         text += "sing::";
         if (declaration->HasOneOfFlags(VF_READONLY)) {
@@ -141,11 +145,26 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
 
 void CppSynth::SynthType(TypeDeclaration *declaration)
 {
-    string text(declaration->name_);
+    switch (declaration->type_spec_->GetType()) {
+        case ANT_CLASS_TYPE:
+            SynthClassDeclaration(declaration->name_.c_str(), (AstClassType*)declaration->type_spec_);
+            break;
+        case ANT_INTERFACE_TYPE:
+            SynthInterfaceDeclaration(declaration->name_.c_str(), (AstInterfaceType*)declaration->type_spec_);
+            break;
+        case ANT_ENUM_TYPE:
+            SynthEnumDeclaration(declaration->name_.c_str(), (AstEnumType*)declaration->type_spec_);
+            break;
+        default:
+        {
+            string text(declaration->name_);
 
-    SynthTypeSpecification(&text, declaration->type_spec_);
-    text.insert(0, "typedef ");
-    Write(&text);
+            SynthTypeSpecification(&text, declaration->type_spec_);
+            text.insert(0, "typedef ");
+            Write(&text);
+            break;
+        }
+    }
 }
 
 void CppSynth::SynthFunc(FuncDeclaration *declaration)
@@ -153,14 +172,34 @@ void CppSynth::SynthFunc(FuncDeclaration *declaration)
     string text, typedecl;
 
     if (declaration->is_class_member_) {
-        text = declaration->classname_ + "::" + declaration->name_;
+        AstClassType *ctype = GetLocalClassTypeDeclaration(declaration->classname_.c_str());
+        if (ctype != nullptr && ctype->has_constructor && !ctype->constructor_written) {
+            ctype->SetConstructorDone();
+            SynthConstructor(&declaration->classname_, ctype);
+        }
+        if (declaration->name_ == "finalize") {
+            text = declaration->classname_ + "::~" + declaration->classname_ + "()";
+        } else {
+            text = declaration->classname_ + "::" + declaration->name_;
+            SynthFuncTypeSpecification(&text, declaration->function_type_, false);
+            if (!declaration->is_muting_) {
+                text += " const";
+            }
+        }
     } else {
         text = declaration->name_;
+        SynthFuncTypeSpecification(&text, declaration->function_type_, false);
+        if (!declaration->IsPublic()) {
+            text.insert(0, "static ");
+        }
     }
-    SynthFuncTypeSpecification(&text, declaration->function_type_, false);
-    if (!declaration->IsPublic()) {
-        text.insert(0, "static ");
-    }
+    SynthFunOpenBrace(text);
+    return_type_ = GetBaseType(declaration->function_type_->return_type_);
+    SynthBlock(declaration->block_);
+}
+
+void CppSynth::SynthFunOpenBrace(string &text)
+{
     if (!newline_before_function_bracket_) {
         text += " {";
     }
@@ -169,11 +208,37 @@ void CppSynth::SynthFunc(FuncDeclaration *declaration)
         text = "{";
         Write(&text, false);
     }
-    return_type_ = GetBaseType(declaration->function_type_->return_type_);
-    SynthBlock(declaration->block_);
 }
 
-void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec, bool root_of_fun_parm)
+void CppSynth::SynthConstructor(string *classname, AstClassType *ctype)
+{
+    string initer, text;
+
+    text = *classname + "::" + *classname + "()";
+    SynthFunOpenBrace(text);
+    ++indent_;
+
+    for (int ii = 0; ii < ctype->member_vars_.size(); ++ii) {
+        VarDeclaration *vdecl = ctype->member_vars_[ii];
+        if (vdecl->initer_ != nullptr) {
+            SynthIniterCore(&initer, vdecl->weak_type_spec_, vdecl->initer_);
+        } else {
+            SynthZeroIniter(&initer, vdecl->weak_type_spec_);
+        }
+        if (initer.length() > 0) {
+            text = vdecl->name_;
+            text += " = ";
+            text += initer;
+            Write(&text);
+        }
+    }
+
+    --indent_;
+    text = "}";
+    Write(&text, false);
+}
+
+void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool root_of_fun_parm)
 {
     switch (type_spec->GetType()) {
     case ANT_BASE_TYPE:
@@ -184,7 +249,6 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec, bool roo
         break;
     case ANT_NAMED_TYPE:
         {
-            // TODO: Multicomponent names !!
             AstNamedType *node = (AstNamedType*)type_spec;
             if (node->next_component != nullptr) {
                 string full;
@@ -220,6 +284,7 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstNode *type_spec, bool roo
             string fulldecl, the_type;
 
             fulldecl = "sing::";
+            if (node->pointed_type_->GetType() == ANT_INTERFACE_TYPE) fulldecl += 'i';
             if (node->isconst_) fulldecl += 'c';
             if (node->isweak_) fulldecl += 'w';
             fulldecl += "ptr<";
@@ -344,6 +409,267 @@ void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec,
     PrependWithSeparator(dst, decl.c_str());
 }
 
+void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
+{
+    bool has_base = type_spec->member_interfaces_.size() > 0;
+    SynthClassHeader(name, &type_spec->member_interfaces_);
+
+    // collect some info
+    bool supports_typeswitch = type_spec->member_interfaces_.size() > 0;
+    bool has_private = supports_typeswitch;
+    bool needs_constructor = false;
+    for (int ii = 0; ii < type_spec->member_vars_.size(); ++ii) {
+        VarDeclaration *vdecl = type_spec->member_vars_[ii];
+        if (!vdecl->IsPublic()) {
+            has_private = true;
+        }
+        if (vdecl->initer_ != nullptr || vdecl->type_spec_->NeedsZeroIniter()) {
+            needs_constructor = true;
+        }
+    }
+    for (int ii = 0; ii < type_spec->member_functions_.size() && !has_private; ++ii) {
+        if (!type_spec->member_functions_[ii]->IsPublic()) {
+            has_private = true;
+        }
+    }
+
+    // for later use !!
+    if (needs_constructor) {
+        type_spec->SetNeedsConstructor();
+    }
+
+    string text = "public:";
+    Write(&text, false);
+
+    // the functions
+    ++indent_;
+
+    // constructor
+    if (needs_constructor) {
+        text = name;
+        text += "()";
+        Write(&text);
+    }
+
+    // destructor
+    if (type_spec->has_destructor) {
+        text = name;
+        if (has_base) {
+            text.insert(0, "virtual ~");
+            text += "()";
+        } else {
+            text.insert(0, "~");
+            text += "()";
+        }
+        Write(&text);
+
+        // if has a destructor, copying is unsafe !!
+        text = name;
+        text += "(const ";
+        text += name;
+        text += " &) = delete";
+        Write(&text);
+
+        text = name;
+        text += " &operator=(const ";
+        text += name;
+        text += " &) = delete";
+        Write(&text);
+    }
+
+    // get__id (if inherits from an interface)
+    if (supports_typeswitch) {
+        text = "virtual void *get__id() { return(&id__); }";
+        Write(&text);
+    }
+
+    // user defined
+    SynthClassMemberFunctions(&type_spec->member_functions_, &type_spec->fn_implementors_, 
+        type_spec->first_hinherited_member_, true, false);
+
+    EmptyLine();
+
+    // the variables
+    SynthClassMemberVariables(&type_spec->member_vars_, true);
+
+    --indent_;
+
+    if (has_private) {
+        EmptyLine();
+        string text = "private:";
+        Write(&text, false);
+
+        ++indent_;
+        if (supports_typeswitch) {
+            text = "static char id__";
+            Write(&text);
+        }
+        SynthClassMemberFunctions(&type_spec->member_functions_, &type_spec->fn_implementors_, 
+            type_spec->first_hinherited_member_, false, false);
+        EmptyLine();
+        SynthClassMemberVariables(&type_spec->member_vars_, false);
+        --indent_;
+    }
+
+    // close the declaration
+    text = "}";
+    Write(&text);
+}
+
+void CppSynth::SynthClassHeader(const char *name, vector<AstNamedType*> *bases)
+{
+    string text = "class ";
+    text += name;
+    int num_bases = bases->size();
+    if (num_bases > 0) {
+        string basename;
+        text += " :";
+        for (int ii = 0; ii < num_bases; ++ii) {
+            SynthTypeSpecification(&basename, (*bases)[ii]);
+            text += " public ";
+            text += basename;
+            if (ii < num_bases - 1) {
+                text += ",";
+            }
+        }
+    }
+    text += " {";
+    Write(&text, false);
+}
+
+void CppSynth::SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, vector<string> *implementors,
+                                         int first_hinerited, bool public_members, bool is_interface)
+{
+    string text;
+    int top = declarations->size();
+
+    // on interfaces there is no need to declare inherited functions
+    if (is_interface) {
+        top = first_hinerited;  
+    }
+    for (int ii = 0; ii < top; ++ii) {
+        FuncDeclaration *func = (*declarations)[ii];
+        if (func->IsPublic() != public_members) continue;
+        text = func->name_;
+        SynthFuncTypeSpecification(&text, func->function_type_, true);
+        if (is_interface || ii >= first_hinerited) {
+            text.insert(0, "virtual ");
+        }
+        if (!func->is_muting_) {
+            text += " const";
+        }
+        if (is_interface) {
+            text += " = 0";
+        } else if ((*implementors)[ii] != "") {
+            SynthFunOpenBrace(text);
+            ++indent_;
+
+            AstFuncType *ftype = func->function_type_;
+            bool voidfun = ftype->ReturnsVoid();
+            if (!voidfun) {
+                text = "return(";
+            } else {
+                text = "";
+            }
+            text += (*implementors)[ii] + "(";
+            --split_level_;
+            for (int ii = 0; ii < ftype->arguments_.size(); ++ii) {
+                text += ftype->arguments_[ii]->name_;
+                if (ii < ftype->arguments_.size() - 1) {
+                    text += ", ";
+                    AddSplitMarker(&text);
+                }
+            }
+            ++split_level_;
+            text += ")";
+            if (!voidfun) {
+                text += ")";
+            }
+            Write(&text);
+
+            --indent_;
+            text = "}";
+        }
+        Write(&text);
+    } 
+}
+
+void CppSynth::SynthClassMemberVariables(vector<VarDeclaration*> *d_vector, bool public_members)
+{
+    string text;
+    int top = d_vector->size();
+
+    // on interfaces there is no need to declare inherited functions
+    for (int ii = 0; ii < top; ++ii) {
+        VarDeclaration *declaration = (*d_vector)[ii];
+        if (declaration->IsPublic() != public_members) continue;
+        text = declaration->name_;
+        SynthTypeSpecification(&text, declaration->weak_type_spec_);
+        Write(&text);
+    }
+}
+
+void CppSynth::SynthInterfaceDeclaration(const char *name, AstInterfaceType *type_spec)
+{
+    SynthClassHeader(name, &type_spec->ancestors_);
+
+    string text = "public:";
+    Write(&text, false);
+
+    // the functions
+    ++indent_;
+
+    // virtual destructor and typeswitch support (if not inherited)
+    if (type_spec->ancestors_.size() == 0) {
+        text = "virtual ~";
+        text += name;
+        text += "() {}";
+        Write(&text, false);      
+
+        text = "virtual void *get__id() = 0";
+        Write(&text);      
+    } else {
+
+        // get__id (if inherits from an interface)
+        if (supports_typeswitch) {
+            text = "virtual void *get__id() { return(&id__); }";
+            Write(&text);
+        }
+    }
+
+    SynthClassMemberFunctions(&type_spec->members_, nullptr, type_spec->first_hinherited_member_, true, true);
+    --indent_;
+
+    // close the declaration
+    text = "}";
+    Write(&text);
+}
+
+void CppSynth::SynthEnumDeclaration(const char *name, AstEnumType *type_spec)
+{
+    --split_level_;
+    string text = "enum class ";
+    text += name;
+    text += " {";
+    AddSplitMarker(&text);
+    for (int ii = 0; ii < type_spec->items_.size(); ++ii) {
+        text += type_spec->items_[ii];
+        if (type_spec->initers_[ii] != nullptr) {
+            string exp;
+            SynthExpression(&exp, type_spec->initers_[ii]);
+            text += " = ";
+            text += exp;
+        }
+        if (ii < type_spec->items_.size() - 1) {
+            text += ", ";
+            AddSplitMarker(&text);
+        }
+    }
+    text += "}";
+    Write(&text);
+    ++split_level_;
+}
+
 void CppSynth::SynthIniter(string *dst, IAstTypeNode *type_spec, IAstNode *initer)
 {
     *dst += " = ";
@@ -416,7 +742,9 @@ void CppSynth::SynthZeroIniter(string *dst, IAstTypeNode *type_spec)
     case ANT_FUNC_TYPE:
         *dst = "nullptr";
         break;
-        // for objects with a constructor
+    case ANT_ENUM_TYPE:
+        *dst = ((AstEnumType*)type_spec)->items_[0];
+        break;
     default:
         break;  
     }
@@ -424,63 +752,77 @@ void CppSynth::SynthZeroIniter(string *dst, IAstTypeNode *type_spec)
 
 void CppSynth::SynthBlock(AstBlock *block, bool write_closing_bracket)
 {
-    string      text;
     int         ii;
-    AstNodeType type, oldtype;
+    AstNodeType oldtype = ANT_BLOCK;    // init so that SynthStatementOrAutoVar doesn't place an empty line.
 
     ++indent_;
     for (ii = 0; ii < (int)block->block_items_.size(); ++ii) {
-        IAstNode *node = block->block_items_[ii];
-        type = node->GetType();
-        formatter_.SetNodePos(node->GetPositionRecord());
-
-        // place an empty line before the first non-var statement following one or more var declarations 
-        if (ii != 0 &&  type != ANT_VAR && oldtype == ANT_VAR) {
-            EmptyLine();
-        }
-        oldtype = type;
-
-        switch (type) {
-        case ANT_VAR:
-            SynthVar((VarDeclaration*)node);
-            break;
-        case ANT_UPDATE:
-            SynthUpdateStatement((AstUpdate*)node);
-            break;
-        case ANT_INCDEC:
-            SynthIncDec((AstIncDec*)node);
-            break;
-        case ANT_WHILE:
-            SynthWhile((AstWhile*)node);
-            break;
-        case ANT_IF:
-            SynthIf((AstIf*)node);
-            break;
-        case ANT_FOR:
-            SynthFor((AstFor*)node);
-            break;
-        case ANT_SIMPLE:
-            SynthSimpleStatement((AstSimpleStatement*)node);
-            break;
-        case ANT_RETURN:
-            SynthReturn((AstReturn*)node);
-            break;
-        case ANT_FUNCALL:
-            text = "";
-            SynthFunCall(&text, (AstFunCall*)node);
-            Write(&text, true);
-            break;
-        case ANT_BLOCK:
-            text = "{";
-            Write(&text, false);
-            SynthBlock((AstBlock*)node);
-            break;
-        }
+        SynthStatementOrAutoVar(block->block_items_[ii], &oldtype);
     }
     --indent_;
     if (write_closing_bracket) {
-        text = "}";
+        string text = "}";
         Write(&text, false);
+    }
+}
+
+void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
+{
+    string      text;
+    AstNodeType type;
+
+    type = node->GetType();
+    formatter_.SetNodePos(node->GetPositionRecord());
+
+    // place an empty line before the first non-var statement following one or more var declarations 
+    if (oldtype != nullptr) {
+        if (type != ANT_VAR && *oldtype == ANT_VAR) {
+            EmptyLine();
+        }
+        *oldtype = type;
+    }
+
+    switch (type) {
+    case ANT_VAR:
+        SynthVar((VarDeclaration*)node);
+        break;
+    case ANT_UPDATE:
+        SynthUpdateStatement((AstUpdate*)node);
+        break;
+    case ANT_INCDEC:
+        SynthIncDec((AstIncDec*)node);
+        break;
+    case ANT_WHILE:
+        SynthWhile((AstWhile*)node);
+        break;
+    case ANT_IF:
+        SynthIf((AstIf*)node);
+        break;
+    case ANT_FOR:
+        SynthFor((AstFor*)node);
+        break;
+    case ANT_SIMPLE:
+        SynthSimpleStatement((AstSimpleStatement*)node);
+        break;
+    case ANT_RETURN:
+        SynthReturn((AstReturn*)node);
+        break;
+    case ANT_FUNCALL:
+        text = "";
+        SynthFunCall(&text, (AstFunCall*)node);
+        Write(&text, true);
+        break;
+    case ANT_SWITCH:
+        SynthSwitch((AstSwitch*)node);
+        break;
+    case ANT_TYPESWITCH:
+        SynthTypeSwitch((AstTypeSwitch*)node);
+        break;
+    case ANT_BLOCK:
+        text = "{";
+        Write(&text, false);
+        SynthBlock((AstBlock*)node);
+        break;
     }
 }
 
@@ -599,6 +941,158 @@ void CppSynth::SynthIf(AstIf *node)
     }
     text = "}";
     Write(&text, false);
+}
+
+void CppSynth::SynthSwitch(AstSwitch *node)
+{
+    string text;
+    if (node->c_switch_compatible) {
+        SynthExpression(&text, node->switch_value_);
+        text.insert(0, "switch (");
+        text += ") {";
+        Write(&text, false);
+        for (int ii = 0; ii < node->case_values_.size(); ++ii) {
+            IAstExpNode *clause = node->case_values_[ii];
+            IAstNode *statement = node->case_statements_[ii];
+            if (clause == nullptr) {
+                text = "default:";
+            } else {
+                SynthExpression(&text, clause);
+                text.insert(0, "case ");
+                text += ": ";
+            }
+            Write(&text, false);
+            ++indent_;
+            if (statement != nullptr) {
+                SynthStatementOrAutoVar(statement, nullptr);
+            }
+            text = "break";
+            Write(&text);            
+            --indent_;
+        }
+    } else {
+        for (int ii = 0; ii < node->case_values_.size(); ++ii) {
+            IAstExpNode *clause = node->case_values_[ii];
+            IAstNode *statement = node->case_statements_[ii];
+
+            if (clause == nullptr) {
+                if (statement != nullptr) {
+                    assert(ii != 0);
+                    text = "} else {";
+                    Write(&text, false);
+                }
+            } else {
+                AstBinop comparison(TOKEN_EQUAL, node->switch_value_, clause);
+                SynthRelationalOperator(&text, &comparison);
+                if (ii == 0) {
+                    text.insert(0, "if (");
+                } else {
+                    text.insert(0, "} else if (");
+                }
+                text += ") {";                    
+                Write(&text, false);
+            }
+            if (statement != nullptr) {
+
+                // this is all about avoiding double {}
+                ++indent_;
+                if (statement->GetType() == ANT_BLOCK) {
+                    SynthBlock((AstBlock*)statement, false);
+                } else {
+                    SynthStatementOrAutoVar(statement, nullptr);
+                }
+                --indent_;
+            }
+        }
+    }
+    text = "}";
+    Write(&text, false);            
+}
+
+void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
+{
+    string text, switch_exp, tocompare;
+
+    int exppri = SynthExpression(&switch_exp, node->expression_);
+    tocompare = switch_exp;
+    if (node->on_interface_ptr_) {
+        Protect(&tocompare, exppri, GetUnopCppPriority(TOKEN_MPY));
+        tocompare.insert(0, "(*");
+        tocompare += ").get__id() == &";
+    } else {
+        Protect(&tocompare, exppri, GetUnopCppPriority(TOKEN_DOT));
+        tocompare += ".get__id() == &";
+    }
+    for (int ii = 0; ii < node->case_types_.size(); ++ii) {
+        IAstTypeNode *clause = node->case_types_[ii];
+        IAstNode *statement = node->case_statements_[ii];
+        bool needs_reference = node->uses_reference_[ii];
+        string clause_typename;
+
+        if (clause == nullptr) {
+            if (statement != nullptr) {
+                assert(ii != 0);
+                text = "} else {";
+                Write(&text, false);
+            }
+        } else {
+            if (ii == 0) {
+                text = "if (";
+            } else {
+                text = "} else if (";
+            }
+            text += tocompare;
+            if (node->on_interface_ptr_) {
+                IAstTypeNode *solved = SolveTypedefs(clause);
+                if (solved->GetType() == ANT_POINTER_TYPE) {
+                    SynthTypeSpecification(&clause_typename, ((AstPointerType*)solved)->pointed_type_);
+                }
+            } else {
+                SynthTypeSpecification(&clause_typename, clause);
+            }
+            text += clause_typename;
+            text += "::id__) {";
+            Write(&text, false);
+        }
+        if (statement != nullptr) {
+
+            ++indent_;
+
+            // init the reference
+            if (needs_reference) {
+                if (node->on_interface_ptr_) {
+                    // es: sing::ptr<Derived> localname = (sing::wrapper<Derived>*)p04.get_wrapper();
+                    text = node->reference_->name_;
+                    SynthTypeSpecification(&text, clause);
+                    text += " = (sing::wrapper<";
+                    text += clause_typename;
+                    text += ">*)";
+                    text += switch_exp;
+                    text += ".get_wrapper()";
+                } else {
+                    // es: Derived *localname = (Derived *)&inparm;
+                    text = clause_typename;
+                    text = " *";
+                    text += node->reference_->name_;
+                    text += " = (";
+                    text += clause_typename;
+                    text += " *)&";
+                    text += switch_exp;
+                }
+                Write(&text);
+            }
+                       
+            // this is all about avoiding double {}
+            if (statement->GetType() == ANT_BLOCK) {
+                SynthBlock((AstBlock*)statement, false);
+            } else {
+                SynthStatementOrAutoVar(statement, nullptr);
+            }
+            --indent_;
+        }
+    }    
+    text = "}";
+    Write(&text, false);            
 }
 
 void CppSynth::SynthFor(AstFor *node)
@@ -970,25 +1464,45 @@ int CppSynth::SynthBinop(string *dst, AstBinop *node)
 
 int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
 {
-    int priority;
+    int priority = GetBinopCppPriority(TOKEN_DOT);
+    assert(node->operand_right_->GetType() == ANT_EXP_LEAF);
+    AstExpressionLeaf* right_leaf = (AstExpressionLeaf*)node->operand_right_;
 
     // is a package resolution operator ?
     int pkg_index = -1;
     if (node->operand_left_->GetType() == ANT_EXP_LEAF) {
         AstExpressionLeaf* left_leaf = (AstExpressionLeaf*)node->operand_left_;
         pkg_index = left_leaf->pkg_index_;
+        if (pkg_index >= 0) {
+            GetFullExternName(dst, pkg_index, right_leaf->value_.c_str());
+            return(KLeafPriority);
+        } else if (left_leaf->subtype_ == TOKEN_THIS) {
+            if (!right_leaf->unambiguous_member_access) {
+                *dst = "this->";
+            }
+            *dst += right_leaf->value_;
+            return(priority);
+        }
     }
-    if (pkg_index >= 0) {
-        string full;
+    int left_priority = SynthExpression(dst, node->operand_left_);
+    AstNodeType nodetype = ANT_ENUM_TYPE;
 
-        assert(node->operand_right_->GetType() == ANT_EXP_LEAF);
-        AstExpressionLeaf* right_leaf = (AstExpressionLeaf*)node->operand_right_;
-        GetFullExternName(dst, pkg_index, right_leaf->value_.c_str());
-        return(KLeafPriority);
-    } else {
-        priority = GetBinopCppPriority(TOKEN_DOT);
-        assert(false);  // fild selector unsipported
+    IAstTypeNode *tnode = node->operand_left_->GetAttr()->GetTypeTree();
+    assert(tnode != nullptr);
+    if (tnode != nullptr) nodetype = tnode->GetType();
+    switch (nodetype) {
+        case ANT_ENUM_TYPE:
+            *dst += "::";
+            priority = KLeafPriority;
+            break;
+        case ANT_POINTER_TYPE:
+            *dst += "->";
+            break;
+        case ANT_CLASS_TYPE:
+            *dst += ".";
+            break;
     }
+    *dst += right_leaf->value_;
     return(priority);
 }
 
@@ -1567,6 +2081,9 @@ int CppSynth::SynthLeaf(string *dst, AstExpressionLeaf *node)
         dst->insert(0, "std::complex<float>(0.0f, ");
         *dst += ')';
         break;
+    case TOKEN_THIS:
+        *dst = "this";
+        break;
     case TOKEN_NAME:
         {
             IAstDeclarationNode *decl = node->wp_decl_;
@@ -2080,6 +2597,7 @@ bool CppSynth::IsPOD(IAstTypeNode *node)
         ispod = false;
         break;
     case ANT_FUNC_TYPE:
+    case ANT_ENUM_TYPE:
     default:
         break;
     }
@@ -2193,6 +2711,28 @@ void CppSynth::WriteNamespaceClosing(int num_levels)
     }
 }
 
+void CppSynth::WriteClassForwardDeclarations(bool public_defs)
+{
+    bool empty_section = true;
+    string text;
+    ForwardReferenceType reftype = public_defs ? FRT_PUBLIC : FRT_PRIVATE;
+
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            if (tdecl->forward_referral_ != reftype) continue;
+            text = "class ";
+            text += tdecl->name_;
+            Write(&text);
+            empty_section = false;
+        }
+    }
+    if (!empty_section) {
+        EmptyLine();
+    }    
+}
+
 int CppSynth::WriteTypeDefinitions(bool public_defs)
 {
     int num_items = 0;
@@ -2303,6 +2843,68 @@ int CppSynth::WriteVariablesDefinitions(void)
     return(num_items);
 }
 
+int CppSynth::WriteClassIdsDefinitions(void)
+{
+    int num_items = 0;
+    string text;
+
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            bool towrite = false;
+
+            // if has base classes, downcast is possible. 
+            if (tdecl->type_spec_->GetType() == ANT_CLASS_TYPE) {
+                AstClassType *ctype = (AstClassType*)tdecl->type_spec_;    
+                towrite = ctype->member_interfaces_.size() > 0;
+            } else if (tdecl->type_spec_->GetType() == ANT_INTERFACE_TYPE) {
+                AstInterfaceType *itype = (AstInterfaceType*)tdecl->type_spec_;    
+                towrite = itype->ancestors_.size() > 0;
+            }
+            if (towrite) {
+                text = "char ";
+                text += tdecl->name_;
+                text += "::id__";
+                Write(&text);
+                ++num_items;
+            }
+        }
+    }
+    if (num_items > 0) {
+        EmptyLine();
+    }
+    SetFormatterRemarks(nullptr);
+    return(num_items);     
+}
+
+int CppSynth::WriteConstructors(void)
+{
+    int num_items = 0;
+    string text;
+
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            if (tdecl->type_spec_->GetType() == ANT_CLASS_TYPE) {
+                AstClassType *ctype = (AstClassType*)tdecl->type_spec_;    
+
+                // note: if the class has functions, the constructor is placed just before the first of them            
+                if (ctype->has_constructor && !ctype->constructor_written && ctype->member_functions_.size() == 0) {
+                    ++num_items;
+                    SynthConstructor(&tdecl->name_, ctype);
+                }
+            }
+        }
+    }
+    if (num_items > 0) {
+        EmptyLine();
+    }
+    SetFormatterRemarks(nullptr);
+    return(num_items); 
+}
+
 int CppSynth::WriteFunctions(void)
 {
     string text;
@@ -2320,6 +2922,20 @@ int CppSynth::WriteFunctions(void)
     }
     SetFormatterRemarks(nullptr);
     return(num_items);
+}
+
+AstClassType *CppSynth::GetLocalClassTypeDeclaration(const char *classname)
+{
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE) {
+            IAstTypeNode *ntype = ((TypeDeclaration*)declaration)->type_spec_;
+            if (ntype != nullptr && ntype->GetType() == ANT_CLASS_TYPE) {
+                return((AstClassType*)ntype);
+            }
+        }
+    }    
+    return(nullptr);
 }
 
 } // namespace

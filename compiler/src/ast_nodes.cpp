@@ -9,6 +9,24 @@ namespace SingNames {
 // TYPES
 //
 /////////////////////////
+IAstTypeNode *SolveTypedefs(IAstTypeNode *begin)
+{
+    while (begin != nullptr) {
+        if (begin->GetType() != ANT_NAMED_TYPE) {
+            break;
+        } else {
+            // TODO: Multicomponent names !!
+            TypeDeclaration *declaration = ((AstNamedType*)begin)->wp_decl_;
+            if (declaration != nullptr) {
+                begin = declaration->type_spec_;
+            } else {
+                begin = nullptr;
+            }
+        }
+    }
+    return(begin);
+}
+
 AstFuncType::~AstFuncType()
 {
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
@@ -112,7 +130,11 @@ bool AstNamedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 
 int AstNamedType::SizeOf(void)
 { 
-    return(wp_decl_ != NULL ? wp_decl_->type_spec_->SizeOf() : 0); 
+    return(wp_decl_ != nullptr ? wp_decl_->type_spec_->SizeOf() : 0); 
+}
+
+bool AstNamedType::NeedsZeroIniter(void) { 
+    return(wp_decl_ != nullptr ? wp_decl_->type_spec_->NeedsZeroIniter() : true); 
 }
 
 void AstNamedType::AppendFullName(string *fullname)
@@ -227,6 +249,12 @@ int AstClassType::SizeOf(void)
     return(0);
 }
 
+void AstClassType::AddMemberFun(FuncDeclaration *member, string implementor) {
+    member_functions_.push_back(member);
+    fn_implementors_.push_back(implementor);
+    if (member->name_ == "finalize") has_destructor = true;
+}
+
 bool AstClassType::HasInterface(AstInterfaceType *intf)
 {
     for (int ii = 0; ii < (int)member_interfaces_.size(); ++ii) {
@@ -261,6 +289,7 @@ AstExpressionLeaf::AstExpressionLeaf(Token type, const char *value)
     wp_decl_ = NULL;
     pkg_index_ = -1;
     real_is_int_ = real_is_negated_ = img_is_negated_ = false;
+    unambiguous_member_access = false;
 }
 
 AstFunCall::~AstFunCall()

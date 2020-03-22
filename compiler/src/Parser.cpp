@@ -282,7 +282,7 @@ FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
 }
 
 //
-// enum_decl :: = enum <type_name> ‘ { ‘(enum_element) ‘ }’
+// enum_decl :: = enum <type_name> ï¿½ { ï¿½(enum_element) ï¿½ }ï¿½
 // enum_element :: = <label_name>['=' const_expression]
 //
 TypeDeclaration *Parser::ParseEnum(void)
@@ -326,7 +326,7 @@ TypeDeclaration *Parser::ParseEnum(void)
 }
 
 //
-//interface_decl :: = interface<if_name> ‘{ ‘(member_function_declaration | interface <interface_name> ';') ‘ }’
+//interface_decl :: = interface<if_name> ï¿½{ ï¿½(member_function_declaration | interface <interface_name> ';') ï¿½ }ï¿½
 //
 TypeDeclaration *Parser::ParseInterface(void)
 {
@@ -402,7 +402,7 @@ TypeDeclaration *Parser::ParseInterface(void)
 }
 
 //
-// class_decl :: = class <type_name> ‘{ ‘(class_section) ‘ }’
+// class_decl :: = class <type_name> ï¿½{ ï¿½(class_section) ï¿½ }ï¿½
 // class_section :: = public_section | private_section
 // public_section :: = public ':' { var_decl | member_function_declaration }
 // private_section :: = private ':' { var_decl | member_function_declaration | if_declaration | fn_delegation }
@@ -525,9 +525,9 @@ TypeDeclaration *Parser::ParseClass(void)
 /*
 type_specification ::= base_type | <type_name> | <pkg_name>.<type_name> |
                         map '(' type_specification ')' type_specification |
-                        {‘[‘ ([const_expression]) ‘]’} type_specification |
-                        matrix {‘[‘ ([ expression[..expression] ]) ‘]’} type_specification |
-                        [const] [weak] ‘*’ type_specification |
+                        {ï¿½[ï¿½ ([const_expression]) ï¿½]ï¿½} type_specification |
+                        matrix {ï¿½[ï¿½ ([ expression[..expression] ]) ï¿½]ï¿½} type_specification |
+                        [const] [weak] ï¿½*ï¿½ type_specification |
                         function_type
 */
 IAstTypeNode *Parser::ParseTypeSpecification(void)
@@ -685,7 +685,7 @@ AstArrayType *Parser::ParseIndices(void)
     return(root);
 }
 
-// initer :: = expression | ‘{ ‘(initer) ‘ }’
+// initer :: = expression | ï¿½{ ï¿½(initer) ï¿½ }ï¿½
 IAstNode *Parser::ParseIniter(void)
 {
     if (m_token == TOKEN_CURLY_OPEN) {
@@ -732,7 +732,7 @@ AstFuncType *Parser::ParseFunctionType(bool is_body)
     return(node);
 }
 
-// argsdef ::=  ‘(’ ( single_argdef ) [',' ...] ‘)’ | '(' … ')'
+// argsdef ::=  ï¿½(ï¿½ ( single_argdef ) [',' ...] ï¿½)ï¿½ | '(' ï¿½ ')'
 void Parser::ParseArgsDef(AstFuncType *desc, bool is_function_body)
 {
     if (m_token != TOKEN_ROUND_OPEN) {
@@ -765,7 +765,7 @@ void Parser::ParseArgsDef(AstFuncType *desc, bool is_function_body)
     Advance();  // absorb ')'
 }
 
-//single_argdef :: = [arg_direction] <arg_name> type_specification[‘ = ’ initer]
+//single_argdef :: = [arg_direction] <arg_name> type_specification[ï¿½ = ï¿½ initer]
 // arg_direction :: = out | io | in
 VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory_initer)
 {
@@ -815,15 +815,15 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
     return(node);
 }
 
-//block :: = ‘{ ‘{ block_item } ‘ }’
+//block :: = ï¿½{ ï¿½{ block_item } ï¿½ }ï¿½
 //block_item :: = var_decl | const_decl | statement | block
 /* statements:
-( left_term ) ‘=’ ( expression ) |
+( left_term ) ï¿½=ï¿½ ( expression ) |
 left_term update_operator expression |
 left_term ++ | left_term -- |
 functioncall |
-while ‘(‘ expression ‘)’ block |
-if ‘(‘ expression ‘)’ block {[ else if ‘(‘ expression ‘)’ block ]} [else block] |
+while ï¿½(ï¿½ expression ï¿½)ï¿½ block |
+if ï¿½(ï¿½ expression ï¿½)ï¿½ block {[ else if ï¿½(ï¿½ expression ï¿½)ï¿½ block ]} [else block] |
 for '(' <name> in <expression> ':' <expression> [step <expression>]')' |
 for '(' [<name>','] <name> in <name> ')' |
 break |
@@ -960,7 +960,7 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
     return(node);
 }
 
-//left_term‘ = ’expression |
+//left_termï¿½ = ï¿½expression |
 //left_term update_operator expression |
 //left_term++ | left_term-- |
 //functioncall |    ====>>> i.e. a left term
@@ -1022,9 +1022,9 @@ IAstNode *Parser::ParseLeftTermStatement(void)
 /*
 expression :: = prefix_expression | expression binop expression
 
-binop ::=  ‘+’ | ‘-’ | ‘*’ | ‘/’ | ‘^’ | ‘%’ | 
-	  ‘&’ | ‘|’ | ‘>>’ | ‘<<’ |
-	  ‘<’ | ‘<=’ | ‘>’ | ‘>=’ | ‘==’ | ‘!=’ | 
+binop ::=  ï¿½+ï¿½ | ï¿½-ï¿½ | ï¿½*ï¿½ | ï¿½/ï¿½ | ï¿½^ï¿½ | ï¿½%ï¿½ | 
+	  ï¿½&ï¿½ | ï¿½|ï¿½ | ï¿½>>ï¿½ | ï¿½<<ï¿½ |
+	  ï¿½<ï¿½ | ï¿½<=ï¿½ | ï¿½>ï¿½ | ï¿½>=ï¿½ | ï¿½==ï¿½ | ï¿½!=ï¿½ | 
 	  xor | && | || 
 */
 IAstExpNode *Parser::ParseExpression()
@@ -1071,9 +1071,9 @@ IAstExpNode *Parser::ParseExpression()
 //          <Numeral> | <LiteralString> | <LiteralComplex> |
 //          left_term | sizeof '(' left_term ')' | sizeof '(' type_specification ')' | dimof '(' left_term ')' |
 //           base_type '(' expression ')'|
-//          unop prefix_expression | ‘(’ expression ‘)’
+//          unop prefix_expression | ï¿½(ï¿½ expression ï¿½)ï¿½
 //
-// unop :: = ‘ - ’ | ‘!’ | ‘~’ | '&'
+// unop :: = ï¿½ - ï¿½ | ï¿½!ï¿½ | ï¿½~ï¿½ | '&'
 //
 IAstExpNode *Parser::ParsePrefixExpression(void)
 {
@@ -1295,8 +1295,8 @@ AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
     }
 }
 
-//left_term :: = <var_name> | ‘(’ left_term ‘)’ | '*'left_term
-//               left_term ‘[’ indices_or_rages ‘]’ | left_term ‘.’ <name> | left_term '(' arguments ')' | this
+//left_term :: = <var_name> | ï¿½(ï¿½ left_term ï¿½)ï¿½ | '*'left_term
+//               left_term ï¿½[ï¿½ indices_or_rages ï¿½]ï¿½ | left_term ï¿½.ï¿½ <name> | left_term '(' arguments ')' | this
 IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
 {
     IAstExpNode    *node = NULL;
@@ -1678,9 +1678,9 @@ AstTypeSwitch *Parser::ParseTypeSwitch(void)
         Advance();  // absorb '{'
         while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_ELSE) {
             int recovery_level = curly_indent_;
-            AstNamedType *the_type = nullptr;
+            IAstTypeNode *the_type = nullptr;
             try {
-                the_type = ParseNamedType();
+                the_type = ParseTypeSpecification();
                 if (m_token != TOKEN_COLON) {
                     Error("Expecting ':'");
                 }
