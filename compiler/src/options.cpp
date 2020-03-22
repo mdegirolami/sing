@@ -193,6 +193,7 @@ bool Options::ParseArgs(int argc, char *argv[])
 
     // parse all the arguments
     for (ii = 1; ii < argc && !error_; ++ii) {
+        if (argv[ii][0] == '<' || argv[ii][1] == '>') continue;
         ParseSingleArg(argv[ii]);
     }
 

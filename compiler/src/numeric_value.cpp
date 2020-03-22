@@ -688,6 +688,7 @@ bool NumericValue::FitsUnsigned(int nbits) const
     } else {
         value = signed_ | unsigned_;
     }
+    if (nbits == 64) return(true);
     cast_value = value & ((uint64_t)1 << nbits) - 1;
     return(cast_value == value);
 }

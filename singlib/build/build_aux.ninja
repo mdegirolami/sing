@@ -9,21 +9,24 @@ rule cc
 rule ln
   command = g++ -o $out $in
 
+rule aa
+  command = ar rvs $out $in
+
 # the library
 
-build dvect.o       : cc $src_l/dvect.cpp
 build sing.o        : cc $src_l/sing.cpp      
 build sing_string.o : cc $src_l/sing_string.cpp
 
-build $lib_target : ln_lib  dvect.o sing.o sing_string.o
+build $lib_target : aa  sing.o sing_string.o
 
 # the bench
 
 build main.o             : cc $src_b/main.cpp
+build ptr_speed.o        : cc $src_b/ptr_speed.cpp
 build ptr_test.o         : cc $src_b/ptr_test.cpp  
 build string_test.o      : cc $src_b/string_test.cpp  
 build UsingVectors.o     : cc $src_b/UsingVectors.cpp
 
-build $bin_target: ln main.o ptr_test.o string_test.o UsingVectors.o
+build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o $lib_target
 
 default $bin_target

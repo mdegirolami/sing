@@ -2,6 +2,7 @@ debug_flags =
 
 src = ../../tests_results
 bin_target = ../../bin/tests.exe
+singlib = ../../../singlib/bin/singlib.a
 
 include ../build_aux.ninja
 

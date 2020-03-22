@@ -1,16 +1,15 @@
 #include <sing.h>
 //#include <limits.h>
-#include "sinth_test.h"
 
-void print_primes_to(int32_t top);
-uint32_t uint32_sqrt(uint32_t x);
-uint16_t SquareRoot(uint32_t x);
+// void print_primes_to(int32_t top);
+// uint32_t uint32_sqrt(uint32_t x);
+// uint16_t SquareRoot(uint32_t x);
 
 void ptrtest(void);
-void CheckLiterals(void);
-void test_vectors(int size);
-void using_strings(void);
-void test_types_and_vars();
+// void CheckLiterals(void);
+// void test_vectors(int size);
+// void using_strings(void);
+// void test_types_and_vars();
 void test_ptr_speed();
 
 int main() {

@@ -23,7 +23,7 @@ void FileName::BuildFullName(const string *path, const string *name,
     }
 
     // find where the name starts/ends inside the name string
-    dot = name->rfind('.');
+    dot = SearchExtensionDot(name->c_str());
     if (dot == string::npos) dot = name->size();
 
     bkslash = SearchLastSlash(name->c_str());
@@ -47,6 +47,22 @@ int FileName::SearchLastSlash(const char *name)
     return((int)(bkslash - name));
 }
 
+int FileName::SearchExtensionDot(const char *name)
+{
+    const char  *dot;
+
+    dot = name + strlen(name);
+    while (dot > name) {
+        --dot;
+        if (*dot == '\\' || *dot == '/') {
+            break;
+        } else if (*dot == '.') {
+            return((int)(dot - name));
+        }
+    }
+    return(string::npos);
+}
+
 void FileName::SplitFullName(string *path, string *name,
     string *exp, const string *fullname)
 {
@@ -54,7 +70,7 @@ void FileName::SplitFullName(string *path, string *name,
 
     // extract exp
     top = fullname->size();
-    dot = fullname->rfind('.');
+    dot = SearchExtensionDot(fullname->c_str());
     if (dot == string::npos) {
         if (exp != NULL) {
             *exp = "";
@@ -100,7 +116,7 @@ void FileName::ExtensionSet(string *filename, const string *extension)
     URGH_SIZE_T  dot;
 
     // erase current extension
-    dot = filename->rfind('.');
+    dot = SearchExtensionDot(filename->c_str());
     if (dot != string::npos) {
         filename->erase(dot);
     }
@@ -109,7 +125,7 @@ void FileName::ExtensionSet(string *filename, const string *extension)
     if (extension == NULL || *extension == "") return;
 
     // add the new extension, also add the dot if not from 'exp'  
-    dot = extension->rfind('.');
+    dot = SearchExtensionDot(extension->c_str());
     if (dot == string::npos) {
         (*filename) += '.';
         (*filename) += *extension;
@@ -124,7 +140,7 @@ void FileName::ExtensionSet(string *filename, const char *extension)
     const char   *cdot;
 
     // erase current extension
-    dot = filename->rfind('.');
+    dot = SearchExtensionDot(filename->c_str());
     if (dot != string::npos) {
         filename->erase(dot);
     }

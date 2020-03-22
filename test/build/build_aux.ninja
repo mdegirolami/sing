@@ -1,13 +1,28 @@
-cflags = -fsigned-char -I $src
-obj = .
+cflags = -fsigned-char -I $src -I../../../singlib/inc
+skip_usage = -u
+test_mode =
+sing_src = ../../tests
+singcc = ../../../compiler/bin/sing
 
 rule cc
   deps = gcc
   depfile = $out.d
   command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
 
+rule sc
+  command = $singcc $debug_flags $skip_usage -I ../../tests  -o $out $in
+
 rule ln
-  command = g++ -o $out @../objslist.txt
+  command = g++ -o $out $in $singlib
+
+build $src/main.h            : sc $sing_src/main.sing
+build $src/sinth_test.h      : sc $sing_src/sinth_test.sing  
+build $src/synth_pkgs_test.h : sc $sing_src/synth_pkgs_test.sing  
+build $src/synth_test_pkg.h  : sc $sing_src/synth_test_pkg.sing  
+build $src/synth_test_pkg2.h : sc $sing_src/synth_test_pkg2.sing  
+build $src/types_and_vars.h  : sc $sing_src/types_and_vars.sing  
+build $src/siege.h           : sc $sing_src/siege.sing
+#  skip_usage =
 
 build main.o             : cc $src/main.cpp
 build siege.o            : cc $src/siege.cpp

@@ -50,7 +50,7 @@ void using_strings(void)
 
     gs1 = sing::tostring((int8_t)100);
     gs1 = sing::tostring((int16_t)100);
-    gs1 = sing::tostring((int32_t)-(1 << 31));
+    gs1 = sing::tostring((int32_t)0x80000000);
     gs1 = sing::tostring((int64_t)0x8000000000000000);
     gs1 = sing::tostring((uint8_t)100);
     gs1 = sing::tostring((uint16_t)100);

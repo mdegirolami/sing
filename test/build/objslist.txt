@@ -1,1 +1,0 @@
-main.o siege.o sinth_test.o synth_pkgs_test.o synth_test_pkg.o types_and_vars.o

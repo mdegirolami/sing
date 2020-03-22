@@ -357,9 +357,9 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
             IAstDeclarationNode *decl = nullptr;
             AstNamedType *node = (AstNamedType*)type_spec;
             const char *name = node->name_.c_str();
-            if (node->next_component != nullptr) {
-                AstNamedType *second_node = node->next_component;
-                const char *second_name = node->name_.c_str();
+            AstNamedType *second_node = node->next_component;
+            if (second_node != nullptr) {
+                const char *second_name = second_node->name_.c_str();
                 if (second_node->next_component != nullptr) {
                     Error("Qualified type names can have at most 2 components: a package name + a type name", second_node->next_component);
                     success = false;
@@ -384,14 +384,15 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                 }
             }
             if (success) {
+                AstNamedType *error_locus = second_node != nullptr ? second_node : node;
                 if (decl == nullptr) {
-                    Error("Undefined type", type_spec);
+                    Error("Undefined type", error_locus);
                     success = false;
                 } else if (decl->GetType() != ANT_TYPE) {
-                    Error("Expected a type name", type_spec);
+                    Error("Expected a type name", error_locus);
                     success = false;
                 } else if (mode != TSCM_REFERENCED && !NodeIsConcrete(((TypeDeclaration*)decl)->type_spec_)) {
-                    Error("An Interface type is not allowed here (only concrete types)", type_spec);
+                    Error("An Interface type is not allowed here (only concrete types)", error_locus);
                     success = false;
                 } else {
                     node->wp_decl_ = (TypeDeclaration*)decl;
@@ -1983,7 +1984,9 @@ bool AstChecker::VerifyBinopForIndexConstness(AstBinop *node)
 {
     if (node->subtype_ == TOKEN_DOT) {
         const ExpressionAttributes *attr = node->GetAttr();
-        return(attr != nullptr && attr->IsEnum() && !attr->IsAVariable() && attr->HasKnownValue());
+        if (attr != nullptr && attr->IsEnum() && !attr->IsAVariable() && attr->HasKnownValue()) {
+            return(true);
+        }
     }
     if (!VerifyIndexConstness(node->operand_left_) || !VerifyIndexConstness(node->operand_right_)) {
         return(false);

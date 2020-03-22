@@ -50,22 +50,26 @@ public:
     virtual int kkk2() { return(10); }
 };
 
-template<class DstT, class SrcT>
-void upcast(sing::ptr<DstT> dst, sing::ptr<SrcT>)
-{
-    dst->pointed_ = src->pointed_;
-}
+// template<class DstT, class SrcT>
+// void upcast(sing::ptr<DstT> dst, sing::ptr<SrcT>)
+// {
+//     dst->pointed_ = src->pointed_;
+// }
 
 void test_ptr_speed()
 {
     clock_t start = clock();
-    for (int ii = 0; ii < 3; ++ii) {
+    for (int ii = 0; ii < 1; ++ii) {
         BuidSingTree(20);   // build a tree of 2^20-1 nodes, then deletes it (when the pointer exits its scope !)
     }
     printf("\ntime = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
-    for (int ii = 0; ii < 3; ++ii) {
+
+    start = clock();
+    for (int ii = 0; ii < 1; ++ii) {
         BuidStdTree(20);   // build a tree of 2^20-1 nodes, then deletes it (when the pointer exits its scope !)
     }
     printf("\ntime = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+
+    printf("\nPress any key to exit...");
     getchar();
 }

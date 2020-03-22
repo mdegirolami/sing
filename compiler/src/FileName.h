@@ -7,6 +7,7 @@ namespace SingNames {
 
 class FileName {
     static int SearchLastSlash(const char *name);
+    static int SearchExtensionDot(const char *name);
 
 public:
     // name and exp can be full names, the appropriate part is extracted !

@@ -1,7 +1,7 @@
 #ifndef SING_VECTORS_H_
 #define SING_VECTORS_H_
 
-#include "memory.h"
+#include <memory.h>
 #include <initializer_list>
 #include <algorithm>
 

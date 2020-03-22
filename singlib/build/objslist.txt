@@ -1,1 +1,0 @@
-LiteraexpTest.o main.o mod_aa.o mod_bb.o ptr_test.o siege.o sinth_test.o string_test.o synth_pkgs_test.o synth_test_pkg.o types_and_vars.o UsingVectors.o dvect.o sing.o sing_string.o

@@ -1,10 +1,7 @@
 #include "formatter_test.h"
 
-static void manyargs(
-    const std::complex<float> veryveryveryveryveryverylongarg1,
-    const std::complex<float> veryveryveryveryveryverylongarg2,
-    const std::complex<float> veryveryveryveryveryverylongarg3,
-    const std::complex<float> veryveryveryveryveryverylongarg4);
+static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
+    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4);
 static void fn1(const int32_t a, const int32_t b, int32_t *c);
 static void fn2(const int32_t a, const int32_t b, int32_t *c);
 
@@ -29,11 +26,8 @@ static const sing::svect<sing::spvect<int32_t, 3>, 6> table3 = {                
 static const sing::string stest = "kjdhfkhfdkhskdfhkshghkhl"                    // rem1
     "hfdslkjflkjasdlkfjlksdjflkj";                                              // rem2
 
-static void manyargs(
-    const std::complex<float> veryveryveryveryveryverylongarg1,
-    const std::complex<float> veryveryveryveryveryverylongarg2,
-    const std::complex<float> veryveryveryveryveryverylongarg3,
-    const std::complex<float> veryveryveryveryveryverylongarg4)
+static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
+    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4)
 {
 }
 
@@ -47,18 +41,14 @@ static void fn1(const int32_t a, const int32_t b, int32_t *c)                   
     // of statement
     *c = a + b;     // post
 
-    *c = 100 + 123 * sing::pow2(12) +                                           // rem
-        12345 /
-        (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) -
+    *c = 100 + 123 * sing::pow2(12) + 12345 / (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) -         // rem
         (veryveryveryveryveryverylong3 & veryveryveryveryveryverylong4);
-    manyargs(12.6526546f + std::complex<float>(0.0f, 12.925985478f),            // xyz
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f),
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f),
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f));
-    manyargs(12.6526546f + std::complex<float>(0.0f, 12.925985478f),            // abc 
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f),                 // abc
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f),                 // abc
-        12.6526546f + std::complex<float>(0.0f, 12.925985478f));                // xyz
+    manyargs(12.6526546f + std::complex<float>(0.0f, 12.925985478f), 12.6526546f + std::complex<float>(0.0f, 12.925985478f),                // xyz
+        12.6526546f + std::complex<float>(0.0f, 12.925985478f), 12.6526546f + std::complex<float>(0.0f, 12.925985478f));
+    manyargs(12.6526546f + std::complex<float>(0.0f, 12.925985478f), 12.6526546f + std::complex<float>(0.0f, 12.925985478f),                // abc 
+        12.6526546f + std::complex<float>(0.0f, 12.925985478f), 12.6526546f + std::complex<float>(0.0f, 12.925985478f));                    // abc
+                                    // abc
+                                     // xyz
 
     // note: the next line has blanks but must be handled as empty
 

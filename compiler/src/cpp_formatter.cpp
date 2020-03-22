@@ -5,7 +5,7 @@ namespace SingNames {
 
 CppFormatter::CppFormatter()
 {
-    max_line_len_ = 80;
+    max_line_len_ = 160;
     remarks_tabs = 20;
     Reset();
 }

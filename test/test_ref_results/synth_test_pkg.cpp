@@ -7,7 +7,6 @@ typedef int32_t invisible2;
 
 static void invisible();
 
-
 int32_t pkg_fun(const pkg_vectype &p0)
 {
     return (0);

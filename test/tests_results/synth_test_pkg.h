@@ -11,6 +11,5 @@ typedef sing::spvect<int32_t, pkg_ctc> pkg_vectype;
 
 int32_t pkg_fun(const pkg_vectype &p0);
 
-
 }   // namespace
 }   // namespace

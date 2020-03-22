@@ -1,96 +1,95 @@
 
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 11 	column: 19 	You can only compare two numbers, enums, strings or bools (the latter for equality only)
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 14 	column: 12 	You can't compare two enums of different type
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 18 	column: 11 	Index value is out of bound
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 19 	column: 14 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 23 	column: 4 	Can't find the function's class declaration
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 38 	column: 16 	Inherited Function "from_if0" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 38 	column: 16 	Inherited Function "conflicting" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 41 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 47 	column: 9 	Var member name conflicts with function from interface if0
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 48 	column: 9 	Duplicated member name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 51 	column: 8 	The delegated member has not the required function
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 52 	column: 8 	Implementor not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 55 	column: 15 	The delegated member has not the required interface
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 56 	column: 15 	Implementor not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 56 	column: 15 	Interface included twice
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 57 	column: 15 	Interface included twice
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 60 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 60 	column: 8 	Duplicated member name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 61 	column: 8 	Duplicated member name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 63 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 64 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 64 	column: 8 	Did you mean 'finalize' (please check the case) ?
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 65 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 65 	column: 8 	The finalize function must have no arguments and no return value
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 66 	column: 13 	Undefined type
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 68 	column: 21 	Member variables only support single value initers
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 69 	column: 21 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 72 	column: 19 	The argument's initer must be a compile time constant !
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 75 	column: 8 	Duplicated member name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 75 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 78 	column: 4 	Function doesn't belong to the class
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 82 	column: 4 	A member function should access at least a class member
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 86 	column: 4 	Double defined function
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 90 	column: 4 	Function signature differs from class declaration
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 94 	column: 32 	A public declaration cannot refer a private symbol
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 94 	column: 11 	Original declaration is not public !
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 98 	column: 21 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 100 	column: 6 	Enum case "uno" is duplicated
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 100 	column: 31 	The enum case initer must be a compile time integer constant !
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 105 	column: 8 	Duplicated member name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 116 	column: 15 	Interface included twice
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1B
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 118 	column: 15 	Function f2 from interface if1B conflicts (has same name, different type) with a function from interface if1
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 119 	column: 15 	Name doesn't refer to an object of type interface
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f2" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f3" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f1" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f1" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 132 	column: 5 	The Switch statement requires one of the following types: numeric, enum, string, bool, pointer
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 140 	column: 5 	Switch cases must be compile time constants !
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 141 	column: 5 	Switch cases must match the switch expression type
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 144 	column: 16 	The reference name must be a new name
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 147 	column: 23 	The expression must evaluate to an interface type
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 152 	column: 5 	The case label type must be a class/interface implementing the typeswitch interface
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 162 	column: 9 	Undefined symbol
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 163 	column: 9 	Cannot access private symbol
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 164 	column: 9 	Need a variable/const/function name here
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 165 	column: 29 	Not a case of the enumeration
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 166 	column: 9 	Left operand is not compatible with the dot operator
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 174 	column: 8 	Function has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 180 	column: 5 	Undefined symbol
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 181 	column: 10 	Can't call a muting member function from a non-muting one
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 183 	column: 5 	Undefined symbol
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 184 	column: 13 	Writing to a read-only variable
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 196 	column: 14 	Can't access private member
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 198 	column: 14 	Can't access private member
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 200 	column: 14 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 201 	column: 5 	'This' is allowed only in member functions
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f3" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f1" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f2" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f1" has not an implementation
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 214 	column: 12 	An Interface type is not allowed here (only concrete types)
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 219 	column: 8 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 220 	column: 10 	Left operand has not a concrete type
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 221 	column: 8 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 224 	column: 16 	Argument 2 type mismatch
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 225 	column: 16 	Argument 2 is an output argument and needs to be a writable variable
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 227 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 228 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 229 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 230 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 240 	column: 8 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 242 	column: 8 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 245 	column: 16 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 246 	column: 16 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 247 	column: 16 	Type mismatch/No known conversion
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 248 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 249 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 250 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 251 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 252 	column: 10 	Member not found
-ERROR !! file D:/Documents/w12/sing/tests/checker_test_classes.sing: line: 253 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 11 	column: 19 	You can only compare two numbers, enums, strings or bools (the latter for equality only)
+ERROR !! file checker_test_classes.sing: line: 14 	column: 12 	You can't compare two enums of different type
+ERROR !! file checker_test_classes.sing: line: 18 	column: 11 	Index value is out of bound
+ERROR !! file checker_test_classes.sing: line: 19 	column: 14 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test_classes.sing: line: 23 	column: 4 	Can't find the function's class declaration
+ERROR !! file checker_test_classes.sing: line: 38 	column: 16 	Inherited Function "from_if0" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 38 	column: 16 	Inherited Function "conflicting" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 41 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 47 	column: 9 	Var member name conflicts with function from interface if0
+ERROR !! file checker_test_classes.sing: line: 48 	column: 9 	Duplicated member name
+ERROR !! file checker_test_classes.sing: line: 51 	column: 8 	The delegated member has not the required function
+ERROR !! file checker_test_classes.sing: line: 52 	column: 8 	Implementor not found
+ERROR !! file checker_test_classes.sing: line: 55 	column: 15 	The delegated member has not the required interface
+ERROR !! file checker_test_classes.sing: line: 56 	column: 15 	Implementor not found
+ERROR !! file checker_test_classes.sing: line: 56 	column: 15 	Interface included twice
+ERROR !! file checker_test_classes.sing: line: 57 	column: 15 	Interface included twice
+ERROR !! file checker_test_classes.sing: line: 60 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 60 	column: 8 	Duplicated member name
+ERROR !! file checker_test_classes.sing: line: 61 	column: 8 	Duplicated member name
+ERROR !! file checker_test_classes.sing: line: 63 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 64 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 64 	column: 8 	Did you mean 'finalize' (please check the case) ?
+ERROR !! file checker_test_classes.sing: line: 65 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 65 	column: 8 	The finalize function must have no arguments and no return value
+ERROR !! file checker_test_classes.sing: line: 66 	column: 13 	Undefined type
+ERROR !! file checker_test_classes.sing: line: 68 	column: 21 	Member variables only support single value initers
+ERROR !! file checker_test_classes.sing: line: 69 	column: 21 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 72 	column: 19 	The argument's initer must be a compile time constant !
+ERROR !! file checker_test_classes.sing: line: 75 	column: 8 	Duplicated member name
+ERROR !! file checker_test_classes.sing: line: 75 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 78 	column: 4 	Function doesn't belong to the class
+ERROR !! file checker_test_classes.sing: line: 82 	column: 4 	A member function should access at least a class member
+ERROR !! file checker_test_classes.sing: line: 86 	column: 4 	Double defined function
+ERROR !! file checker_test_classes.sing: line: 90 	column: 4 	Function signature differs from class declaration
+ERROR !! file checker_test_classes.sing: line: 94 	column: 32 	A public declaration cannot refer a private symbol
+ERROR !! file checker_test_classes.sing: line: 94 	column: 11 	Original declaration is not public !
+ERROR !! file checker_test_classes.sing: line: 98 	column: 21 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 100 	column: 6 	Enum case "uno" is duplicated
+ERROR !! file checker_test_classes.sing: line: 100 	column: 31 	The enum case initer must be a compile time integer constant !
+ERROR !! file checker_test_classes.sing: line: 105 	column: 8 	Duplicated member name
+ERROR !! file checker_test_classes.sing: line: 116 	column: 15 	Interface included twice
+ERROR !! file checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1
+ERROR !! file checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1
+ERROR !! file checker_test_classes.sing: line: 117 	column: 8 	Function member conflicts with function from interface if1B
+ERROR !! file checker_test_classes.sing: line: 118 	column: 15 	Function f2 from interface if1B conflicts (has same name, different type) with a function from interface if1
+ERROR !! file checker_test_classes.sing: line: 119 	column: 15 	Name doesn't refer to an object of type interface
+ERROR !! file checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f2" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f3" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f1" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 122 	column: 21 	Inherited Function "f1" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 132 	column: 5 	The Switch statement requires one of the following types: numeric, enum, string, bool, pointer
+ERROR !! file checker_test_classes.sing: line: 140 	column: 5 	Switch cases must be compile time constants !
+ERROR !! file checker_test_classes.sing: line: 141 	column: 5 	Switch cases must match the switch expression type
+ERROR !! file checker_test_classes.sing: line: 144 	column: 16 	The reference name must be a new name
+ERROR !! file checker_test_classes.sing: line: 147 	column: 23 	The expression must evaluate to an interface type
+ERROR !! file checker_test_classes.sing: line: 152 	column: 5 	The case label type must be a class/interface implementing the typeswitch interface
+ERROR !! file checker_test_classes.sing: line: 162 	column: 9 	Undefined symbol
+ERROR !! file checker_test_classes.sing: line: 163 	column: 9 	Cannot access private symbol
+ERROR !! file checker_test_classes.sing: line: 164 	column: 9 	Need a variable/const/function name here
+ERROR !! file checker_test_classes.sing: line: 165 	column: 29 	Not a case of the enumeration
+ERROR !! file checker_test_classes.sing: line: 166 	column: 9 	Left operand is not compatible with the dot operator
+ERROR !! file checker_test_classes.sing: line: 174 	column: 8 	Function has not an implementation
+ERROR !! file checker_test_classes.sing: line: 180 	column: 5 	Undefined symbol
+ERROR !! file checker_test_classes.sing: line: 181 	column: 10 	Can't call a muting member function from a non-muting one
+ERROR !! file checker_test_classes.sing: line: 183 	column: 5 	Undefined symbol
+ERROR !! file checker_test_classes.sing: line: 184 	column: 13 	Writing to a read-only variable
+ERROR !! file checker_test_classes.sing: line: 196 	column: 14 	Can't access private member
+ERROR !! file checker_test_classes.sing: line: 198 	column: 14 	Can't access private member
+ERROR !! file checker_test_classes.sing: line: 200 	column: 14 	Member not found
+ERROR !! file checker_test_classes.sing: line: 201 	column: 5 	'This' is allowed only in member functions
+ERROR !! file checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f2" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f1" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f1" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 207 	column: 15 	Inherited Function "f3" has not an implementation
+ERROR !! file checker_test_classes.sing: line: 214 	column: 12 	An Interface type is not allowed here (only concrete types)
+ERROR !! file checker_test_classes.sing: line: 219 	column: 8 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 220 	column: 10 	Left operand has not a concrete type
+ERROR !! file checker_test_classes.sing: line: 221 	column: 8 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 225 	column: 16 	Argument 2 is an output argument and needs to be a writable variable
+ERROR !! file checker_test_classes.sing: line: 227 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 228 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 229 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 230 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 240 	column: 8 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 242 	column: 8 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 245 	column: 16 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 246 	column: 16 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 247 	column: 16 	Type mismatch/No known conversion
+ERROR !! file checker_test_classes.sing: line: 248 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 249 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 250 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 251 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 252 	column: 10 	Member not found
+ERROR !! file checker_test_classes.sing: line: 253 	column: 10 	Member not found
