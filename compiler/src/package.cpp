@@ -77,7 +77,7 @@ const char *Package::GetError(int index)
     message = errors_.GetError(index, &row, &col);
     if (message == nullptr) return(nullptr);
     if (row >= 0 && col >= 0) {
-        sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, col, message);
+        sprintf(fullmessage, "%d:%d: %s", row, col, message);
     } else {
         return(message);
     }

@@ -26,6 +26,7 @@ class AstChecker : public ITypedefSolver {
     SymbolsStorage          *symbols_;      // not owned !!!
     Options                 *options_;      // not owned !!!
     ErrorList               usage_errors_;
+    bool                    check_usage_errors_;
 
     // info about the currently checked declaration
     int                     current_;
@@ -54,7 +55,7 @@ class AstChecker : public ITypedefSolver {
     void CheckEnum(AstEnumType *declaration);
     void CheckInterface(AstInterfaceType *declaration);
     void CheckClass(AstClassType *declaration);
-    void CheckMemberFuncDeclaration(FuncDeclaration *declaration);
+    void CheckMemberFuncDeclaration(FuncDeclaration *declaration, bool from_interface_declaration);
 
     void CheckBlock(AstBlock *block, bool open_scope);
     AstNodeType CheckStatement(IAstNode *statement);
@@ -118,7 +119,7 @@ class AstChecker : public ITypedefSolver {
     VarDeclaration *GetIteratedVar(IAstExpNode *node);
     void CheckInnerBlockVarUsage(void);
     void CheckPrivateDeclarationsUsage(void);
-    void CheckPrivateVarUsage(VarDeclaration *var);
+    void CheckPrivateVarUsage(VarDeclaration *var, bool is_member = false);
     void CheckPrivateFuncUsage(FuncDeclaration *func);
     void CheckPrivateTypeUsage(TypeDeclaration *tdec);
     void CheckMemberFunctionsDeclarationsPresence(void);

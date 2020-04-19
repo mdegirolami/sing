@@ -20,7 +20,7 @@ out c i32) void // rem3
     // of statement
     c = a + b;      // post
     
-    c = 100 + 123 * 12^2 + 12345 / (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) - (veryveryveryveryveryverylong3 & veryveryveryveryveryverylong4); // rem
+    c = 100 + 123 * 12**2 + 12345 / (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) - (veryveryveryveryveryverylong3 & veryveryveryveryveryverylong4); // rem
     manyargs(12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i); // xyz
     manyargs(12.6526546 + 12.925985478i,    // abc 
         12.6526546 + 12.925985478i, // abc

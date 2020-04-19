@@ -66,8 +66,8 @@ fn myclass.chebello pure(in uno i32, out due i8, io tre string, ...) bool
 		myclass.member = 10;
 		a = pippo + 10 * (mm[1,1] + package1.extvar) / myclass.member;
 		*returning_pointer(a : singlepar) = sizeof(f32) + dimof(mm[0]) + u64(pippo) + -a;
-		var test = pippo^3 * 2 + pippo^2 * 5 > 3 && pippo < 0 || pippo > 100;
-		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5^2;
+		var test = pippo**3 * 2 + pippo**2 * 5 > 3 && pippo < 0 || pippo > 100;
+		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5**2;
         
         // recognizing the fake casts : not fake
         a = i8(40);
@@ -91,17 +91,17 @@ fn varargs_func (...) void {
 
 public fn defs_func (in xxx i32 = 3) void {
     switch (a + 3*bb) {
-        0 : ++counter;
-        1 : --counter;
-        else : return;
+        case 0 : ++counter;
+        case 1 : --counter;
+        default : return;
     }
     typeswitch(v = base) {
-        derived1     : ++v;
-        far.derived2 : --v;
-        else : return;
+        case derived1     : ++v;
+        case far.derived2 : --v;
+        default : return;
     }
     switch (v) {
-        else :      // default is explicitly empty
+        default :      // default is explicitly empty
     }
     this.member = 0;
 }
@@ -110,22 +110,19 @@ let contint = 10;
 
 enum tenum {ID_0, ID_1 = 5, ID_2 = constint * 2, ID_3, ID_4}
 
-interface test_if {
+interface test_if : far.base {
     fn fun1(in aa string) void;
     fn mut fun2(out kk f32) bool;
-    interface far.base;
 }
 
-class the_class {    
+class the_class : test_if, if2 by core {    
 public:    
     var core far.if2_implementor;
     var member1 [10]i64 = {3, 4, 5, 0};
     
     fn mut InsertJob(in job *Job) void;    
     fn fun4 by core;
-    
-    interface test_if;
-    interface if2 by core;
+
 private:
     var member2 [10]i64 = {3, 4, 5, 0};
     fn fun3(in aa c128) void;

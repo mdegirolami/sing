@@ -2,7 +2,7 @@ requires "assert";
 requires "synth_test_pkg", the_pkg;
 requires "synth_test_pkg2";        
 
-type gg the_pkg.pkg_type;   // good !!
+type gg *the_pkg.pkg_type;   // good !!
 
 var vf [the_pkg.pkg_ctc] i32;   // good !!
 

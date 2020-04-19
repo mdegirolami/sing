@@ -24,9 +24,8 @@ AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
     for_reference_ = for_reference;
     curly_indent_ = 0;
     root_ = new AstFile();
-    try {
-        ParseFile(root_, for_reference);
-    } catch(...) {
+    ParseFile(root_, for_reference);
+    if (on_error_) {
         has_errors_ = true;
     }
     if (root_ != NULL && has_errors_) {
@@ -43,25 +42,22 @@ void Parser::ParseFile(AstFile *file, bool for_reference)
 {
     bool    done = false;
 
-    if (Advance() == TOKEN_NAMESPACE) {
-        try {
-            ParseNamespace(file);
-        } catch (...) {
+    if (!Advance()) return;
+    if (m_token == TOKEN_NAMESPACE) {
+        ParseNamespace(file);
+        if (on_error_) {
             SkipToNextDeclaration();
         }
     }
     while (m_token == TOKEN_REQUIRES) {
-        try {
-            ParseDependency(file);
-        }
-        catch (...) {
+        ParseDependency(file);
+        if (on_error_) {
             SkipToNextDeclaration();
         }
     }
     while (m_token != TOKEN_EOF) {
-        try {
-            ParseDeclaration(file, for_reference);
-        } catch (...) {
+        ParseDeclaration(file, for_reference);
+        if (on_error_) {
             SkipToNextDeclaration();
         }
     }
@@ -69,16 +65,22 @@ void Parser::ParseFile(AstFile *file, bool for_reference)
 
 void Parser::ParseNamespace(AstFile *file)
 {
-    if (Advance() != TOKEN_NAME) {
+    if (!Advance()) return;
+    if (m_token != TOKEN_NAME) {
         Error("Expecting the namespace name");
+        return;
     } else {
         string n_space = m_lexer->CurrTokenString();
-        while (Advance() == TOKEN_DOT) {
-            if (Advance() != TOKEN_NAME) {
+        if (!Advance()) return;
+        while (m_token == TOKEN_DOT) {
+            if (!Advance()) return;
+            if (m_token != TOKEN_NAME) {
                 Error("Expecting the next portion of a qualifyed name");
+                return;
             }
             n_space += '.';
             n_space += m_lexer->CurrTokenString();
+            if (!Advance()) return;
         }
         file->SetNamespace(n_space.c_str());
     }
@@ -87,19 +89,23 @@ void Parser::ParseNamespace(AstFile *file)
 
 void Parser::ParseDependency(AstFile *file)
 {
-    if (Advance() != TOKEN_LITERAL_STRING) {
+    if (!Advance()) return;
+    if (m_token != TOKEN_LITERAL_STRING) {
         Error("Expecting the required package path (remember to enclose it in double quotes !)");
+        return;
     } 
     AstDependency *dep = new AstDependency(m_lexer->CurrTokenString(), NULL);
     file->AddDependency(dep);
     RecordPosition(dep);
-
-    if (Advance() == TOKEN_COMMA) {
-        if (Advance() != TOKEN_NAME) {
+    if (!Advance()) return;
+    if (m_token == TOKEN_COMMA) {
+        if (!Advance()) return;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the required package local name");
+            return;
         }
         dep->SetLocalPackageName(m_lexer->CurrTokenString());
-        Advance();
+        if (!Advance()) return;
     }
     UpdateEndPosition(dep);
     CheckSemicolon();
@@ -111,13 +117,15 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
     bool    is_public = false;
 
     if (m_token == TOKEN_PUBLIC) {
-        Advance();
+        if (!Advance()) return;
         is_public = true;
     } else if (for_reference) {
-        if (Advance() == TOKEN_NAME) {
+        if (!Advance()) return;
+        if (m_token == TOKEN_NAME) {
             file->AddPrivateSymbol(m_lexer->CurrTokenString());
         } else {
             Error("Expecting the declaration name");
+            return;
         }
         SkipToNextDeclaration();
         return;
@@ -146,9 +154,12 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
         break;
     default:
         Error("Expecting a declaration: type, var, let, fn, class, interface, enum");
+        return;
     }
-    node->SetPublic(is_public);
-    file->AddNode(node);
+    if (!on_error_) {
+        node->SetPublic(is_public);
+        file->AddNode(node);
+    }
 }
 
 VarDeclaration *Parser::ParseVar(void)
@@ -156,34 +167,37 @@ VarDeclaration *Parser::ParseVar(void)
     VarDeclaration *var = NULL;
     bool            type_defined = false;
 
-    if (Advance() != TOKEN_NAME) {
+    if (!Advance()) return(nullptr);
+    if (m_token != TOKEN_NAME) {
         Error("Expecting the variable name");
+        return(nullptr);
     }
     var = new VarDeclaration(m_lexer->CurrTokenString());
     RecordPosition(var);
-    try {
-        Advance();
-        //if (m_token == TOKEN_VOLATILE) {
-        //    var->SetFlags(VF_ISVOLATILE);
-        //    Advance();
-        //}
+    {
+        if (!Advance()) goto recovery;
         if (m_token != TOKEN_ASSIGN && m_token != TOKEN_SEMICOLON) {
             var->SetType(ParseTypeSpecification());
+            if (on_error_) goto recovery;
             type_defined = true;
         }
         if (m_token == TOKEN_ASSIGN) {
-            Advance();
+            if (!Advance()) goto recovery;
             var->SetIniter(ParseIniter());
+            if (on_error_) goto recovery;
             type_defined = true;
         }
         if (!type_defined) {
             Error("You must either declare the variable type or use an initializer");
+            goto recovery;
         }
         UpdateEndPosition(var);
         CheckSemicolon();
-    } catch(...) {
+    }
+recovery:
+    if (on_error_) {
         delete var;
-        throw;
+        return(nullptr);
     }
     return(var);
 }
@@ -193,31 +207,38 @@ VarDeclaration *Parser::ParseConst(void)
     VarDeclaration *node;
     bool            type_defined = false;
 
-    if (Advance() != TOKEN_NAME) {
+    if (!Advance()) return(nullptr);
+    if (m_token != TOKEN_NAME) {
         Error("Expecting the const name");
+        return(nullptr);
     }
     node = new VarDeclaration(m_lexer->CurrTokenString());
     node->SetFlags(VF_READONLY);
     RecordPosition(node);
-    try {
-        Advance();
+    {
+        if (!Advance()) goto recovery;
         if (m_token != TOKEN_ASSIGN) {
             node->SetType(ParseTypeSpecification());
+            if (on_error_) goto recovery;
             type_defined = true;
         }
         if (m_token == TOKEN_ASSIGN) {
-            Advance();
+            if (!Advance()) goto recovery;
             node->SetIniter(ParseIniter());
+            if (on_error_) goto recovery;
             type_defined = true;
         }
         if (!type_defined) {
             Error("You must either declare the const type or use an initializer");
+            goto recovery;
         }
         UpdateEndPosition(node);
         CheckSemicolon();
-    } catch(...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -226,21 +247,27 @@ TypeDeclaration *Parser::ParseType(void)
 {
     TypeDeclaration *node;
 
-    if (Advance() != TOKEN_NAME) {
+    if (!Advance()) return(nullptr);
+    if (m_token != TOKEN_NAME) {
         Error("Expecting the type name");
+        return(nullptr);
     }
     node = new TypeDeclaration(m_lexer->CurrTokenString());
     RecordPosition(node);
-    try {
-        Advance();
+    {
+        if (!Advance()) goto recovery;
         node->SetType(ParseTypeSpecification());
+        if (on_error_) goto recovery;
         if (m_token == TOKEN_ASSIGN) {
             Error("Can't initialize a type !");
+            goto recovery;
         }
         CheckSemicolon();
-    } catch(...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -249,160 +276,196 @@ TypeDeclaration *Parser::ParseType(void)
 FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
 {
     string          name1, name2;
+    bool            is_member = false;
     FuncDeclaration *node = NULL;
 
-    try {
-        if (Advance() != TOKEN_NAME) {
+    {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the function name");
+            goto recovery;
         }
         name1 = m_lexer->CurrTokenString();
         node = new FuncDeclaration();
         RecordPosition(node);
-        if (Advance() == TOKEN_DOT) {
-            if (Advance() == TOKEN_NAME) {
+        if (!Advance()) goto recovery;
+        if (m_token == TOKEN_DOT) {
+            if (!Advance()) goto recovery;
+            is_member = true;
+            if (m_token == TOKEN_NAME) {
                 name2 = m_lexer->CurrTokenString();
-                Advance();
+                if (!Advance()) goto recovery;
             } else {
                 Error("Expecting a member function name after the member selector '.'");
+                goto recovery;
             }
         }
         node->SetNames(name1.c_str(), name2.c_str());
-        node->AddType(ParseFunctionType(true));
+        AstFuncType *ftype = ParseFunctionType(true);
+        node->AddType(ftype);
+        if (on_error_) goto recovery;
+        if (is_member) ftype->SetIsMember();
         UpdateEndPosition(node);
         if (skip_body) {
             SkipToNextDeclaration();
         } else {
             node->AddBlock(ParseBlock());
         }
-    } catch (...) {
-        if (node != NULL) delete node;
-        throw;
+    } 
+recovery:    
+    if (on_error_) {
+        if (node != nullptr) delete node;
+        node = nullptr;
     }
     return(node);
 }
 
 //
-// enum_decl :: = enum <type_name> � { �(enum_element) � }�
+// enum_decl :: = enum <type_name> ' { '(enum_element) ' }'
 // enum_element :: = <label_name>['=' const_expression]
 //
 TypeDeclaration *Parser::ParseEnum(void)
 {
     TypeDeclaration *node = nullptr;
-    try {
-        if (Advance() != TOKEN_NAME) {
+    {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the type name");
+            goto recovery;
         }
         node = new TypeDeclaration(m_lexer->CurrTokenString());
         AstEnumType *typenode = new AstEnumType();
         node->SetType(typenode);
         RecordPosition(node);
         RecordPosition(typenode);
-        if (Advance() != TOKEN_CURLY_OPEN) {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_CURLY_OPEN) {
             Error("Expecting '{'");
+            goto recovery;
         }
         do {
-            if (Advance() != TOKEN_NAME) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_NAME) {
                 Error("Expecting an enum case name");
+                goto recovery;
             }
             string the_case = m_lexer->CurrTokenString();
-            if (Advance() == TOKEN_ASSIGN) {
-                Advance();  // absorb '='
+            if (!Advance()) goto recovery;
+            if (m_token == TOKEN_ASSIGN) {
+                if (!Advance()) goto recovery;  // absorb '='
                 typenode->AddItem(the_case.c_str(), ParseExpression());
+                if (on_error_) goto recovery;
             } else {
                 typenode->AddItem(the_case.c_str(), nullptr);
             }
         } while (m_token == TOKEN_COMMA);
         if (m_token != TOKEN_CURLY_CLOSE) {
             Error("Expecting '}'");
+            goto recovery;
         }
         UpdateEndPosition(node);
         Advance();  // absorb '}'
     }
-    catch (...) {
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
 
 //
-//interface_decl :: = interface<if_name> �{ �(member_function_declaration | interface <interface_name> ';') � }�
+//interface_decl :: = interface<if_name> '{ '(member_function_declaration | interface <interface_name> ';') ' }'
 //
 TypeDeclaration *Parser::ParseInterface(void)
 {
     TypeDeclaration *node = nullptr;
-    try {
-        if (Advance() != TOKEN_NAME) {
+    {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the type name");
+            goto recovery;
         }
         node = new TypeDeclaration(m_lexer->CurrTokenString());
         AstInterfaceType *typenode = new AstInterfaceType();
         node->SetType(typenode);
         RecordPosition(node);
         RecordPosition(typenode);
-        Advance();
-        //if (m_token == TOKEN_COLON) {
-        //    do {
-        //        Advance();  // absorb ':' or ','
-        //        node->AddAncestor(ParseNamedType());
-        //    } while (m_token == TOKEN_COMMA);
-        //}
+        if (!Advance()) goto recovery;
+
+        if (m_token == TOKEN_COLON) {
+            do {
+                if (!Advance()) goto recovery; // absorb ':' or ','
+                typenode->AddAncestor(ParseNamedType());
+                if (on_error_) goto recovery;
+            } while (m_token == TOKEN_COMMA);
+        }
+
         if (m_token != TOKEN_CURLY_OPEN) {
             Error("Expecting '{'");
+            goto recovery;
         }
-        Advance();  // absorb '{'
+        if (!Advance()) goto recovery;  // absorb '{'
         while (m_token != TOKEN_CURLY_CLOSE) {
             int recovery_level = curly_indent_;
             FuncDeclaration *fun = nullptr;
-            try {
+            {
                 if (m_token == TOKEN_FUNC) {
                     bool is_mutable = false;
-                    Advance();
+                    if (!Advance()) goto recovery2;
                     if (m_token == TOKEN_MUT) {
                         is_mutable = true;
-                        Advance();
+                        if (!Advance()) goto recovery2;
                     } 
                     if (m_token != TOKEN_NAME) {
                         Error("Expecting the function name");
+                        goto recovery2;
                     }
                     fun = new FuncDeclaration();
                     RecordPosition(fun);
                     fun->SetNames(m_lexer->CurrTokenString(), "");
                     fun->SetMuting(is_mutable);
                     fun->SetPublic(true);
-                    Advance();
-                    fun->AddType(ParseFunctionType(false));
+                    if (!Advance()) goto recovery2;
+                    AstFuncType *ftype = ParseFunctionType(false);
+                    fun->AddType(ftype);
+                    if (on_error_) goto recovery;
+                    ftype->SetIsMember();
                     UpdateEndPosition(fun);
                     typenode->AddMember(fun);
                     fun = nullptr;
                     CheckSemicolon();
-                } else if (m_token == TOKEN_INTERFACE) {
-                    Advance();
-                    typenode->AddAncestor(ParseNamedType());
-                    CheckSemicolon();
+                // } else if (m_token == TOKEN_INTERFACE) {
+                //     if (!Advance()) goto recovery2;
+                //     typenode->AddAncestor(ParseNamedType());
+                //     if (on_error_) goto recovery2;
+                //     CheckSemicolon();
                 } else {
                     Error("Expecting 'fn' or 'interface'. Note: public/private qualifiers are not allowed here.");
+                    goto recovery2;
                 }
             }
-            catch (...) {
+recovery2:    
+            if (on_error_) {
                 if (fun != nullptr) delete fun;
                 if (!SkipToNextStatement(recovery_level)) {
-                    throw;
+                    goto recovery;
                 }
             }
         };
         UpdateEndPosition(node);
         Advance();  // absorb '}'
     }
-    catch (...) {
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
 
 //
-// class_decl :: = class <type_name> �{ �(class_section) � }�
+// class_decl :: = class <type_name> '{ '(class_section) ' }'
 // class_section :: = public_section | private_section
 // public_section :: = public ':' { var_decl | member_function_declaration }
 // private_section :: = private ':' { var_decl | member_function_declaration | if_declaration | fn_delegation }
@@ -413,111 +476,161 @@ TypeDeclaration *Parser::ParseInterface(void)
 TypeDeclaration *Parser::ParseClass(void)
 {
     TypeDeclaration *node = nullptr;
+    AstNamedType *named = nullptr;
     bool public_section = false;
-    try {
-        if (Advance() != TOKEN_NAME) {
+    {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the type name");
+            goto recovery2;
         }
         node = new TypeDeclaration(m_lexer->CurrTokenString());
         AstClassType *typenode = new AstClassType();
         node->SetType(typenode);
         RecordPosition(node);
         RecordPosition(typenode);
-        if (Advance() != TOKEN_CURLY_OPEN) {
-            Error("Expecting '{'");
+        if (!Advance()) goto recovery2;
+
+        if (m_token == TOKEN_COLON) {
+            do {
+                if (!Advance()) goto recovery2; // absorb ':' or ','
+
+                named = ParseNamedType();
+                if (on_error_) goto recovery2;
+                if (m_token == TOKEN_BY) {
+                    if (!Advance()) goto recovery2;
+                    if (m_token != TOKEN_NAME) {
+                        Error("Expecting the name of the var member implementing the interface");
+                        goto recovery2;
+                    }
+                    typenode->AddMemberInterface(named, m_lexer->CurrTokenString());
+                    named = nullptr;
+                    if (!Advance()) goto recovery2;
+                } else {
+                    typenode->AddMemberInterface(named, "");
+                    named = nullptr;
+                }
+            } while (m_token == TOKEN_COMMA);
         }
-        Advance();  // absorb '{'
+
+        
+
+        if (m_token != TOKEN_CURLY_OPEN) {
+            Error("Expecting '{'");
+            goto recovery2;
+        }
+        if (!Advance()) goto recovery2;  // absorb '{'
         while (m_token != TOKEN_CURLY_CLOSE) {
             int recovery_level = curly_indent_;
             FuncDeclaration *fun = nullptr;
-            AstNamedType *named = nullptr;
-            try {
+            //AstNamedType *named = nullptr;
+            {
                 if (m_token == TOKEN_PRIVATE) {
                     public_section = false;
-                    if (Advance() != TOKEN_COLON) {
+                    if (!Advance()) goto recovery;
+                    if (m_token != TOKEN_COLON) {
                         Error("Expecting ':'");
+                        goto recovery;
                     }
-                    Advance();
+                    if (!Advance()) goto recovery;;
                 } else if (m_token == TOKEN_PUBLIC) {
                     public_section = true;
-                    if (Advance() != TOKEN_COLON) {
+                    if (!Advance()) goto recovery;
+                    if (m_token != TOKEN_COLON) {
                         Error("Expecting ':'");
+                        goto recovery;
                     }
-                    Advance();
+                    if (!Advance()) goto recovery;;
                 } else if (m_token == TOKEN_VAR) {
                     VarDeclaration *var = ParseVar();
+                    if (on_error_) goto recovery;
                     var->SetPublic(public_section);
                     typenode->AddMemberVar(var);
                 } else if (m_token == TOKEN_FUNC) {
                     bool is_mutable = false;
-                    Advance();
+                    if (!Advance()) goto recovery;
                     if (m_token == TOKEN_MUT) {
                         is_mutable = true;
-                        Advance();
+                        if (!Advance()) goto recovery;
                     } 
                     if (m_token != TOKEN_NAME) {
                         Error("Expecting the function name");
+                        goto recovery;
                     }
                     fun = new FuncDeclaration();
                     RecordPosition(fun);
                     fun->SetNames(m_lexer->CurrTokenString(), "");
                     fun->SetMuting(is_mutable);
                     fun->SetPublic(public_section);
-                    Advance();
+                    if (!Advance()) goto recovery;;
                     if (m_token == TOKEN_BY) {
                         if (!public_section) {
                             Error("You can't delegate a private function");
+                            goto recovery;
                         }
-                        if (Advance() != TOKEN_NAME) {
+                        if (!Advance()) goto recovery;
+                        if (m_token != TOKEN_NAME) {
                             Error("Expecting the name of the var member implementing the function");
+                            goto recovery;
                         }
                         UpdateEndPosition(fun);
                         typenode->AddMemberFun(fun, m_lexer->CurrTokenString());
                         fun = nullptr;
-                        Advance();
+                        if (!Advance()) goto recovery;
                     } else {
-                        fun->AddType(ParseFunctionType(false));
+                        AstFuncType *ftype = ParseFunctionType(false);
+                        fun->AddType(ftype);
+                        if (on_error_) goto recovery;
+                        ftype->SetIsMember();
                         UpdateEndPosition(fun);
                         typenode->AddMemberFun(fun, "");
                         fun = nullptr;
                     }
                     CheckSemicolon();
-                } else if (m_token == TOKEN_INTERFACE) {
-                    if (!public_section) {
-                        Error("All the interfaces must be public");
-                    }
-                    Advance();
-                    named = ParseNamedType();
-                    if (m_token == TOKEN_BY) {
-                        if (Advance() != TOKEN_NAME) {
-                            Error("Expecting the name of the var member implementing the interface");
-                        }
-                        typenode->AddMemberInterface(named, m_lexer->CurrTokenString());
-                        named = nullptr;
-                        Advance();
-                    } else {
-                        typenode->AddMemberInterface(named, "");
-                        named = nullptr;
-                    }
-                    CheckSemicolon();
+                // } else if (m_token == TOKEN_INTERFACE) {
+                //     if (!public_section) {
+                //         Error("All the interfaces must be public");
+                //         goto recovery;
+                //     }
+                //     if (!Advance()) goto recovery;
+                //     named = ParseNamedType();
+                //     if (on_error_) goto recovery;
+                //     if (m_token == TOKEN_BY) {
+                //         if (!Advance()) goto recovery;
+                //         if (m_token != TOKEN_NAME) {
+                //             Error("Expecting the name of the var member implementing the interface");
+                //             goto recovery;
+                //         }
+                //         typenode->AddMemberInterface(named, m_lexer->CurrTokenString());
+                //         named = nullptr;
+                //         if (!Advance()) goto recovery;
+                //     } else {
+                //         typenode->AddMemberInterface(named, "");
+                //         named = nullptr;
+                //     }
+                //     CheckSemicolon();
                 } else {
                     Error("Expecting a var/fn/interface declaration or a public/private qualifier");
+                    goto recovery;
                 }
             }
-            catch (...) {
+recovery:            
+            if (on_error_) {
                 if (fun != nullptr) delete fun;
-                if (named != nullptr) delete named;
+                //if (named != nullptr) delete named;
                 if (!SkipToNextStatement(recovery_level)) {
-                    throw;
+                    goto recovery2;
                 }
             }
         }
         UpdateEndPosition(node);
         Advance();  // absorb '}'
     }
-    catch (...) {
+recovery2:
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
+        if (named != nullptr) delete named;
     }
     return(node);
 }
@@ -525,16 +638,16 @@ TypeDeclaration *Parser::ParseClass(void)
 /*
 type_specification ::= base_type | <type_name> | <pkg_name>.<type_name> |
                         map '(' type_specification ')' type_specification |
-                        {�[� ([const_expression]) �]�} type_specification |
-                        matrix {�[� ([ expression[..expression] ]) �]�} type_specification |
-                        [const] [weak] �*� type_specification |
+                        {'[' ([const_expression]) ']'} type_specification |
+                        matrix {'[' ([ expression[..expression] ]) ']'} type_specification |
+                        [const] [weak] '*' type_specification |
                         function_type
 */
 IAstTypeNode *Parser::ParseTypeSpecification(void)
 {
     IAstTypeNode *node = NULL;
 
-    try {
+    {
         switch (m_token){
         case TOKEN_INT8:
         case TOKEN_INT16:
@@ -554,7 +667,7 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
         case TOKEN_VOID:
             node = new AstBaseType(m_token);
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_NAME:
             node = ParseNamedType();
@@ -564,16 +677,21 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
                 AstMapType *map = new AstMapType();
                 node = map;
                 RecordPosition(node);
-                if (Advance() != TOKEN_ROUND_OPEN) {
+                if (!Advance()) goto recovery;
+                if (m_token != TOKEN_ROUND_OPEN) {
                     Error("Expecting '('");
+                    goto recovery;
                 }
-                Advance();
+                if (!Advance()) goto recovery;
                 map->SetKeyType(ParseTypeSpecification());
+                if (on_error_) goto recovery;
                 if (m_token != TOKEN_ROUND_CLOSE) {
                     Error("Expecting ')'");
+                    goto recovery;
                 }
-                Advance();
+                if (!Advance()) goto recovery;
                 map->SetReturnType(ParseTypeSpecification());
+                if (on_error_) goto recovery;
             }
             break;
         case TOKEN_SQUARE_OPEN:
@@ -592,14 +710,15 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
                     } else {
                         isweak = true;
                     }
-                    Advance();
+                    if (!Advance()) goto recovery;
                 }
                 if (m_token != TOKEN_MPY) {
                     Error("Expecting '*'");
+                    goto recovery;
                 }
                 node = new AstPointerType();
                 RecordPosition(node);
-                Advance();
+                if (!Advance()) goto recovery;
                 ((AstPointerType*)node)->Set(isconst, isweak, ParseTypeSpecification());
             }
             break;
@@ -609,11 +728,13 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
             break;
         default:
             Error("Invalid type declaration");
-            break;
+            goto recovery;
         }
-    } catch(...) {
+    } 
+recovery:    
+    if (on_error_) {
         if (node != NULL) delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -621,25 +742,31 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
 AstNamedType *Parser::ParseNamedType(void)
 {
     AstNamedType *node = new AstNamedType(m_lexer->CurrTokenString());
-    try {
+    {
         if (m_token != TOKEN_NAME) {
             Error("Expecting a name");
+            if (on_error_) goto recovery;
         }
         AstNamedType *last = node;
         RecordPosition(node);
-        while (Advance() == TOKEN_DOT) {
-            if (Advance() != TOKEN_NAME) {
+        if (!Advance()) goto recovery;
+        while (m_token == TOKEN_DOT) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_NAME) {
                 Error("Expecting the next portion of a qualifyed name");
+                if (on_error_) goto recovery;
             }
             AstNamedType *curr = new AstNamedType(m_lexer->CurrTokenString());
             RecordPosition(curr);
             last->ChainComponent(curr);
             last = curr;
+            if (!Advance()) goto recovery;
         }
     }
-    catch (...) {
-        if (node != NULL) delete node;
-        throw;
+recovery:    
+    if (on_error_) {
+        if (node != nullptr) delete node;
+        node = nullptr;
     }
     return(node);
 }
@@ -649,7 +776,7 @@ AstArrayType *Parser::ParseIndices(void)
     AstArrayType    *root = NULL;
     AstArrayType    *last, *curr;
 
-    try {
+    {
         while (m_token == TOKEN_SQUARE_OPEN) {
             do {
                 if (root == NULL) {
@@ -661,49 +788,57 @@ AstArrayType *Parser::ParseIndices(void)
                     last->SetElementType(curr);
                     last = curr;
                 }
-                Advance();
+                if (!Advance()) goto recovery;
                 RecordPosition(curr);
                 if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA && m_token != TOKEN_MPY) {
                     curr->SetDimensionExpression(ParseExpression());
+                    if (on_error_) goto recovery;
                 } else if (m_token == TOKEN_MPY) {
                     curr->SetDynamic(true);
-                    Advance();
+                    if (!Advance()) goto recovery;
                     curr->SetRegular(m_token == TOKEN_COMMA);
                 }
                 UpdateEndPosition(curr);
                 if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
                     Error("Expecting ']' or ','");
+                    goto recovery;
                 }
             } while (m_token == TOKEN_COMMA);
-            Advance();  // absorb ']'
+            if (!Advance()) goto recovery;  // absorb ']'
         }
         last->SetElementType(ParseTypeSpecification());
-    } catch (...) {
-        if (root != NULL) delete root;
-        throw;
+    } 
+recovery:    
+    if (on_error_) {
+        if (root != nullptr) delete root;
+        root = nullptr;
     }
     return(root);
 }
 
-// initer :: = expression | �{ �(initer) � }�
+// initer :: = expression | '{ '(initer) ' }'
 IAstNode *Parser::ParseIniter(void)
 {
     if (m_token == TOKEN_CURLY_OPEN) {
         AstIniter *node = new AstIniter();
         RecordPosition(node);
-        try {
+        {
             do {
-                Advance();
+                if (!Advance()) goto recovery;
                 node->AddElement(ParseIniter());
+                if (on_error_) goto recovery;
             } while (m_token == TOKEN_COMMA);
             if (m_token != TOKEN_CURLY_CLOSE) {
                 Error("Expecting '}'");
+                goto recovery;
             }
             UpdateEndPosition(node);
-            Advance();  // absorb }
-        } catch (...) {
+            if (!Advance()) goto recovery;  // absorb }
+        } 
+recovery:    
+        if (on_error_) {
             delete node;
-            throw;
+            node = nullptr;
         }
         return(node);
     }
@@ -715,30 +850,35 @@ AstFuncType *Parser::ParseFunctionType(bool is_body)
 {
     AstFuncType *node = NULL;
 
-    try {
+    {
         if (m_token == TOKEN_PURE) {
             node = new AstFuncType(true);
-            Advance();
+            if (!Advance()) goto recovery;
         } else {
             node = new AstFuncType(false);
         }
         RecordPosition(node);
         ParseArgsDef(node, is_body);
+        if (on_error_) goto recovery;
         node->SetReturnType(ParseTypeSpecification());
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
 
-// argsdef ::=  �(� ( single_argdef ) [',' ...] �)� | '(' � ')'
+// argsdef ::=  '(' ( single_argdef ) [',' ...] ')' | '(' ' ')'
 void Parser::ParseArgsDef(AstFuncType *desc, bool is_function_body)
 {
     if (m_token != TOKEN_ROUND_OPEN) {
         Error("Expecting '('");
+        return;
     }
-    if (Advance() != TOKEN_ROUND_CLOSE) {
+    if (!Advance()) return;
+    if (m_token != TOKEN_ROUND_CLOSE) {
 
         // used only inside AddArgument to check if all the args after the first inited one have initers.
         bool mandatory_initer = false;
@@ -746,26 +886,29 @@ void Parser::ParseArgsDef(AstFuncType *desc, bool is_function_body)
         while (true) {
             if (m_token == TOKEN_ETC) {
                 desc->SetVarArgs();
-                Advance();
+                if (!Advance()) return;
                 if (m_token != TOKEN_ROUND_CLOSE) {
                     Error("Expecting ')' no other arguments allowed after ellipsis");
+                    return;
                 }
                 break;
             } else {
                 desc->AddArgument(ParseSingleArgDef(is_function_body, &mandatory_initer));
+                if (on_error_) return;
             }
             if (m_token == TOKEN_ROUND_CLOSE) {
                 break;
             } else if (m_token != TOKEN_COMMA) {
                 Error("Expecting ','");
+                return;
             }
-            Advance();  // absorb ','
+            if (!Advance()) return;  // absorb ','
         }
     }
-    Advance();  // absorb ')'
+    if (!Advance()) return;  // absorb ')'
 }
 
-//single_argdef :: = [arg_direction] <arg_name> type_specification[� = � initer]
+//single_argdef :: = [arg_direction] <arg_name> type_specification[' = ' initer]
 // arg_direction :: = out | io | in
 VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory_initer)
 {
@@ -776,17 +919,15 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
     case TOKEN_IN:
     case TOKEN_OUT:
     case TOKEN_IO:
-        Advance();
+        if (!Advance()) return(nullptr);
         break;
     default:
         direction = TOKEN_IN;
         break;
-        //if (!is_function_body) {
-        //    Error("Expecting the argument direction (in, out, io)");
-        //}
     }
     if (m_token != TOKEN_NAME) {
         Error("Expecting the argument name");
+        return(nullptr);
     }
     node = new VarDeclaration(m_lexer->CurrTokenString());
     node->SetFlags(VF_ISARG);
@@ -797,33 +938,37 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
         node->SetFlags(VF_WRITEONLY);
     }
     RecordPosition(node);
-    try {
-        Advance();
+    {
+        if (!Advance()) goto recovery;
         node->SetType(ParseTypeSpecification());
+        if (on_error_) goto recovery;
         if (m_token == TOKEN_ASSIGN) {
-            Advance();
+            if (!Advance()) goto recovery;
             node->SetIniter(ParseIniter());
+            if (on_error_) goto recovery;
             *mandatory_initer = true;
         } else if (*mandatory_initer) {
             Error("All arguments following a default arg must have a default value.");
         }
         UpdateEndPosition(node);
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
 
-//block :: = �{ �{ block_item } � }�
+//block :: = '{ '{ block_item } ' }'
 //block_item :: = var_decl | const_decl | statement | block
 /* statements:
-( left_term ) �=� ( expression ) |
+( left_term ) '=' ( expression ) |
 left_term update_operator expression |
 left_term ++ | left_term -- |
 functioncall |
-while �(� expression �)� block |
-if �(� expression �)� block {[ else if �(� expression �)� block ]} [else block] |
+while '(' expression ')' block |
+if '(' expression ')' block {[ else if '(' expression ')' block ]} [else block] |
 for '(' <name> in <expression> ':' <expression> [step <expression>]')' |
 for '(' [<name>','] <name> in <name> ')' |
 break |
@@ -841,22 +986,26 @@ AstBlock *Parser::ParseBlock(void)
 {
     if (m_token != TOKEN_CURLY_OPEN) {
         Error("Expecting a block (i.e. Expecting '{' )");
+        return(nullptr);
     }
     AstBlock *node = new AstBlock();
     RecordPosition(node);
-    try {
-        Advance();
+    {
+        if (!Advance()) goto recovery;
         while (m_token != TOKEN_CURLY_CLOSE) {
             IAstNode *statement = ParseStatement(true);
+            if (on_error_) goto recovery;
             if (statement != nullptr) {
                 node->AddItem(statement);
             }
         }
         UpdateEndPosition(node);
         Advance();
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -865,7 +1014,7 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
 {
     IAstNode *node = nullptr;
     int recovery_level = curly_indent_;
-    try {
+    {
         switch (m_token) {
         case TOKEN_VAR:
             if (allow_let_and_var) {
@@ -912,7 +1061,7 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             AstSimpleStatement *ss = new AstSimpleStatement(m_token);
             node = ss;
             RecordPosition(ss);
-            Advance();
+            if (!Advance()) goto recovery;
             CheckSemicolon();
         }
         break;
@@ -921,13 +1070,16 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             AstReturn *ast_ret = new AstReturn();
             node = ast_ret;
             RecordPosition(ast_ret);
-            if (Advance() == TOKEN_ROUND_OPEN) {
-                Advance();
+            if (!Advance()) goto recovery;
+            if (m_token == TOKEN_ROUND_OPEN) {
+                if (!Advance()) goto recovery;
                 ast_ret->AddRetExp(ParseExpression());
+                if (on_error_) goto recovery;
                 if (m_token != TOKEN_ROUND_CLOSE) {
                     Error("Expecting ')'");
+                    goto recovery;
                 }
-                Advance();
+                if (!Advance()) goto recovery;
             }
             UpdateEndPosition(ast_ret);
             CheckSemicolon();
@@ -939,8 +1091,9 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             AstIncDec *aid = new AstIncDec(m_token);
             node = aid;
             RecordPosition(aid);
-            Advance();
+            if (!Advance()) goto recovery;
             aid->SetLeftTerm(ParseLeftTerm());
+            if (on_error_) goto recovery;
             CheckSemicolon();
         }
         break;
@@ -948,19 +1101,19 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             node = ParseLeftTermStatement();
             break;
         }
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         if (node != nullptr) {
             delete node;
             node = nullptr;
         }
-        if (!SkipToNextStatement(recovery_level)) {
-            throw;
-        }
+        SkipToNextStatement(recovery_level);
     }
     return(node);
 }
 
-//left_term� = �expression |
+//left_term = expression |
 //left_term update_operator expression |
 //left_term++ | left_term-- |
 //functioncall |    ====>>> i.e. a left term
@@ -972,8 +1125,9 @@ IAstNode *Parser::ParseLeftTermStatement(void)
     Token                   token;
     PositionInfo            pinfo;
 
-    try {
+    {
         assignee = ParseLeftTerm("Expecting a statement");
+        if (on_error_) goto recovery;
         FillPositionInfo(&pinfo);   // start with token
         token = m_token;
         switch (m_token) {
@@ -982,16 +1136,17 @@ IAstNode *Parser::ParseLeftTermStatement(void)
         case TOKEN_UPD_MINUS:
         case TOKEN_UPD_MPY:
         case TOKEN_UPD_DIVIDE:
-        case TOKEN_UPD_POWER:
+        case TOKEN_UPD_XOR:
         case TOKEN_UPD_MOD:
         case TOKEN_UPD_SHR:
         case TOKEN_UPD_SHL:
         case TOKEN_UPD_AND:
         case TOKEN_UPD_OR:
-            Advance();
+            if (!Advance()) goto recovery;
             node = new AstUpdate(token, assignee, ParseExpression());
+            assignee = nullptr;
+            if (on_error_) goto recovery;
             *(node->GetPositionRecord()) = pinfo;
-            assignee = NULL;
             break;
         case TOKEN_INC:
         case TOKEN_DEC:
@@ -999,11 +1154,12 @@ IAstNode *Parser::ParseLeftTermStatement(void)
             ((AstIncDec*)node)->SetLeftTerm(assignee);
             *(node->GetPositionRecord()) = pinfo;
             assignee = NULL;
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         default:
             if (assignee->GetType() != ANT_FUNCALL) {
                 Error("Expression or part of it has no effects");
+                goto recovery;
             }
             node = assignee;
             assignee = NULL;
@@ -1011,10 +1167,12 @@ IAstNode *Parser::ParseLeftTermStatement(void)
         }
         UpdateEndPosition(node);
         CheckSemicolon();
-    } catch(...) {
-        if (node != NULL) delete node;
-        if (assignee != NULL) delete assignee;
-        throw;
+    } 
+recovery:    
+    if (on_error_) {
+        if (node != nullptr) delete node;
+        if (assignee != nullptr) delete assignee;
+        node = nullptr;
     }
     return(node);
 }
@@ -1022,9 +1180,9 @@ IAstNode *Parser::ParseLeftTermStatement(void)
 /*
 expression :: = prefix_expression | expression binop expression
 
-binop ::=  �+� | �-� | �*� | �/� | �^� | �%� | 
-	  �&� | �|� | �>>� | �<<� |
-	  �<� | �<=� | �>� | �>=� | �==� | �!=� | 
+binop ::=  '+' | '-' | '*' | '/' | '^' | '%' | 
+	  '&' | '|' | '>>' | '<<' |
+	  '<' | '<=' | '>' | '>=' | '==' | '!=' | 
 	  xor | && | || 
 */
 IAstExpNode *Parser::ParseExpression()
@@ -1037,9 +1195,11 @@ IAstExpNode *Parser::ParseExpression()
     int             num_ops = 0;
     int             priority;
 
-    try {
+    {
         do {
             nodes[num_nodes++] = ParsePrefixExpression();
+            if (on_error_) goto recovery;
+            m_lexer->ConvertToPower(&m_token);              // if appropriate convert to the power operator
             priority = m_lexer->GetBinopPriority(m_token);
             while (num_ops > 0 && priority >= priorities[num_ops - 1]) {
                 --num_nodes;
@@ -1051,14 +1211,16 @@ IAstExpNode *Parser::ParseExpression()
                 subtype[num_ops] = m_token;
                 FillPositionInfo(positions + num_ops);
                 priorities[num_ops++] = priority;
-                Advance();
+                if (!Advance()) goto recovery;
             }
         } while (priority <= Lexer::max_priority);
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         for (int ii = 0; ii < num_nodes; ++ii) {
             delete nodes[ii];
         }
-        throw;
+        return(nullptr);
     }
     return(nodes[0]);
 }
@@ -1071,30 +1233,32 @@ IAstExpNode *Parser::ParseExpression()
 //          <Numeral> | <LiteralString> | <LiteralComplex> |
 //          left_term | sizeof '(' left_term ')' | sizeof '(' type_specification ')' | dimof '(' left_term ')' |
 //           base_type '(' expression ')'|
-//          unop prefix_expression | �(� expression �)�
+//          unop prefix_expression | '(' expression ')'
 //
-// unop :: = � - � | �!� | �~� | '&'
+// unop :: = ' - ' | '!' | '~' | '&'
 //
 IAstExpNode *Parser::ParsePrefixExpression(void)
 {
     IAstExpNode    *node = NULL;
 
-    try {
+    {
         switch (m_token) {
         case TOKEN_NULL:
         case TOKEN_FALSE:
         case TOKEN_TRUE:
             node = new AstExpressionLeaf(m_token, "");
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_LITERAL_STRING:
             node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
             RecordPosition(node);
-            while (Advance() == TOKEN_LITERAL_STRING)
+            if (!Advance()) goto recovery;
+            while (m_token == TOKEN_LITERAL_STRING)
             {
                 ((AstExpressionLeaf*)node)->AppendToValue("\xff");
                 ((AstExpressionLeaf*)node)->AppendToValue(m_lexer->CurrTokenVerbatim());
+                if (!Advance()) goto recovery;
             };
             break;
         case TOKEN_LITERAL_UINT:
@@ -1102,37 +1266,45 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
         case TOKEN_LITERAL_IMG:
             node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_SIZEOF:
             node = new AstUnop(TOKEN_SIZEOF);
             RecordPosition(node);
-            if (Advance() != TOKEN_ROUND_OPEN) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
                 Error("Expecting '('");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             if (m_token == TOKEN_NAME || m_token == TOKEN_MPY) {
                 ((AstUnop*)node)->SetOperand(ParseLeftTerm());
             } else {
                 ((AstUnop*)node)->SetTypeOperand(ParseTypeSpecification());
             }
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_DIMOF:
             node = new AstUnop(TOKEN_DIMOF);
             RecordPosition(node);
-            if (Advance() != TOKEN_ROUND_OPEN) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
                 Error("Expecting '('");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             ((AstUnop*)node)->SetOperand(ParseLeftTerm());
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_INT8:
         case TOKEN_INT16:
@@ -1150,30 +1322,30 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
         case TOKEN_BOOL:
             node = new AstUnop(m_token);
             RecordPosition(node);
-            if (Advance() != TOKEN_ROUND_OPEN) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
                 Error("Expecting '('");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             ((AstUnop*)node)->SetOperand(ParseExpression());
+            if (on_error_) goto recovery;
             node = CheckForCastedLiterals((AstUnop*)node);
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_ROUND_OPEN:
-            Advance();
+            if (!Advance()) goto recovery;
             node = ParseExpression();
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;
             }
-            //} else if (node->GetType() == ANT_EXP_LEAF) {
-            //    AstExpressionLeaf *leaf = (AstExpressionLeaf*)node;
-            //    if (leaf->subtype_ == TOKEN_NAME) {
-            //        Error("Single symbol in bracket have no effect, did you mispell a type name in a cast ?");
-            //    }
-            //}
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_MINUS:
         case TOKEN_PLUS:
@@ -1183,16 +1355,18 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
         //case TOKEN_DOT:
             node = new AstUnop(m_token);
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             ((AstUnop*)node)->SetOperand(ParsePrefixExpression());
             break;
         default:
             node = ParseLeftTerm("Expecting an expression");
             break;
         }
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         if (node != NULL) delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1295,41 +1469,44 @@ AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
     }
 }
 
-//left_term :: = <var_name> | �(� left_term �)� | '*'left_term
-//               left_term �[� indices_or_rages �]� | left_term �.� <name> | left_term '(' arguments ')' | this
+//left_term :: = <var_name> | '(' left_term ')' | '*'left_term
+//               left_term '[' indices_or_rages ']' | left_term '.' <name> | left_term '(' arguments ')' | this
 IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
 {
     IAstExpNode    *node = NULL;
 
-    try {
+    {
         switch (m_token) {
         case TOKEN_MPY:
             node = new AstUnop(TOKEN_MPY);
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             ((AstUnop*)node)->SetOperand(ParseLeftTerm());
+            if (on_error_) goto recovery;
             break;
         case TOKEN_ROUND_OPEN:
-            Advance();
+            if (!Advance()) goto recovery;
             node = ParseLeftTerm();
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;                
             }
-            Advance();  // absorb ')'
+            if (!Advance()) goto recovery;  // absorb ')'
             break;
         case TOKEN_NAME:
             node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         case TOKEN_THIS:
             node = new AstExpressionLeaf(TOKEN_THIS, "");
             RecordPosition(node);
-            Advance();
+            if (!Advance()) goto recovery;
             break;
         default:
             Error(errmess != NULL ? errmess : "Expecting a left term (an assignable expression)");
-            break;
+            goto recovery;                
         }
 
         // postfixed ?
@@ -1338,25 +1515,29 @@ IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
             switch (m_token) {
             case TOKEN_SQUARE_OPEN:
                 node = ParseRangesOrIndices(node);
+                if (on_error_) goto recovery;
                 break;
             case TOKEN_DOT:
                 {
                     PositionInfo pnfo;
                     FillPositionInfo(&pnfo);
-                    if (Advance() != TOKEN_NAME) {
+                    if (!Advance()) goto recovery;
+                    if (m_token != TOKEN_NAME) {
                         Error("Expecting a field name or a symbol");
+                        goto recovery;                
                     }
                     AstExpressionLeaf *leaf = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
                     RecordPosition(leaf);
                     node = new AstBinop(TOKEN_DOT, node, leaf);
                     *(node->GetPositionRecord()) = pnfo;
-                    Advance();
+                    if (!Advance()) goto recovery;
                 }
                 break;
             case TOKEN_ROUND_OPEN:
                 node = new AstFunCall(node);
                 RecordPosition(node);
                 ParseArguments((AstFunCall*)node);
+                if (on_error_) goto recovery;                
                 UpdateEndPosition(node);
                 break;
             default:
@@ -1364,9 +1545,11 @@ IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
                 break;
             }
         }
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         if (node != NULL) delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1376,7 +1559,7 @@ AstIndexing *Parser::ParseRangesOrIndices(IAstExpNode *indexed)
     AstIndexing *node = NULL;
     AstIndexing *first;         // note: the first is at the bottom of the chain !
     
-    try {
+    {
         while (m_token == TOKEN_SQUARE_OPEN) {
             do {
                 if (node == NULL) {
@@ -1384,21 +1567,25 @@ AstIndexing *Parser::ParseRangesOrIndices(IAstExpNode *indexed)
                 } else {
                     node = new AstIndexing(node);
                 }
-                if (Advance() == TOKEN_COLON) {
+                if (!Advance()) goto recovery;
+                if (m_token == TOKEN_COLON) {
                     RecordPosition(node);
-                    Advance();
+                    if (!Advance()) goto recovery;
                     if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
                         node->SetARange(NULL, ParseExpression());
+                        if (on_error_) goto recovery;
                     } else {
                         node->SetARange(NULL, NULL);
                     }
                 } else {
                     RecordPosition(node);
                     IAstExpNode *lower = ParseExpression();
+                    if (on_error_) goto recovery;
                     if (m_token == TOKEN_COLON) {
-                        Advance();
+                        if (!Advance()) goto recovery;
                         if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
                             node->SetARange(lower, ParseExpression());
+                            if (on_error_) goto recovery;
                         } else {
                             node->SetARange(lower, NULL);
                         }
@@ -1409,14 +1596,17 @@ AstIndexing *Parser::ParseRangesOrIndices(IAstExpNode *indexed)
                 UpdateEndPosition(node);
                 if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
                     Error("Expecting ']' or ','");
+                    goto recovery;
                 }
             } while (m_token == TOKEN_COMMA);
-            Advance();  // absorb ']'
+            if (!Advance()) goto recovery;  // absorb ']'
         }
-    } catch (...) {
-        if (first != NULL) first->UnlinkIndexedTerm();  // it is deleted by the caller !
-        if (node != NULL) delete node;
-        throw;
+    } 
+recovery:    
+    if (on_error_) {
+        if (first != nullptr) first->UnlinkIndexedTerm();  // it is deleted by the caller !
+        if (node != nullptr) delete node;
+        node = nullptr;
     }
     return(node);
 }
@@ -1426,7 +1616,7 @@ void Parser::ParseArguments(AstFunCall *node)
     AstArgument *argument;
 
     do {
-        Advance();                      // absorb ( or ,
+        if (!Advance()) return; // absorb ( or ,
         if (m_token == TOKEN_COMMA) {
             node->AddAnArgument(NULL);
         } else if (m_token != TOKEN_ROUND_CLOSE) {
@@ -1434,18 +1624,22 @@ void Parser::ParseArguments(AstFunCall *node)
             node->AddAnArgument(argument);
             RecordPosition(argument);
             argument->SetExpression(ParseExpression());
+            if (on_error_) return;
             UpdateEndPosition(argument);
             if (m_token == TOKEN_COLON) {
-                if (Advance() != TOKEN_NAME) {
+                if (!Advance()) return;
+                if (m_token != TOKEN_NAME) {
                     Error("Expecting the parameter name");
+                    return;
                 } 
                 argument->AddName(m_lexer->CurrTokenString());
                 UpdateEndPosition(argument);
-                Advance();
+                if (!Advance()) return;;
             }
         }
         if (m_token != TOKEN_ROUND_CLOSE && m_token != TOKEN_COMMA) {
             Error("Expecting ')' or ','");
+            return;
         }
     } while (m_token == TOKEN_COMMA);
     Advance();  // Absorb ')'
@@ -1455,23 +1649,29 @@ AstWhile *Parser::ParseWhile(void)
 {
     AstWhile    *node = NULL;
 
-    try {
-        if (Advance() != TOKEN_ROUND_OPEN) {
-            Error("Expecting '('");
-        }
-        Advance();
+    if (!Advance()) return(nullptr);
+    if (m_token != TOKEN_ROUND_OPEN) {
+        Error("Expecting '('");
+        return(nullptr);
+    }
+    if (!Advance()) return(nullptr);
+    {
         node = new AstWhile();
         RecordPosition(node);
         node->SetExpression(ParseExpression());
+        if (on_error_) goto recovery;
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expecting ')'");
+            goto recovery;
         }
-        Advance();
+        if (!Advance()) goto recovery;
         UpdateEndPosition(node);
         node->SetBlock(ParseBlock());
-    } catch (...) {
+    }
+recovery:    
+    if (on_error_) {
         if (node != NULL) delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1481,31 +1681,40 @@ AstIf *Parser::ParseIf(void)
     AstIf *node = new AstIf();
     bool firstclause = true;
     RecordPosition(node);
-    try {
+    {
         do {
-            if (Advance() != TOKEN_ROUND_OPEN) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
                 Error("Expecting '('");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             node->AddExpression(ParseExpression());
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
+                goto recovery;
             }
-            Advance();
+            if (!Advance()) goto recovery;
             if (firstclause) {
                 firstclause = false;
                 UpdateEndPosition(node);
             }
             node->AddBlock(ParseBlock());
+            if (on_error_) goto recovery;
             if (m_token != TOKEN_ELSE) break;   // done !
-            if (Advance() != TOKEN_IF) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_IF) {
                 node->SetDefaultBlock(ParseBlock());
+                if (on_error_) goto recovery;
                 break;
             }
         } while (true);
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1518,19 +1727,26 @@ AstFor *Parser::ParseFor(void)
     IAstExpNode     *first_expr;
     VarDeclaration  *var = NULL;
 
-    try {
+    {
         RecordPosition(node);
-        if (Advance() != TOKEN_ROUND_OPEN) {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_ROUND_OPEN) {
             Error("Expecting '('");
+            goto recovery;
         }
-        if (Advance() != TOKEN_NAME) {
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the iterator or index name");
+            goto recovery;
         }
         var = new VarDeclaration(m_lexer->CurrTokenString());
         RecordPosition(var);
-        if (Advance() == TOKEN_COMMA) {
-            if (Advance() != TOKEN_NAME) {
+        if (!Advance()) goto recovery;
+        if (m_token == TOKEN_COMMA) {
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_NAME) {
                 Error("Expecting the iterator name");
+                goto recovery;
             }
             var->SetFlags(VF_READONLY | VF_ISFORINDEX);
             node->SetIndexVar(var);
@@ -1540,7 +1756,7 @@ AstFor *Parser::ParseFor(void)
             var->SetFlags(VF_ISFORITERATOR);
             node->SetIteratorVar(var);
             var = NULL;                 // in case we have an exception in the next lines
-            Advance();
+            if (!Advance()) goto recovery;
         } else {
             var->SetFlags(VF_ISFORITERATOR);
             node->SetIteratorVar(var);
@@ -1548,16 +1764,20 @@ AstFor *Parser::ParseFor(void)
         }
         if (m_token != TOKEN_IN) {
             Error("Expecting 'in' followed by the for iteration range");
+            goto recovery;
         }
-        Advance();
+        if (!Advance()) goto recovery;
         first_expr = ParseExpression();
+        if (on_error_) goto recovery;
         if (m_token == TOKEN_COLON) {
             node->SetLowBound(first_expr);
-            Advance();
+            if (!Advance()) goto recovery;
             node->SetHightBound(ParseExpression());
+            if (on_error_) goto recovery;
             if (m_token == TOKEN_STEP) {
-                Advance();
+                if (!Advance()) goto recovery;
                 node->SetStep(ParseExpression());
+                if (on_error_) goto recovery;
             }
             node->iterator_->SetFlags(VF_READONLY);
         } else {
@@ -1566,14 +1786,17 @@ AstFor *Parser::ParseFor(void)
         }
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expecting ')'");
+            goto recovery;
         }
-        Advance();
+        if (!Advance()) goto recovery;
         UpdateEndPosition(node);
         node->SetBlock(ParseBlock());
-    } catch (...) {
+    } 
+recovery:    
+    if (on_error_) {
         delete node;
         if (var != NULL) delete var;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1586,58 +1809,76 @@ AstFor *Parser::ParseFor(void)
 AstSwitch *Parser::ParseSwitch(void)
 {
     AstSwitch *node = new AstSwitch();
-    try {
+    {
         RecordPosition(node);
-        if (Advance() != TOKEN_ROUND_OPEN) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_ROUND_OPEN) {
             Error("Expecting '('");
+            goto recovery2;
         }
-        Advance();  // absorb '('
+        if (!Advance()) goto recovery2;  // absorb '('
         node->AddSwitchValue(ParseExpression());
+        if (on_error_) goto recovery2;
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expecting ')'");
+            goto recovery2;
         }
-        if (Advance() != TOKEN_CURLY_OPEN) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_CURLY_OPEN) {
             Error("Expecting '{'");
+            goto recovery2;
         }
-        Advance();  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_ELSE) {
+        if (!Advance()) goto recovery2;  // absorb '{'
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT) {
             int recovery_level = curly_indent_;
-            IAstExpNode* exp = nullptr;
-            try {
-                exp = ParseExpression();
+            do {
+                if (m_token != TOKEN_CASE) {
+                    Error("Expecting 'case'");
+                    goto recovery;
+                }
+                if (!Advance()) goto recovery; // absorb 'case'
+                node->AddCase(ParseExpression());
+                if (on_error_) goto recovery;
                 if (m_token != TOKEN_COLON) {
                     Error("Expecting ':'");
+                    goto recovery;
                 }
-                Advance(); // absorb ':'
-                node->AddCase(exp, ParseStatement(false));
-                exp = nullptr;
-            }
-            catch (...) {
-                if (exp != nullptr) delete exp;
+                if (!Advance()) goto recovery; // absorb ':'
+            } while (m_token == TOKEN_CASE);
+            node->AddStatement(ParseStatement(false));
+recovery:             
+            if (on_error_) {
+                // skips past the end of the next statement (at the beginnig of the next case!) 
                 if (!SkipToNextStatement(recovery_level)) {
-                    throw;
+                    goto recovery2;
                 }
             }
         }
-        if (m_token == TOKEN_ELSE) {
-            if (Advance() != TOKEN_COLON) {
+        if (m_token == TOKEN_DEFAULT) {
+            if (!Advance()) goto recovery2;
+            if (m_token != TOKEN_COLON) {
                 Error("Expecting ':'");
+                goto recovery2;
             }
-            if (Advance() == TOKEN_CURLY_CLOSE) {
-                node->AddCase(nullptr, nullptr);
+            if (!Advance()) goto recovery2;
+            if (m_token == TOKEN_CURLY_CLOSE) {
+                node->AddDefaultStatement(nullptr);
             } else {
-                node->AddCase(nullptr, ParseStatement(false));
+                node->AddDefaultStatement(ParseStatement(false));
+                if (on_error_) goto recovery2;
             }
             if (m_token != TOKEN_CURLY_CLOSE) {
                 Error("Expecting '}', the else case must be the last of the switch !");
+                goto recovery2;
             }
         }
         Advance();  // absorb '}'
         UpdateEndPosition(node);
     }
-    catch (...) {
+recovery2:    
+    if (on_error_) {
         delete node;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1651,70 +1892,94 @@ AstTypeSwitch *Parser::ParseTypeSwitch(void)
 {
     AstTypeSwitch   *node = new AstTypeSwitch();
     VarDeclaration  *var = nullptr;
-    try {
+    {
         RecordPosition(node);
-        if (Advance() != TOKEN_ROUND_OPEN) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_ROUND_OPEN) {
             Error("Expecting '('");
+            goto recovery2;
         }
-        if (Advance() != TOKEN_NAME) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_NAME) {
             Error("Expecting the reference name");
+            goto recovery2;
         }
         var = new VarDeclaration(m_lexer->CurrTokenString());
         RecordPosition(var);
         var->SetFlags(VF_IS_REFERENCE);
-        if (Advance() != TOKEN_ASSIGN) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_ASSIGN) {
             Error("Expecting '='");
+            goto recovery2;
         }
-        Advance();  // absorb '='
+        if (!Advance()) goto recovery2;  // absorb '='
         IAstExpNode *exp = ParseExpression();
+        if (on_error_) goto recovery2;
         node->Init(var, exp);
         var = nullptr;
         if (m_token != TOKEN_ROUND_CLOSE) {
             Error("Expecting ')'");
+            goto recovery2;
         }
-        if (Advance() != TOKEN_CURLY_OPEN) {
+        if (!Advance()) goto recovery2;
+        if (m_token != TOKEN_CURLY_OPEN) {
             Error("Expecting '{'");
+            goto recovery2;
         }
-        Advance();  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_ELSE) {
+        if (!Advance()) goto recovery2;  // absorb '{'
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT) {
             int recovery_level = curly_indent_;
             IAstTypeNode *the_type = nullptr;
-            try {
+            {
+                if (m_token != TOKEN_CASE) {
+                    Error("Expecting 'case'");
+                    goto recovery;
+                }
+                if (!Advance()) goto recovery;  // absorb 'case'
                 the_type = ParseTypeSpecification();
+                if (on_error_) goto recovery;
                 if (m_token != TOKEN_COLON) {
                     Error("Expecting ':'");
+                    goto recovery;
                 }
-                Advance(); // absorb ':'
+                if (!Advance()) goto recovery; // absorb ':'
                 node->AddCase(the_type, ParseStatement(false));
                 the_type = nullptr;
             }
-            catch (...) {
+recovery:            
+            if (on_error_) {
                 if (the_type != nullptr) delete the_type;
                 if (!SkipToNextStatement(recovery_level)) {
-                    throw;
+                    goto recovery2;
                 }
             }
         }
-        if (m_token == TOKEN_ELSE) {
-            if (Advance() != TOKEN_COLON) {
+        if (m_token == TOKEN_DEFAULT) {
+            if (!Advance()) goto recovery2;
+            if (m_token != TOKEN_COLON) {
                 Error("Expecting ':'");
+                goto recovery2;
             }
-            if (Advance() == TOKEN_CURLY_CLOSE) {
+            if (!Advance()) goto recovery2;
+            if (m_token == TOKEN_CURLY_CLOSE) {
                 node->AddCase(nullptr, nullptr);
             } else {
                 node->AddCase(nullptr, ParseStatement(false));
+                if (on_error_) goto recovery2;
                 if (m_token != TOKEN_CURLY_CLOSE) {
                     Error("Expecting '}', the else case must be the last of the switch !");
+                    goto recovery2;
                 }
             }
         }
-        Advance();  // absorb '}'
+        if (!Advance()) goto recovery2;  // absorb '}'
         UpdateEndPosition(node);
     }
-    catch (...) {
+recovery2:    
+    if (on_error_) {
         delete node;
         if (var != nullptr) delete var;
-        throw;
+        node = nullptr;
     }
     return(node);
 }
@@ -1723,21 +1988,21 @@ void Parser::CheckSemicolon(void)
 {
     if (m_token != TOKEN_SEMICOLON) {
         Error("Missing ';'");
+        return;
     }
     Advance();
 }
 
-Token Parser::Advance(void)
+bool Parser::Advance(void)
 {
     do {
-        try {
-            m_token = m_lexer->Advance();
-        } catch (ParsingException ex) {
-            SetError(ex.description, ex.row, ex.column);
+        if (!m_lexer->Advance(&m_token)) {
+            int row, col;
+            string mess;
+            m_lexer->GetError(&mess, &row, &col);
+            SetError(mess.c_str(), row, col);
             m_lexer->ClearError();
-            throw;
-        } catch(...) {
-            Error("Lexer error");
+            return(false);
         }
         if ((m_token == TOKEN_INLINE_COMMENT || m_token == TOKEN_EMPTY_LINES) && !for_reference_) {
             RemarkDescriptor *rd = new RemarkDescriptor;
@@ -1759,7 +2024,7 @@ Token Parser::Advance(void)
             curly_indent_--;
         }
     }
-    return(m_token);
+    return(true);
 }
 
 void Parser::Error(const char *message)
@@ -1769,24 +2034,15 @@ void Parser::Error(const char *message)
     line = m_lexer->CurrTokenLine();
     col = m_lexer->CurrTokenColumn() + 1;
     SetError(message, line, col);
-    throw(ParsingException(1000, line, col, message));
 }
 
 void Parser::SetError(const char *message, int row, int column)
 {
-    //char fullmessage[600];
-
     // errors happening while trying to recover are ignored.
     if (on_error_) {
         return;
     }
     errors_->AddError(message, row, column);
-    //if (strlen(message) > 512) {
-    //    errors_->AddName(message);
-    //} else {
-    //    sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, column, message);
-    //    errors_->AddName(fullmessage);
-    //}
     has_errors_ = true;
     on_error_ = true;
 }
@@ -1813,10 +2069,12 @@ bool Parser::SkipToNextStatement(int level)
         }
         SkipToken();
     }
-    on_error_ = false;
     if (m_token == TOKEN_EOF) {
+        // in this case didn't manage to solve the situation. Must keep returning from functions.
+        on_error_ = true;
         return(false);
     }
+    on_error_ = false;
     return(success);
 }
 
@@ -1873,11 +2131,9 @@ bool Parser::OutOfFunctionToken(void)
 Token Parser::SkipToken(void)
 {
     do {
-        try {
-            m_token = m_lexer->Advance();
-        }
-        catch (...) {
-            // ignore errors while resyncing
+        if (!m_lexer->Advance(&m_token)) {
+            m_token = TOKEN_COMMENT;    // ignore errors: go on eating tokens 'til the first valid one.
+            m_lexer->ClearError();
         }
     } while (m_token == TOKEN_COMMENT || m_token == TOKEN_INLINE_COMMENT || m_token == TOKEN_EMPTY_LINES);
     if (m_token == TOKEN_CURLY_OPEN) {

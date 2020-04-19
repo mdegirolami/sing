@@ -1,26 +1,26 @@
 
-ERROR !! file checker_pkgs_test.sing: line: 1 	column: 10 	Invalid path
-ERROR !! file checker_pkgs_test.sing: line: 1 	column: 10 	Failed to load package
-ERROR !! file checker_pkgs_test.sing: line: 2 	column: 10 	Invalid path
-ERROR !! file checker_pkgs_test.sing: line: 2 	column: 10 	package stuff has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 3 	column: 10 	Invalid path
-ERROR !! file checker_pkgs_test.sing: line: 3 	column: 10 	package stuff2 has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 4 	column: 10 	Invalid path
-ERROR !! file checker_pkgs_test.sing: line: 4 	column: 10 	package unused has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 6 	column: 10 	package synth_test_pkg2 has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 7 	column: 10 	Two 'requires' clauses share the same local name: stpn
-ERROR !! file checker_pkgs_test.sing: line: 7 	column: 10 	package assert has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 8 	column: 10 	Duplicated 'requires' clause. After search directory resolution, both clauses map to: ../tests/synth_test_pkg2.sing
-ERROR !! file checker_pkgs_test.sing: line: 8 	column: 10 	package tests/synth_test_pkg2 has been required but not used.
-ERROR !! file checker_pkgs_test.sing: line: 10 	column: 17 	Qualified type names can have at most 2 components: a package name + a type name
-ERROR !! file checker_pkgs_test.sing: line: 11 	column: 9 	Unknown package name
-ERROR !! file checker_pkgs_test.sing: line: 12 	column: 17 	Undefined type
-ERROR !! file checker_pkgs_test.sing: line: 13 	column: 17 	Expected a type name
-ERROR !! file checker_pkgs_test.sing: line: 14 	column: 17 	Cannot access private symbol
-ERROR !! file checker_pkgs_test.sing: line: 15 	column: 9 	Failed to load the package
-ERROR !! file checker_pkgs_test.sing: line: 18 	column: 9 	Undefined symbol
-ERROR !! file checker_pkgs_test.sing: line: 20 	column: 17 	Undefined symbol
-ERROR !! file checker_pkgs_test.sing: line: 21 	column: 17 	Need a variable/const/function name here
-ERROR !! file checker_pkgs_test.sing: line: 22 	column: 24 	Argument 1 is not specified and has no default value
-ERROR !! file checker_pkgs_test.sing: line: 27 	column: 20 	Argument 1 is not specified and has no default value
-ERROR !! file checker_pkgs_test.sing: line: 31 	column: 31 	Undefined type
+ERROR !! file checker_pkgs_test.sing:1:10: Failed to load package
+ERROR !! file checker_pkgs_test.sing:1:10: Invalid path
+ERROR !! file checker_pkgs_test.sing:2:10: Invalid path
+ERROR !! file checker_pkgs_test.sing:2:10: package stuff has been required but not used.
+ERROR !! file checker_pkgs_test.sing:3:10: Invalid path
+ERROR !! file checker_pkgs_test.sing:3:10: package stuff2 has been required but not used.
+ERROR !! file checker_pkgs_test.sing:4:10: Invalid path
+ERROR !! file checker_pkgs_test.sing:4:10: package unused has been required but not used.
+ERROR !! file checker_pkgs_test.sing:6:10: package synth_test_pkg2 has been required but not used.
+ERROR !! file checker_pkgs_test.sing:7:10: Two 'requires' clauses share the same local name: stpn
+ERROR !! file checker_pkgs_test.sing:7:10: package assert has been required but not used.
+ERROR !! file checker_pkgs_test.sing:8:10: Duplicated 'requires' clause. After search directory resolution, both clauses map to: ../tests/synth_test_pkg2.sing
+ERROR !! file checker_pkgs_test.sing:8:10: package tests/synth_test_pkg2 has been required but not used.
+ERROR !! file checker_pkgs_test.sing:10:18: Qualified type names can have at most 2 components: a package name + a type name
+ERROR !! file checker_pkgs_test.sing:11:10: Unknown package name
+ERROR !! file checker_pkgs_test.sing:12:18: Undefined type
+ERROR !! file checker_pkgs_test.sing:13:18: Expected a type name
+ERROR !! file checker_pkgs_test.sing:14:18: Cannot access private symbol
+ERROR !! file checker_pkgs_test.sing:15:10: Failed to load the package
+ERROR !! file checker_pkgs_test.sing:18:9: Undefined symbol
+ERROR !! file checker_pkgs_test.sing:20:17: Undefined symbol
+ERROR !! file checker_pkgs_test.sing:21:17: Need a variable/const/function name here
+ERROR !! file checker_pkgs_test.sing:22:24: Argument 1 is not specified and has no default value
+ERROR !! file checker_pkgs_test.sing:27:20: Argument 1 is not specified and has no default value
+ERROR !! file checker_pkgs_test.sing:31:31: Undefined type

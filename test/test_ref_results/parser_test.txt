@@ -451,14 +451,14 @@ Func myclass.chebello {
                         Binop > Operation {
                             Binop + Operation {
                                 Binop * Operation {
-                                    Binop ^ Operation {
+                                    Binop ** Operation {
                                          pippo
                                          3
                                     }
                                      2
                                 }
                                 Binop * Operation {
-                                    Binop ^ Operation {
+                                    Binop ** Operation {
                                          pippo
                                          2
                                     }
@@ -501,7 +501,7 @@ Func myclass.chebello {
                                              mm
                                         }
                                     }
-                                    Binop ^ Operation {
+                                    Binop ** Operation {
                                          5
                                          2
                                     }
@@ -599,7 +599,7 @@ Func defs_func {
         void type
     }
     Block {
-        Switch cases = 3 {
+        Switch cases = 2 {
             Binop + Operation {
                  a
                 Binop * Operation {
@@ -615,7 +615,7 @@ Func defs_func {
             -- Operation {
                  counter
             }
-            else case:
+            default case:
             Return {
             }
         }
@@ -636,9 +636,10 @@ Func defs_func {
             Return {
             }
         }
-        Switch cases = 1 {
+        Switch cases = 0 {
              v
-            else case:
+            default case:
+            empty
         }
         Update with = {
             Binop . Operation {

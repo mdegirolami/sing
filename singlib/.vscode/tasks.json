@@ -9,6 +9,9 @@
 
             "command": "C:\\MinGW\\bin\\ninja.exe",
             "args": ["-v", "-f", "../build_debug.ninja"],
+            "presentation": {
+                "clear": true 
+            },
             "options": {
                 "cwd": "${workspaceFolder}\\build\\obj_d"
             },
@@ -26,6 +29,9 @@
 
             "command": "C:\\MinGW\\bin\\ninja.exe",
             "args": ["-v", "-f", "../build_release.ninja"],
+            "presentation": {
+                "clear": true 
+            },
             "options": {
                 "cwd": "${workspaceFolder}\\build\\obj_r"
             },

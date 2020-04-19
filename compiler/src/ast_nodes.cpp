@@ -27,19 +27,40 @@ IAstTypeNode *SolveTypedefs(IAstTypeNode *begin)
     return(begin);
 }
 
+ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_parm)
+{
+    switch (type_spec->GetType()) {
+    case ANT_BASE_TYPE:
+        if (input_parm && ((AstBaseType*)type_spec)->base_type_ == TOKEN_STRING) return(PPM_CONSTREF);
+        // fallthrough
+    case ANT_POINTER_TYPE:
+    case ANT_FUNC_TYPE:
+        return(input_parm ? PPM_VALUE : PPM_POINTER);
+    case ANT_NAMED_TYPE:
+        return(GetParameterPassingMethod(((AstNamedType*)type_spec)->wp_decl_->type_spec_, input_parm));
+    case ANT_ARRAY_TYPE:
+        return(input_parm ? PPM_CONSTREF : PPM_REF);
+    case ANT_MAP_TYPE:
+    default:
+        break;
+    }
+    return(input_parm ? PPM_CONSTREF : PPM_POINTER);
+}
+
 AstFuncType::~AstFuncType()
 {
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
-        if (arguments_[ii] != NULL) delete arguments_[ii];
+        if (arguments_[ii] != nullptr) delete arguments_[ii];
     }
-    if (return_type_ != NULL) delete return_type_;
+    if (return_type_ != nullptr) delete return_type_;
 }
 
 bool AstFuncType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
     AstFuncType *other = (AstFuncType*)src_tree;
-    if (arguments_.size() != other->arguments_.size() || varargs_ != other->varargs_ || ispure_ && !other->ispure_) {
+    if (arguments_.size() != other->arguments_.size() || varargs_ != other->varargs_ || 
+        ispure_ && !other->ispure_ || is_member_ != other->is_member_) {
         return(false);
     }
     if (mode == FOR_EQUALITY && ispure_ != other->ispure_) {
@@ -65,8 +86,8 @@ bool AstPointerType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mod
     if (mode == FOR_REFERENCING && isweak_ != other->isweak_) {
         return(false);
     }
-    assert(pointed_type_ != NULL);
-    assert(other->pointed_type_ != NULL);
+    assert(pointed_type_ != nullptr);
+    assert(other->pointed_type_ != nullptr);
     return(true);
 }
 
@@ -85,17 +106,17 @@ bool AstMapType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
     AstMapType *other = (AstMapType*)src_tree;
-    assert(key_type_ != NULL);
-    assert(other->key_type_ != NULL);
-    assert(returned_type_ != NULL);
-    assert(other->returned_type_ != NULL);
+    assert(key_type_ != nullptr);
+    assert(other->key_type_ != nullptr);
+    assert(returned_type_ != nullptr);
+    assert(other->returned_type_ != nullptr);
     return(true);
 }
 
 AstArrayType::~AstArrayType()
 {
-    if (expression_ != NULL) delete expression_;
-    if (element_type_ != NULL) delete element_type_;
+    if (expression_ != nullptr) delete expression_;
+    if (element_type_ != nullptr) delete element_type_;
 }
 
 bool AstArrayType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
@@ -109,8 +130,8 @@ bool AstArrayType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
             return(false);
         }
     }
-    assert(element_type_ != NULL);
-    assert(other->element_type_ != NULL);
+    assert(element_type_ != nullptr);
+    assert(other->element_type_ != nullptr);
     return(true);
 }
 
@@ -135,6 +156,10 @@ int AstNamedType::SizeOf(void)
 
 bool AstNamedType::NeedsZeroIniter(void) { 
     return(wp_decl_ != nullptr ? wp_decl_->type_spec_->NeedsZeroIniter() : true); 
+}
+
+bool AstNamedType::SupportsEqualOperator(void) {
+    return(wp_decl_ != nullptr ? wp_decl_->type_spec_->SupportsEqualOperator() : false); 
 }
 
 void AstNamedType::AppendFullName(string *fullname)
@@ -187,6 +212,14 @@ int AstBaseType::SizeOf(void)
     return(0);
 }
 
+AstEnumType::~AstEnumType()
+{
+    for (int ii = 0; ii < (int)initers_.size(); ++ii) {
+        IAstExpNode *initer = initers_[ii];
+        if (initer != nullptr) delete initer;
+    }
+}
+
 bool AstEnumType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     // there is a single declaration for each enum/class/if type
@@ -198,6 +231,17 @@ bool AstEnumType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 int AstEnumType::SizeOf(void)
 {
     return(0);
+}
+
+AstInterfaceType::~AstInterfaceType()
+{
+    for (int ii = 0; ii < (int)ancestors_.size(); ++ii) {
+        if (ancestors_[ii] != nullptr) delete ancestors_[ii];
+    }
+    for (int ii = 0; ii < (int)members_.size(); ++ii) {
+        FuncDeclaration *member = members_[ii];
+        if (member != nullptr) delete member;
+    }
 }
 
 bool AstInterfaceType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
@@ -236,6 +280,35 @@ bool AstInterfaceType::HasInterface(AstInterfaceType *intf)
     return(false);
 }
 
+AstClassType::AstClassType()
+{
+    first_hinherited_member_ = -1;
+    has_destructor = has_constructor = constructor_written = false;
+    can_be_copied = true;
+}
+
+AstClassType::~AstClassType()
+{
+    for (int ii = 0; ii < (int)member_vars_.size(); ++ii) {
+        VarDeclaration *member = member_vars_[ii];
+        if (member != nullptr) delete member;
+    }
+    int top = (int)member_functions_.size();
+    if (first_hinherited_member_ != -1) top = first_hinherited_member_;
+    for (int ii = 0; ii < top; ++ii) {
+        FuncDeclaration *member = member_functions_[ii];
+        if (member != nullptr) {
+            if (fn_implementors_[ii] != "") {
+                member->function_type_ = nullptr;   // is not the owner !!
+            }
+            delete member;
+        }
+    }
+    for (int ii = 0; ii < (int)member_interfaces_.size(); ++ii) {
+        if (member_interfaces_[ii] != nullptr) delete member_interfaces_[ii];
+    }
+}
+
 bool AstClassType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     // there is a single declaration for each enum/class/if type
@@ -252,7 +325,12 @@ int AstClassType::SizeOf(void)
 void AstClassType::AddMemberFun(FuncDeclaration *member, string implementor) {
     member_functions_.push_back(member);
     fn_implementors_.push_back(implementor);
-    if (member->name_ == "finalize") has_destructor = true;
+    if (member->name_ == "finalize") {
+        has_destructor = true;
+        //can_be_copied = false;    // just a bad idea: imagine if we added a log in finalize() for debug purpose...
+                                    // also, if you do this, remember to check arrays and maps who have non-copiable items.
+                                    // the best would be to have a IAstTypeNode::SupportsEssignOperator() function.
+    }
 }
 
 bool AstClassType::HasInterface(AstInterfaceType *intf)
@@ -286,7 +364,7 @@ AstExpressionLeaf::AstExpressionLeaf(Token type, const char *value)
 {
     subtype_ = type;
     value_ = value;
-    wp_decl_ = NULL;
+    wp_decl_ = nullptr;
     pkg_index_ = -1;
     real_is_int_ = real_is_negated_ = img_is_negated_ = false;
     unambiguous_member_access = false;
@@ -295,22 +373,22 @@ AstExpressionLeaf::AstExpressionLeaf(Token type, const char *value)
 AstFunCall::~AstFunCall()
 {
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
-        if (arguments_[ii] != NULL) delete arguments_[ii];
+        if (arguments_[ii] != nullptr) delete arguments_[ii];
     }
-    if (left_term_ != NULL) delete left_term_;
+    if (left_term_ != nullptr) delete left_term_;
 }
 
 AstArgument::~AstArgument()
 {
-    if (expression_ != NULL) delete expression_;
-    if (cast_to_ != NULL) delete cast_to_;
+    if (expression_ != nullptr) delete expression_;
+    if (cast_to_ != nullptr) delete cast_to_;
 }
 
 AstIndexing::~AstIndexing()
 {
-    if (lower_value_ != NULL) delete lower_value_;
-    if (upper_value_ != NULL) delete upper_value_;
-    if (indexed_term_ != NULL) delete indexed_term_;
+    if (lower_value_ != nullptr) delete lower_value_;
+    if (upper_value_ != nullptr) delete upper_value_;
+    if (indexed_term_ != nullptr) delete indexed_term_;
 }
 
 /////////////////////////
@@ -323,52 +401,52 @@ AstIf::~AstIf()
     int ii;
 
     for (ii = 0; ii < (int)expressions_.size(); ++ii) {
-        if (expressions_[ii] != NULL) delete expressions_[ii];
+        if (expressions_[ii] != nullptr) delete expressions_[ii];
     }
     for (ii = 0; ii < (int)blocks_.size(); ++ii) {
-        if (blocks_[ii] != NULL) delete blocks_[ii];
+        if (blocks_[ii] != nullptr) delete blocks_[ii];
     }
-    if (default_block_ != NULL) delete default_block_;
+    if (default_block_ != nullptr) delete default_block_;
 }
 
 AstFor::~AstFor() { 
-    if (iterator_ != NULL) delete iterator_;
-    if (index_ != NULL) delete index_;
-    if (set_ != NULL) delete set_;
-    if (low_ != NULL) delete low_;
-    if (high_ != NULL) delete high_;
-    if (step_ != NULL) delete step_;
-    if (block_ != NULL) delete block_;
+    if (iterator_ != nullptr) delete iterator_;
+    if (index_ != nullptr) delete index_;
+    if (set_ != nullptr) delete set_;
+    if (low_ != nullptr) delete low_;
+    if (high_ != nullptr) delete high_;
+    if (step_ != nullptr) delete step_;
+    if (block_ != nullptr) delete block_;
 }
 
 AstBlock::~AstBlock()
 {
     for (int ii = 0; ii < (int)block_items_.size(); ++ii) {
-        if (block_items_[ii] != NULL) delete block_items_[ii];
+        if (block_items_[ii] != nullptr) delete block_items_[ii];
     }
 }
 
 AstSwitch::~AstSwitch()
 {
     for (int ii = 0; ii < (int)case_values_.size(); ++ii) {
-        if (case_values_[ii] != NULL) delete case_values_[ii];
+        if (case_values_[ii] != nullptr) delete case_values_[ii];
     }
-    for (int ii = 0; ii < (int)case_statements_.size(); ++ii) {
-        if (case_statements_[ii] != NULL) delete case_statements_[ii];
+    for (int ii = 0; ii < (int)statements_.size(); ++ii) {
+        if (statements_[ii] != nullptr) delete statements_[ii];
     }
-    if (switch_value_ != NULL) delete switch_value_;
+    if (switch_value_ != nullptr) delete switch_value_;
 }
 
 AstTypeSwitch::~AstTypeSwitch()
 {
     for (int ii = 0; ii < (int)case_types_.size(); ++ii) {
-        if (case_types_[ii] != NULL) delete case_types_[ii];
+        if (case_types_[ii] != nullptr) delete case_types_[ii];
     }
     for (int ii = 0; ii < (int)case_statements_.size(); ++ii) {
-        if (case_statements_[ii] != NULL) delete case_statements_[ii];
+        if (case_statements_[ii] != nullptr) delete case_statements_[ii];
     }
-    if (expression_ != NULL) delete expression_;
-    if (reference_ != NULL) delete reference_;
+    if (expression_ != nullptr) delete expression_;
+    if (reference_ != nullptr) delete reference_;
 }
 
 /////////////////////////
@@ -380,13 +458,13 @@ AstTypeSwitch::~AstTypeSwitch()
 AstIniter::~AstIniter()
 {
     for (int ii = 0; ii < (int)elements_.size(); ++ii) {
-        if (elements_[ii] != NULL) delete elements_[ii];
+        if (elements_[ii] != nullptr) delete elements_[ii];
     }
 }
 
 void FuncDeclaration::SetNames(const char *name1, const char *name2)
 {
-    if (name2 == NULL || name2[0] == 0) {
+    if (name2 == nullptr || name2[0] == 0) {
         is_class_member_ = false;
         name_ = name1;
     } else {
@@ -396,44 +474,10 @@ void FuncDeclaration::SetNames(const char *name1, const char *name2)
     }
 }
 
-AstEnumType::~AstEnumType()
-{
-    for (int ii = 0; ii < (int)initers_.size(); ++ii) {
-        IAstExpNode *initer = initers_[ii];
-        if (initer != nullptr) delete initer;
-    }
-}
-
-AstInterfaceType::~AstInterfaceType()
-{
-    for (int ii = 0; ii < (int)ancestors_.size(); ++ii) {
-        if (ancestors_[ii] != nullptr) delete ancestors_[ii];
-    }
-    for (int ii = 0; ii < (int)members_.size(); ++ii) {
-        FuncDeclaration *member = members_[ii];
-        if (member != nullptr) delete member;
-    }
-}
-
-AstClassType::~AstClassType()
-{
-    for (int ii = 0; ii < (int)member_vars_.size(); ++ii) {
-        VarDeclaration *member = member_vars_[ii];
-        if (member != nullptr) delete member;
-    }
-    for (int ii = 0; ii < (int)member_functions_.size(); ++ii) {
-        FuncDeclaration *member = member_functions_[ii];
-        if (member != nullptr) delete member;
-    }
-    for (int ii = 0; ii < (int)member_interfaces_.size(); ++ii) {
-        if (member_interfaces_[ii] != nullptr) delete member_interfaces_[ii];
-    }
-}
-
 AstDependency::AstDependency(const char *path, const char *name)
 {
     package_dir_ = path;
-    if (name == NULL || name[0] == 0) {
+    if (name == nullptr || name[0] == 0) {
         const char *slash;
 
         for (slash = path + strlen(path) - 1; slash > path && *slash != '\\' && *slash != '/'; --slash);
@@ -457,13 +501,13 @@ void AstDependency::SetUsage(DependencyUsage usage)
 AstFile::~AstFile()
 {
     for (int ii = 0; ii < (int)dependencies_.size(); ++ii) {
-        if (dependencies_[ii] != NULL) delete dependencies_[ii];
+        if (dependencies_[ii] != nullptr) delete dependencies_[ii];
     }
     for (int ii = 0; ii < (int)declarations_.size(); ++ii) {
-        if (declarations_[ii] != NULL) delete declarations_[ii];
+        if (declarations_[ii] != nullptr) delete declarations_[ii];
     }
     for (int ii = 0; ii < (int)remarks_.size(); ++ii) {
-        if (remarks_[ii] != NULL) delete remarks_[ii];
+        if (remarks_[ii] != nullptr) delete remarks_[ii];
     }
 }
 

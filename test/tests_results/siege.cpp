@@ -1,7 +1,6 @@
 #include "siege.h"
 
 static uint32_t uint32_sqrt(const uint32_t x);
-static uint16_t SquareRoot(const uint32_t x);
 
 void print_primes_to(const int32_t top)
 {
@@ -46,27 +45,3 @@ static uint32_t uint32_sqrt(const uint32_t x)
     }
     return (res);
 }
-
-static uint16_t SquareRoot(const uint32_t x)
-{
-    uint32_t op = x;
-    uint32_t res = (uint32_t)0;
-    uint32_t one = (uint32_t)(1 << 30); // The second-to-top bit is set: use 1u << 14 for uint16_t type; use 1uL<<30 for uint32_t type
-
-    // "one" starts at the highest power of four <= than the argument.
-    while (one > op) {
-        one >>= (uint32_t)2;
-    }
-
-    while (!sing::iseq(one, 0)) {
-        if (op >= res + one) {
-            op = op - (res + one);
-            res = res + 2U * one;
-        }
-        res >>= (uint32_t)1;
-        one >>= (uint32_t)2;
-    }
-    return ((uint16_t)res);
-}
-
-// 2 bits at a time

@@ -56,8 +56,7 @@ void Options::ParseSingleArg(const char *arg)
             tag_ = 0;
             SetOption(arg);
         } else if (strcmp(arg, "-MF") == 0) {
-            waiting_a_value_ = true;
-            tag_ = arg[1];
+            create_d_file_ = true;
         } else if (strlen(arg) != 2) {
             unknown_option = true;
         } else {
@@ -186,6 +185,7 @@ bool Options::ParseArgs(int argc, char *argv[])
     test_to_perform_ = 0;
     skip_usage_errors_ = false;
     debug_build_ = false;
+    create_d_file_ = false;
 
     waiting_a_value_ = false;
     error_ = false;

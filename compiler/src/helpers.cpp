@@ -1,3 +1,4 @@
+#include <string.h>
 #include "helpers.h"
 
 namespace SingNames {
@@ -35,10 +36,10 @@ void ErrorList::Append(const ErrorList *source)
 
 static int stub(int a, int b, void *context)
 {
-    return(((ErrorList*)context)->CompRows(a, b));
+    return(((ErrorList*)context)->CompareForSort(a, b));
 }
 
-void ErrorList::SortByRow(void)
+void ErrorList::Sort(void)
 {
     int         *indices;
     ErrorList   sorted;
@@ -65,6 +66,17 @@ void ErrorList::SortByRow(void)
 
     // free used-up resources
     delete[] indices;
+}
+
+int ErrorList::CompareForSort(int a, int b)
+{ 
+    if (rows_[a] != rows_[b]) {
+        return(rows_[a] - rows_[b]);
+    }
+    if (cols_[a] != cols_[b]) {
+        return(cols_[a] - cols_[b]);
+    }
+    return(strcmp(errors_strings_.GetName(a), errors_strings_.GetName(b))); 
 }
 
 void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context)

@@ -35,13 +35,16 @@ interface if0 {
 interface if10 {
 }
 
-class delegated {
+class delegated : if0 {
 public:
-    interface if0;
     fn unimplemented() void;
 }
 
-class first {
+// errors in class header
+// if10 by implementor - implementor doesn't implement !
+// if10 by implementorX - implementor doesn't exist !
+// if0 - included twice
+class first : if0 by implementor, if10 by implementor, if10 by implementorX, if0 {
     fn cfy(the_other *first) void;              // forward ref to itself
 public:
     var conflicting i32;                // conflicts with function from interface
@@ -51,10 +54,6 @@ public:
     fn unimplemented2 by implementor;   // implementor doesn't implement !
     fn unimplemented3 by implementorX;  // implementor doesn't exist !
     fn unimplemented by implementor;      // ok
-    interface if0 by implementor;       // ok
-    interface if10 by implementor;       // implementor doesn't implement !
-    interface if10 by implementorX;      // implementor doesn't exist !
-    interface if0;                      // included twice
 
     fn cf0() void;
     fn cf0() void;              // duplicated
@@ -111,17 +110,14 @@ interface if1B {
     fn f2 (aaa i32) void;       // conflict !!
 }
 
-interface if2 {
-    interface if1;
-    interface if1;  // duplicated
+// if1 duplicated
+// if1 and if1B both have conflicting f2 signatures
+// myenum3 is not an interface
+interface if2 : if1, if1, if1B, myenum3 {
     fn f1() void;   // conflict
-    interface if1B; // if1 and if1B both have conflicting f2 signatures
-    interface myenum3;  // not an interface !!
 }
 
-class if1implementor {
-public:
-    interface if1;
+class if1implementor : if1 {
 }
 
 fn switchtest(in arg0 if1) void
@@ -130,15 +126,15 @@ fn switchtest(in arg0 if1) void
     var int0 = 0;
 
     switch(imp) {   // unallowed type 
-    5: test();      
-    ctc: int0++;
+    case 5: test();      
+    case ctc: int0++;
     }
     
     switch(int0) {
-    5: test();
-    ctc: int0++;
-    notctc: int0++; // must be ctc
-    "a": int0++;    // type mismatch
+    case 5: test();
+    case ctc: int0++;
+    case notctc: int0++; // must be ctc
+    case "a": int0++;    // type mismatch
     }
     
     typeswitch(int0 = arg0) {    // refname must be new    
@@ -148,8 +144,8 @@ fn switchtest(in arg0 if1) void
     }
     
     typeswitch(tref = arg0) {
-    if1implementor: int0++;
-    delegated: int0++;       // not derived from if1
+    case if1implementor: tref.f3();  // error: arg0 is const but f3 is muting
+    case delegated: int0++;          // not derived from if1
     }
 }
 
@@ -204,9 +200,7 @@ fn extern() void
 //
 // interfaces assignments, usage
 //
-class concrete {
-public:
-    interface if1;
+class concrete : if1 {
 }
 
 fn assignments(in arg0 if1, out arg1 if1) void
@@ -224,10 +218,10 @@ fn assignments(in arg0 if1, out arg1 if1) void
     assignments(v1, v2);
     assignments(arg0, arg0);    // ko: arg0 is read only
     assignments(arg0, arg1);    // ok
-    arg0.fn1();                 // ok
-    arg0.fn3();                 // ko: can't call muting !!
-    arg1.fn1();                 // ok
-    arg1.fn3();                 // ok
+    arg0.f2();                 // ok
+    arg0.f3();                 // ko: can't call muting !!
+    arg1.f2();                 // ok
+    arg1.f3();                 // ok
 }
 
 fn assignments2(in arg0 *if1, out arg1 *if1, in arg2 const *if1) void
@@ -242,13 +236,83 @@ fn assignments2(in arg0 *if1, out arg1 *if1, in arg2 const *if1) void
     v1 = v2;                    // ko: different types
     v2 = v3;                    // ok
     
-    assignments(v1, v2);        // ok
-    assignments(arg0, arg0);    // ko: arg0 is read only
-    assignments(arg0, arg1);    // ok
-    arg0.fn1();                 // ok
-    arg0.fn3();                 // ok
-    arg1.fn1();                 // ok
-    arg1.fn3();                 // ok
-    arg2.fn1();                 // ok
-    arg2.fn3();                 // ko: pointed is const   
+    assignments2(v1, v2, arg2);     // ko: first is upcast but second is not convertible
+    assignments2(arg0, arg0, arg0); // ko: arg0 is read only
+    assignments2(arg0, arg1, arg0); // ok
+
+    arg0.f2();                 // ok
+    arg0.f3();                 // ok
+    arg1.f2();                 // ok
+    arg1.f3();                 // ok
+    arg2.f2();                 // ok
+    arg2.f3();                 // ko: pointed is const   
 }
+
+// finalize unallowed in interfaces
+// finalize in class or member of class prevents class copy
+
+interface wrong {
+    fn finalize() void;    // unallowed in interfaces
+}
+
+class privatedesc {
+    fn finalize() void; // ko: must be public
+}
+
+type ccc if1implementor;    // can't typedef a named type.
+
+enum forcheck {first, second, third}
+
+fn othertests() void 
+{
+    var src0 if1implementor;
+    var dst0 if1implementor;
+
+    // switch can't have just the default case
+    switch (5) {
+        default: return;
+    }
+
+    // can't compare classes
+    if (src0 == dst0) {
+    }
+
+    let value = forcheck.first;
+
+    switch (value) {            // error: not al cases
+        case forcheck.first: {}
+    }
+
+    switch (value) {            // ok: all cases
+        case forcheck.first: {}
+        default: 
+    }
+
+    switch (value) {            // ok: all cases
+        case forcheck.first: {}
+        case forcheck.second: {}
+        case forcheck.third: {}
+    }
+
+    switch (5) {
+        case 5: {}
+        case 3: {}
+        case 5: {}  // duplicated
+        default: return;
+    }
+
+    switch (5) {    // ok
+        case 5: {}
+        case 3: {}
+        default: return;
+    }
+}
+
+class second {
+public:
+    fn mut unimplemented by implementor;      // ko: shouldn't declare mut here
+    var implementor delegated;
+}
+
+enum vtest {v0 = -10, v1, v2 = -10} // ko: values must be rising
+enum v2test {v0 = 0x7fffffff, v1}   // overflow

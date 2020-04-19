@@ -123,20 +123,20 @@ fn assignments() void
 	dd += dd;		// invalid (can operate only on numbers)
 	aa = aa * bb;	// can only sum 
 	bb = true + 1.0;
-	bb = 1^-1;
-	bb = 1000^1;
-	bb = 1^64;
-	bb = 2^64;
-	bb = 2^-1;
-	bb = 10^3;
-	bb = 10^60;
-	bb = 10000^0;
+	bb = 1**-1;
+	bb = 1000**1;
+	bb = 1**64;
+	bb = 2**64;
+	bb = 2**-1;
+	bb = 10**3;
+	bb = 10**60;
+	bb = 10000**0;
 	cc = f64(1e300) * f64(1e100);
 	bb = i64(10000000000) * i64(10000000000);
 	cc = 0/0;
-	bb = 0^0;
-	bb = 0^-1;
-	bb = 0^100;
+	bb = 0**0;
+	bb = 0**-1;
+	bb = 0**100;
 	bb = 5 << 64;
 	bb = 1 << 63;
 	cc = cc | 5.3;
@@ -562,8 +562,8 @@ fn dead_code() i32 {
 // literals operations
 fn literals() void
 {
-	let c1 c64 = (123.7+13i)^(5-3i)*3/2;
-	let c2 f32 = (123.7)^5*3/2.0;
+	let c1 c64 = (123.7+13i)**(5-3i)*3/2;
+	let c2 f32 = (123.7)**5*3/2.0;
 	let c3 i32 = 123 + 1280;
 	let c4 i32 = u64(0x8000000000000000) + u64(0x8000000000000000);
 	let c5 i32 = u64(0x8000000000000000) - u64(0x8000000000000001);
@@ -591,7 +591,7 @@ fn literals() void
 	vloca = -1000 >> -3;
 	let c19 i32 = 1000 & -3;
 	let c20 i32 = 1000 | -3;
-	let c21 i32 = 1000 xor -3;
+	let c21 i32 = 1000 ^ -3;
 	let c22 i32 = i64(-0x8000000000000000);
 	let c23 i32 = -0x8000000000000001;
 	let c24 i32 = - - 0x8;
@@ -604,7 +604,7 @@ fn literals() void
 	let c31 f32 = 5.0 / 0.0;
 	let c32 i32 = -3 & -5;
 	let c33 i32 = 3 | 5;
-	let c34 i32 = 3 xor 5;
+	let c34 i32 = 3 ^ 5;
 	var tstptr *i32 = null;
 	let c35 = true;
 	let c36 = false;
@@ -613,11 +613,11 @@ fn literals() void
 	var vloca2 u8 = 1;
 	var vloca3 u16;
 	var vloca4 u32 = vloca2 * vloca3;
-	var vloca_bool bool = vloca2 > -(12^-1);
+	var vloca_bool bool = vloca2 > -(12**-1);
 	vloca2 = vloca3 + -&vloca2;
 	vloca2 = +6 + +false;
 	vloca2 = vloca4(*vloca3);
-	withargs(vloca3^-1, 1);
+	withargs(vloca3**-1, 1);
 	var crazy1 [5]map(string)*(in a i32, in b i32)bool;
 	crazyout(crazy1);
 	var crazy2 [5]map(string)weak*(in a i32, in b i32)bool;	
@@ -640,7 +640,7 @@ fn crazyout(out theout [5]map(string)*(in a i32, in b i32)bool) void
 
 fn weakout(out theout weak*i8) i32
 {
-	return(12^-1);
+	return(12**-1);
 }
 
 fn weakout2(out theout weak*i8, out theout weak*i8) void
@@ -749,3 +749,10 @@ fn complex_refvalue() [*] i32
 }
 
 public var forbidden i32;
+
+fn constptrtest() void
+{
+	let cvar = 0;
+	let p0 *i32 = &cvar;
+	let p1 = &cvar;
+}

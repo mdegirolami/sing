@@ -19,6 +19,7 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
     current_function_ = nullptr;
     current_class_ = nullptr;
     usage_errors_.Reset();
+    check_usage_errors_ = fully_parsed && options_->AreUsageErrorsEnabled();
 
     for (int ii = 0; ii < (int)root_->dependencies_.size(); ++ii) {
         AstDependency *dependency = root_->dependencies_[ii];
@@ -138,8 +139,11 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
         }
     }
 
-    CheckMemberFunctionsDeclarationsPresence();
-    if (options_->AreUsageErrorsEnabled() && errors_->NumErrors() == 0) {
+    if (fully_parsed) {
+        CheckMemberFunctionsDeclarationsPresence();
+    }
+    
+    if (check_usage_errors_ && errors_->NumErrors() == 0) {
         CheckPrivateDeclarationsUsage();
         errors_->Append(&usage_errors_);
     }
@@ -149,6 +153,9 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
 
 void AstChecker::CheckVar(VarDeclaration *declaration)
 {
+    // insert now so that we can check conflicts with names in initers
+    InsertName(declaration->name_.c_str(), declaration);
+    
     if (declaration->IsPublic() && !declaration->HasOneOfFlags(VF_READONLY)) {
         Error("Public global variables are forbidden !", declaration);
     }
@@ -191,7 +198,6 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
             }
         }
     }
-    InsertName(declaration->name_.c_str(), declaration);
 }
 
 void AstChecker::CheckMemberVar(VarDeclaration *declaration)
@@ -233,7 +239,11 @@ void AstChecker::CheckMemberVar(VarDeclaration *declaration)
 
 void AstChecker::CheckType(TypeDeclaration *declaration)
 {
-    CheckTypeSpecification(declaration->type_spec_, TSCM_STD);
+    if (CheckTypeSpecification(declaration->type_spec_, TSCM_STD)) {
+        if (declaration->type_spec_->GetType() == ANT_NAMED_TYPE) {
+            Error("You can't have a type declaration whose only purpose is to rename an existing type", declaration->type_spec_);
+        }
+    }
     InsertName(declaration->name_.c_str(), declaration);
 }
 
@@ -613,7 +623,7 @@ bool AstChecker::CheckArrayIniter(AstArrayType *type_spec, IAstNode *initer)
 
 void AstChecker::CheckEnum(AstEnumType *declaration)
 {
-    int32_t cur_index = 0;
+    int64_t cur_index = 0;
     int num_elements = (int)declaration->items_.size();
 
     declaration->indices_.reserve(num_elements);
@@ -635,17 +645,25 @@ void AstChecker::CheckEnum(AstEnumType *declaration)
             CheckExpression(initer, &attr, ExpressionUsage::READ);
             if (!attr.IsOnError()) {
                 if (!VerifyIndexConstness(initer) || !attr.HasKnownValue() || !attr.IsInteger() || !attr.FitsSigned(32)) {
-                    Error("The enum case initer must be a compile time integer constant !", initer);
+                    Error("The enum case initer must be a compile time integer constant and fit an i32 type !", initer);
                 } else {
                     attr.GetSignedIntegerValue(&initer_value);
-                    declaration->indices_.push_back((int32_t)initer_value);
-                    cur_index = (int32_t)initer_value;
+                    if (initer_value < cur_index && ii != 0) {                        
+                        Error("The enum case value must be greter than the previous one.", initer);                      
+                    } else {
+                        initer_valid = true;
+                        declaration->indices_.push_back((int32_t)initer_value);
+                        cur_index = initer_value + 1;
+                    }
                 }
             }
         }
         if (!initer_valid) {
-            declaration->indices_.push_back(cur_index++);
+            declaration->indices_.push_back((int32_t)cur_index++);
         }
+    }
+    if (cur_index >= 0x80000000) {
+        Error("The enum case value overflows i32 capacity.", declaration);                      
     }
 }
 
@@ -657,7 +675,7 @@ void AstChecker::CheckInterface(AstInterfaceType *declaration)
     declaration->first_hinherited_member_ = func_count;
     for (int ii = 0; ii < func_count; ++ii) {
         FuncDeclaration *fdecl = declaration->members_[ii];
-        CheckMemberFuncDeclaration(fdecl);
+        CheckMemberFuncDeclaration(fdecl, true);
         for (int jj = 0; jj < ii; ++jj) {
             if (declaration->members_[jj]->name_ == fdecl->name_) {
                 Error("Duplicated member name", declaration->members_[ii]);
@@ -694,6 +712,17 @@ void AstChecker::CheckClass(AstClassType *declaration)
     for (int ii = 0; ii < num_vars; ++ii) {
         VarDeclaration *decl = declaration->member_vars_[ii];
         CheckMemberVar(decl);
+
+        // if member can't be copied the class can't be copied as well !!
+        if (declaration->can_be_copied) {
+            IAstTypeNode *solved = SolveTypedefs(decl->type_spec_);
+            if (solved != nullptr && solved->GetType() == ANT_CLASS_TYPE) {
+                if (!((AstClassType*)solved)->can_be_copied) {
+                    declaration->DisableCopy();
+                }
+            }
+        }
+
         for (int jj = 0; jj < ii; ++jj) {
             if (declaration->member_vars_[jj]->name_ == decl->name_) {
                 Error("Duplicated member name", decl);
@@ -711,9 +740,13 @@ void AstChecker::CheckClass(AstClassType *declaration)
         if (*implementor != "") {
             bool found = false;
             bool has_function = false;
+            if (fdecl->is_muting_) {
+                Error("Muting attribute can't be assigned to a delegating function (depends on the delegated object)", fdecl);
+            }
             for (int jj = 0; jj < num_vars; ++jj) {
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
+                    SetUsageFlags(declaration->member_vars_[jj], ExpressionUsage::BOTH);
                     IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
@@ -721,6 +754,10 @@ void AstChecker::CheckClass(AstClassType *declaration)
                         for (int kk = 0; kk < (int)impl_decl->member_functions_.size(); ++kk) {
                             if (impl_decl->member_functions_[kk]->name_ == fdecl->name_) {
                                 has_function = true;
+                                FuncDeclaration *implementing_fun = impl_decl->member_functions_[kk];
+                                fdecl->function_type_ = implementing_fun->function_type_;
+                                fdecl->SetMuting(implementing_fun->is_muting_);
+                                break;
                             }
                         }
                     }
@@ -734,7 +771,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
             }
             declaration->implemented_.push_back(true);
         } else {
-            CheckMemberFuncDeclaration(fdecl);
+            CheckMemberFuncDeclaration(fdecl, false);
             declaration->implemented_.push_back(false);
         }
         bool duplicated = false;
@@ -766,6 +803,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
             for (int jj = 0; jj < num_vars; ++jj) {
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
+                    SetUsageFlags(declaration->member_vars_[jj], ExpressionUsage::BOTH);
                     IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
@@ -799,12 +837,13 @@ void AstChecker::CheckClass(AstClassType *declaration)
                 &declaration->member_functions_, &origins, func_count);
             while (declaration->implemented_.size() < declaration->member_functions_.size()) {
                 declaration->implemented_.push_back(has_implementor);
+                declaration->fn_implementors_.push_back(*implementor);
             }
         }
     }
 }
 
-void AstChecker::CheckMemberFuncDeclaration(FuncDeclaration *declaration)
+void AstChecker::CheckMemberFuncDeclaration(FuncDeclaration *declaration, bool from_interface_declaration)
 {
     bool isok = true;
     AstFuncType *functype = declaration->function_type_;
@@ -821,6 +860,11 @@ void AstChecker::CheckMemberFuncDeclaration(FuncDeclaration *declaration)
                 Error("The finalize function must have no arguments and no return value", declaration);
                 isok = false;
             }
+        }
+        if (from_interface_declaration) {
+            Error("No finalize function allowed in interfaces", declaration);
+        } else if (!declaration->IsPublic()) {
+            Error("Finalize function must be public", declaration);
         }
     }
     if (isok) {
@@ -907,7 +951,7 @@ void AstChecker::CheckBlock(AstBlock *block, bool open_scope)
             Error("Dead code after terminating statement", node);
         }
     }
-    if (options_->AreUsageErrorsEnabled()) {
+    if (check_usage_errors_) {
         CheckInnerBlockVarUsage();
     }
     symbols_->CloseScope();
@@ -984,7 +1028,7 @@ void AstChecker::CheckUpdateStatement(AstUpdate *node)
             case TOKEN_UPD_MINUS:   operation = TOKEN_MINUS;    break;
             case TOKEN_UPD_MPY:     operation = TOKEN_MPY;      break;
             case TOKEN_UPD_DIVIDE:  operation = TOKEN_DIVIDE;   break;
-            case TOKEN_UPD_POWER:   operation = TOKEN_POWER;    break;
+            case TOKEN_UPD_XOR:     operation = TOKEN_XOR;      break;
             case TOKEN_UPD_MOD:     operation = TOKEN_MOD;      break;
             case TOKEN_UPD_SHR:     operation = TOKEN_SHR;      break;
             case TOKEN_UPD_SHL:     operation = TOKEN_SHL;      break;
@@ -1165,49 +1209,92 @@ void AstChecker::CheckFor(AstFor *node)
 void AstChecker::CheckSwitch(AstSwitch *node)
 {
     ExpressionAttributes attr;
-    bool unallowed_type = false;
+    bool switch_error = false;
+    bool has_errors = false;
+    AstEnumType *enum_type = nullptr;
+    vector<int64_t> case_values;
+    bool is_integer = false; 
+    string error;
 
     CheckExpression(node->switch_value_, &attr, ExpressionUsage::READ);
     if (!attr.IsOnError()) {
-        IAstTypeNode *ntype = attr.GetTypeTree();
-        if (ntype != nullptr && !IsArgTypeEligibleForAnIniter(ntype)) {
-            Error("The Switch statement requires one of the following types: numeric, enum, string, bool, pointer", node);
-            unallowed_type = true;
-        }
-        if (attr.IsInteger() || attr.IsEnum()) {
+        if (attr.IsEnum()) {
+            node->SetCCompatibility(true);  // may be compiled to a C switch
+            enum_type = (AstEnumType*)attr.GetTypeTree();
+        } else if (attr.IsInteger()) {
             node->SetCCompatibility(true);
+            is_integer = true;
             if (attr.RequiresPromotion()) {
                 attr.InitWithInt32(0);  // just done to force the type to int32.
             }
+        } else {
+            ExpressionAttributes attr2 = attr;
+            if (!attr2.UpdateWithRelationalOperation(this, &attr, TOKEN_EQUAL, &error)) {
+                Error("Switch expression must be of a type which supports the == operator", node->switch_value_);
+                switch_error = true;
+            }
         }
+    } else {
+        switch_error = true;
+    }
+    if (node->statement_top_case_.size() == 0 || node->statement_top_case_.size() == 1 && node->has_default) {
+        Error("The Switch statement must have at least a non-default case", node);       
     }
     for (int ii = 0; ii < (int)node->case_values_.size(); ++ii) {
         IAstExpNode *exp = node->case_values_[ii];
         if (exp != nullptr) {
             ExpressionAttributes cmp_attr;
-            string error;
             CheckExpression(exp, &cmp_attr, ExpressionUsage::READ);
-            if (!cmp_attr.IsOnError() && !unallowed_type) {
-                if (node->c_switch_compatible) {
-                    if (!VerifyIndexConstness(exp) || !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
-                        node->SetCCompatibility(false);
-                    } 
+            if (!switch_error && !cmp_attr.IsOnError()) {
+                ExpressionAttributes tmp = cmp_attr;
+                if (!tmp.UpdateWithRelationalOperation(this, &attr, TOKEN_EQUAL, &error)) {
+                    Error("Switch cases must match the switch expression type (or be scalar values)", exp);
+                    has_errors = true;
+                } else {
+
+                    // is the case value compatible with C switch ?
+                    if (node->c_switch_compatible) {
+                        if (!VerifyIndexConstness(exp) || is_integer &&
+                            !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
+                            node->SetCCompatibility(false);
+                        } else {
+                            int64_t value = 0;
+                            cmp_attr.GetSignedIntegerValue(&value);
+                            case_values.push_back(value);
+                        }
+                    }                     
                 }
-                if (!node->c_switch_compatible) {
-                    if (!cmp_attr.UpdateWithRelationalOperation(&attr, TOKEN_EQUAL, &error)) {
-                        Error("Switch cases must match the switch expression type", exp);
-                    }
-                }
-                // if (!IsCompileTimeConstant(exp)) {
-                //     Error("Switch cases must be compile time constants !", exp);
-                // } else if (!unallowed_type && !cmp_attr.UpdateWithRelationalOperation(&attr, TOKEN_EQUAL, &error)) {
-                //     Error("Switch cases must match the switch expression type", exp);
-                // } else if (node->c_switch_compatible && !VerifyIndexConstness(exp)) {
-                //     node->SetCCompatibility(false);
-                // }
             }
         }
-        IAstNode *statement = node->case_statements_[ii];
+    }
+
+    if (!has_errors && !switch_error && node->c_switch_compatible) {
+        case_values.sort_shallow_copy(0, case_values.size());
+        bool is_ok = true;
+        for (int ii = 1; is_ok && ii < case_values.size(); ++ii) {
+            if (case_values[ii] == case_values[ii - 1]) {
+                Error("Duplicated case values !", node);
+                is_ok = false;
+            }
+        }
+        if (enum_type != nullptr && !node->has_default && is_ok) {
+
+            // we require all enum values to be present
+            bool is_ok = case_values.size() == enum_type->indices_.size();
+            for (int ii = 0; is_ok && ii < case_values.size(); ++ii) {
+                if (case_values[ii] != enum_type->indices_[ii]) {
+                    is_ok = false;
+                }
+            }
+
+            if (!is_ok) {
+                Error("Not All Enum Values are present", node);
+            }
+        }
+    }
+
+    for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
+        IAstNode *statement = node->statements_[ii];
         if (statement != nullptr) {
             CheckStatement(statement);
         }
@@ -1232,8 +1319,10 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
         Error("The expression must evaluate to an interface or interface pointer type", node->expression_);
         referenced_type = nullptr;
     }
-    if (is_interface_ptr) node->SetSwitchOnInterfacePointer();
-
+    if (is_interface_ptr) {
+        node->reference_->ClearFlags(VF_IS_REFERENCE);  // is the actual pointer, not a reference to pointer !
+        node->SetSwitchOnInterfacePointer();
+    }
     for (int ii = 0; ii < (int)node->case_types_.size(); ++ii) {
         IAstTypeNode *case_type = node->case_types_[ii];
         if (case_type != nullptr) {
@@ -1243,7 +1332,7 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
                 if (!AreInterfaceAndClass(referenced_type, solved_type, FOR_ASSIGNMENT)) {
                     Error("The case label type must be a class/interface implementing the typeswitch interface", case_type);
                 } else if (solved_type->GetType() == ANT_POINTER_TYPE) {
-                    if (!((AstPointerType*)t0)->CheckConstness(t1, mode)) {
+                    if (!((AstPointerType*)solved_type)->CheckConstness(referenced_type, FOR_ASSIGNMENT)) {
                         Error("The case label type should be a const pointer", case_type);
                     }
                 }
@@ -1253,14 +1342,18 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
         if (statement != nullptr && case_type != nullptr) {
             symbols_->OpenScope();
 
+            IAstTypeNode *savetype = node->reference_->type_spec_;
+
             // want to know if it is used
             node->reference_->ClearFlags(VF_WASREAD | VF_WASWRITTEN);
+            node->reference_->weak_type_spec_ = case_type;
+            node->reference_->type_spec_ = case_type;
 
             symbols_->InsertName(reference_name, node->reference_);
-            IAstTypeNode *savetype = node->reference_->type_spec_;
-            node->reference_->type_spec_ = case_type;
             CheckStatement(statement);
+
             node->reference_->type_spec_ = savetype;
+            node->reference_->weak_type_spec_ = savetype;
 
             node->SetReferenceUsage(node->reference_->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN));
             symbols_->CloseScope();
@@ -1428,7 +1521,7 @@ void AstChecker::CheckBinop(AstBinop *node, ExpressionAttributes *attr)
     case TOKEN_LTE:
     case TOKEN_DIFFERENT:
     case TOKEN_EQUAL:
-        if (!attr->UpdateWithRelationalOperation(&attr_right, node->subtype_, &error)) {
+        if (!attr->UpdateWithRelationalOperation(this, &attr_right, node->subtype_, &error)) {
             Error(error.c_str(), node);
         }
         break;
@@ -1710,7 +1803,15 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
     if (decl->GetType() == ANT_VAR) {
         node->wp_decl_ = decl;
         VarDeclaration *var = (VarDeclaration*)decl;
-        attr->InitWithTree(var->weak_type_spec_, true, !var->HasOneOfFlags(VF_READONLY), this);
+        bool readonly = false;
+        if (var->HasOneOfFlags(VF_IS_REFERENCE)) {
+            if (var->weak_iterated_var_ != nullptr) {
+                readonly = var->weak_iterated_var_->HasOneOfFlags(VF_READONLY);
+            }
+        } else {
+            readonly = var->HasOneOfFlags(VF_READONLY);
+        }
+        attr->InitWithTree(var->weak_type_spec_, true, !readonly, this);
         if (var->HasOneOfFlags(VF_READONLY)) {
             if (var->initer_ != nullptr && var->initer_->GetType() != ANT_INITER) {
                 attr->SetTheValueFrom(((IAstExpNode*)var->initer_)->GetAttr());
@@ -2152,96 +2253,7 @@ bool AstChecker::IsBinopCompileTimeConstant(AstBinop *node)
     }
     return(false);
 }
-/*
-void AstChecker::IsDotOpCompileTimeConstant(AstBinop *node, ExpressionAttributes *attr, ExpressionUsage usage, bool dotop_left)
-{
-    // if left branch is a leaf or another dotop, call it directly with special options:
-    // it could be a <file reference> or a <file reference>.<enum/class/if type>, which is disallowed in other cases.
-    int pkg_index = -1;
-    if (node->operand_left_->GetType() == ANT_EXP_LEAF) {
-        AstExpressionLeaf* left_leaf = (AstExpressionLeaf*)node->operand_left_;
-        CheckDotOpLeftLeaf(left_leaf, attr, usage);
-        pkg_index = left_leaf->pkg_index_;
-    } else if (node->operand_left_->GetType() == ANT_BINOP && ((AstBinop*)node->operand_left_)->subtype_ == TOKEN_DOT) {
-        CheckDotOp((AstBinop*)node->operand_left_, attr, usage, true);
-    } else {
-        CheckExpression(node->operand_left_, attr, usage);
-    }
 
-    // check the right branch
-    AstExpressionLeaf* right_leaf = nullptr;
-    if (node->operand_right_->GetType() == ANT_EXP_LEAF) {
-        right_leaf = (AstExpressionLeaf*)node->operand_right_;
-        if (right_leaf->subtype_ != TOKEN_NAME) {
-            right_leaf = nullptr;
-        }
-    }
-    if (right_leaf == nullptr) {
-        Error("The term at the right of a dot operator must be a name", node);
-        return;
-    }
-
-    if (pkg_index >= 0) {
-        bool is_private;
-        IAstDeclarationNode *decl = SearchExternDeclaration(pkg_index, right_leaf->value_.c_str(), &is_private);
-        if (is_private) {
-            Error("Cannot access private symbol", right_leaf);
-            attr->SetError();
-        } else if (decl == nullptr) {
-            Error("Undefined symbol", right_leaf);
-            attr->SetError();
-        } else {
-            CheckNamedLeaf(decl, right_leaf, attr, usage, dotop_left);
-        }
-        right_leaf->attr_ = *attr;
-    } else if (!attr->IsOnError()) {
-        bool is_valid = false;
-
-        // is a field selector operator or the case selector of an enum literal.
-        IAstTypeNode *tnode = attr->GetTypeTree();
-        if (tnode != nullptr) {
-            AstNodeType nodetype = tnode->GetType();
-            if (nodetype == ANT_ENUM_TYPE) {
-                is_valid = true;
-                AstEnumType *enumnode = (AstEnumType*)tnode;
-                int entry;
-                for (entry = 0; entry < (int)enumnode->items_.size(); ++entry) {
-                    if (enumnode->items_[entry] == right_leaf->value_) {
-                        break;
-                    }
-                }
-                if (entry >= (int)enumnode->items_.size()) {
-                    //string message = right_leaf->value_ + " is not a case of the enum";
-                    //Error(message.c_str(), right_leaf);
-                    Error("Not a case of the enumeration", right_leaf);
-                    attr->SetError();
-                } else if (entry < (int)enumnode->indices_.size()) {
-                    attr->SetEnumValue(enumnode->indices_[entry]);
-                }
-            } else {
-                if (nodetype == ANT_POINTER_TYPE) {
-                    tnode = SolveTypedefs(((AstPointerType*)tnode)->pointed_type_);
-                }
-                nodetype = tnode->GetType();
-                if (nodetype == ANT_CLASS_TYPE) {
-                    is_valid = true;
-                    AstClassType *classnode = (AstClassType*)tnode;
-                    CheckMemberAccess(right_leaf, &classnode->member_functions_, &classnode->member_vars_, attr, usage);
-                } else if (nodetype == ANT_INTERFACE_TYPE) {
-                    is_valid = true;
-                    AstInterfaceType *ifnode = (AstInterfaceType*)tnode;
-                    CheckMemberAccess(right_leaf, &ifnode->members_, nullptr, attr, usage);
-                }
-            }
-        }
-        if (!is_valid) {
-            //Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
-            Error("Left operand is not compatible with the dot operator", node);
-        }
-    }
-    node->attr_ = *attr;
-}
-*/
 bool AstChecker::IsUnopCompileTimeConstant(AstUnop *node)
 {
     if (!IsCompileTimeConstant(node->operand_)) {
@@ -2310,13 +2322,17 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
     AstArrayType    *array1;
     TypeMatchResult result;
 
-    // optimization (check the pointers insead of the content)
-    if (t0 == t1) return(OK);
-
     t0 = SolveTypedefs(t0);
     t1 = SolveTypedefs(t1);
     if (t0 == nullptr || t1 == nullptr) {
         return(KO);
+    }
+
+    // some classes are not copyable
+    if (mode == FOR_ASSIGNMENT && t1->GetType() == ANT_CLASS_TYPE) {
+        if (!((AstClassType*)t0)->can_be_copied) {
+            return(NONCOPY);
+        }
     }
 
     // optimization (check the pointers instead of the content)
@@ -2325,12 +2341,16 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
     AstNodeType t0type = t0->GetType();
     AstNodeType t1type = t1->GetType();
 
-    // only case of auto conversion.
+    // cases in which the types don't need to be the same: concrete to interface reference/pointer.
     if (mode != FOR_EQUALITY && AreInterfaceAndClass(t0, t1, mode)) {
-        if (t0type == ANT_POINTER_TYPE && !((AstPointerType*)t0)->CheckConstness(t1, mode)) {
-            return(CONST);
+        if (mode == FOR_ASSIGNMENT && t0type == ANT_POINTER_TYPE) {
+            if (!((AstPointerType*)t0)->CheckConstness(t1, mode)) {
+                return(CONST);
+            }
+            return(OK);
+        } else if (mode == FOR_REFERENCING && t0type != ANT_POINTER_TYPE) {
+            return(OK);
         }
-        return(OK);
     }
 
     if (t0type != t1type) return(KO);
@@ -2590,15 +2610,16 @@ void AstChecker::CheckPrivateDeclarationsUsage(void)
     }
 }
 
-void AstChecker::CheckPrivateVarUsage(VarDeclaration *var)
+void AstChecker::CheckPrivateVarUsage(VarDeclaration *var, bool is_member)
 {
+    bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->type_spec_);
     if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_INVOLVED_IN_TYPE_DEFINITION)) {
         if (!var->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN)) {
             UsageError("Variable/Constant unused !!", var);
-        } else if (!var->HasOneOfFlags(VF_READONLY) && !var->HasOneOfFlags(VF_WASWRITTEN)) {
+        } else if (check_all && !var->HasOneOfFlags(VF_READONLY) && !var->HasOneOfFlags(VF_WASWRITTEN)) {
             UsageError("Variable never written, please declare as a constant !!", var);
         }
-    } else if (var->HasAllFlags(VF_ISARG | VF_WRITEONLY)) {
+    } else if (check_all && var->HasAllFlags(VF_ISARG | VF_WRITEONLY)) {
         if (var->HasOneOfFlags(VF_WASREAD) && !var->HasOneOfFlags(VF_WASWRITTEN)) {
             UsageError("Output parameter read before being written !!", var);
         }
@@ -2621,7 +2642,7 @@ void AstChecker::CheckPrivateTypeUsage(TypeDeclaration *tdec)
         AstClassType *ctype = (AstClassType*)tdec->type_spec_;
         for (int ii = 0; ii < (int)ctype->member_vars_.size(); ++ii) {
             VarDeclaration *var = ctype->member_vars_[ii];
-            if (!var->IsPublic()) CheckPrivateVarUsage(var);
+            if (!var->IsPublic()) CheckPrivateVarUsage(var, true);
         }
         for (int ii = 0; ii < (int)ctype->member_functions_.size() && ii < ctype->first_hinherited_member_; ++ii) {
             FuncDeclaration *func = ctype->member_functions_[ii];

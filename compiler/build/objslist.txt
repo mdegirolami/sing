@@ -1,1 +1,0 @@
-ast_checks.o ast_nodes.o ast_nodes_print.o compiler.o cpp_formatter.o cpp_synth.o expression_attributes.o FileName.o helpers.o lexer.o NamesList.o numeric_value.o options.o package.o Parser.o string.o symbols_storage.o target.o

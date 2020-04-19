@@ -7,13 +7,13 @@ requires "synth_test_pkg2", stpn;   // ok
 requires "assert", stpn;            // dup. local name
 requires "tests/synth_test_pkg2", unique;       // dup path (please add a shortened include path)
 
-type aa one.two.three;      // too many name components
-type bb one.two;            // unknown package
-type cc the_pkg.dummy;      // doesn't exist
-type dd the_pkg.pkg_fun;    // need a type
-type ee the_pkg.invisible2; // need to be public !!
-type ff stuff.xx;           // reference to ambiguous package
-type gg the_pkg.pkg_type;   // good !!
+type aa *one.two.three;      // too many name components
+type bb *one.two;            // unknown package
+type cc *the_pkg.dummy;      // doesn't exist
+type dd *the_pkg.pkg_fun;    // need a type
+type ee *the_pkg.invisible2; // need to be public !!
+type ff *stuff.xx;           // reference to ambiguous package
+type gg *the_pkg.pkg_type;   // good !!
 
 var va [one.two] i32;           // undefined
 //var vb [(100 * 3).dummy] i32;   // field selector ?

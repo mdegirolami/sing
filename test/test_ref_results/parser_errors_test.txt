@@ -1,100 +1,101 @@
 
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 2 	column: 18 	Expecting the next portion of a qualifyed name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 3 	column: 11 	Expecting the required package path (remember to enclose it in double quotes !)
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 5 	column: 32 	Expecting the required package local name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 8 	column: 6 	Expecting the variable name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 11 	column: 11 	You must either declare the variable type or use an initializer
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 12 	column: 11 	Invalid type declaration
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 14 	column: 7 	Expecting the type name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 15 	column: 16 	Can't initialize a type !
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 16 	column: 14 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 17 	column: 17 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 19 	column: 16 	Expecting '*'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 20 	column: 18 	Expecting the next portion of a qualifyed name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 22 	column: 5 	Expecting the function name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 30 	column: 53 	All arguments following a default arg must have a default value.
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 39 	column: 21 	Expecting ']' or ','
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 43 	column: 6 	Missing ';'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 48 	column: 10 	Expecting a block (i.e. Expecting '{' )
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 50 	column: 6 	Expecting a declaration: type, var, let, fn, class, interface, enum
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 87 	column: 18 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 90 	column: 14 	Expecting ')' no other arguments allowed after ellipsis
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 91 	column: 18 	Expecting ','
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 92 	column: 13 	Expecting the argument name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 94 	column: 13 	Expecting an expression
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 95 	column: 7 	Expression or part of it has no effects
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 96 	column: 11 	Missing ';'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 97 	column: 7 	Expression or part of it has no effects
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 98 	column: 7 	Expression or part of it has no effects
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 99 	column: 16 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 100 	column: 20 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 101 	column: 15 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 102 	column: 17 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 103 	column: 15 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 104 	column: 16 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 105 	column: 9 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 106 	column: 16 	Expecting a field name or a symbol
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 107 	column: 6 	Expecting a statement
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 108 	column: 10 	Expecting ']' or ','
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 109 	column: 14 	Expecting the parameter name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 110 	column: 13 	Expecting ')' or ','
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 110 	column: 15 	Expecting a statement
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 111 	column: 12 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 112 	column: 17 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 113 	column: 9 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 114 	column: 14 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 115 	column: 10 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 116 	column: 11 	Expecting the iterator or index name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 117 	column: 14 	Expecting the iterator name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 118 	column: 14 	Expecting 'in' followed by the for iteration range
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 119 	column: 23 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 120 	column: 12 	Illegal name: only alpha ,digits and '_' are allowed.
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 127 	column: 2 	Missing ';'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 132 	column: 10 	Expecting a block (i.e. Expecting '{' )
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 134 	column: 2 	Expecting a declaration: type, var, let, fn, class, interface, enum
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 136 	column: 9 	Expecting a member function name after the member selector '.'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 143 	column: 10 	Expecting a name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 144 	column: 10 	Expecting a name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 147 	column: 13 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 148 	column: 14 	Expecting an expression
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 149 	column: 15 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 150 	column: 16 	Expecting '{'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 153 	column: 10 	Expecting a statement
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 156 	column: 11 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 160 	column: 10 	Expecting '}', the else case must be the last of the switch !
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 163 	column: 15 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 166 	column: 17 	Expecting '('
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 167 	column: 18 	Expecting the reference name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 168 	column: 19 	Expecting '='
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 169 	column: 22 	Expecting an expression
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 170 	column: 26 	Expecting ')'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 171 	column: 27 	Expecting '{'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 174 	column: 10 	Expecting a statement
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 177 	column: 15 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 180 	column: 14 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 184 	column: 10 	Expecting '}', the else case must be the last of the switch !
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 189 	column: 2 	Expecting the type name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 189 	column: 10 	Expecting '{'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 190 	column: 12 	Expecting an enum case name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 191 	column: 17 	Expecting '}'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 194 	column: 2 	Expecting the type name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 195 	column: 2 	Expecting '{'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 196 	column: 10 	Expecting the function name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 197 	column: 2 	Expecting 'fn' or 'interface'. Note: public/private qualifiers are not allowed here.
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 201 	column: 2 	Expecting the type name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 202 	column: 2 	Expecting '{'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 204 	column: 6 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 207 	column: 9 	Expecting the function name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 208 	column: 12 	Expecting the function name
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 210 	column: 6 	Expecting ':'
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 212 	column: 14 	You can't delegate a private function
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 213 	column: 6 	All the interfaces must be public
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 215 	column: 17 	Expecting the name of the var member implementing the function
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 216 	column: 23 	Expecting the name of the var member implementing the interface
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 217 	column: 6 	Expecting a var/fn/interface declaration or a public/private qualifier
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 224 	column: 40 	Expecting an expression
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 234 	column: 15 	You must either declare the variable type or use an initializer
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 238 	column: 44 	Expecting an expression
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 240 	column: 10 	Expecting a statement
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 245 	column: 6 	The only declarations allowed in a function are Let and Var
-ERROR !! file D:/Documents/w12/sing/tests/parser_errors_test.sing: line: 247 	column: 16 	Expecting '''
+ERROR !! file parser_errors_test.sing:2:17: Expecting the next portion of a qualifyed name
+ERROR !! file parser_errors_test.sing:3:10: Expecting the required package path (remember to enclose it in double quotes !)
+ERROR !! file parser_errors_test.sing:5:31: Expecting the required package local name
+ERROR !! file parser_errors_test.sing:8:5: Expecting the variable name
+ERROR !! file parser_errors_test.sing:11:10: You must either declare the variable type or use an initializer
+ERROR !! file parser_errors_test.sing:12:10: Invalid type declaration
+ERROR !! file parser_errors_test.sing:14:6: Expecting the type name
+ERROR !! file parser_errors_test.sing:15:15: Can't initialize a type !
+ERROR !! file parser_errors_test.sing:16:13: Expecting '('
+ERROR !! file parser_errors_test.sing:17:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:19:15: Expecting '*'
+ERROR !! file parser_errors_test.sing:20:17: Expecting the next portion of a qualifyed name
+ERROR !! file parser_errors_test.sing:22:4: Expecting the function name
+ERROR !! file parser_errors_test.sing:30:52: All arguments following a default arg must have a default value.
+ERROR !! file parser_errors_test.sing:39:20: Expecting ']' or ','
+ERROR !! file parser_errors_test.sing:43:5: Missing ';'
+ERROR !! file parser_errors_test.sing:48:9: Expecting a block (i.e. Expecting '{' )
+ERROR !! file parser_errors_test.sing:50:5: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:87:17: Expecting '('
+ERROR !! file parser_errors_test.sing:90:13: Expecting ')' no other arguments allowed after ellipsis
+ERROR !! file parser_errors_test.sing:91:17: Expecting ','
+ERROR !! file parser_errors_test.sing:92:12: Expecting the argument name
+ERROR !! file parser_errors_test.sing:94:12: Expecting an expression
+ERROR !! file parser_errors_test.sing:95:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:96:10: Missing ';'
+ERROR !! file parser_errors_test.sing:97:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:98:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:99:15: Expecting '('
+ERROR !! file parser_errors_test.sing:100:19: Expecting ')'
+ERROR !! file parser_errors_test.sing:101:14: Expecting '('
+ERROR !! file parser_errors_test.sing:102:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:103:14: Expecting '('
+ERROR !! file parser_errors_test.sing:104:15: Expecting ')'
+ERROR !! file parser_errors_test.sing:105:8: Expecting ')'
+ERROR !! file parser_errors_test.sing:106:15: Expecting a field name or a symbol
+ERROR !! file parser_errors_test.sing:107:5: Expecting a statement
+ERROR !! file parser_errors_test.sing:108:9: Expecting ']' or ','
+ERROR !! file parser_errors_test.sing:109:13: Expecting the parameter name
+ERROR !! file parser_errors_test.sing:110:12: Expecting ')' or ','
+ERROR !! file parser_errors_test.sing:110:14: Expecting a statement
+ERROR !! file parser_errors_test.sing:111:11: Expecting '('
+ERROR !! file parser_errors_test.sing:112:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:113:8: Expecting '('
+ERROR !! file parser_errors_test.sing:114:13: Expecting ')'
+ERROR !! file parser_errors_test.sing:115:9: Expecting '('
+ERROR !! file parser_errors_test.sing:116:10: Expecting the iterator or index name
+ERROR !! file parser_errors_test.sing:117:13: Expecting the iterator name
+ERROR !! file parser_errors_test.sing:118:13: Expecting 'in' followed by the for iteration range
+ERROR !! file parser_errors_test.sing:119:22: Expecting ')'
+ERROR !! file parser_errors_test.sing:120:11: Illegal name: only alpha ,digits and '_' are allowed.
+ERROR !! file parser_errors_test.sing:127:1: Missing ';'
+ERROR !! file parser_errors_test.sing:132:9: Expecting a block (i.e. Expecting '{' )
+ERROR !! file parser_errors_test.sing:134:1: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:136:8: Expecting a member function name after the member selector '.'
+ERROR !! file parser_errors_test.sing:143:14: Invalid type declaration
+ERROR !! file parser_errors_test.sing:144:14: Invalid type declaration
+ERROR !! file parser_errors_test.sing:147:12: Expecting '('
+ERROR !! file parser_errors_test.sing:148:13: Expecting an expression
+ERROR !! file parser_errors_test.sing:149:14: Expecting ')'
+ERROR !! file parser_errors_test.sing:150:15: Expecting '{'
+ERROR !! file parser_errors_test.sing:153:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:156:15: Expecting ':'
+ERROR !! file parser_errors_test.sing:160:9: Expecting '}', the else case must be the last of the switch !
+ERROR !! file parser_errors_test.sing:163:17: Expecting ':'
+ERROR !! file parser_errors_test.sing:166:16: Expecting '('
+ERROR !! file parser_errors_test.sing:167:17: Expecting the reference name
+ERROR !! file parser_errors_test.sing:168:18: Expecting '='
+ERROR !! file parser_errors_test.sing:169:21: Expecting an expression
+ERROR !! file parser_errors_test.sing:170:25: Expecting ')'
+ERROR !! file parser_errors_test.sing:171:26: Expecting '{'
+ERROR !! file parser_errors_test.sing:174:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:177:19: Expecting ':'
+ERROR !! file parser_errors_test.sing:180:16: Expecting ':'
+ERROR !! file parser_errors_test.sing:184:9: Expecting '}', the else case must be the last of the switch !
+ERROR !! file parser_errors_test.sing:189:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:189:9: Expecting '{'
+ERROR !! file parser_errors_test.sing:190:11: Expecting an enum case name
+ERROR !! file parser_errors_test.sing:191:16: Expecting '}'
+ERROR !! file parser_errors_test.sing:194:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:195:1: Expecting '{'
+ERROR !! file parser_errors_test.sing:196:9: Expecting the function name
+ERROR !! file parser_errors_test.sing:197:1: Expecting 'fn' or 'interface'. Note: public/private qualifiers are not allowed here.
+ERROR !! file parser_errors_test.sing:198:1: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:201:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:202:1: Expecting '{'
+ERROR !! file parser_errors_test.sing:204:5: Expecting ':'
+ERROR !! file parser_errors_test.sing:207:8: Expecting the function name
+ERROR !! file parser_errors_test.sing:208:11: Expecting the function name
+ERROR !! file parser_errors_test.sing:210:5: Expecting ':'
+ERROR !! file parser_errors_test.sing:212:13: You can't delegate a private function
+ERROR !! file parser_errors_test.sing:214:16: Expecting the name of the var member implementing the function
+ERROR !! file parser_errors_test.sing:215:5: Expecting a var/fn/interface declaration or a public/private qualifier
+ERROR !! file parser_errors_test.sing:218:21: Expecting '{'
+ERROR !! file parser_errors_test.sing:221:21: Expecting the name of the var member implementing the interface
+ERROR !! file parser_errors_test.sing:228:39: Expecting an expression
+ERROR !! file parser_errors_test.sing:238:14: You must either declare the variable type or use an initializer
+ERROR !! file parser_errors_test.sing:242:43: Expecting an expression
+ERROR !! file parser_errors_test.sing:244:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:249:5: The only declarations allowed in a function are Let and Var
+ERROR !! file parser_errors_test.sing:251:15: Expecting '''

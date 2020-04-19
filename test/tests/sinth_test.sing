@@ -172,26 +172,26 @@ fn expressions() void
     s0 = s0 + 'f' + "alse" + s1 + v_int32 + v_uint8;
     
     // power + cases which require conversion
-    v_int32 = v_int8 ^ 2;           // ^2 integer promotion
-    v_int32 = v_int32 ^ v_int8;     // ^, <<, >> on ints, don't require the operands to be of the same type 
-    f0 = f0 ^ f0;                   // same types: no conversion needed
-    c0 = c0 ^ f0;                   // floats is like complex without a component !
-    c0 = f0 ^ c0;
-    c1 = c1 ^ d0;
-    c1 = d0 ^ c1;
-    f0 = f0 ^ 3.0;
-    f0 = 3.0 ^ f0;
-    v_int32 = v_int8 ^ v_uint32;    // integer promotion
+    v_int32 = v_int8 ** 2;           // **2 integer promotion
+    v_int32 = v_int32 ** v_int8;     // **, <<, >> on ints, don't require the operands to be of the same type 
+    f0 = f0 ** f0;                   // same types: no conversion needed
+    c0 = c0 ** f0;                   // floats is like complex without a component !
+    c0 = f0 ** c0;
+    c1 = c1 ** d0;
+    c1 = d0 ** c1;
+    f0 = f0 ** 3.0;
+    f0 = 3.0 ** f0;
+    v_int32 = v_int8 ** v_uint32;    // integer promotion
     
-    // power update
+    // xor update
     v_int32 ^= 2;
     v_int32 ^= 3;
-    f0 ^= 2.0;
+    //f0 ^= 2.0;
     
     // math operators
     f0 = f0 + f32(34 >> 1);      // >> needs brackets and conversion
     f0 = f32(34 >> 1) + f0;
-    v_int32 = v_int32 xor 3;
+    v_int32 = v_int32 ^ 3;
     
     // relationals
     var b0 = v_int8 > 3;
@@ -290,7 +290,7 @@ fn expressions() void
     v_int64 = i64(-0x8000_0000_0000_0000);
       
     // compile time constants checks
-    v_int32 = 5 ^ 3;
+    v_int32 = 5 ** 3;
     v_int32 = 5 + -3;
     v_int32 = -5 + -3;
     v_int32 = -5 + 3;
@@ -309,23 +309,23 @@ fn expressions() void
     v_int32 = u32(i32(-12000)) >> 3;
     v_int32 = 5 | 100;
     v_int32 = -12 & 100;
-    v_int32 = -12 xor 100;
-    f0 = f64(3.0) ^ f64(2.0);
+    v_int32 = -12 ^ 100;
+    f0 = f64(3.0) ** f64(2.0);
     f0 = f64(3.0) + f64(2.0);
     f0 = f64(3.0) - f64(2.0);
     f0 = f64(3.0) * f64(2.0);
     f0 = f64(3.0) / f64(2.0);
-    f0 = 3.0 ^ 2.0;
+    f0 = 3.0 ** 2.0;
     f0 = 3.0 + 2.0;
     f0 = 3.0 - 2.0;
     f0 = 3.0 * 2.0;
     f0 = 3.0 / 2.0;
-    c1 = c128(3.0) ^ c128(2.0 + 1i);
+    c1 = c128(3.0) ** c128(2.0 + 1i);
     c1 = c128(3.0) + c128(2.0 + 1i);
     c1 = c128(3.0) - c128(2.0 + 1i);
     c1 = c128(3.0) * c128(2.0 + 1i);
     c1 = c128(3.0) / c128(2.0 + 1i);
-    c1 = 3.0 ^ (2.0 + 1i);
+    c1 = 3.0 ** (2.0 + 1i);
     c1 = 3.0 + (2.0 + 1i);
     c1 = 3.0 - (2.0 + 1i);
     c1 = 3.0 * (2.0 + 1i);

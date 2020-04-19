@@ -8,29 +8,28 @@
 int main(int argc, char *argv[])
 {
     SingNames::Compiler compiler;
-    compiler.Run(argc, argv);
-    return(0);
+    return(compiler.Run(argc, argv));
 }
 
 namespace SingNames {
 
-void Compiler::Run(int argc, char *argv[])
+int Compiler::Run(int argc, char *argv[])
 {
     if (!options_.ParseArgs(argc, argv)) {
-        return;
+        return(0);
     }
     switch (options_.GetTestMode()) {
     case 1:
         TestLexer();
-        return;
+        return(0);
     case 2:
         TestParser();
-        return;
+        return(0);
     case 3:
         TestChecker();
-        return;
+        return(0);
     }
-    CompileSinglePackage();
+    return(CompileSinglePackage());
 }
 
 void Compiler::TestChecker(void)
@@ -54,7 +53,6 @@ void Compiler::TestParser(void)
     pkg->Init(options_.GetSourceName());    // -p improperly used !!
     if (!pkg->Load(PkgStatus::FULL)) {
         PrintPkgErrors(pkg);
-        getchar();
     } else {
         AstNodesPrint   printer;
 
@@ -76,24 +74,20 @@ void Compiler::TestLexer(void)
         return;
     }
     do {
-        try {
-            error = false;
-            lexer.Advance();
-        }
-        catch (ParsingException ex) {
-            printf("\n\nERROR !! %s at %d, %d\n", ex.description, ex.row, ex.column);
+        if (!lexer.Advance(&token)) {
+            int row, col;
+            string mess;
+            lexer.GetError(&mess, &row, &col);
+            printf("\n\nERROR !! %s at %d, %d\n", mess.c_str(), row, col);
             lexer.ClearError();
-            error = true;
-        }
-        token = lexer.CurrToken();
-        if (token != TOKEN_EOF && !error) {
+        } else if (token != TOKEN_EOF) {
             printf("\n%d\t%s", token, lexer.CurrTokenVerbatim());
         }
     } while (token != TOKEN_EOF);
     lexer.CloseFile();
 }
 
-void Compiler::CompileSinglePackage(void)
+int Compiler::CompileSinglePackage(void)
 {
     Package     *pkg = new Package;
 
@@ -110,13 +104,13 @@ void Compiler::CompileSinglePackage(void)
         bool empty_cpp;
 
         cpp_synthesizer_.Init();
-        output_name = options_.GetOutputFile();     // -o improperly used
+        output_name = options_.GetOutputFile();
 
         FileName::ExtensionSet(&output_name, "cpp");
         cppfd = fopen(output_name.c_str(), "wb");
         if (cppfd == NULL) {
             printf("\ncan't open output file: %s", output_name.c_str());
-            return;
+            return(1);
         }
 
         FileName::ExtensionSet(&output_name, "h");
@@ -124,7 +118,7 @@ void Compiler::CompileSinglePackage(void)
         if (hfd == NULL) {
             printf("\ncan't open output file: %s", output_name.c_str());
             fclose(cppfd);
-            return;
+            return(1);
         }
 
         cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, 0, &empty_cpp);
@@ -134,7 +128,20 @@ void Compiler::CompileSinglePackage(void)
             FileName::ExtensionSet(&output_name, "cpp");
             unlink(output_name.c_str());
         }
+
+        if (options_.MustCreateDFile()) {
+            FileName::ExtensionSet(&output_name, "h");
+            FILE *dfd = fopen((output_name + ".d").c_str(), "wb");
+            if (dfd == NULL) {
+                printf("\ncan't open output file: %s", output_name.c_str());
+                return(1);
+            }
+            cpp_synthesizer_.SynthDFile(dfd, packages_[0], output_name.c_str());
+            fclose(dfd);
+        }
+        return(0);
     }
+    return(1);
 }
 
 void Compiler::PrintAllPkgErrors()
@@ -149,14 +156,19 @@ void Compiler::PrintPkgErrors(Package *pkg)
 {
     int         error_idx = 0;
     const char  *error;
+    bool        has_errors = false;
 
     pkg->SortErrors();
     do {
         error = pkg->GetError(error_idx++);
         if (error != NULL) {
-            printf("\nERROR !! file %s: %s", pkg->fullpath_.c_str() ,error);
+            printf("\nERROR !! file %s:%s", pkg->fullpath_.c_str() ,error);
+            has_errors = true;
         }
     } while (error != NULL);
+    if (has_errors) {
+        printf("\n");
+    }
 }
 
 }

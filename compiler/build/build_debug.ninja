@@ -1,4 +1,5 @@
-debug_flags = -g
+debug_flags = -O0 -g
+profile_flags =
 
 src = ../../src
 bin_target = ../../bin/sing_d.exe

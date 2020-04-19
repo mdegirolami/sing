@@ -8,7 +8,7 @@
 
 null true false package requires var const type matrix map weak i8 i16 i32 i64 u8 u16 u32
 u64 f32 f64 c64 c128 let string rune bool size_t errcode fn pure in out io if else
-while for return break continue error cleanup run bind sizeof dimof xor as typeswitch case default public
+while for return break continue error cleanup run bind sizeof dimof ** as typeswitch case default public
 private enum struct class finalize interface static implements bypass template argument volatile throw
 try catch this mut ()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&=|=&&=||='a''\ueeee'
 ;
@@ -40,6 +40,6 @@ try catch this mut ()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&
 id__double
 id_single_
 _
-by switch
+by switch flagset
 /*
 		

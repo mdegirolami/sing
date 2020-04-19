@@ -327,10 +327,10 @@ NumericValue::OpError NumericValue::PerformIntOp(NumericValue *other, Token op, 
 
         // special cases
         if (baseis0 && (expis0 || op2neg)) {
-            return(OE_INTEGER_POWER_WRONG); // 0^0 is undefined 0^negative is infinite
+            return(OE_INTEGER_POWER_WRONG); // 0**0 is undefined 0**negative is infinite
         }
         if (expisminus1 && op1mod == 1 || expis1 || baseis0 || baseis1 && !op2neg) {
-            break;      // any^1, -1^-1, 1^-1, 0^positive, 1^positive : result is identical to base
+            break;      // any**1, -1**-1, 1**-1, 0**positive, 1**positive : result is identical to base
         }
         if (expis0) {
             unsigned_ = 1;

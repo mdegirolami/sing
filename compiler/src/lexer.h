@@ -22,7 +22,7 @@ enum Token {
     TOKEN_NULL,
     TOKEN_TRUE,
     TOKEN_FALSE,
-    TOKEN_VOID,
+    TOKEN_VOID,         // currently unused
 
     TOKEN_MUT,
     TOKEN_REQUIRES,
@@ -73,10 +73,10 @@ enum Token {
     TOKEN_SIZEOF,
     TOKEN_DIMOF,
     TOKEN_XOR,
-    TOKEN_AS,           // currently unused
+    TOKEN_CASE,
     TOKEN_TYPESWITCH,
     TOKEN_SWITCH,
-    TOKEN_DEFAULT,      // currently unused
+    TOKEN_DEFAULT,
 
     TOKEN_PUBLIC,
     TOKEN_PRIVATE,
@@ -86,7 +86,7 @@ enum Token {
     TOKEN_THIS,
     TOKEN_INTERFACE,
     TOKEN_STATIC,       // currently unused
-    TOKEN_IMPLEMENTS,   // currently unused
+    TOKEN_FLAGSET,      // currently unused
     TOKEN_BY,
     TOKEN_TEMPLATE,     // currently unused
     TOKEN_ARGUMENT,     // currently unused
@@ -135,7 +135,7 @@ enum Token {
     TOKEN_UPD_MINUS,
     TOKEN_UPD_MPY,
     TOKEN_UPD_DIVIDE,
-    TOKEN_UPD_POWER,
+    TOKEN_UPD_XOR,
     TOKEN_UPD_MOD,
     TOKEN_UPD_SHR,
     TOKEN_UPD_SHL,
@@ -183,20 +183,25 @@ class Lexer {
 
     LexerStatus     m_status;
 
+    // last error
+    LexerError      m_error;
+    int             m_error_row;
+    int             m_error_column;
+
     int         ComputeAsh(const char *symbol);
     int         GetNewLine(void);
     bool        IsEmptyLine(vector<int32_t> *line);
-    void        ReadCharacterLiteral(void);
-    void        ReadStringLiteral(void);
-    int32_t     ReadEscapeSequence(void);
-    int32_t     HexToChar(int32_t *cps, int maxlength);
-    void        ReadNumberLiteral(void);
-    void        ReadDecimalLiteral(void);
-    uint64_t    ReadHexLiteral(void);
-    void        ReadSymbol(void);
-    void        ReadName(void);
+    bool        ReadCharacterLiteral(void);
+    bool        ReadStringLiteral(void);
+    bool        ReadEscapeSequence(int32_t *value);
+    bool        HexToChar(int32_t *retv, int32_t *cps, int maxlength);
+    bool        ReadNumberLiteral(void);
+    bool        ReadDecimalLiteral(void);
+    bool        ReadHexLiteral(uint64_t *retv);
+    bool        ReadSymbol(void);
+    bool        ReadName(void);
     Token       AshLookUp(int ash, const char *name);
-    void        ReadComment(void);
+    bool        ReadComment(void);
     void        Error(LexerError error, int column);
     inline int  ResidualCharacters(void) { return(m_line_buffer.size() - m_curcol); }
     inline int  CompareIntRep(const char *a, const char *b) {
@@ -224,12 +229,18 @@ public:
     const char *CurrTokenVerbatim(void) { return(m_curr_token_verbatim.c_str()); }
 
     // step forward and return the current
-    Token Advance(void);
+    bool Advance(Token *token);
 
+    // the power operator '**' is context-sensitive. Only in some places the parser asks
+    // if a TOKEN_MPY can be converted to TOKEN_POWER based on the fact it is followed by another '*' without
+    // intermixed spaces.
+    void ConvertToPower(Token *token);
+
+    void GetError(string *error_str, int32_t *row, int32_t *col);
     void ClearError(void);
 
     // utils
-    static const char *GetTokenString(Token token) { return(token_to_string[token]); }
+    static const char *GetTokenString(Token token);
     int GetBinopPriority(Token token);
 
     static const int max_priority = 5;

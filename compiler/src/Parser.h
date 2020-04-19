@@ -20,7 +20,7 @@ class Parser {
     int         curly_indent_;  // need it for error recovery
 
     void    CheckSemicolon(void);
-    Token   Advance(void);
+    bool    Advance(void);
     void    Error(const char *message);                         // throws and need to recover
     void    SetError(const char *message, int row, int column); // just adds to the errors list
     bool    SkipToNextStatement(int level);                     // returns false if exits from the function/block

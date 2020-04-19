@@ -4,10 +4,12 @@ obj = .
 rule cc
   deps = gcc
   depfile = $out.d
-  command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
+  command = g++ -MD -MF $out.d $cflags $debug_flags $profile_flags -c $in -o $out
 
 rule ln
-  command = g++ -o $out @../objslist.txt
+  command = g++ $profile_flags -o $out @$out.rsp
+  rspfile = $out.rsp
+  rspfile_content = $in
 
 build $obj/ast_checks.o:           cc $src/ast_checks.cpp                                                                                                                                         
 build $obj/ast_nodes.o:            cc $src/ast_nodes.cpp                                                                                                                                          

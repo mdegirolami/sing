@@ -1,4 +1,4 @@
-debug_flags =
+debug_flags = -O2 -s -DNDEBUG
 
 src_b = ../../src_bench
 src_l = ../../src_lib

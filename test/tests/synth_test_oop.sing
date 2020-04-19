@@ -1,0 +1,203 @@
+namespace sinth_test_oop;
+
+// has constructor, destructor, private stuff
+public class stat {
+public:
+    fn mut finalize() void;
+
+    fn mut add(in value f32) void;
+    fn getall(out avg f32, out variance f32) bool;
+
+    var count i32;
+private:
+    fn avg() f32;
+    fn variance() f32;
+
+    var sum f32;
+    var sum2 f32;
+}
+
+// some interfaces
+public enum result {ok = 1, ko}
+
+public interface tester {
+    fn isgood() result;
+} 
+
+public interface tough_tester : tester {
+    fn mut tough_test(in enable bool) void;
+}
+
+// has virtual destructor, interface (support for typeswitch)
+class c0_test : tough_tester {
+public:
+    fn mut finalize() void;
+    fn mut init() void;
+private:
+    var message string;
+    var istough bool;
+}
+
+// testing 'by'
+class delegating : tough_tester by implementor {
+public:
+    fn init by implementor;
+private:
+    var implementor c0_test;    
+}
+
+// very simple: NO costructor/destructor/private stuff/inheritance
+public class simple {
+public:
+    var xxx string;
+}
+
+//
+// STAT class
+//
+fn stat.finalize() void
+{
+    this.count = 0;
+}
+
+fn stat.add(in value f32) void
+{
+    this.count++;
+    this.sum += value;
+    this.sum2 += value * value; 
+}
+
+fn stat.getall(out avg f32, out variance f32) bool
+{
+    avg = this.avg();
+    variance = this.variance();
+    return(true);
+}
+
+fn stat.avg() f32
+{
+    if (this.count == 0) {
+        return(0);
+    } else {
+        return(this.sum/f32(this.count));
+    }
+}
+
+fn stat.variance() f32
+{
+    if (this.count == 0) {
+        return(0);
+    } else {
+        let avg = this.avg();
+        return(this.sum2/f32(this.count) - avg * avg);
+    }
+}
+
+//
+// c0_test
+//
+fn c0_test.finalize() void
+{
+    this.message = "uninited";
+}
+
+fn c0_test.init() void
+{
+    this.message = "inited";
+}
+
+fn c0_test.tough_test(in enable bool) void
+{
+    this.istough = enable;
+}
+
+fn c0_test.isgood() result
+{
+    if (this.istough) {
+        return(result.ok);
+    }
+    return(result.ko);
+}
+
+public fn test_oop() void
+{
+    var v_stat stat;
+    var avg f32;
+    var variance f32;
+    
+    // direct access
+    v_stat.add(5);
+    v_stat.add(10);
+    v_stat.getall(avg, variance);
+
+    var t_instance delegating;
+    let t_p *tester = &t_instance;
+
+    // access through interface, switch integer constant
+    switch (t_p.isgood()) {
+        case result.ok: avg *= 2.0;
+        case result.ko: avg *= 0.5;
+    }
+
+    // switch compiled as switch has default and  block statement
+    switch(9) {
+        case 9: {
+            v_stat.add(3.0);
+            v_stat.add(6.0);
+        }
+        default: return;
+    }
+
+    // access through pointer
+    let t_p2 = &t_instance;
+    t_p2.tough_test(true);
+
+    // switch noninteger constant
+    let switch_base = "xxx";
+    switch (switch_base + "y") {
+        case "xxxy": avg *= 2.0;  // should double
+        default: {
+            let avgsqr = avg * avg;
+            if (avgsqr < 10) {
+                avg *= 2.0;
+            }
+        }
+    }
+
+    switch (switch_base) {
+    case "ax": avg *= 2.0;  // should NOT double
+    default:
+    }
+
+    let alternate c0_test;
+
+    check_typeswitch(alternate);
+    check_typeswitch2(t_p);
+}
+
+fn check_typeswitch(in object tester) i32
+{
+    typeswitch(ref = object) {
+        case c0_test: return(0);     // must select this
+        case delegating: 
+            if (ref.isgood() == result.ok) {
+                return(1);
+            }
+        default: return(2);
+    }
+    return(-1);
+}
+
+fn check_typeswitch2(in object *tester) i32
+{
+    var tmp *delegating;
+    typeswitch(ref = object) {
+        case *c0_test: {
+            ref.tough_test(true);
+            return(0);
+        }
+        case *delegating: tmp = ref; // must select this
+        default: return(2);
+    } 
+    return(-1);   
+}

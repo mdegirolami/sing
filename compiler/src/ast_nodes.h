@@ -95,20 +95,24 @@ public:
     virtual PositionInfo *GetPositionRecord(void) = 0;
 };
 
-enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can assign type src_tree to 'this'
+enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can copy type src_tree to 'this'
                          FOR_EQUALITY,              // compare 'this' and src_tree. Just ignores very secondary stuff. (this is the stricter !!)
                          FOR_REFERENCING};          // true if 'this' can be passed as argument to a function whose argument is an output declared as src_tree.
 
 enum ForwardReferenceType {FRT_NONE, FRT_PRIVATE, FRT_PUBLIC};
+
+enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_REF };
 
 class IAstTypeNode : public IAstNode {
 public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode) = 0;    // shallow compare !!
     virtual int SizeOf(void) = 0;
     virtual bool NeedsZeroIniter(void) = 0;
+    virtual bool SupportsEqualOperator(void) = 0;
 };
 
 IAstTypeNode *SolveTypedefs(IAstTypeNode *begin);
+ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_parm);
 
 class IAstExpNode : public IAstNode {
 public:
@@ -134,6 +138,7 @@ class AstFuncType : public IAstTypeNode {
 public:
     bool                        ispure_;
     bool                        varargs_;
+    bool                        is_member_;
     vector<VarDeclaration*>     arguments_;
     IAstTypeNode                *return_type_;
     PositionInfo                pos_;
@@ -141,15 +146,17 @@ public:
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstFuncType();
-    AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL) { arguments_.reserve(8); }
+    AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL), is_member_(false) { arguments_.reserve(8); }
     virtual AstNodeType GetType(void) { return(ANT_FUNC_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(true); }
+    virtual bool SupportsEqualOperator(void) { return(true); }
     void SetVarArgs(void) { varargs_ = true; }
     void AddArgument(VarDeclaration *arg) { arguments_.push_back(arg); }
     void SetReturnType(IAstTypeNode *type) { return_type_ = type; }
     bool ReturnsVoid(void);
+    void SetIsMember(void) { is_member_ = true; };
 };
 
 class AstPointerType : public IAstTypeNode {
@@ -168,6 +175,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(false); }
+    virtual bool SupportsEqualOperator(void) { return(true); }
     bool CheckConstness(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void Set(bool isconst, bool isweak, IAstTypeNode *pointed) { isconst_ = isconst; isweak_ = isweak; pointed_type_ = pointed; }
     void SetWithRef(bool isconst, IAstTypeNode *pointed) { isconst_ = isconst; owning_ = false; pointed_type_ = pointed; }
@@ -187,6 +195,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
+    virtual bool SupportsEqualOperator(void) { return(false); }
     void SetKeyType(IAstTypeNode *key) { key_type_ = key; }
     void SetReturnType(IAstTypeNode *return_type) { returned_type_ = return_type; }
 };
@@ -219,6 +228,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
+    virtual bool SupportsEqualOperator(void) { return(false); }
     void SetDimensionExpression(IAstExpNode *exp) { dimension_ = 0; expression_ = exp; }
     void SetElementType(IAstTypeNode *etype) { element_type_ = etype; }
     void SetDynamic(bool dyna) { is_dynamic_ = dyna; }
@@ -242,6 +252,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void);
+    virtual bool SupportsEqualOperator(void);
     void ChainComponent(AstNamedType *next) { next_component = next; }
     void AppendFullName(string *fullname);  // for the purpose of emitting error messages
 };
@@ -262,6 +273,7 @@ public:
                 base_type_ != TOKEN_COMPLEX128 &&
                 base_type_ != TOKEN_STRING);
     }
+    virtual bool SupportsEqualOperator(void) { return(true); }
 };
 
 class AstEnumType : public IAstTypeNode
@@ -279,6 +291,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(true); }
+    virtual bool SupportsEqualOperator(void) { return(true); }
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     void AddItem(const char *name, IAstExpNode *initer) { items_.push_back(name); initers_.push_back(initer); }
 };
@@ -300,6 +313,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
+    virtual bool SupportsEqualOperator(void) { return(false); }
     void AddAncestor(AstNamedType *anc) { ancestors_.push_back(anc); }
     void AddMember(FuncDeclaration *member) { members_.push_back(member); }
     bool HasInterface(AstInterfaceType *intf);
@@ -310,25 +324,27 @@ class AstClassType : public IAstTypeNode
 public:
     vector<VarDeclaration*>     member_vars_;
     vector<FuncDeclaration*>    member_functions_;      // annotations: this is grown with inherited functions
-    vector<string>              fn_implementors_;       // points into  member_vars_
+    vector<string>              fn_implementors_;       // points into  member_vars_: this is grown with inherited functions
     vector<AstNamedType*>       member_interfaces_;
     vector<string>              if_implementors_;       // points into  member_vars_
     PositionInfo                pos_;
 
-    int             first_hinherited_member_;           // annotations
-    vector<bool>    implemented_;
-    bool            has_destructor;
-    bool            has_constructor;                    // annotation from synthesizer
-    bool            constructor_written;                // annotation from synthesizer
+    int                     first_hinherited_member_;   // annotations
+    vector<bool>            implemented_;
+    bool                    has_destructor;
+    bool                    can_be_copied;
+    bool                    has_constructor;            // annotation from synthesizer
+    bool                    constructor_written;        // annotation from synthesizer
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstClassType();
-    AstClassType() : first_hinherited_member_(-1), has_destructor(false), has_constructor(false), constructor_written(false) {}
+    AstClassType();
     virtual AstNodeType GetType(void) { return(ANT_CLASS_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
+    virtual bool SupportsEqualOperator(void) { return(false); }
     void AddMemberVar(VarDeclaration *member) { 
         member_vars_.push_back(member); 
     }
@@ -340,6 +356,7 @@ public:
     bool HasInterface(AstInterfaceType *intf);
     void SetNeedsConstructor(void) { has_constructor = true; }
     void SetConstructorDone(void) { constructor_written = true; }
+    void DisableCopy(void) { can_be_copied = false; }
 };
 
 /////////////////////////
@@ -618,7 +635,9 @@ class AstSwitch : public IAstNode {
 public:
     IAstExpNode             *switch_value_;
     vector<IAstExpNode*>    case_values_;
-    vector<IAstNode*>       case_statements_;
+    vector<IAstNode*>       statements_;
+    vector<int>             statement_top_case_;
+    bool                    has_default;
     PositionInfo    pos_;
 
     // attributes
@@ -627,10 +646,18 @@ public:
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstSwitch();
-    AstSwitch() : switch_value_(NULL), c_switch_compatible(false) {}
+    AstSwitch() : switch_value_(NULL), c_switch_compatible(false), has_default(false) {}
     virtual AstNodeType GetType(void) { return(ANT_SWITCH); }
     void AddSwitchValue(IAstExpNode *exp) { switch_value_ = exp; }
-    void AddCase(IAstExpNode *exp, IAstNode *statement) { case_values_.push_back(exp); case_statements_.push_back(statement); }
+    void AddCase(IAstExpNode *exp) { case_values_.push_back(exp); }
+    void AddStatement(IAstNode *statement) { 
+        statements_.push_back(statement); 
+        statement_top_case_.push_back(case_values_.size());
+    }
+    void AddDefaultStatement(IAstNode *statement) { 
+        AddStatement(statement);
+        has_default = true;
+    }
     void SetCCompatibility(bool value) { c_switch_compatible = value; }
 };
 
@@ -819,7 +846,9 @@ public:
 // solves a type <name> <def> declaration
 class ITypedefSolver {
 public:
-    enum TypeMatchResult { OK, KO, CONST }; // CONST is returned when the types differ in constness
+    // CONST is returned when the types differ in constness
+    // NONCOPY is returned when the type is not copyable.
+    enum TypeMatchResult { OK, KO, CONST, NONCOPY }; 
 
     //virtual bool            CheckArrayIndicesInTypes(AstArrayType *array) = 0;
     virtual TypeMatchResult AreTypeTreesCompatible(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode) = 0;

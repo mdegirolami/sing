@@ -10,19 +10,24 @@ rule cc
   command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
 
 rule sc
-  command = $singcc $debug_flags $skip_usage -I ../../tests  -o $out $in
+  deps = gcc
+  depfile = $out.d
+  command = $singcc $debug_flags $skip_usage -I ../../tests -MF -o $out $in
 
 rule ln
   command = g++ -o $out $in $singlib
 
-build $src/main.h            : sc $sing_src/main.sing
-build $src/sinth_test.h      : sc $sing_src/sinth_test.sing  
-build $src/synth_pkgs_test.h : sc $sing_src/synth_pkgs_test.sing  
-build $src/synth_test_pkg.h  : sc $sing_src/synth_test_pkg.sing  
-build $src/synth_test_pkg2.h : sc $sing_src/synth_test_pkg2.sing  
-build $src/types_and_vars.h  : sc $sing_src/types_and_vars.sing  
-build $src/siege.h           : sc $sing_src/siege.sing
-#  skip_usage =
+build $src/main.h             | $src/main.cpp            : sc $sing_src/main.sing
+build $src/sinth_test.h       | $src/sinth_test.cpp      : sc $sing_src/sinth_test.sing  
+build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pkgs_test.sing  
+build $src/synth_test_pkg.h   | $src/synth_test_pkg.cpp  : sc $sing_src/synth_test_pkg.sing  
+build $src/synth_test_pkg2.h  | $src/synth_test_pkg2.cpp : sc $sing_src/synth_test_pkg2.sing  
+build $src/types_and_vars.h   | $src/types_and_vars.cpp  : sc $sing_src/types_and_vars.sing  
+build $src/siege.h            | $src/siege.cpp           : sc $sing_src/siege.sing
+  skip_usage =
+
+build $src/synth_test_oop.h | $src/synth_test_oop.cpp : sc $sing_src/synth_test_oop.sing
+  skip_usage =
 
 build main.o             : cc $src/main.cpp
 build siege.o            : cc $src/siege.cpp
@@ -30,7 +35,8 @@ build sinth_test.o       : cc $src/sinth_test.cpp
 build synth_pkgs_test.o  : cc $src/synth_pkgs_test.cpp  
 build synth_test_pkg.o   : cc $src/synth_test_pkg.cpp  
 build types_and_vars.o   : cc $src/types_and_vars.cpp  
+build synth_test_oop.o   : cc $src/synth_test_oop.cpp  
 
-build $bin_target: ln main.o siege.o sinth_test.o synth_pkgs_test.o synth_test_pkg.o types_and_vars.o
+build $bin_target: ln main.o siege.o sinth_test.o synth_pkgs_test.o synth_test_pkg.o types_and_vars.o synth_test_oop.o
 
 default $bin_target

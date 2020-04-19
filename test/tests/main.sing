@@ -1,5 +1,7 @@
+requires "synth_test_oop";
 
 public fn main() i32
 {
+    synth_test_oop.test_oop();
     return(0);
 }

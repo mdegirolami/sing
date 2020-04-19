@@ -66,7 +66,7 @@ public:
     void InitWithInt32(int value);
     bool InitWithLiteral(Token literal_type, const char *value, const char *img_value, bool isint, bool realneg, bool imgneg, string *error);
     bool UpdateWithBinopOperation(ExpressionAttributes *attr_right, Token operation, string *error); // returns false if fails
-    bool UpdateWithRelationalOperation(ExpressionAttributes *attr_right, Token operation, string *error); // returns false if fails
+    bool UpdateWithRelationalOperation(ITypedefSolver *solver, ExpressionAttributes *attr_right, Token operation, string *error); // returns false if fails
     bool UpdateWithBoolOperation(ExpressionAttributes *attr_right, string *error); // returns false if fails
     bool UpdateWithUnaryOperation(Token operation, ITypedefSolver *solver, string *error); // returns false if fails
     bool UpdateWithFunCall(vector<ExpressionAttributes> *attr_args, vector<AstArgument*> *arg_descs, 
@@ -88,6 +88,7 @@ public:
     bool IsString(void) const { return(exp_type_ == BT_STRING); }
     bool IsInteger(void) const { return((exp_type_ & BT_ALL_INTEGERS) != 0); }
     bool IsUnsignedInteger(void) const { return((exp_type_ & BT_ALL_UINTS) != 0); }
+    bool IsNumber(void) const { return((exp_type_ & BT_ALL_THE_NUMBERS) != 0); }
     bool HasIntegerType(void) const;
     bool HasComplexType(void) const;
     bool CanIncrement(void)  const { return((exp_type_ & BT_ALL_INTEGERS) != 0 && is_a_variable_ && is_writable_); }

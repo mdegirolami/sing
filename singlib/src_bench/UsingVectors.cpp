@@ -77,9 +77,9 @@ void test_vectors(int size)
 
     // using slices
     v2 = *vdynalloc;
-    //sing::slice<int>(vst_plain, 2, 4) = sing::slice<int>(*vdynalloc, 0, 2);
+    sing::slice<int>(vst_plain, 2, 4) = sing::slice<int>(*vdynalloc, 0, 2);
     v2 = *vdynalloc;
-    //sing::slice<int>(vst_plain, 1, 10) = *vdynalloc;
+    sing::slice<int>(vst_plain, 1, 10) = *vdynalloc;
     v2 = *vdynalloc;
 
     // references
@@ -101,7 +101,12 @@ void test_vectors(int size)
     vreceiver(vv, *vdynalloc);
     vreceiver(v2, vv);
     vreceiver(rtv, v3);
-    //vreceiver(sing::slice<int>(vst_plain, 2, 3), sing::slice<int>(*vdynalloc, 0, 2));
+    sing::slice<int> vreceiver_v2__arg = sing::slice<int>(*vdynalloc, 0, 2);
+    vreceiver(sing::slice<int>(vst_plain, 2, 3), vreceiver_v2__arg);
+
+    bool isequal = vv_local == rtv;
+    vv_local = rtv;
+    isequal = vv_local == rtv;
 
     const int pippo = 10;
     sing::svect<sing::string, 5>  xxxxx;

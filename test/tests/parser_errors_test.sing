@@ -78,8 +78,8 @@ fn xxx () void {
 		myclass.member = 10;
 		a = pippo + 10 * (mm[1,1] + package1.extvar) / myclass.member;
 		*returning_pointer(a : singlepar) = sizeof(f32) + dimof(mm[0]) + (size_t)pippo + -a;
-		var test = pippo^3 * 2 + pippo^2 * 5 > 3 && pippo < 0 || pippo > 100;
-		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5^2;
+		var test = pippo**3 * 2 + pippo**2 * 5 > 3 && pippo < 0 || pippo > 100;
+		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5**2;
 	}
 	return(true);
 }
@@ -140,27 +140,27 @@ fn ff. () void
 fn test10() void
 {
     typeswitch(v = base) {
-        0 : ++v;            // values instead of types
-        1 : --v;
-        else : return;
+        case 0 : ++v;            // values instead of types
+        case 1 : --v;
+        default : return;
     }
     switch {}   // missing opening
     switch (;   // missing value
     switch (v;  // missing closing brace
     switch (v); // missing cases
     switch (v) {
-        else :      // missing statement!
-        0 : ++xxx;
+        default :      // missing statement!
+        case 0 : ++xxx;
     }
     switch (v) {
-        0;          // missing ':'
+        case 0;          // missing ':'
     }
     switch (v) {
-        else : a = b; // not at the end !
-        0 : ++xxx;
+        default : a = b; // not at the end !
+        case 0 : ++xxx;
     }
     switch (v) {
-        else ; // missing ':'
+        default ; // missing ':'
     }
     
     typeswitch {}   // missing swtch value
@@ -170,18 +170,18 @@ fn test10() void
     typeswitch (v = base; // missing closing brace
     typeswitch (v = base); // missing cases
     typeswitch (v = base) {
-        else :      // missing statement !
-        0 : ++xxx;  // missing ':'
+        default :      // missing statement !
+        case 0 : ++xxx;  // missing ':'
     }
     typeswitch (v = base) {
-        pippo;          // missing ':'
+        case pippo;          // missing ':'
     }
     typeswitch (v = base) {
-        else;          // missing ':'
+        default;          // missing ':'
     }
     typeswitch (v = base) {
-        else: ++xxx;          // not at the end
-        pippo: 
+        default: ++xxx;          // not at the end
+        case pippo: 
     }
 }
 
@@ -210,11 +210,15 @@ private                     // ':' ?
     var member1 [10]i64 = {3, 4, 5, 0};
     fn fun3(in aa c128) void;
     fn fun4 by core;      //can't delegate private 
-    interface test_if;    // private interface ?
 public:
     fn fun4 by ;        // missing implementor
-    interface if2 by ;  // missing implementor
     catarpippolo;       // not a declaration
+}
+
+interface xyz : if2 by {	// by unsupported
+}
+
+class xyzw : if2 by {		// missing item after by
 }
 
 /////////////////////////
@@ -247,9 +251,9 @@ fn test10() void
     shouldnt' resync on // switch ';'
     
     switch (a + 3*bb) {
-        0 : ++counter;
-        1                   // if emits an error here did resync on inner ;
-        else : return;
+        case 0 : ++counter;
+        case 1                   // if emits an error here did resync on inner ;
+        default : return;
     }        
 }
     

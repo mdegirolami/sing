@@ -65,6 +65,15 @@ public:
         SetCount(list.size());
     }
 
+    bool operator==(const vect<T> &right)
+    {
+        if (right._count != _count) return(false);
+        for (int ii = 0; ii < _count; ++ii) {
+            if (_first[ii] != right._first[ii]) return(false);
+        }
+        return(true);
+    }
+
     int32_t size32(void) const
     {
         return((int32_t)_count);

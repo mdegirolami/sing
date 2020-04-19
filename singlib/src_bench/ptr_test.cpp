@@ -111,12 +111,14 @@ void ptrtest(void)
 class Base0 {
 public:
     virtual ~Base0() {}
+    virtual void *get__id() = 0;
     virtual void setone(void) = 0;
 };
 
 class Base1 {
 public:
     virtual ~Base1() {}
+    virtual void *get__id() = 0;
     virtual void settwo(void) = 0;
     virtual int get(void) const = 0;
 };
@@ -128,7 +130,11 @@ public:
     virtual void settwo(void) { val = 2; };
     virtual int get(void) const { return(val); }
     int val;
+    virtual void *get__id() { return(&id__); }
+    static char id__;
 };
+
+char Derived::id__;
 
 void AllPtrOperations(void)
 {
@@ -449,6 +455,23 @@ void AllPtrOperations(void)
 
     p10 = nullptr;
     p11 = nullptr;
+
+    // Here for convenience: typeswitch operations
+    Base1 &inparm = *p00;
+    Base1 *outparm = p00;
+
+    if (inparm.get__id() == &Derived::id__) {
+        Derived *localname = (Derived *)&inparm;
+        localname->setone();
+    }
+    if ((*outparm).get__id() == &Derived::id__) {
+        Derived *localname = (Derived *)&*outparm;
+        localname->setone();
+    }
+    if ((*p04).get__id() == &Derived::id__) {
+        sing::ptr<Derived> localname = (sing::wrapper<Derived>*)p04.get_wrapper();
+        (*localname).setone();
+    }
 
     // assign to null
     // note: the object originally pointed by p10 is deleted by a virtual base destructor !!

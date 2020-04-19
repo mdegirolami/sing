@@ -64,10 +64,11 @@
 56	bind
 57	sizeof
 58	dimof
-59	xor
-60	as
+96	*
+96	*
+2	as
 61	typeswitch
-2	case
+60	case
 63	default
 64	public
 65	private
@@ -77,7 +78,7 @@
 2	finalize
 70	interface
 71	static
-72	implements
+2	implements
 2	bypass
 74	template
 75	argument
@@ -104,7 +105,7 @@
 95	-
 96	*
 97	/
-98	^
+59	^
 99	%
 100	>>
 101	<<
@@ -247,5 +248,6 @@ ERROR !! A symbol must have at least a character different from '_' at 42, 1
 
 73	by
 62	switch
+72	flagset
 
 ERROR !! Unexpected end of file at 45, 1

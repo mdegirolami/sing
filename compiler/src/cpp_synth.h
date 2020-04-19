@@ -22,8 +22,11 @@ class CppSynth {
 
     // options
     bool    newline_before_function_bracket_;
+    string  member_prefix_;
+    string  member_suffix_;
+    bool    use_final_;
+    bool    use_override_;
 
-    enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_REF };
     enum TypeSynthMode { TSS_STD, TSS_VARDECL, TSS_FUNC_DECL }; // 
 
     void SynthVar(VarDeclaration *declaration);
@@ -36,8 +39,8 @@ class CppSynth {
     void SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, bool prototype);           // init dst with the func name
     void SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec, bool root_of_fun_parm);
     void SynthClassDeclaration(const char *name, AstClassType *type_spec);
-    void SynthClassHeader(const char *name, vector<AstNamedType*> *bases);
-    void SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, vector<string> *implementors, 
+    void SynthClassHeader(const char *name, vector<AstNamedType*> *bases, bool is_interface);
+    int  SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, vector<string> *implementors,
                                     int first_hinerited, bool public_members, bool is_interface);
     void SynthClassMemberVariables(vector<VarDeclaration*> *d_vector, bool public_members);
     void SynthInterfaceDeclaration(const char *name, AstInterfaceType *type_spec);
@@ -81,6 +84,7 @@ class CppSynth {
     int SynthPowerOperator(string *dst, AstBinop *node);
     int SynthMathOperator(string *dst, AstBinop *node);
     int SynthRelationalOperator(string *dst, AstBinop *node);
+    int SynthRelationalOperator3(string *dst, Token subtype, IAstExpNode *operand_left, IAstExpNode *operand_right);
     int SynthLogicalOperator(string *dst, AstBinop *node);
     int SynthCastToScalar(string *dst, AstUnop *node, int priority);
     int SynthCastToComplex(string *dst, AstUnop *node, int priority);
@@ -105,8 +109,6 @@ class CppSynth {
     int  GetBinopCppPriority(Token token);
     int  GetUnopCppPriority(Token token);
     bool VarNeedsDereference(VarDeclaration *var);
-    ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_parm);
-    //IAstTypeNode *GetElementType(IAstTypeNode *type_spec);
     void PrependWithSeparator(string *dst, const char *src);
     int AddCast(string *dst, int priority, const char *cast_type);
     void CutDecimalPortionAndSuffix(string *dst);
@@ -126,9 +128,11 @@ class CppSynth {
     void AddSplitMarker(string *dst);
     void SetFormatterRemarks(IAstNode *node);
     AstClassType *GetLocalClassTypeDeclaration(const char *classname);
+    void AppendMemberName(string *dst, IAstDeclarationNode *src);
 public:
-    void Init() { newline_before_function_bracket_ = true; }
+    void Init() { newline_before_function_bracket_ = true; member_suffix_ = "_"; use_final_ = true; use_override_ = true; }
     void Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, int pkg_index, bool *empty_cpp);
+    void SynthDFile(FILE *dfd, Package *package, const char *target_name);
 };
 
 }

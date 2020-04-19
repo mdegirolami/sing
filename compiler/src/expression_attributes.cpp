@@ -351,7 +351,7 @@ bool ExpressionAttributes::UpdateValueWithBinopOperation(ExpressionAttributes *a
         exp_type_ = BT_ERROR;
         break;
     case NumericValue::OE_INTEGER_POWER_WRONG:
-        *error = "On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)";
+        *error = "On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)";
         exp_type_ = BT_ERROR;
         break;
     case NumericValue::OE_OVERFLOW:
@@ -492,7 +492,7 @@ void ExpressionAttributes::GetBaseTypePrecision(ExpBaseTypes the_type, int32_t *
     }
 }
 
-bool ExpressionAttributes::UpdateWithRelationalOperation(ExpressionAttributes *attr_right, Token operation, string *error)
+bool ExpressionAttributes::UpdateWithRelationalOperation(ITypedefSolver *solver, ExpressionAttributes *attr_right, Token operation, string *error)
 {
     bool is_equality_comparison = (operation == TOKEN_EQUAL || operation == TOKEN_DIFFERENT);
 
@@ -532,7 +532,16 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ExpressionAttributes *a
         exp_type_ = BT_BOOL;
         return(true);
     }
-    *error = "You can only compare two numbers, enums, strings or bools (the latter for equality only)";
+    if (is_equality_comparison && type_tree_ != nullptr && type_tree_->SupportsEqualOperator() && 
+        solver->AreTypeTreesCompatible(type_tree_, attr_right->type_tree_, FOR_EQUALITY) == ITypedefSolver::OK) {
+        exp_type_ = BT_BOOL;
+        return(true);
+    }
+    if (is_equality_comparison) {
+        *error = "Values are not numbers nor of same type or the type doesn't support the == operator";
+    } else {
+        *error = "You can only compare two scalar numbers, enums, strings";
+    }
     exp_type_ = BT_ERROR;
     return(false);
 }
@@ -685,7 +694,7 @@ bool ExpressionAttributes::UpdateValueWithUnaryOperation(Token operation, ITyped
     switch (operation) {
     case TOKEN_MINUS:
         if (value_.PerformTypedUnop(TOKEN_MINUS, ExpBase2TokenTypes(exp_type_)) == NumericValue::OE_INTEGER_OVERFLOW) {
-            *error = "Result of sign inversion overflows (sing integer literals range -2^63 to 2^64-1). consider using a float literal";
+            *error = "Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal";
             exp_type_ = BT_ERROR;
         }
         break;
@@ -781,15 +790,22 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         }
 
         // check types compatibility
+        ITypedefSolver::TypeMatchResult typematch = ITypedefSolver::OK;
         argdecl_attr.InitWithTree(argdecl->type_spec_, true, true, solver);
         if (argdecl->HasOneOfFlags(VF_READONLY)) {
             // NOTE: is read only inside the function, but must be written by the caller !!!
-            if (!argdecl_attr.CanAssign(argvalue_attr, solver, error)) {
-                return(false);
+            if (GetParameterPassingMethod(argdecl->type_spec_, true) == PPM_VALUE) {
+                if (!argdecl_attr.CanAssign(argvalue_attr, solver, error)) {  
+
+                    // note: error message provided by CanAssign                 
+                    return(false);
+                }
+            } else {
+                typematch = solver->AreTypeTreesCompatible(argdecl->type_spec_, argvalue_attr->type_tree_, FOR_REFERENCING);
             }
         } else { 
 
-            // out or io
+            // out or io : is actual parameter writable ?
             if (!argvalue_attr->is_a_variable_ || !argvalue_attr->is_writable_) {
                 sprintf(errorbuf, "Argument %d is an output argument and needs to be a writable variable", ii + 1);
                 *error = errorbuf;
@@ -797,7 +813,6 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             }
 
             // type check !!
-            ITypedefSolver::TypeMatchResult typematch = ITypedefSolver::KO;
             if (argvalue_attr->exp_type_ == argdecl_attr.exp_type_) {
                 if (argvalue_attr->exp_type_ == BT_TREE) {
                     typematch = solver->AreTypeTreesCompatible(argdecl->type_spec_, argvalue_attr->type_tree_, FOR_REFERENCING);
@@ -805,15 +820,15 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
                     typematch = ITypedefSolver::OK;
                 }
             }
-            if (typematch == ITypedefSolver::KO) {
-                sprintf(errorbuf, "Argument %d type mismatch", ii + 1);
-                *error = errorbuf;
-                return(false);
-            } else if (typematch == ITypedefSolver::CONST) {
-                sprintf(errorbuf, "Argument %d pointer constness mismatch", ii + 1);
-                *error = errorbuf;
-                return(false);
-            }
+        }
+        if (typematch == ITypedefSolver::KO) {
+            sprintf(errorbuf, "Argument %d type mismatch", ii + 1);
+            *error = errorbuf;
+            return(false);
+        } else if (typematch == ITypedefSolver::CONST) {
+            sprintf(errorbuf, "Argument %d pointer constness mismatch", ii + 1);
+            *error = errorbuf;
+            return(false);
         }
     }
     if (ii != (int)arg_descs->size() && !typedesc->varargs_) {
@@ -1049,7 +1064,7 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
                     can_assign = true;
                 } else {
                     AstPointerType *ptr_desc = (AstPointerType*)dst_tree;
-                    switch (solver->AreTypeTreesCompatible(src->type_tree_, ptr_desc->pointed_type_, FOR_EQUALITY)) {
+                    switch (solver->AreTypeTreesCompatible(ptr_desc->pointed_type_, src->type_tree_, FOR_REFERENCING)) {
                     case ITypedefSolver::OK:
                         can_assign = true;
                         break;
@@ -1060,6 +1075,10 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
                         can_assign = false;
                         *error = "Pointer constness mismatch";
                         break;
+                    }
+                    if (can_assign && !src->is_writable_ && !ptr_desc->isconst_) {
+                        can_assign = false;
+                        *error = "Need a const pointer here";
                     }
                 }
             } else {
@@ -1076,6 +1095,10 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
             case ITypedefSolver::CONST:
                 can_assign = false;
                 *error = "Pointer constness mismatch";
+                break;
+            case ITypedefSolver::NONCOPY:
+                can_assign = false;
+                *error = "Classes with finalize or with a non-copyable member are not copyable";
                 break;
             }
         } else {

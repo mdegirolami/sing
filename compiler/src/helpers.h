@@ -28,8 +28,8 @@ public:
     int NumErrors(void) { return((int)rows_.size()); }
     void Reset(void);
     void Append(const ErrorList *source);
-    void SortByRow(void);
-    int CompRows(int a, int b) { return(rows_[a] - rows_[b]); }
+    void Sort(void);
+    int CompareForSort(int a, int b);
 
 private:
     NamesList   errors_strings_;

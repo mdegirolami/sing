@@ -198,8 +198,8 @@ static void expressions()
     s0 = sing::format("scsscc", s0.c_str(), (uint32_t)'f', "alse", s1.c_str(), v_int32, v_uint8);
 
     // power + cases which require conversion
-    v_int32 = sing::pow2((int32_t)v_int8);                  // ^2 integer promotion
-    v_int32 = sing::pow(v_int32, v_int8);                   // ^, <<, >> on ints, don't require the operands to be of the same type 
+    v_int32 = sing::pow2((int32_t)v_int8);                  // **2 integer promotion
+    v_int32 = sing::pow(v_int32, v_int8);                   // **, <<, >> on ints, don't require the operands to be of the same type 
     f0 = std::pow(f0, f0);              // same types: no conversion needed
     c0 = std::pow(c0, f0);              // floats is like complex without a component !
     c0 = std::pow(f0, c0);
@@ -209,10 +209,10 @@ static void expressions()
     f0 = std::pow(3.0f, f0);
     v_int32 = sing::pow((int32_t)v_int8, v_uint32);         // integer promotion
 
-    // power update
-    v_int32 = sing::pow2(v_int32);
-    v_int32 = sing::pow(v_int32, 3);
-    f0 = sing::pow2(f0);
+    // xor update
+    v_int32 ^= 2;
+    v_int32 ^= 3;
+    //f0 ^= 2.0;
 
     // math operators
     f0 = f0 + (float)(34 >> 1);         // >> needs brackets and conversion

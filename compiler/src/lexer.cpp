@@ -71,8 +71,8 @@ TokenDesc keywords[] = {
     
     {TOKEN_SIZEOF, "sizeof"},
     {TOKEN_DIMOF, "dimof"},
-    {TOKEN_XOR, "xor"},
-    {TOKEN_AS, "as"},
+    {TOKEN_XOR, "^"},
+    {TOKEN_CASE, "case"},
     {TOKEN_TYPESWITCH, "typeswitch"},
     {TOKEN_SWITCH, "switch"},
     {TOKEN_DEFAULT, "default"},
@@ -85,7 +85,7 @@ TokenDesc keywords[] = {
     { TOKEN_THIS, "this"},
     {TOKEN_INTERFACE, "interface"},
     {TOKEN_STATIC, "static"},
-    {TOKEN_IMPLEMENTS, "implements"},
+    {TOKEN_FLAGSET, "flagset"},
     {TOKEN_BY, "by"},
     {TOKEN_TEMPLATE, "template"},
     {TOKEN_ARGUMENT, "argument"},
@@ -113,7 +113,7 @@ TokenDesc keywords[] = {
     {TOKEN_MINUS, "-"},
     {TOKEN_MPY, "*"},
     {TOKEN_DIVIDE, "/"},
-    {TOKEN_POWER, "^"},
+    //{TOKEN_POWER, "**"},  // would make a mess when a pointer is dereferenced twice
     {TOKEN_MOD, "%"},
     {TOKEN_SHR, ">>"},
     {TOKEN_SHL, "<<"},
@@ -134,12 +134,30 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_MINUS, "-=" },
     {TOKEN_UPD_MPY, "*=" },
     {TOKEN_UPD_DIVIDE, "/=" },
-    {TOKEN_UPD_POWER, "^=" },
+    {TOKEN_UPD_XOR, "^=" },
     {TOKEN_UPD_MOD, "%=" },
     {TOKEN_UPD_SHR, ">>=" },
     {TOKEN_UPD_SHL, "<<=" },
     {TOKEN_UPD_AND, "&=" },
     {TOKEN_UPD_OR, "|=" },
+};
+
+static const char *error_desc[] = {
+    "Truncated numeric literal",
+    "Unknown/wrong escape sequence",
+    "Expecting '\''",
+    "Truncated string",
+    "Expecting an hexadecimal digit",
+    "Literal value too big to fit in its type",
+    "Illegal name: only alpha ,digits and \'_\' are allowed.",
+    "Unexpected char",
+    "Unexpected end of file",
+    "Numeric literals must be terminated by blank or punctuation (except \'.\')",
+    "Too many digits in number",
+    "Expected a digit",
+    "Symbols with multiple neighboring _ characters are reserved",
+    "A symbol must have at least a character different from '_'",
+    "In numerics, underscores are allowed only between decimal/exadecimal digits"
 };
 
 int         Lexer::ash_table[TABLE_SIZE];
@@ -298,6 +316,11 @@ int Lexer::GetNewLine(void)
             }
             ++m_curline;
 
+            // if (m_curline == 328) {
+            //     --m_curline;
+            //     ++m_curline;
+            // }
+
             if (m_tmp_line_buffer.length() == 0) {
                 empty_lines = true;
             }
@@ -325,11 +348,14 @@ bool Lexer::IsEmptyLine(vector<int32_t> *line)
     return(true);
 }
 
-Token Lexer::Advance(void)
+bool Lexer::Advance(Token *token)
 {
     int32_t ch, len;
 
-    if (m_status == LS_EOF) return(m_curr_token);
+    if (m_status == LS_EOF) {
+        *token = TOKEN_EOF;
+        return(true);
+    }
     m_curr_token = TOKENS_COUNT;
     m_curr_token_string = "";
     m_curr_token_verbatim = "";
@@ -339,12 +365,14 @@ Token Lexer::Advance(void)
             if (retvalue == EOF) {
                 m_curr_token = TOKEN_EOF;
                 m_status = LS_EOF;
-                return(m_curr_token);
+                *token = m_curr_token;
+                return(true);
             } else if (retvalue == TOKEN_EMPTY_LINES) {
                 m_curr_token = TOKEN_EMPTY_LINES;
                 m_curr_token_row = m_curr_token_last_row = m_curline - 1;
                 m_curr_token_col = m_curr_token_last_col = 0;
-                return(m_curr_token);
+                *token = m_curr_token;
+                return(true);
             }
         }
 
@@ -355,21 +383,22 @@ Token Lexer::Advance(void)
         ch = m_line_buffer[m_curcol++];
         if (ch == '\'') {                         // char constant unallowed. We just use one-char strings
             m_curr_token = TOKEN_LITERAL_UINT;
-            ReadCharacterLiteral();
+            if (!ReadCharacterLiteral()) return(false);
         } else if (ch == '\"') {
             m_curr_token = TOKEN_LITERAL_STRING;
-            ReadStringLiteral();
+            if (!ReadStringLiteral()) return(false);
         } else if (ch >= '0' && ch <= '9') {
             --m_curcol;
-            ReadNumberLiteral();
+            if (!ReadNumberLiteral()) return(false);
         } else if (isalpha(ch) || ch == '_') {
             --m_curcol;
-            ReadName();
+            if (!ReadName()) return(false);
         } else if (ispunct(ch)) {
             --m_curcol;
-            ReadSymbol();
+            if (!ReadSymbol()) return(false);
         } else if (!iswspace(ch)) {
             Error(UNEXPECTED_CHAR, m_curcol-1);
+            return(false);
         }
     }
     if (m_curr_token != TOKEN_COMMENT) {
@@ -380,7 +409,26 @@ Token Lexer::Advance(void)
     }
     m_curr_token_last_row = m_curline;
     m_curr_token_last_col = m_curcol;
-    return(m_curr_token);
+    *token = m_curr_token;
+    return(true);
+}
+
+void Lexer::ConvertToPower(Token *token)
+{
+    if (m_curr_token == TOKEN_MPY && m_curcol < (int)m_line_buffer.size() && m_line_buffer[m_curcol] == '*') {
+        *token = m_curr_token = TOKEN_POWER;
+        m_curr_token_string += '*';
+        m_curr_token_verbatim += '*';
+        m_curr_token_last_col++;
+        m_curcol++;
+    }
+}
+
+void Lexer::GetError(string *error_str, int32_t *row, int32_t *col)
+{
+    *error_str = error_desc[m_error];
+    *col = m_error_column;
+    *row = m_error_row;
 }
 
 void Lexer::ClearError(void)
@@ -390,79 +438,114 @@ void Lexer::ClearError(void)
     }
 }
 
-void Lexer::ReadCharacterLiteral(void)
+bool Lexer::ReadCharacterLiteral(void)
 {
     int32_t ch;
 
-    if (ResidualCharacters() < 1) Error(LE_TRUNCATED_CONSTANT, m_curcol-1);
+    if (ResidualCharacters() < 1) {
+        Error(LE_TRUNCATED_CONSTANT, m_curcol-1);
+        return(false);
+    }
     ch = m_line_buffer[m_curcol++];
     if (ch == '\\') {
-        ch = ReadEscapeSequence();
+        if (!ReadEscapeSequence(&ch)) {
+            return(false);
+        }
     }
     m_curr_token_string = "";
     m_curr_token_string.utf8_encode(&ch, 1);
-    if (m_line_buffer.size() == m_curcol) Error(LE_TRUNCATED_CONSTANT, m_curcol - 1);
-    if (m_line_buffer[m_curcol] != '\'') Error(LE_APEX_EXPECTED, m_curcol);
+    if (m_line_buffer.size() == m_curcol) {
+        Error(LE_TRUNCATED_CONSTANT, m_curcol - 1);
+        return(false);
+    }
+    if (m_line_buffer[m_curcol] != '\'') {
+        Error(LE_APEX_EXPECTED, m_curcol);
+        return(false);
+    }
     m_curcol++;
+    return(true);
 }
 
-void Lexer::ReadStringLiteral(void)
+bool Lexer::ReadStringLiteral(void)
 {
     int32_t ch;
     m_curr_token_string = "";
     while (true) {
-        if (m_line_buffer.size() == m_curcol) Error(LE_TRUNCATED_STRING, m_curcol - 1);
+        if (m_line_buffer.size() == m_curcol) {
+            Error(LE_TRUNCATED_STRING, m_curcol - 1);
+            return(false);
+        }
         ch = m_line_buffer[m_curcol++];
         if (ch == '\"') {
-            return;
+            return(true);
         } else if (ch == '\\') {
-            ch = ReadEscapeSequence();
+            if (!ReadEscapeSequence(&ch)) {
+                return(false);
+            }
         }
         m_curr_token_string.utf8_encode(&ch, 1);
     }
+    return(true);
 }
 
-int32_t Lexer::ReadEscapeSequence(void)
+bool Lexer::ReadEscapeSequence(int32_t *value)
 {
     int ch;
 
-    if (m_line_buffer.size() == m_curcol) Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol-1);
+    if (m_line_buffer.size() == m_curcol) {
+        Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol-1);
+        return(false);
+    }
     ch = m_line_buffer[m_curcol++];
     switch (ch) {
     case '\'':
     case '\"':
     case '\\':
-        return(ch);
+        *value = ch;
+        return(true);
     case '?':
-        return('?');
+        *value = '?';
+        return(true);
     case 'a':
-        return('\a');
+        *value = '\a';
+        return(true);
     case 'b':
-        return('\b');
+        *value = '\b';
+        return(true);
     case 'f':
-        return('\f');
+        *value = '\f';
+        return(true);
     case 'n':
-        return('\n');
+        *value = '\n';
+        return(true);
     case 'r':
-        return('\r');
+        *value = '\r';
+        return(true);
     case 't':
-        return('\t');
+        *value = '\t';
+        return(true);
     case 'v':
-        return('\v');
+        *value = '\v';
+        return(true);
     case 'x':
     case 'u':
-        if (m_line_buffer.size() - m_curcol < 1)  Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol - 1);
-        ch = HexToChar(&m_line_buffer[m_curcol], MIN(6, ResidualCharacters()));
-        return(ch);
+        if (m_line_buffer.size() - m_curcol < 1)  {
+            Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol - 1);
+            return(false);
+        }
+        if (!HexToChar(value, &m_line_buffer[m_curcol], MIN(6, ResidualCharacters()))) {
+            return(false);
+        }
+        return(true);
     default:
         break;
     }
     --m_curcol; 
     Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol);
-    return(0);  // unreachable
+    return(false);
 }
 
-int32_t Lexer::HexToChar(int32_t *cps, int maxlength)
+bool Lexer::HexToChar(int32_t *retv, int32_t *cps, int maxlength)
 {
     int digit, value;
     int retval = 0;
@@ -477,21 +560,26 @@ int32_t Lexer::HexToChar(int32_t *cps, int maxlength)
             retval = (retval << 4) + value + (10 - 'A');
         } else if (digit == 0) {
             Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol);
+            return(false);
         } else {
             m_curcol += digit;
-            return(retval);
+            *retv = retval;
+            return(true);
         }
     }
-    return(retval);
+    *retv = retval;
+    return(true);
 }
 
-void Lexer::ReadNumberLiteral(void)
+bool Lexer::ReadNumberLiteral(void)
 {
     int32_t ch;
 
     if (ResidualCharacters() >= 2 && m_line_buffer[m_curcol] == '0' && m_line_buffer[m_curcol + 1] == 'x') {
         m_curcol += 2;
-        m_uint_real = ReadHexLiteral();
+        if (!ReadHexLiteral(&m_uint_real)) {
+            return(false);
+        }
         if (ResidualCharacters() > 0) {
             ch = m_line_buffer[m_curcol];
             if (ch == 'i' || ch == 'I') {
@@ -503,16 +591,20 @@ void Lexer::ReadNumberLiteral(void)
             ch = m_line_buffer[m_curcol];
             if (!ispunct(ch) && !isspace(ch)) {
                 Error(LE_NUM_TERMINATION, m_curcol);
+                return(false);
             }
         }
     } else {
-        ReadDecimalLiteral();
+        if (!ReadDecimalLiteral()) {
+            return(false);
+        }
     }
+    return(true);
 }
 
 enum NumberSMState {NSM_INTEGER, NSM_FRACT0, NSM_FRACT, NSM_EXP_SIGN, NSM_EXP0, NSM_EXP, NSM_TERM};
 
-void Lexer::ReadDecimalLiteral(void)
+bool Lexer::ReadDecimalLiteral(void)
 {
     NumberSMState   state = NSM_INTEGER;
     int             dst_index = 0;
@@ -529,6 +621,7 @@ void Lexer::ReadDecimalLiteral(void)
     while (m_curcol < (int)m_line_buffer.size() && !done) {
         if (dst_index == sizeof(buffer)) {
             Error(LE_NUM_TOO_MANY_DIGITS, m_curcol);
+            return(false);
         }
         ch = m_line_buffer[m_curcol++];
 
@@ -540,6 +633,7 @@ void Lexer::ReadDecimalLiteral(void)
             if (!has_prev_and_next || !isdigit(m_line_buffer[m_curcol - 2]) || !isdigit(m_line_buffer[m_curcol])) {
                 --m_curcol;
                 Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+                return(false);
             }
             continue;
         }
@@ -568,6 +662,7 @@ void Lexer::ReadDecimalLiteral(void)
             } else {
                 --m_curcol;
                 Error(LE_EXPECTED_A_DIGIT, m_curcol);
+                return(false);
             }
             break;
         case NSM_FRACT:
@@ -596,6 +691,7 @@ void Lexer::ReadDecimalLiteral(void)
             } else {
                 --m_curcol;
                 Error(LE_EXPECTED_A_DIGIT, m_curcol);
+                return(false);
             }
             break;
         case NSM_EXP0:                // stil waiting for the first digit
@@ -606,6 +702,7 @@ void Lexer::ReadDecimalLiteral(void)
             } else {
                 --m_curcol;
                 Error(LE_EXPECTED_A_DIGIT, m_curcol);
+                return(false);
             }
             break;
         case NSM_EXP:
@@ -614,6 +711,7 @@ void Lexer::ReadDecimalLiteral(void)
                 ++exponent_digits;
                 if (exponent > 500) {
                     Error(LS_CONST_VALUE_TOO_BIG, (m_curcol + m_curr_token_col) >> 1);
+                    return(false);
                 }
             } else if (ch == 'i' || ch == 'I') {
                 imaginary = true;
@@ -629,6 +727,7 @@ void Lexer::ReadDecimalLiteral(void)
                 done = true;
             } else {
                 Error(LE_NUM_TERMINATION, m_curcol);
+                return(false);
             }
             break;
         }
@@ -636,6 +735,7 @@ void Lexer::ReadDecimalLiteral(void)
 
     if (state == NSM_FRACT0 || state == NSM_EXP_SIGN || state == NSM_EXP0) {
         Error(LE_TRUNCATED_CONSTANT, m_curcol - 1);
+        return(false);
     }
 
     // no decimal point is the same as decimal point after all the digits.
@@ -654,9 +754,10 @@ void Lexer::ReadDecimalLiteral(void)
     if (decimal_point == dst_index && exponent_digits == 0 && !imaginary) {
         if (CompareIntRep(buffer, "18446744073709551616") < 0) {
             m_curr_token = TOKEN_LITERAL_UINT;
-            return;
+            return(true);
         } else {
             Error(LS_CONST_VALUE_TOO_BIG, (m_curcol + m_curr_token_col) >> 1);
+            return(false);
         }
     }
 
@@ -667,6 +768,7 @@ void Lexer::ReadDecimalLiteral(void)
     // NOTE: numbers are left-aligned, use strcmp instead of CompareIntRep
     if (exponent > 308 || exponent == 308 && strcmp(buffer, "17976931348623158") > 0) { 
         Error(LS_CONST_VALUE_TOO_BIG, (m_curcol + m_curr_token_col) >> 1);
+        return(false);
     }
     
     if (imaginary) {
@@ -674,9 +776,10 @@ void Lexer::ReadDecimalLiteral(void)
     } else {
         m_curr_token = TOKEN_LITERAL_FLOAT;
     }
+    return(true);
 }
 
-uint64_t Lexer::ReadHexLiteral(void)
+bool Lexer::ReadHexLiteral(uint64_t *retv)
 {
     int         digit, value;
     uint64_t    retval = 0;
@@ -695,6 +798,7 @@ uint64_t Lexer::ReadHexLiteral(void)
         } else if (value == '_') {
             if (underscores != 0) {
                 Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+                return(false);
             }
             underscores = 1;
             --digit;
@@ -706,6 +810,7 @@ uint64_t Lexer::ReadHexLiteral(void)
             // 0 digits number ? !!!
             if (digit == 0) {
                 Error(LE_HEX_CONST_ERROR, m_curcol);
+                return(false);
             }
 
             // brake the loop to make the final checks and return
@@ -721,16 +826,19 @@ uint64_t Lexer::ReadHexLiteral(void)
     // can't be in last position
     if (value == '_') {
         Error(LE_UNDERSCORE_UNALLOWED, m_curcol);
+        return(false);
     }
 
     if (digit == 17) {
         Error(LS_CONST_VALUE_TOO_BIG, m_curcol - 8);
+        return(false);
     }
     m_curr_token = TOKEN_LITERAL_UINT;
-    return(retval);
+    *retv = retval;
+    return(true);
 }
 
-void Lexer::ReadName(void)
+bool Lexer::ReadName(void)
 {
     int     numchars = ResidualCharacters();
     int     digit, ash;
@@ -747,6 +855,7 @@ void Lexer::ReadName(void)
             if (ch == '_') {
                 if (!allow_underscore) {
                     Error(LE_DOUBLE_UNDERSCORE, (m_curcol + m_curr_token_col) >> 1);
+                    return(false);
                 }
                 allow_underscore = false;
             } else {
@@ -765,12 +874,14 @@ void Lexer::ReadName(void)
         // underscore-only symbol.
         if (m_curr_token_string.size() == 1) {
             Error(LE_ONLY_UNDERSCORE, (m_curcol + m_curr_token_col) >> 1);
+            return(false);
         }
         m_curr_token = TOKEN_NAME;
     }
+    return(true);
 }
 
-void Lexer::ReadSymbol(void)
+bool Lexer::ReadSymbol(void)
 {
     int         numchars = ResidualCharacters();
     int         digit, tmp, shift, ash;
@@ -816,16 +927,18 @@ void Lexer::ReadSymbol(void)
     }
     if (!found) {
         Error(LS_ILLEGAL_NAME, m_curcol - 1);
+        return(false);
     }
     if (m_curr_token == TOKEN_COMMENT) {
-        ReadComment();
+        if (!ReadComment()) return(false);
     } else if (m_curr_token == TOKEN_INLINE_COMMENT) {
         m_curr_token_string.utf8_encode(&m_line_buffer[m_curcol], ResidualCharacters());
         m_curcol = m_line_buffer.size();
     }
+    return(true);
 }
 
-void Lexer::ReadComment(void)
+bool Lexer::ReadComment(void)
 {
     int     depth = 1;
     int     status = 0;
@@ -837,7 +950,7 @@ void Lexer::ReadComment(void)
             if (GetNewLine() == EOF) {
                 Error(UNEXPECTED_EOF, m_line_buffer.size() - 1);
                 m_status = LS_EOF;
-                return;
+                return(false);
             }
             status = 0;
             m_curr_token_verbatim += "\r\n";
@@ -868,6 +981,7 @@ void Lexer::ReadComment(void)
             }
         }
     }
+    return(true);
 }
 
 Token Lexer::AshLookUp(int ash, const char *name)
@@ -880,27 +994,16 @@ Token Lexer::AshLookUp(int ash, const char *name)
     return(TOKEN_NAME);
 }
 
-static const char *error_desc[] = {
-    "Truncated numeric literal",
-    "Unknown/wrong escape sequence",
-    "Expecting '\''",
-    "Truncated string",
-    "Expecting an hexadecimal digit",
-    "Literal value too big to fit in its type",
-    "Illegal name: only alpha ,digits and \'_\' are allowed.",
-    "Unexpected char",
-    "Unexpected end of file",
-    "Numeric literals must be terminated by blank or punctuation (except \'.\')",
-    "Too many digits in number",
-    "Expected a digit",
-    "Symbols with multiple neighboring _ characters are reserved",
-    "A symbol must have at least a character different from '_'",
-    "In numerics, underscores are allowed only between decimal/exadecimal digits"
-};
-
 void Lexer::Error(LexerError error, int column)
 {
-    throw(ParsingException(error, m_curline, MAX(column, 0) + 1, error_desc[error]));
+    m_error_row = m_curline;
+    m_error_column = MAX(column, 0) + 1;
+    m_error = error;
+}
+
+const char *Lexer::GetTokenString(Token token) { 
+    if (token == TOKEN_POWER) return("**");
+    return(token_to_string[token]); 
 }
 
 /*

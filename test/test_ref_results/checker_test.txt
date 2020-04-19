@@ -1,325 +1,326 @@
 
-ERROR !! file checker_test.sing: line: 3 	column: 11 	Auto variables require a single expression initer
-ERROR !! file checker_test.sing: line: 8 	column: 8 	Void only allowed as a function return type
-ERROR !! file checker_test.sing: line: 9 	column: 8 	Undefined type
-ERROR !! file checker_test.sing: line: 10 	column: 9 	Expected a type name
-ERROR !! file checker_test.sing: line: 11 	column: 13 	Void only allowed as a function return type
-ERROR !! file checker_test.sing: line: 12 	column: 13 	Void only allowed as a function return type
-ERROR !! file checker_test.sing: line: 13 	column: 21 	Undefined type
-ERROR !! file checker_test.sing: line: 14 	column: 10 	Undefined type
-ERROR !! file checker_test.sing: line: 15 	column: 15 	Void only allowed as a function return type
-ERROR !! file checker_test.sing: line: 16 	column: 28 	You can apply argument initers only to input parameters
-ERROR !! file checker_test.sing: line: 17 	column: 14 	Only a single value is allowed here(not an aggregate initializer)
-ERROR !! file checker_test.sing: line: 18 	column: 25 	Undefined type
-ERROR !! file checker_test.sing: line: 19 	column: 14 	Only a single value is allowed here (not an aggregate initializer)
-ERROR !! file checker_test.sing: line: 20 	column: 17 	You must init an aggregate with an aggregate initializer !
-ERROR !! file checker_test.sing: line: 21 	column: 14 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 22 	column: 26 	You must init a map with an aggregate initializer !
-ERROR !! file checker_test.sing: line: 23 	column: 32 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 23 	column: 26 	The initializer #2 is not of the type of the map element
-ERROR !! file checker_test.sing: line: 24 	column: 27 	You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 24 	column: 26 	The initializer #1 is not of the type of the map key
-ERROR !! file checker_test.sing: line: 25 	column: 26 	The initializer of a map must have an even number of items (alternating keys and values)
-ERROR !! file checker_test.sing: line: 30 	column: 10 	You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-ERROR !! file checker_test.sing: line: 32 	column: 19 	Too many initializers
-ERROR !! file checker_test.sing: line: 33 	column: 22 	You must init an aggregate with an aggregate initializer !
-ERROR !! file checker_test.sing: line: 34 	column: 23 	Only a single value is allowed here (not an aggregate initializer)
-ERROR !! file checker_test.sing: line: 36 	column: 23 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 37 	column: 10 	Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing: line: 41 	column: 9 	Symbol 'uno' is duplicated
-ERROR !! file checker_test.sing: line: 45 	column: 7 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 47 	column: 7 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 49 	column: 6 	Increment and Decrement operations can be applied only to writable integer variables
-ERROR !! file checker_test.sing: line: 50 	column: 12 	Expression must evaluate to a bool
-ERROR !! file checker_test.sing: line: 53 	column: 13 	Expression must evaluate to a bool
-ERROR !! file checker_test.sing: line: 56 	column: 13 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 59 	column: 13 	Symbol 'a' is duplicated
-ERROR !! file checker_test.sing: line: 61 	column: 5 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 61 	column: 5 	You can only break/continue a for or while loop.
-ERROR !! file checker_test.sing: line: 62 	column: 5 	You can only break/continue a for or while loop.
-ERROR !! file checker_test.sing: line: 62 	column: 5 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 63 	column: 5 	You can't return a value from a void function.
-ERROR !! file checker_test.sing: line: 68 	column: 5 	You must return a value from a non-void function.
-ERROR !! file checker_test.sing: line: 73 	column: 15 	Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing: line: 79 	column: 15 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 80 	column: 16 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 81 	column: 5 	Undefined symbol
-ERROR !! file checker_test.sing: line: 82 	column: 8 	Indices must be positive integers
-ERROR !! file checker_test.sing: line: 83 	column: 8 	Index value is out of bound
-ERROR !! file checker_test.sing: line: 84 	column: 8 	Indices must be positive integers
-ERROR !! file checker_test.sing: line: 85 	column: 8 	Index value is out of bound
-ERROR !! file checker_test.sing: line: 89 	column: 10 	You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)
-ERROR !! file checker_test.sing: line: 90 	column: 8 	Maps accept a single index (not ranges)
-ERROR !! file checker_test.sing: line: 93 	column: 7 	You can apply an argument list only to an object of type 'function'
-ERROR !! file checker_test.sing: line: 94 	column: 22 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 95 	column: 13 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 96 	column: 5 	Undefined symbol
-ERROR !! file checker_test.sing: line: 97 	column: 13 	Argument 2 is not specified and has no default value
-ERROR !! file checker_test.sing: line: 99 	column: 13 	Argument 1 is an output argument and needs to be a writable variable
-ERROR !! file checker_test.sing: line: 100 	column: 13 	Argument 2 is not specified and has no default value
-ERROR !! file checker_test.sing: line: 122 	column: 8 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 123 	column: 8 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 124 	column: 13 	Operands must be numbers
-ERROR !! file checker_test.sing: line: 125 	column: 15 	Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 129 	column: 11 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 130 	column: 11 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 132 	column: 12 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 134 	column: 21 	Operation causes an overflow
-ERROR !! file checker_test.sing: line: 135 	column: 27 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 136 	column: 11 	Divide by 0
-ERROR !! file checker_test.sing: line: 137 	column: 11 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 138 	column: 11 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 140 	column: 12 	Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing: line: 141 	column: 12 	Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing: line: 142 	column: 13 	Operation requires integer operands
-ERROR !! file checker_test.sing: line: 143 	column: 14 	Divide by 0
-ERROR !! file checker_test.sing: line: 155 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 156 	column: 22 	Value doesn't fit a complex64. use the fake cast notation type([real] + [img]) es: complex128(-1e50 + 5i)
-ERROR !! file checker_test.sing: line: 157 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 158 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 159 	column: 17 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 160 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 161 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 163 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 164 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 165 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 166 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 167 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 171 	column: 15 	Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-ERROR !! file checker_test.sing: line: 172 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 173 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 174 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 175 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 176 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 177 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 179 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 180 	column: 19 	Operation requires integer operands
-ERROR !! file checker_test.sing: line: 181 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 184 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 186 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 187 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 188 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 189 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 190 	column: 12 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 192 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 193 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 195 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 196 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 197 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 198 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 200 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 201 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 202 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 203 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 204 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 205 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 206 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 208 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 209 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 210 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 211 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 212 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 213 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 214 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 216 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 217 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 218 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 219 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 220 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 221 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 222 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 224 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 225 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 226 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 227 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 228 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 229 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 230 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 232 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 233 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 234 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 235 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 236 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 237 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 238 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 240 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 241 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 242 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 243 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 244 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 245 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 246 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 251 	column: 19 	Operation requires integer operands
-ERROR !! file checker_test.sing: line: 252 	column: 11 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 256 	column: 18 	Dont' know how to apply an order (i.e. use '>' '<' operators) to complex numbers
-ERROR !! file checker_test.sing: line: 263 	column: 28 	You can only compare two numbers, enums, strings or bools (the latter for equality only)
-ERROR !! file checker_test.sing: line: 264 	column: 17 	You can only compare two numbers, enums, strings or bools (the latter for equality only)
-ERROR !! file checker_test.sing: line: 266 	column: 10 	Arithmetic '&' and '|' operands must be integer numbers.
-ERROR !! file checker_test.sing: line: 267 	column: 10 	Arithmetic '&' and '|' operands must be integer numbers.
-ERROR !! file checker_test.sing: line: 268 	column: 16 	You can apply '&&' and '||' only to bools
-ERROR !! file checker_test.sing: line: 271 	column: 23 	You can apply the & unary operator only to a local variable.
-ERROR !! file checker_test.sing: line: 272 	column: 24 	You can apply the & unary operator only to a local variable.
-ERROR !! file checker_test.sing: line: 281 	column: 13 	Unary '-' only applies to numeric signed basic types
-ERROR !! file checker_test.sing: line: 282 	column: 13 	Unary '-' only applies to numeric signed basic types
-ERROR !! file checker_test.sing: line: 283 	column: 10 	Unary '-' only applies to numeric signed basic types
-ERROR !! file checker_test.sing: line: 284 	column: 12 	Unary '-' only applies to numeric signed basic types
-ERROR !! file checker_test.sing: line: 286 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 289 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 290 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 291 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 292 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 293 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 294 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 295 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 296 	column: 10 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 298 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 299 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 300 	column: 13 	The logical not (!) operator requires a boolean
-ERROR !! file checker_test.sing: line: 302 	column: 13 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 303 	column: 13 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 304 	column: 13 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 309 	column: 10 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 310 	column: 12 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 311 	column: 13 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 316 	column: 47 	Unallowed conversion.
-ERROR !! file checker_test.sing: line: 316 	column: 59 	Unallowed conversion.
-ERROR !! file checker_test.sing: line: 316 	column: 88 	Please use relational operators to convert numbers and strings to bools.
-ERROR !! file checker_test.sing: line: 319 	column: 13 	Undefined symbol
-ERROR !! file checker_test.sing: line: 323 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 328 	column: 13 	Writing to a read-only variable
-ERROR !! file checker_test.sing: line: 329 	column: 18 	Undefined type
-ERROR !! file checker_test.sing: line: 332 	column: 13 	Undefined symbol
-ERROR !! file checker_test.sing: line: 334 	column: 13 	Writing to a read-only variable
-ERROR !! file checker_test.sing: line: 335 	column: 18 	Undefined type
-ERROR !! file checker_test.sing: line: 339 	column: 14 	The index name must be either a new name or the name of a reusable index
-ERROR !! file checker_test.sing: line: 339 	column: 30 	An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
-ERROR !! file checker_test.sing: line: 341 	column: 22 	The iterator name must be a new name
-ERROR !! file checker_test.sing: line: 346 	column: 14 	The iterator name must be a new name
-ERROR !! file checker_test.sing: line: 346 	column: 10 	The index name must be either a new name or the name of a reusable index
-ERROR !! file checker_test.sing: line: 348 	column: 19 	The variable you are iterating in must be an array, map or string
-ERROR !! file checker_test.sing: line: 358 	column: 5 	For loop extrema and step must fit int64
-ERROR !! file checker_test.sing: line: 360 	column: 5 	For loop extrema and step must fit int64
-ERROR !! file checker_test.sing: line: 362 	column: 5 	For loop extrema and step must fit int64
-ERROR !! file checker_test.sing: line: 372 	column: 5 	Step can't be 0
-ERROR !! file checker_test.sing: line: 377 	column: 15 	Writing to a read-only variable
-ERROR !! file checker_test.sing: line: 386 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 390 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 392 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 393 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 395 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 398 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 400 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 401 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 402 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 403 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 404 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 405 	column: 10 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 408 	column: 10 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 410 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 411 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 412 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 416 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 417 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 418 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 419 	column: 11 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 421 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 424 	column: 11 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 426 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 427 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 428 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 429 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 430 	column: 10 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 431 	column: 10 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 434 	column: 10 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 436 	column: 10 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 441 	column: 8 	You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 444 	column: 8 	You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
-ERROR !! file checker_test.sing: line: 446 	column: 10 	You can assign a bool only with a bool (use relational operators to generate bools)
-ERROR !! file checker_test.sing: line: 455 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 463 	column: 10 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 468 	column: 10 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 471 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 474 	column: 12 	Pointer constness mismatch
-ERROR !! file checker_test.sing: line: 477 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 480 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 482 	column: 51 	Undefined type
-ERROR !! file checker_test.sing: line: 483 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 486 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 489 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 494 	column: 11 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 500 	column: 11 	Pointer constness mismatch
-ERROR !! file checker_test.sing: line: 513 	column: 2 	Function must return a value !!
-ERROR !! file checker_test.sing: line: 535 	column: 2 	Function must return a value !!
-ERROR !! file checker_test.sing: line: 549 	column: 9 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 553 	column: 9 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 557 	column: 9 	Dead code after terminating statement
-ERROR !! file checker_test.sing: line: 565 	column: 32 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 566 	column: 25 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 568 	column: 42 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 569 	column: 42 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 571 	column: 21 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 581 	column: 35 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 582 	column: 35 	Operation causes an integer overflow
-ERROR !! file checker_test.sing: line: 583 	column: 42 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 584 	column: 20 	Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-ERROR !! file checker_test.sing: line: 585 	column: 42 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 586 	column: 20 	Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-ERROR !! file checker_test.sing: line: 590 	column: 25 	Shift amount can't be negative
-ERROR !! file checker_test.sing: line: 591 	column: 19 	Shift amount can't be negative
-ERROR !! file checker_test.sing: line: 595 	column: 42 	Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing: line: 596 	column: 20 	Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-ERROR !! file checker_test.sing: line: 598 	column: 19 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 599 	column: 19 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 602 	column: 25 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 602 	column: 37 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 603 	column: 23 	Operation requires integer operands
-ERROR !! file checker_test.sing: line: 604 	column: 23 	Divide by 0
-ERROR !! file checker_test.sing: line: 611 	column: 36 	Operand types mismatch.
-ERROR !! file checker_test.sing: line: 612 	column: 21 	Operation requires integer operands
-ERROR !! file checker_test.sing: line: 615 	column: 29 	Type mismatch in assignment. Please cast explicitly
-ERROR !! file checker_test.sing: line: 616 	column: 40 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 617 	column: 23 	On an address the only allowed operator is '*'
-ERROR !! file checker_test.sing: line: 618 	column: 19 	Unary '+' only applies to numeric types
-ERROR !! file checker_test.sing: line: 619 	column: 21 	You can use unary * only on pointers and addresses
-ERROR !! file checker_test.sing: line: 620 	column: 13 	Argument 1 is an output argument and needs to be a writable variable
-ERROR !! file checker_test.sing: line: 624 	column: 13 	Argument 1 type mismatch
-ERROR !! file checker_test.sing: line: 628 	column: 12 	Argument 1 type mismatch
-ERROR !! file checker_test.sing: line: 629 	column: 12 	Too many arguments
-ERROR !! file checker_test.sing: line: 630 	column: 12 	Argument 1 is not specified and has no default value
-ERROR !! file checker_test.sing: line: 631 	column: 14 	You can apply the & unary operator only to a local variable.
-ERROR !! file checker_test.sing: line: 632 	column: 12 	Type mismatch/No known conversion
-ERROR !! file checker_test.sing: line: 643 	column: 14 	On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0^0)
-ERROR !! file checker_test.sing: line: 646 	column: 37 	Duplicated argument name
-ERROR !! file checker_test.sing: line: 655 	column: 9 	Sizeof doesn't apply to this type (it has variable size)
-ERROR !! file checker_test.sing: line: 658 	column: 9 	You can apply the dimof operator only to objects of type 'map' or 'array'
-ERROR !! file checker_test.sing: line: 666 	column: 14 	Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing: line: 667 	column: 5 	Symbol 'fvecdimf' is duplicated
-ERROR !! file checker_test.sing: line: 667 	column: 14 	Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing: line: 671 	column: 20 	Indices must be positive integers
-ERROR !! file checker_test.sing: line: 673 	column: 32 	Value too big for the type or can't be represented in full precision.
-ERROR !! file checker_test.sing: line: 674 	column: 15 	Result of sign inversion overflows (sing integer literals range -2^63 to 2^64-1). consider using a float literal
-ERROR !! file checker_test.sing: line: 675 	column: 15 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 677 	column: 15 	Overflow in float to int conversion
-ERROR !! file checker_test.sing: line: 678 	column: 41 	Value too big to be represented in an integer variable.
-ERROR !! file checker_test.sing: line: 681 	column: 19 	Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing: line: 684 	column: 25 	Divide by 0
-ERROR !! file checker_test.sing: line: 685 	column: 26 	Divide by 0
-ERROR !! file checker_test.sing: line: 687 	column: 16 	Overflow in float to int conversion
-ERROR !! file checker_test.sing: line: 688 	column: 36 	Value too big for the type or can't be represented in full precision.
-ERROR !! file checker_test.sing: line: 689 	column: 29 	Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing: line: 691 	column: 29 	Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing: line: 698 	column: 44 	Value too big to be represented in an integer variable.
-ERROR !! file checker_test.sing: line: 699 	column: 14 	The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing: line: 716 	column: 10 	A pure function can only call pure functions !!
-ERROR !! file checker_test.sing: line: 717 	column: 5 	A pure function can only access local variables !!
-ERROR !! file checker_test.sing: line: 719 	column: 5 	Increment and Decrement operations can be applied only to writable integer variables
-ERROR !! file checker_test.sing: line: 722 	column: 14 	You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-ERROR !! file checker_test.sing: line: 724 	column: 20 	You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-ERROR !! file checker_test.sing: line: 726 	column: 18 	The argument's initer must be a compile time constant !
-ERROR !! file checker_test.sing: line: 726 	column: 43 	You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
-ERROR !! file checker_test.sing: line: 736 	column: 11 	An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
-ERROR !! file checker_test.sing: line: 742 	column: 28 	A public declaration cannot refer a private symbol
-ERROR !! file checker_test.sing: line: 745 	column: 2 	Function must return a value !!
-ERROR !! file checker_test.sing: line: 747 	column: 24 	You can only return values of type: numeric, enum, string, bool, pointer
-ERROR !! file checker_test.sing: line: 749 	column: 2 	Function must return a value !!
-ERROR !! file checker_test.sing: line: 751 	column: 12 	Public global variables are forbidden !
+ERROR !! file checker_test.sing:3:11: Auto variables require a single expression initer
+ERROR !! file checker_test.sing:8:8: Void only allowed as a function return type
+ERROR !! file checker_test.sing:9:8: Undefined type
+ERROR !! file checker_test.sing:10:9: Expected a type name
+ERROR !! file checker_test.sing:11:13: Void only allowed as a function return type
+ERROR !! file checker_test.sing:12:13: Void only allowed as a function return type
+ERROR !! file checker_test.sing:13:21: Undefined type
+ERROR !! file checker_test.sing:14:10: Undefined type
+ERROR !! file checker_test.sing:15:15: Void only allowed as a function return type
+ERROR !! file checker_test.sing:16:28: You can apply argument initers only to input parameters
+ERROR !! file checker_test.sing:17:14: Only a single value is allowed here(not an aggregate initializer)
+ERROR !! file checker_test.sing:18:25: Undefined type
+ERROR !! file checker_test.sing:19:14: Only a single value is allowed here (not an aggregate initializer)
+ERROR !! file checker_test.sing:20:17: You must init an aggregate with an aggregate initializer !
+ERROR !! file checker_test.sing:21:14: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:22:26: You must init a map with an aggregate initializer !
+ERROR !! file checker_test.sing:23:26: The initializer #2 is not of the type of the map element
+ERROR !! file checker_test.sing:23:32: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:24:26: The initializer #1 is not of the type of the map key
+ERROR !! file checker_test.sing:24:27: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
+ERROR !! file checker_test.sing:25:26: The initializer of a map must have an even number of items (alternating keys and values)
+ERROR !! file checker_test.sing:30:10: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+ERROR !! file checker_test.sing:32:19: Too many initializers
+ERROR !! file checker_test.sing:33:22: You must init an aggregate with an aggregate initializer !
+ERROR !! file checker_test.sing:34:23: Only a single value is allowed here (not an aggregate initializer)
+ERROR !! file checker_test.sing:36:23: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:37:10: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:41:9: Symbol 'uno' is duplicated
+ERROR !! file checker_test.sing:45:7: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:47:7: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:49:6: Increment and Decrement operations can be applied only to writable integer variables
+ERROR !! file checker_test.sing:50:12: Expression must evaluate to a bool
+ERROR !! file checker_test.sing:53:13: Expression must evaluate to a bool
+ERROR !! file checker_test.sing:56:13: Dead code after terminating statement
+ERROR !! file checker_test.sing:59:13: Symbol 'a' is duplicated
+ERROR !! file checker_test.sing:61:5: Dead code after terminating statement
+ERROR !! file checker_test.sing:61:5: You can only break/continue a for or while loop.
+ERROR !! file checker_test.sing:62:5: Dead code after terminating statement
+ERROR !! file checker_test.sing:62:5: You can only break/continue a for or while loop.
+ERROR !! file checker_test.sing:63:5: You can't return a value from a void function.
+ERROR !! file checker_test.sing:68:5: You must return a value from a non-void function.
+ERROR !! file checker_test.sing:73:15: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:79:15: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:80:16: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:81:5: Undefined symbol
+ERROR !! file checker_test.sing:82:8: Indices must be positive integers
+ERROR !! file checker_test.sing:83:8: Index value is out of bound
+ERROR !! file checker_test.sing:84:8: Indices must be positive integers
+ERROR !! file checker_test.sing:85:8: Index value is out of bound
+ERROR !! file checker_test.sing:89:10: You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)
+ERROR !! file checker_test.sing:90:8: Maps accept a single index (not ranges)
+ERROR !! file checker_test.sing:93:7: You can apply an argument list only to an object of type 'function'
+ERROR !! file checker_test.sing:94:22: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:95:13: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:96:5: Undefined symbol
+ERROR !! file checker_test.sing:97:13: Argument 2 is not specified and has no default value
+ERROR !! file checker_test.sing:99:13: Argument 1 is an output argument and needs to be a writable variable
+ERROR !! file checker_test.sing:100:13: Argument 2 is not specified and has no default value
+ERROR !! file checker_test.sing:122:8: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:123:8: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:124:13: Operands must be numbers
+ERROR !! file checker_test.sing:125:15: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:129:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:130:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:132:12: Operation causes an integer overflow
+ERROR !! file checker_test.sing:134:21: Operation causes an overflow
+ERROR !! file checker_test.sing:135:27: Operation causes an integer overflow
+ERROR !! file checker_test.sing:136:11: Divide by 0
+ERROR !! file checker_test.sing:137:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:138:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:140:12: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:141:12: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:142:13: Operation requires integer operands
+ERROR !! file checker_test.sing:143:14: Divide by 0
+ERROR !! file checker_test.sing:155:12: Operand types mismatch.
+ERROR !! file checker_test.sing:156:22: Value doesn't fit a complex64. use the fake cast notation type([real] + [img]) es: complex128(-1e50 + 5i)
+ERROR !! file checker_test.sing:157:11: Operand types mismatch.
+ERROR !! file checker_test.sing:158:11: Operand types mismatch.
+ERROR !! file checker_test.sing:159:17: Operand types mismatch.
+ERROR !! file checker_test.sing:160:11: Operand types mismatch.
+ERROR !! file checker_test.sing:161:11: Operand types mismatch.
+ERROR !! file checker_test.sing:163:11: Operand types mismatch.
+ERROR !! file checker_test.sing:164:11: Operand types mismatch.
+ERROR !! file checker_test.sing:165:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:166:11: Operand types mismatch.
+ERROR !! file checker_test.sing:167:11: Operand types mismatch.
+ERROR !! file checker_test.sing:171:15: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+ERROR !! file checker_test.sing:172:11: Operand types mismatch.
+ERROR !! file checker_test.sing:173:11: Operand types mismatch.
+ERROR !! file checker_test.sing:174:11: Operand types mismatch.
+ERROR !! file checker_test.sing:175:11: Operand types mismatch.
+ERROR !! file checker_test.sing:176:11: Operand types mismatch.
+ERROR !! file checker_test.sing:177:11: Operand types mismatch.
+ERROR !! file checker_test.sing:179:11: Operand types mismatch.
+ERROR !! file checker_test.sing:180:19: Operation requires integer operands
+ERROR !! file checker_test.sing:181:11: Operand types mismatch.
+ERROR !! file checker_test.sing:184:12: Operand types mismatch.
+ERROR !! file checker_test.sing:186:12: Operand types mismatch.
+ERROR !! file checker_test.sing:187:12: Operand types mismatch.
+ERROR !! file checker_test.sing:188:12: Operand types mismatch.
+ERROR !! file checker_test.sing:189:12: Operand types mismatch.
+ERROR !! file checker_test.sing:190:12: Operand types mismatch.
+ERROR !! file checker_test.sing:192:11: Operand types mismatch.
+ERROR !! file checker_test.sing:193:11: Operand types mismatch.
+ERROR !! file checker_test.sing:195:11: Operand types mismatch.
+ERROR !! file checker_test.sing:196:11: Operand types mismatch.
+ERROR !! file checker_test.sing:197:11: Operand types mismatch.
+ERROR !! file checker_test.sing:198:11: Operand types mismatch.
+ERROR !! file checker_test.sing:200:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:201:11: Operand types mismatch.
+ERROR !! file checker_test.sing:202:11: Operand types mismatch.
+ERROR !! file checker_test.sing:203:11: Operand types mismatch.
+ERROR !! file checker_test.sing:204:11: Operand types mismatch.
+ERROR !! file checker_test.sing:205:11: Operand types mismatch.
+ERROR !! file checker_test.sing:206:11: Operand types mismatch.
+ERROR !! file checker_test.sing:208:11: Operand types mismatch.
+ERROR !! file checker_test.sing:209:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:210:11: Operand types mismatch.
+ERROR !! file checker_test.sing:211:11: Operand types mismatch.
+ERROR !! file checker_test.sing:212:11: Operand types mismatch.
+ERROR !! file checker_test.sing:213:11: Operand types mismatch.
+ERROR !! file checker_test.sing:214:11: Operand types mismatch.
+ERROR !! file checker_test.sing:216:11: Operand types mismatch.
+ERROR !! file checker_test.sing:217:11: Operand types mismatch.
+ERROR !! file checker_test.sing:218:11: Operand types mismatch.
+ERROR !! file checker_test.sing:219:11: Operand types mismatch.
+ERROR !! file checker_test.sing:220:11: Operand types mismatch.
+ERROR !! file checker_test.sing:221:11: Operand types mismatch.
+ERROR !! file checker_test.sing:222:11: Operand types mismatch.
+ERROR !! file checker_test.sing:224:11: Operand types mismatch.
+ERROR !! file checker_test.sing:225:11: Operand types mismatch.
+ERROR !! file checker_test.sing:226:11: Operand types mismatch.
+ERROR !! file checker_test.sing:227:11: Operand types mismatch.
+ERROR !! file checker_test.sing:228:11: Operand types mismatch.
+ERROR !! file checker_test.sing:229:11: Operand types mismatch.
+ERROR !! file checker_test.sing:230:11: Operand types mismatch.
+ERROR !! file checker_test.sing:232:11: Operand types mismatch.
+ERROR !! file checker_test.sing:233:11: Operand types mismatch.
+ERROR !! file checker_test.sing:234:11: Operand types mismatch.
+ERROR !! file checker_test.sing:235:11: Operand types mismatch.
+ERROR !! file checker_test.sing:236:11: Operand types mismatch.
+ERROR !! file checker_test.sing:237:11: Operand types mismatch.
+ERROR !! file checker_test.sing:238:11: Operand types mismatch.
+ERROR !! file checker_test.sing:240:11: Operand types mismatch.
+ERROR !! file checker_test.sing:241:11: Operand types mismatch.
+ERROR !! file checker_test.sing:242:11: Operand types mismatch.
+ERROR !! file checker_test.sing:243:11: Operand types mismatch.
+ERROR !! file checker_test.sing:244:11: Operand types mismatch.
+ERROR !! file checker_test.sing:245:11: Operand types mismatch.
+ERROR !! file checker_test.sing:246:11: Operand types mismatch.
+ERROR !! file checker_test.sing:251:19: Operation requires integer operands
+ERROR !! file checker_test.sing:252:11: Operand types mismatch.
+ERROR !! file checker_test.sing:256:18: Dont' know how to apply an order (i.e. use '>' '<' operators) to complex numbers
+ERROR !! file checker_test.sing:263:28: You can only compare two scalar numbers, enums, strings
+ERROR !! file checker_test.sing:264:17: You can only compare two scalar numbers, enums, strings
+ERROR !! file checker_test.sing:266:10: Arithmetic '&' and '|' operands must be integer numbers.
+ERROR !! file checker_test.sing:267:10: Arithmetic '&' and '|' operands must be integer numbers.
+ERROR !! file checker_test.sing:268:16: You can apply '&&' and '||' only to bools
+ERROR !! file checker_test.sing:271:23: You can apply the & unary operator only to a local variable.
+ERROR !! file checker_test.sing:272:24: You can apply the & unary operator only to a local variable.
+ERROR !! file checker_test.sing:281:13: Unary '-' only applies to numeric signed basic types
+ERROR !! file checker_test.sing:282:13: Unary '-' only applies to numeric signed basic types
+ERROR !! file checker_test.sing:283:10: Unary '-' only applies to numeric signed basic types
+ERROR !! file checker_test.sing:284:12: Unary '-' only applies to numeric signed basic types
+ERROR !! file checker_test.sing:286:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:289:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:290:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:291:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:292:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:293:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:294:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:295:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:296:10: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:298:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:299:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:300:13: The logical not (!) operator requires a boolean
+ERROR !! file checker_test.sing:302:13: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:303:13: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:304:13: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:309:10: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:310:12: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:311:13: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:316:47: Unallowed conversion.
+ERROR !! file checker_test.sing:316:59: Unallowed conversion.
+ERROR !! file checker_test.sing:316:88: Please use relational operators to convert numbers and strings to bools.
+ERROR !! file checker_test.sing:319:13: Undefined symbol
+ERROR !! file checker_test.sing:323:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:328:13: Writing to a read-only variable
+ERROR !! file checker_test.sing:329:18: Undefined type
+ERROR !! file checker_test.sing:332:13: Undefined symbol
+ERROR !! file checker_test.sing:334:13: Writing to a read-only variable
+ERROR !! file checker_test.sing:335:18: Undefined type
+ERROR !! file checker_test.sing:339:14: The index name must be either a new name or the name of a reusable index
+ERROR !! file checker_test.sing:339:30: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
+ERROR !! file checker_test.sing:341:22: The iterator name must be a new name
+ERROR !! file checker_test.sing:346:10: The index name must be either a new name or the name of a reusable index
+ERROR !! file checker_test.sing:346:14: The iterator name must be a new name
+ERROR !! file checker_test.sing:348:19: The variable you are iterating in must be an array, map or string
+ERROR !! file checker_test.sing:358:5: For loop extrema and step must fit int64
+ERROR !! file checker_test.sing:360:5: For loop extrema and step must fit int64
+ERROR !! file checker_test.sing:362:5: For loop extrema and step must fit int64
+ERROR !! file checker_test.sing:372:5: Step can't be 0
+ERROR !! file checker_test.sing:377:15: Writing to a read-only variable
+ERROR !! file checker_test.sing:386:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:390:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:392:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:393:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:395:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:398:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:400:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:401:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:402:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:403:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:404:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:405:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:408:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:410:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:411:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:412:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:416:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:417:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:418:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:419:11: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:421:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:424:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:426:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:427:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:428:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:429:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:430:10: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:431:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:434:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:436:10: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:441:8: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
+ERROR !! file checker_test.sing:444:8: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
+ERROR !! file checker_test.sing:446:10: You can assign a bool only with a bool (use relational operators to generate bools)
+ERROR !! file checker_test.sing:455:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:463:10: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:468:10: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:471:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:474:12: Pointer constness mismatch
+ERROR !! file checker_test.sing:477:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:480:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:482:51: Undefined type
+ERROR !! file checker_test.sing:483:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:486:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:489:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:494:11: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:500:11: Pointer constness mismatch
+ERROR !! file checker_test.sing:513:2: Function must return a value !!
+ERROR !! file checker_test.sing:535:2: Function must return a value !!
+ERROR !! file checker_test.sing:549:9: Dead code after terminating statement
+ERROR !! file checker_test.sing:553:9: Dead code after terminating statement
+ERROR !! file checker_test.sing:557:9: Dead code after terminating statement
+ERROR !! file checker_test.sing:565:33: Operand types mismatch.
+ERROR !! file checker_test.sing:566:25: Operand types mismatch.
+ERROR !! file checker_test.sing:568:42: Operation causes an integer overflow
+ERROR !! file checker_test.sing:569:42: Operation causes an integer overflow
+ERROR !! file checker_test.sing:571:21: Operand types mismatch.
+ERROR !! file checker_test.sing:581:35: Operation causes an integer overflow
+ERROR !! file checker_test.sing:582:35: Operation causes an integer overflow
+ERROR !! file checker_test.sing:583:42: Operand types mismatch.
+ERROR !! file checker_test.sing:584:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+ERROR !! file checker_test.sing:585:42: Operand types mismatch.
+ERROR !! file checker_test.sing:586:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+ERROR !! file checker_test.sing:590:25: Shift amount can't be negative
+ERROR !! file checker_test.sing:591:19: Shift amount can't be negative
+ERROR !! file checker_test.sing:595:42: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:596:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+ERROR !! file checker_test.sing:598:19: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:599:19: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:602:25: Operand types mismatch.
+ERROR !! file checker_test.sing:602:37: Operand types mismatch.
+ERROR !! file checker_test.sing:603:23: Operation requires integer operands
+ERROR !! file checker_test.sing:604:23: Divide by 0
+ERROR !! file checker_test.sing:611:36: Operand types mismatch.
+ERROR !! file checker_test.sing:612:21: Operation requires integer operands
+ERROR !! file checker_test.sing:615:29: Type mismatch in assignment. Please cast explicitly
+ERROR !! file checker_test.sing:616:40: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:617:23: On an address the only allowed operator is '*'
+ERROR !! file checker_test.sing:618:19: Unary '+' only applies to numeric types
+ERROR !! file checker_test.sing:619:21: You can use unary * only on pointers and addresses
+ERROR !! file checker_test.sing:620:13: Argument 1 is an output argument and needs to be a writable variable
+ERROR !! file checker_test.sing:624:13: Argument 1 type mismatch
+ERROR !! file checker_test.sing:628:12: Argument 1 type mismatch
+ERROR !! file checker_test.sing:629:12: Too many arguments
+ERROR !! file checker_test.sing:630:12: Argument 1 is not specified and has no default value
+ERROR !! file checker_test.sing:631:14: You can apply the & unary operator only to a local variable.
+ERROR !! file checker_test.sing:632:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:643:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:646:37: Duplicated argument name
+ERROR !! file checker_test.sing:655:9: Sizeof doesn't apply to this type (it has variable size)
+ERROR !! file checker_test.sing:658:9: You can apply the dimof operator only to objects of type 'map' or 'array'
+ERROR !! file checker_test.sing:666:14: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:667:5: Symbol 'fvecdimf' is duplicated
+ERROR !! file checker_test.sing:667:14: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:671:20: Indices must be positive integers
+ERROR !! file checker_test.sing:673:32: Value too big for the type or can't be represented in full precision.
+ERROR !! file checker_test.sing:674:15: Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal
+ERROR !! file checker_test.sing:675:15: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:677:15: Overflow in float to int conversion
+ERROR !! file checker_test.sing:678:41: Value too big to be represented in an integer variable.
+ERROR !! file checker_test.sing:681:19: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:684:25: Divide by 0
+ERROR !! file checker_test.sing:685:26: Divide by 0
+ERROR !! file checker_test.sing:687:16: Overflow in float to int conversion
+ERROR !! file checker_test.sing:688:36: Value too big for the type or can't be represented in full precision.
+ERROR !! file checker_test.sing:689:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:691:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:698:44: Value too big to be represented in an integer variable.
+ERROR !! file checker_test.sing:699:14: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:716:10: A pure function can only call pure functions !!
+ERROR !! file checker_test.sing:717:5: A pure function can only access local variables !!
+ERROR !! file checker_test.sing:719:5: Increment and Decrement operations can be applied only to writable integer variables
+ERROR !! file checker_test.sing:722:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+ERROR !! file checker_test.sing:724:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+ERROR !! file checker_test.sing:726:18: The argument's initer must be a compile time constant !
+ERROR !! file checker_test.sing:726:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
+ERROR !! file checker_test.sing:736:11: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
+ERROR !! file checker_test.sing:742:28: A public declaration cannot refer a private symbol
+ERROR !! file checker_test.sing:745:2: Function must return a value !!
+ERROR !! file checker_test.sing:747:24: You can only return values of type: numeric, enum, string, bool, pointer
+ERROR !! file checker_test.sing:749:2: Function must return a value !!
+ERROR !! file checker_test.sing:751:12: Public global variables are forbidden !
+ERROR !! file checker_test.sing:756:19: Need a const pointer here

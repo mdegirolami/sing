@@ -10,7 +10,11 @@
 namespace SingNames {
 
 // after ERROR, keep these in order of increasing completion
-enum class PkgStatus { UNLOADED, ERROR, HEADER_ONLY, FOR_REFERENCIES, FULL };
+enum class PkgStatus {  UNLOADED, 
+                        ERROR,              // failed to load 
+                        HEADER_ONLY,        // unused value
+                        FOR_REFERENCIES,    // loaded because referenced - fun. bodies and private functions are not parsed
+                        FULL };             // loaded to be compiled.
 
 class Package {
 public:
@@ -28,7 +32,7 @@ public:
     const char *GetError(int index);
     bool HasErrors(void) { return(errors_.NumErrors() > 0); }
     void SetError(void) { status_ = PkgStatus::ERROR; }
-    void SortErrors(void) { errors_.SortByRow(); }
+    void SortErrors(void) { errors_.Sort(); }
 };
 
 } // namespace

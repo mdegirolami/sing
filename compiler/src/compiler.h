@@ -18,12 +18,12 @@ class Compiler {
     void TestLexer(void);
     void TestParser(void);
     void TestChecker(void);
-    void CompileSinglePackage(void);
+    int  CompileSinglePackage(void);
 
     void PrintAllPkgErrors();
     void PrintPkgErrors(Package *pkg);
 public:
-    void Run(int argc, char *argv[]);
+    int Run(int argc, char *argv[]);
 };
 
 } // namespace

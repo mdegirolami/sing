@@ -248,14 +248,25 @@ void AstNodesPrint::PrintSwitch(AstSwitch *node)
     fprintf(fd_, "Switch cases = %d {", node->case_values_.size());
     ++indent_;
     PrintHierarchy(node->switch_value_);
-    for (int ii = 0; ii < (int)node->case_values_.size(); ++ii) {
-        if (node->case_values_[ii] == nullptr) {
+    int cases = 0;
+    for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
+        if (cases == node->statement_top_case_[ii]) {
             PrintIndent();
-            fprintf(fd_, "else case:");
+            fprintf(fd_, "default case:");
         } else {
-            PrintHierarchy(node->case_values_[ii]);
+            while (cases < node->statement_top_case_[ii]) {
+                if (node->case_values_[cases] != nullptr) {
+                    PrintHierarchy(node->case_values_[cases]);
+                }
+                ++cases;
+            }
         }
-        PrintHierarchy(node->case_statements_[ii]);
+        if (node->statements_[ii] == nullptr) {
+            PrintIndent();
+            fprintf(fd_, "empty");
+        } else {
+            PrintHierarchy(node->statements_[ii]);
+        }
     }
     ClosingBrace();
 }

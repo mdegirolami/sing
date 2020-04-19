@@ -1,4 +1,4 @@
-debug_flags =
+debug_flags = -O2 -s -DNDEBUG
 
 src = ../../tests_results
 bin_target = ../../bin/tests.exe

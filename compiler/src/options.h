@@ -22,6 +22,7 @@ class Options {
     bool            skip_usage_errors_;
     bool            debug_build_;
     bool            verbose_;
+    bool            create_d_file_;
 
     // for the parser
     bool        waiting_a_value_;
@@ -44,6 +45,7 @@ public:
     CompilerMode GetMode(void) { return(mode_); }
     const char *GetSrcDir(int index) const { return(packages_src_dirs_.GetName(index)); }
     bool AreUsageErrorsEnabled(void) { return(!skip_usage_errors_); }
+    bool MustCreateDFile(void) { return(create_d_file_); }
 
     // helper
     FileSolveError SolveFileName(FILE **fh, string *full, const char *partial);

@@ -1,0 +1,101 @@
+
+ERROR !! file parser_errors_test.sing:2:17: Expecting the next portion of a qualifyed name
+ERROR !! file parser_errors_test.sing:3:10: Expecting the required package path (remember to enclose it in double quotes !)
+ERROR !! file parser_errors_test.sing:5:31: Expecting the required package local name
+ERROR !! file parser_errors_test.sing:8:5: Expecting the variable name
+ERROR !! file parser_errors_test.sing:11:10: You must either declare the variable type or use an initializer
+ERROR !! file parser_errors_test.sing:12:10: Invalid type declaration
+ERROR !! file parser_errors_test.sing:14:6: Expecting the type name
+ERROR !! file parser_errors_test.sing:15:15: Can't initialize a type !
+ERROR !! file parser_errors_test.sing:16:13: Expecting '('
+ERROR !! file parser_errors_test.sing:17:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:19:15: Expecting '*'
+ERROR !! file parser_errors_test.sing:20:17: Expecting the next portion of a qualifyed name
+ERROR !! file parser_errors_test.sing:22:4: Expecting the function name
+ERROR !! file parser_errors_test.sing:30:52: All arguments following a default arg must have a default value.
+ERROR !! file parser_errors_test.sing:39:20: Expecting ']' or ','
+ERROR !! file parser_errors_test.sing:43:5: Missing ';'
+ERROR !! file parser_errors_test.sing:48:9: Expecting a block (i.e. Expecting '{' )
+ERROR !! file parser_errors_test.sing:50:5: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:87:17: Expecting '('
+ERROR !! file parser_errors_test.sing:90:13: Expecting ')' no other arguments allowed after ellipsis
+ERROR !! file parser_errors_test.sing:91:17: Expecting ','
+ERROR !! file parser_errors_test.sing:92:12: Expecting the argument name
+ERROR !! file parser_errors_test.sing:94:12: Expecting an expression
+ERROR !! file parser_errors_test.sing:95:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:96:10: Missing ';'
+ERROR !! file parser_errors_test.sing:97:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:98:6: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:99:15: Expecting '('
+ERROR !! file parser_errors_test.sing:100:19: Expecting ')'
+ERROR !! file parser_errors_test.sing:101:14: Expecting '('
+ERROR !! file parser_errors_test.sing:102:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:103:14: Expecting '('
+ERROR !! file parser_errors_test.sing:104:15: Expecting ')'
+ERROR !! file parser_errors_test.sing:105:8: Expecting ')'
+ERROR !! file parser_errors_test.sing:106:15: Expecting a field name or a symbol
+ERROR !! file parser_errors_test.sing:107:5: Expecting a statement
+ERROR !! file parser_errors_test.sing:108:9: Expecting ']' or ','
+ERROR !! file parser_errors_test.sing:109:13: Expecting the parameter name
+ERROR !! file parser_errors_test.sing:110:12: Expecting ')' or ','
+ERROR !! file parser_errors_test.sing:110:14: Expecting a statement
+ERROR !! file parser_errors_test.sing:111:11: Expecting '('
+ERROR !! file parser_errors_test.sing:112:16: Expecting ')'
+ERROR !! file parser_errors_test.sing:113:8: Expecting '('
+ERROR !! file parser_errors_test.sing:114:13: Expecting ')'
+ERROR !! file parser_errors_test.sing:115:9: Expecting '('
+ERROR !! file parser_errors_test.sing:116:10: Expecting the iterator or index name
+ERROR !! file parser_errors_test.sing:117:13: Expecting the iterator name
+ERROR !! file parser_errors_test.sing:118:13: Expecting 'in' followed by the for iteration range
+ERROR !! file parser_errors_test.sing:119:22: Expecting ')'
+ERROR !! file parser_errors_test.sing:120:11: Illegal name: only alpha ,digits and '_' are allowed.
+ERROR !! file parser_errors_test.sing:127:1: Missing ';'
+ERROR !! file parser_errors_test.sing:132:9: Expecting a block (i.e. Expecting '{' )
+ERROR !! file parser_errors_test.sing:134:1: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:136:8: Expecting a member function name after the member selector '.'
+ERROR !! file parser_errors_test.sing:143:14: Invalid type declaration
+ERROR !! file parser_errors_test.sing:144:14: Invalid type declaration
+ERROR !! file parser_errors_test.sing:147:12: Expecting '('
+ERROR !! file parser_errors_test.sing:148:13: Expecting an expression
+ERROR !! file parser_errors_test.sing:149:14: Expecting ')'
+ERROR !! file parser_errors_test.sing:150:15: Expecting '{'
+ERROR !! file parser_errors_test.sing:153:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:156:15: Expecting ':'
+ERROR !! file parser_errors_test.sing:160:9: Expecting '}', the else case must be the last of the switch !
+ERROR !! file parser_errors_test.sing:163:17: Expecting ':'
+ERROR !! file parser_errors_test.sing:166:16: Expecting '('
+ERROR !! file parser_errors_test.sing:167:17: Expecting the reference name
+ERROR !! file parser_errors_test.sing:168:18: Expecting '='
+ERROR !! file parser_errors_test.sing:169:21: Expecting an expression
+ERROR !! file parser_errors_test.sing:170:25: Expecting ')'
+ERROR !! file parser_errors_test.sing:171:26: Expecting '{'
+ERROR !! file parser_errors_test.sing:174:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:177:19: Expecting ':'
+ERROR !! file parser_errors_test.sing:180:16: Expecting ':'
+ERROR !! file parser_errors_test.sing:184:9: Expecting '}', the else case must be the last of the switch !
+ERROR !! file parser_errors_test.sing:189:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:189:9: Expecting '{'
+ERROR !! file parser_errors_test.sing:190:11: Expecting an enum case name
+ERROR !! file parser_errors_test.sing:191:16: Expecting '}'
+ERROR !! file parser_errors_test.sing:194:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:195:1: Expecting '{'
+ERROR !! file parser_errors_test.sing:196:9: Expecting the function name
+ERROR !! file parser_errors_test.sing:197:1: Expecting 'fn' or 'interface'. Note: public/private qualifiers are not allowed here.
+ERROR !! file parser_errors_test.sing:198:1: Expecting a declaration: type, var, let, fn, class, interface, enum
+ERROR !! file parser_errors_test.sing:201:1: Expecting the type name
+ERROR !! file parser_errors_test.sing:202:1: Expecting '{'
+ERROR !! file parser_errors_test.sing:204:5: Expecting ':'
+ERROR !! file parser_errors_test.sing:207:8: Expecting the function name
+ERROR !! file parser_errors_test.sing:208:11: Expecting the function name
+ERROR !! file parser_errors_test.sing:210:5: Expecting ':'
+ERROR !! file parser_errors_test.sing:212:13: You can't delegate a private function
+ERROR !! file parser_errors_test.sing:214:16: Expecting the name of the var member implementing the function
+ERROR !! file parser_errors_test.sing:215:5: Expecting a var/fn/interface declaration or a public/private qualifier
+ERROR !! file parser_errors_test.sing:218:21: Expecting '{'
+ERROR !! file parser_errors_test.sing:221:21: Expecting the name of the var member implementing the interface
+ERROR !! file parser_errors_test.sing:228:39: Expecting an expression
+ERROR !! file parser_errors_test.sing:238:14: You must either declare the variable type or use an initializer
+ERROR !! file parser_errors_test.sing:242:43: Expecting an expression
+ERROR !! file parser_errors_test.sing:244:9: Expecting a statement
+ERROR !! file parser_errors_test.sing:249:5: The only declarations allowed in a function are Let and Var
+ERROR !! file parser_errors_test.sing:251:15: Expecting '''
