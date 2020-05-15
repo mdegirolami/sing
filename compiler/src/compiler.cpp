@@ -124,10 +124,12 @@ int Compiler::CompileSinglePackage(void)
         cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, 0, &empty_cpp);
         fclose(cppfd);
         fclose(hfd);
-        if (empty_cpp) {
-            FileName::ExtensionSet(&output_name, "cpp");
-            unlink(output_name.c_str());
-        }
+
+        // dont delete an empty cpp: this would cause ninja to repeat the build !!
+        // if (empty_cpp) {
+        //     FileName::ExtensionSet(&output_name, "cpp");
+        //     unlink(output_name.c_str());
+        // }
 
         if (options_.MustCreateDFile()) {
             FileName::ExtensionSet(&output_name, "h");

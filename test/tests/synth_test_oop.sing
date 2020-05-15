@@ -173,6 +173,8 @@ public fn test_oop() void
 
     check_typeswitch(alternate);
     check_typeswitch2(t_p);
+
+    check_builtin();
 }
 
 fn check_typeswitch(in object tester) i32
@@ -201,3 +203,117 @@ fn check_typeswitch2(in object *tester) i32
     } 
     return(-1);   
 }
+
+fn check_builtin() void
+{
+    var sign i32;
+
+    var int8 i8 = -100;
+    int8 = int8.abs();
+    int8 = int8.sqrt();
+    sign = int8.sgn();
+
+    var int32 i32 = -100;
+    int32 = int32.abs();
+    int32 = int32.sqrt();
+    sign = int32.sgn();
+
+    var uint64 u64 = 10000;
+    uint64 = uint64.abs();
+    uint64 = uint64.sqrt();
+    sign = uint64.sgn();
+
+    var f0 = -10000.0;
+    f0 = f0.abs();
+    f0 = f0.sqrt();
+    sign = f0.sgn();
+    f0 = f0.sin();
+    f0 = f0.cos();
+    f0 = f0.tan();
+    f0 = 0.5;
+    f0 = f0.asin();
+    f0 = f0.acos();
+    f0 = f0.atan();
+    f0 = f0.log();
+    f0 = f0.exp();
+    f0 = f0.log2();
+    f0 = f0.exp2();
+    f0 = f0.log10();
+    f0 = f0.exp10();
+    f0 = f0.floor();
+    f0 = (0.3).ceil();
+    f0 = (-0.3).round();
+    f0 = (-0.7).round();
+
+    var f1 = f64(-10000.0);
+    f1 = f1.abs();
+    f1 = f1.sqrt();
+    sign = f1.sgn();
+    f1 = f1.sin();
+    f1 = f1.cos();
+    f1 = f1.tan();
+    f1 = 0.5;
+    f1 = f1.asin();
+    f1 = f1.acos();
+    f1 = f1.atan();
+    f1 = f1.log();
+    f1 = f1.exp();
+    f1 = f1.log2();
+    f1 = f1.exp2();
+    f1 = f1.log10();
+    f1 = f1.exp10();
+    f1 = f1.floor();
+    //f1 = f64(0.3).ceil();
+    //f1 = f64(-0.3).round();
+    //f1 = f64(-0.7).round();
+    f1 = 0.3;
+    f1 = f1.ceil();
+    f1 = -0.3;
+    f1 = f1.round();
+    f1 = -0.7;
+    f1 = f1.round();
+
+    var cpl c64 = -1.0 + 1i;
+    f0 = cpl.abs();
+    f0 = cpl.arg();
+    f0 = cpl.imag();
+    f0 = cpl.real();
+    f0 = cpl.norm();
+    cpl = cpl.sqrt();
+    cpl = cpl.sin();
+    cpl = cpl.cos();
+    cpl = cpl.tan();
+    cpl = 1i;
+    cpl = cpl.asin();
+    cpl = cpl.acos();
+    cpl = cpl.atan();
+    cpl = cpl.log();
+    cpl = cpl.exp();
+
+    var aa [*]f32 = {1, 2, 3};
+    aa.reserve(100);
+    var cc = aa.capacity();
+    var ss = aa.size();
+    aa.trim(); 
+    cc = aa.capacity();
+    ss = aa.size();
+    aa.resize(10);
+    cc = aa.capacity();
+    ss = aa.size();
+    aa.clear();
+    cc = aa.capacity();
+    ss = aa.size();
+    let isempty = aa.isempty();
+    aa.push_back(5);
+    aa.push_back(6);
+    f0 = aa.last();
+    aa.pop_back();
+    aa.insert(0, 5, 10:element);
+    aa.erase(1,4);
+
+    var bb [*]f32 = {1, 2, 3};
+    let bbp = &bb;
+    bbp.push_back(1); 
+    ss = bb.size();
+}
+

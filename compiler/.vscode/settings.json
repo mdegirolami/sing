@@ -53,6 +53,7 @@
         "xlocnum": "cpp",
         "xmemory0": "cpp",
         "xstring": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "map": "cpp"
     }
 }

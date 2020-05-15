@@ -293,6 +293,83 @@ string format(const char *format, ...)
     return(result);
 }
 
+// note: typically contex is a vector or a class with vector[s]
+void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context)
+{
+    int tmp, lower, upper, pivot;
+
+    // trivial cases
+    if (count < 2) return;
+    if (count == 2) {
+        if (comp(vv[0], vv[1], context) > 0) {
+            tmp = vv[1];
+            vv[1] = vv[0];
+            vv[0] = tmp;
+        }
+        return;
+    }
+
+    // sort around the pivot
+    lower = 0;
+    upper = count - 1;
+    pivot = count >> 1;
+    while (true) {
+
+        // find an item preceeding the pivot that should stay after the pivot.
+        while (lower < pivot && comp(vv[lower], vv[pivot], context) <= 0) {
+            ++lower;
+        }
+
+        // find an item succeeding the pivot that should stay before the pivot.
+        while (upper > pivot && comp(vv[upper], vv[pivot], context) >= 0) {
+            --upper;
+        }
+
+        // swap them
+        if (lower < pivot) {
+            if (upper > pivot) {
+                tmp = vv[lower];
+                vv[lower] = vv[upper];
+                vv[upper] = tmp;
+                ++lower;
+                --upper;
+            } else {
+
+                // lower is out of place but not upper.
+                // move the pivot down one position to make room for lower
+                tmp = vv[pivot];
+                vv[pivot] = vv[lower];
+                vv[lower] = vv[pivot - 1];
+                vv[pivot - 1] = tmp;
+                --pivot;
+                upper = pivot;
+            }
+        } else {
+            if (upper > pivot) {
+
+                // upper is out of place but not lower.
+                tmp = vv[pivot];
+                vv[pivot] = vv[upper];
+                vv[upper] = vv[pivot + 1];
+                vv[pivot + 1] = tmp;
+                ++pivot;
+                lower = pivot;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // recur
+    if (pivot > 1) {
+        quick_sort_indices(vv, pivot, comp, context);
+    }
+    tmp = count - pivot - 1;
+    if (tmp > 1) {
+        quick_sort_indices(vv + (pivot + 1), tmp, comp, context);
+    }
+}
+
 /*
 string format(const char *format, ...)
 {

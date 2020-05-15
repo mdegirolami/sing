@@ -97,6 +97,12 @@ class AstChecker : public ITypedefSolver {
         vector<AstNamedType*> *origins,
         int first_inherited_fun);
 
+    void SetUsageOnExpression(IAstExpNode *node, ExpressionUsage usage);
+    void SetUsageOnIndices(AstIndexing *node, ExpressionUsage usage);
+    void SetUsageOnDotOp(AstBinop *node, ExpressionUsage usage, bool dotop_left);
+    void SetUsageOnLeaf(AstExpressionLeaf *node, ExpressionUsage usage, bool dotop_left);
+    void SetUsageOnNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop);
+
     // symbols
     void InsertName(const char *name, IAstDeclarationNode *declaration);
     IAstDeclarationNode *SearchDeclaration(const char *name, IAstNode *location);

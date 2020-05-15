@@ -87,6 +87,9 @@ public:
     bool IsBool(void)  const { return(exp_type_ == BT_BOOL); }
     bool IsString(void) const { return(exp_type_ == BT_STRING); }
     bool IsInteger(void) const { return((exp_type_ & BT_ALL_INTEGERS) != 0); }
+    bool IsFloat(void) const { return((exp_type_ & BT_ALL_FLOATS) != 0); }
+    bool IsComplex(void) const { return((exp_type_ & BT_ALL_COMPLEX) != 0); }
+    bool IsScalar(void) const { return((exp_type_ & (BT_ALL_INTEGERS + BT_ALL_FLOATS)) != 0); }
     bool IsUnsignedInteger(void) const { return((exp_type_ & BT_ALL_UINTS) != 0); }
     bool IsNumber(void) const { return((exp_type_ & BT_ALL_THE_NUMBERS) != 0); }
     bool HasIntegerType(void) const;
@@ -112,6 +115,10 @@ public:
     static bool CanAssignWithoutLoss(Token dst, Token src);
     bool IsAVariable(void) const { return(is_a_variable_); }
     bool IsEnum(void) const;
+    bool IsArray(void) const;
+    bool IsMap(void) const;
+    bool IsFunc(void) const;
+    bool IsPointer(void) const;
     bool IsWritable(void) { return(is_writable_); }
     bool IsCaseValueCompatibleWithSwitchExpression(ExpressionAttributes *switch_expression);
 

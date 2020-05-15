@@ -151,7 +151,6 @@ void AstNodesPrint::PrintArgument(AstArgument *node)
     fprintf(fd_, "Argument %s {", node->name_.c_str());
     ++indent_;
     PrintHierarchy(node->expression_);
-    PrintHierarchy(node->cast_to_);
     ClosingBrace();
 }
 

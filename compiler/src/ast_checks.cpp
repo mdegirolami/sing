@@ -3,6 +3,7 @@
 #include <math.h>
 #include "ast_checks.h"
 #include "target.h"
+#include "builtin_functions.h"
 
 namespace SingNames {
 
@@ -1453,20 +1454,15 @@ void AstChecker::CheckFunCall(AstFunCall *node, ExpressionAttributes *attr)
     failure = attr->IsOnError();
     if (!failure) {
         ftype = attr->GetFunCallType();
-        if (ftype != nullptr) {
-            if (ftype->arguments_.size() < node->arguments_.size()) {
-                ftype = nullptr;
-            }
-        }
     }
     if (node->arguments_.size() > 0) {
         attributes.reserve(node->arguments_.size());
         for (int ii = 0; ii < (int)node->arguments_.size(); ++ii) {
             AstArgument *arg = node->arguments_[ii];
             if (arg != nullptr) {
-                ExpressionUsage usage = ExpressionUsage::NONE;
+                ExpressionUsage usage = ExpressionUsage::READ;
 
-                if (ftype != nullptr) {
+                if (ftype != nullptr && ii < ftype->arguments_.size()) {
                     if (ftype->arguments_[ii]->HasOneOfFlags(VF_READONLY)) {
                         usage = ExpressionUsage::READ;
                     } else if (ftype->arguments_[ii]->HasOneOfFlags(VF_WRITEONLY)) {
@@ -1592,6 +1588,7 @@ void AstChecker::CheckUnop(AstUnop *node, ExpressionAttributes *attr)
 // <enum type>.<enum case>
 // <class/interface instance>.<member function/variable>
 // this.<member function/variable>
+// value.builtin_function()
 //
 void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, ExpressionUsage usage, bool dotop_left)
 {
@@ -1620,6 +1617,8 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
         Error("The term at the right of a dot operator must be a name", node);
         attr->SetError();
     } else if (pkg_index >= 0) {
+
+        // case 1: <file tag>.<extern_symbol>
         bool is_private;
         IAstDeclarationNode *decl = SearchExternDeclaration(pkg_index, right_leaf->value_.c_str(), &is_private);
         if (is_private) {
@@ -1641,6 +1640,8 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
         if (tnode != nullptr) {
             AstNodeType nodetype = tnode->GetType();
             if (nodetype == ANT_ENUM_TYPE) {
+
+                // case 2: <enum type>.<enum case>
                 is_valid = true;
                 AstEnumType *enumnode = (AstEnumType*)tnode;
                 int entry;
@@ -1658,6 +1659,9 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                     attr->SetEnumValue(enumnode->indices_[entry]);
                 }
             } else {
+
+                // case 3: <class/interface instance>.<member function/variable>
+                //          this.<member function/variable>
                 if (nodetype == ANT_POINTER_TYPE) {
                     AstPointerType *ptrnode = (AstPointerType*)tnode;
                     attr->InitWithTree(ptrnode->pointed_type_, true, !ptrnode->isconst_, this);
@@ -1674,12 +1678,31 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                         AstInterfaceType *ifnode = (AstInterfaceType*)tnode;
                         CheckMemberAccess(right_leaf, &ifnode->members_, nullptr, attr, usage);
                     }
-                }
+                }                
             }
         }
         if (!is_valid) {
-            //Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
-            Error("Left operand is not compatible with the dot operator", node);
+
+            // case 4: value.builtin_function()
+            const char *name = right_leaf->value_.c_str();
+            bool ismuting = false;
+            BInSynthMode mode;
+            node->builtin_ = GetFuncSignature(&ismuting, &mode, name, attr);
+            if (node->builtin_ == nullptr) {
+                //Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
+                Error("Left operand is not compatible with the dot operator", node);
+                attr->SetError();
+            } else {
+                node->SetBuitInMode(mode);
+                if (ismuting) {
+                    if (!attr->IsWritable()) {
+                        Error("Can't call a muting member function on a constant variable/field", right_leaf);
+                    // } else if (attr->IsAVariable()) {
+                    //     SetUsageFlags(VarDeclaration *var, ExpressionUsage::WRITE);
+                    }
+                } 
+                attr->InitWithTree(node->builtin_, false, false, this);
+            }
         }
     }
     node->attr_ = *attr;
@@ -1704,6 +1727,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
 {
     bool has_private_access = attr->GetTypeTree() == current_class_;        // i.e. the function is a member of the accessed class.
     bool class_is_writable = attr->IsWritable();
+    bool in_notmuting = has_private_access && current_function_ != nullptr && !current_function_->is_muting_;
     for (int fun_idx = 0; fun_idx < (int)member_functions->size(); ++fun_idx) {
         if ((*member_functions)[fun_idx]->name_ == accessed->value_) {
             FuncDeclaration *decl = (*member_functions)[fun_idx];
@@ -1713,7 +1737,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 decl->SetUsed();
                 CheckIfFunCallIsLegal(decl->function_type_, accessed);
                 if (decl->is_muting_) {
-                    if (current_function_ != nullptr && !current_function_->is_muting_ && has_private_access) {
+                    if (in_notmuting) {
                         Error("Can't call a muting member function from a non-muting one", accessed);
                     } else if (!class_is_writable) {
                         Error("Can't call a muting member function on a read-only instance (input argument or constant)", accessed);
@@ -1733,7 +1757,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 VarDeclaration *decl = (*member_vars)[var_idx];
                 if (has_private_access || decl->IsPublic()) {
                     accessed->wp_decl_ = decl;
-                    attr->InitWithTree(decl->weak_type_spec_, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable(), this);
+                    attr->InitWithTree(decl->weak_type_spec_, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
                     SetUsageFlags(decl, usage);
                     CheckIfVarReferenceIsLegal(decl, accessed);
                     accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
@@ -1841,13 +1865,39 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
             }
         }
         if (!is_allowed_type) {
-            Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
+            //Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
+            Error("Left operand is not compatible with the dot operator", node);
             attr->SetError();
         }
     } else {
         Error("Need a variable/const/function name here", node);
         attr->SetError();
     }
+}
+
+void AstChecker::SetUsageOnExpression(IAstExpNode *node, ExpressionUsage usage)
+{
+
+}
+
+void AstChecker::SetUsageOnIndices(AstIndexing *node, ExpressionUsage usage)
+{
+
+}
+
+void AstChecker::SetUsageOnDotOp(AstBinop *node, ExpressionUsage usage, bool dotop_left)
+{
+
+}
+
+void AstChecker::SetUsageOnLeaf(AstExpressionLeaf *node, ExpressionUsage usage, bool dotop_left)
+{
+
+}
+
+void AstChecker::SetUsageOnNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop)
+{
+
 }
 
 void AstChecker::InsertName(const char *name, IAstDeclarationNode *declaration)
@@ -2398,7 +2448,7 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
                 if ((arg0->flags_ & (VF_READONLY | VF_WRITEONLY)) != (arg1->flags_ & (VF_READONLY | VF_WRITEONLY))) {
                     return(KO);
                 }
-                result = AreTypeTreesCompatible(arg0->type_spec_, arg1->type_spec_, FOR_EQUALITY);
+                result = AreTypeTreesCompatible(arg0->weak_type_spec_, arg1->weak_type_spec_, FOR_EQUALITY);
                 if (result != OK) return(result);
             }
         }
@@ -2612,7 +2662,7 @@ void AstChecker::CheckPrivateDeclarationsUsage(void)
 
 void AstChecker::CheckPrivateVarUsage(VarDeclaration *var, bool is_member)
 {
-    bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->type_spec_);
+    bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->weak_type_spec_);
     if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_INVOLVED_IN_TYPE_DEFINITION)) {
         if (!var->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN)) {
             UsageError("Variable/Constant unused !!", var);

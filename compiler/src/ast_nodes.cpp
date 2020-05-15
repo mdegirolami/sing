@@ -52,7 +52,7 @@ AstFuncType::~AstFuncType()
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
         if (arguments_[ii] != nullptr) delete arguments_[ii];
     }
-    if (return_type_ != nullptr) delete return_type_;
+    if (return_type_ != nullptr && is_owning_) delete return_type_;
 }
 
 bool AstFuncType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
@@ -370,6 +370,13 @@ AstExpressionLeaf::AstExpressionLeaf(Token type, const char *value)
     unambiguous_member_access = false;
 }
 
+AstBinop::~AstBinop() 
+{ 
+    if (operand_left_ != nullptr) delete operand_left_; 
+    if (operand_right_ != nullptr) delete operand_right_; 
+    if (builtin_ != nullptr) delete builtin_; 
+}
+
 AstFunCall::~AstFunCall()
 {
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
@@ -381,7 +388,6 @@ AstFunCall::~AstFunCall()
 AstArgument::~AstArgument()
 {
     if (expression_ != nullptr) delete expression_;
-    if (cast_to_ != nullptr) delete cast_to_;
 }
 
 AstIndexing::~AstIndexing()

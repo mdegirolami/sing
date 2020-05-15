@@ -44,6 +44,7 @@ private:
 
 static int32_t check_typeswitch(const tester &object);
 static int32_t check_typeswitch2(const sing::iptr<tester> object);
+static void check_builtin();
 
 char c0_test::id__;
 char delegating::id__;
@@ -191,6 +192,8 @@ void test_oop()
 
     check_typeswitch(alternate);
     check_typeswitch2(t_p);
+
+    check_builtin();
 }
 
 static int32_t check_typeswitch(const tester &object)
@@ -223,6 +226,130 @@ static int32_t check_typeswitch2(const sing::iptr<tester> object)
         return (2);
     }
     return (-1);
+}
+
+static void check_builtin()
+{
+    int32_t sign = 0;
+
+    int8_t int8 = (int8_t)-100;
+
+    int8 = sing::abs(int8);
+    int8 = (int8_t)sqrt(int8);
+    sign = sing::sgn(int8);
+
+    int32_t int32 = -100;
+
+    int32 = sing::abs(int32);
+    int32 = (int32_t)sqrt(int32);
+    sign = sing::sgn(int32);
+
+    uint64_t uint64 = (uint64_t)10000;
+
+    uint64 = sing::abs(uint64);
+    uint64 = (uint64_t)sqrt(uint64);
+    sign = sing::sgn(uint64);
+
+    float f0 = -10000.0f;
+
+    f0 = sing::abs(f0);
+    f0 = (float)sqrt(f0);
+    sign = sing::sgn(f0);
+    f0 = (float)sin(f0);
+    f0 = (float)cos(f0);
+    f0 = (float)tan(f0);
+    f0 = 0.5f;
+    f0 = (float)asin(f0);
+    f0 = (float)acos(f0);
+    f0 = (float)atan(f0);
+    f0 = (float)log(f0);
+    f0 = (float)exp(f0);
+    f0 = (float)log2(f0);
+    f0 = (float)exp2(f0);
+    f0 = (float)log10(f0);
+    f0 = sing::exp10(f0);
+    f0 = (float)floor(f0);
+    f0 = (float)ceil(0.3f);
+    f0 = (float)round(-0.3f);
+    f0 = (float)round(-0.7f);
+
+    double f1 = -10000.0;
+
+    f1 = sing::abs(f1);
+    f1 = sqrt(f1);
+    sign = sing::sgn(f1);
+    f1 = sin(f1);
+    f1 = cos(f1);
+    f1 = tan(f1);
+    f1 = 0.5f;
+    f1 = asin(f1);
+    f1 = acos(f1);
+    f1 = atan(f1);
+    f1 = log(f1);
+    f1 = exp(f1);
+    f1 = log2(f1);
+    f1 = exp2(f1);
+    f1 = log10(f1);
+    f1 = sing::exp10(f1);
+    f1 = floor(f1);
+    //f1 = f64(0.3).ceil();
+    //f1 = f64(-0.3).round();
+    //f1 = f64(-0.7).round();
+    f1 = 0.3f;
+    f1 = ceil(f1);
+    f1 = -0.3f;
+    f1 = round(f1);
+    f1 = -0.7f;
+    f1 = round(f1);
+
+    std::complex<float> cpl = -1.0f + std::complex<float>(0.0f, 1.0f);
+
+    f0 = abs(cpl);
+    f0 = arg(cpl);
+    f0 = imag(cpl);
+    f0 = real(cpl);
+    f0 = norm(cpl);
+    cpl = sqrt(cpl);
+    cpl = sin(cpl);
+    cpl = cos(cpl);
+    cpl = tan(cpl);
+    cpl = std::complex<float>(0.0f, 1.0f);
+    cpl = asin(cpl);
+    cpl = acos(cpl);
+    cpl = atan(cpl);
+    cpl = log(cpl);
+    cpl = exp(cpl);
+
+    sing::dpvect<float> aa = {1, 2, 3};
+
+    aa.reserve(100);
+    int32_t cc = aa.capacity();
+    int32_t ss = aa.size();
+
+    aa.trim();
+    cc = aa.capacity();
+    ss = aa.size();
+    aa.resize(10);
+    cc = aa.capacity();
+    ss = aa.size();
+    aa.clear();
+    cc = aa.capacity();
+    ss = aa.size();
+    const bool isempty = aa.isempty();
+
+    aa.push_back((float)5);
+    aa.push_back((float)6);
+    f0 = aa.last();
+    aa.pop_back();
+    aa.insert(0, 5, (float)10);
+    aa.erase(1, 4);
+
+    sing::ptr<sing::dpvect<float>> bb(new sing::wrapper<sing::dpvect<float>>);
+    *bb = {1, 2, 3};
+    const sing::ptr<sing::dpvect<float>> bbp = bb;
+
+    (*bbp).push_back((float)1);
+    ss = (*bb).size();
 }
 
 }   // namespace

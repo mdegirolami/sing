@@ -116,7 +116,7 @@ class CppSynth {
     int CastIfNeededTo(Token target, Token src_type, string *dst, int priority, bool for_power_op);
     void CastForRelational(Token left_type, Token right_type, string *left, string *right, int *priority_left, int *priority_right);
     int PromoteToInt32(Token target, string *dst, int priority);
-    int Protect(string *dst, int priority, int next_priority, bool is_right_term = false);
+    void Protect(string *dst, int priority, int next_priority, bool is_right_term = false);
     bool IsPOD(IAstTypeNode *node);
     Token GetBaseType(IAstTypeNode *node);
     int GetRealPartOfIntegerLiteral(string *dst, AstExpressionLeaf *node, int nbits);

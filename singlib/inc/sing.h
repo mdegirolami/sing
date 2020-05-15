@@ -140,6 +140,43 @@ namespace sing {
     string add_strings(int count, ...);
     string format(const char *format, ...);
 
+    template<class T>
+    inline int32_t sgn(T value)
+    {
+        if (value > 0) return(1);
+        if (value < 0) return(-1);
+        return(0);
+    }
+
+    template<class T>
+    inline T abs(T value)
+    {
+        if (value >= 0) return(value);
+        return(-value);
+    }
+
+    // template<class T>
+    // inline void xchg(T value1, T value2)
+    // {
+    //     T tmp = value1;
+    //     value1 = value2;
+    //     value2 = tmp;
+    // }
+
+    inline float exp10(float value)
+    {
+        return((float)exp(value * 2.30258509299f));
+    }
+
+    inline double exp10(double value)
+    {
+        return(exp(value * 2.30258509299));
+    }
+
+
+void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context);
+
+
 }   // namespace
 
 #endif

@@ -94,3 +94,5 @@ ERROR !! file checker_test_classes.sing:297:5: Duplicated case values !
 ERROR !! file checker_test_classes.sing:313:12: Muting attribute can't be assigned to a delegating function (depends on the delegated object)
 ERROR !! file checker_test_classes.sing:317:32: The enum case value must be greter than the previous one.
 ERROR !! file checker_test_classes.sing:318:6: The enum case value overflows i32 capacity.
+ERROR !! file checker_test_classes.sing:324:5: Left operand is not compatible with the dot operator
+ERROR !! file checker_test_classes.sing:326:8: Can't call a muting member function on a constant variable/field

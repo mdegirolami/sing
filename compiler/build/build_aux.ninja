@@ -29,7 +29,8 @@ build $obj/Parser.o:               cc $src/Parser.cpp
 build $obj/string.o:               cc $src/string.cpp                                                                                                                                             
 build $obj/symbols_storage.o:      cc $src/symbols_storage.cpp                                                                                                                                    
 build $obj/target.o:               cc $src/target.cpp                                                                                                                                             
+build $obj/builtin_functions.o:    cc $src/builtin_functions.cpp                                                                                                                                             
 
-build $bin_target: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o
+build $bin_target: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o builtin_functions.o
 
 default $bin_target

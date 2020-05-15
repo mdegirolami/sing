@@ -4,6 +4,7 @@
 #include "cpp_synth.h"
 #include "FileName.h"
 #include "helpers.h"
+#include "builtin_functions.h"
 
 namespace SingNames {
 
@@ -345,7 +346,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
             } else {    // PPM_VALUE
                 the_type = arg->name_;
             }
-            SynthTypeSpecification(&the_type, arg->type_spec_, true);
+            SynthTypeSpecification(&the_type, arg->weak_type_spec_, true);
 
             // add to dst
             if (ii != 0) {
@@ -356,7 +357,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
                 *dst += "const ";
             }
             if (ii > last_uninited && prototype) {
-                SynthIniter(&the_type, arg->type_spec_, arg->initer_);
+                SynthIniter(&the_type, arg->weak_type_spec_, arg->initer_);
             }
             *dst += the_type;
         }
@@ -435,7 +436,7 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
         if (!vdecl->IsPublic()) {
             has_private = true;
         }
-        if (vdecl->initer_ != nullptr || vdecl->type_spec_->NeedsZeroIniter()) {
+        if (vdecl->initer_ != nullptr || vdecl->weak_type_spec_->NeedsZeroIniter()) {
             needs_constructor = true;
         }
     }
@@ -1065,7 +1066,7 @@ void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
         tocompare.insert(0, "(*");
         tocompare += ").get__id() == &";
     } else {
-        Protect(&tocompare, exppri, GetUnopCppPriority(TOKEN_DOT));
+        Protect(&tocompare, exppri, GetBinopCppPriority(TOKEN_DOT));
         tocompare += ".get__id() == &";
     }
     for (int ii = 0; ii < node->case_types_.size(); ++ii) {
@@ -1197,7 +1198,7 @@ void CppSynth::SynthForEachOnDyna(AstFor *node)
     // iterator initialization
     text += " = ";
     priority = SynthExpression(&expression, node->set_);
-    priority = Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
+    Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
     text += expression;
     text += ".begin(); ";
     AddSplitMarker(&text);
@@ -1414,7 +1415,7 @@ int CppSynth::SynthIndices(string *dst, AstIndexing *node)
     // TODO: ranges/dyna.
 
     int exp_pri = SynthExpression(dst, node->indexed_term_);
-    exp_pri = Protect(dst, exp_pri, GetUnopCppPriority(TOKEN_SQUARE_OPEN));
+    Protect(dst, exp_pri, GetUnopCppPriority(TOKEN_SQUARE_OPEN));
     if (node->map_type_ == NULL) {
 
         // an array
@@ -1433,14 +1434,36 @@ int CppSynth::SynthIndices(string *dst, AstIndexing *node)
 int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
 {
     int     ii, priority;
+    int     numargs = (int)node->arguments_.size();
     string  expression;
+    bool builtin = false;
+
+    if (node->left_term_->GetType() == ANT_BINOP) {
+        builtin = ((AstBinop*)node->left_term_)->builtin_ != nullptr;
+    }
 
     --split_level_;
     priority = SynthExpression(dst, node->left_term_);
-    priority = Protect(dst, priority, GetUnopCppPriority(TOKEN_ROUND_OPEN));
-    *dst += '(';
-    AddSplitMarker(dst);
-    for (ii = 0; ii < (int)node->arguments_.size(); ++ii) {
+    if (builtin) {
+
+        // fun call alredy synthesized in SynthDotOp() but is missing the arguments
+        dst->erase(dst->length() - 1);  // just delete ')' - reopen the arg list
+        bool has_already_args = (*dst)[dst->length() - 1] != '(';
+        if (has_already_args && numargs > 0) {
+            // seperate the two groups 
+            *dst += ", ";
+        }
+        if (has_already_args || numargs > 0) {
+            AddSplitMarker(dst);    // has at least an arg.
+        }
+    } else {
+        Protect(dst, priority, GetUnopCppPriority(TOKEN_ROUND_OPEN));
+        *dst += '(';
+        if (numargs > 0) {
+            AddSplitMarker(dst);    // has at least an arg.
+        }
+    }
+    for (ii = 0; ii < numargs; ++ii) {
         VarDeclaration *var = node->func_type_->arguments_[ii];
         Token var_type = GetBaseType(var->weak_type_spec_);
         expression = "";
@@ -1535,30 +1558,59 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
             return(priority);
         }
     }
-    int left_priority = SynthExpression(dst, node->operand_left_);
-    AstNodeType nodetype = ANT_ENUM_TYPE;
-
-    IAstTypeNode *tnode = node->operand_left_->GetAttr()->GetTypeTree();
-    //assert(tnode != nullptr);
-    if (tnode != nullptr) {
-        nodetype = tnode->GetType();
-    } else {
-        assert(false);
-    }
-    if (nodetype == ANT_ENUM_TYPE) {
+    priority = SynthExpression(dst, node->operand_left_);
+    const ExpressionAttributes *left_attr = node->operand_left_->GetAttr();
+    if (left_attr->IsEnum()) {
         *dst += "::";
         *dst += right_leaf->value_;
         priority = KLeafPriority;
+    } else if (node->builtin_ != nullptr) {   
+        if (left_attr->IsPointer()) {
+            Protect(dst,  priority, GetUnopCppPriority(TOKEN_MPY));
+            dst->insert(0, "*");
+            priority = GetUnopCppPriority(TOKEN_MPY);
+        }
+        switch (node->builtin_mode_) {
+        case BInSynthMode::sing:
+            dst->insert(0, "(");
+            dst->insert(0, right_leaf->value_);
+            dst->insert(0, "sing::");
+            (*dst) += ")";
+            priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
+            break;
+        case BInSynthMode::cast:
+        case BInSynthMode::plain:
+            {
+                dst->insert(0, "(");
+                dst->insert(0, right_leaf->value_);
+                (*dst) += ")";
+                priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
+                Token base_type = node->operand_left_->GetAttr()->GetAutoBaseType();
+                if (base_type != TOKEN_FLOAT64 && node->builtin_mode_ != BInSynthMode::plain) {
+                    priority = AddCast(dst, priority, GetBaseTypeName(base_type));
+                }
+            }
+            break;
+        case BInSynthMode::member:
+        default:
+            Protect(dst,  priority, GetBinopCppPriority(TOKEN_DOT));
+            (*dst) += ".";
+            (*dst) += right_leaf->value_;
+            (*dst) += "()";
+            priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
+            break;            
+        }
     } else {
-        if (nodetype == ANT_POINTER_TYPE) {
-            Protect(dst,  left_priority, GetUnopCppPriority(TOKEN_MPY));
+        if (left_attr->IsPointer()) {
+            Protect(dst,  priority, GetUnopCppPriority(TOKEN_MPY));
             dst->insert(0, "(*");
             *dst += ").";
         } else { // ANT_CLASS_TYPE
-            Protect(dst,  left_priority, priority);
+            Protect(dst,  priority, GetBinopCppPriority(TOKEN_DOT));
             *dst += ".";
         }
         AppendMemberName(dst, right_leaf->wp_decl_);
+        priority = GetBinopCppPriority(TOKEN_DOT);
     }
     return(priority);
 }
@@ -1663,8 +1715,8 @@ int CppSynth::SynthMathOperator(string *dst, AstBinop *node)
     }
 
     // add brackets if needed
-    left_priority = Protect(dst, left_priority, priority);
-    right_priority = Protect(&right, right_priority, priority, true);
+    Protect(dst, left_priority, priority);
+    Protect(&right, right_priority, priority, true);
 
     // sinthesize the operation
     if (node->subtype_ == TOKEN_XOR) {
@@ -1773,8 +1825,8 @@ int CppSynth::SynthRelationalOperator3(string *dst, Token subtype, IAstExpNode *
     }
 
     // add brackets if needed
-    left_priority = Protect(dst, left_priority, priority);
-    right_priority = Protect(&right, right_priority, priority, true);
+    Protect(dst, left_priority, priority);
+    Protect(&right, right_priority, priority, true);
 
     // sinthesize the operation
     *dst += ' ';
@@ -1794,8 +1846,8 @@ int CppSynth::SynthLogicalOperator(string *dst, AstBinop *node)
     int right_priority = SynthExpression(&right, node->operand_right_);
 
     // add brackets if needed
-    left_priority = Protect(dst, left_priority, priority);
-    right_priority = Protect(&right, right_priority, priority, true);
+    Protect(dst, left_priority, priority);
+    Protect(&right, right_priority, priority, true);
 
     // sinthesize the operation
     *dst += ' ';
@@ -1833,13 +1885,8 @@ int CppSynth::SynthUnop(string *dst, AstUnop *node)
         *dst += ".size()";
         break;                      // TODO
     case TOKEN_MINUS:
-        exp_priority = Protect(dst, exp_priority, priority);
+        Protect(dst, exp_priority, priority);
         dst->insert(0, "-");
-        //if (exp_priority == KLiteralPriority) {
-        //    priority = exp_priority; // let -1.0 be transformed into -1.0f (instead of (float)-1.0)
-        //                             // note: this leaves the expression without protection from operators of priority 1, 2
-        //                             // fortunately no one of them is applicable to a constant ! (they are ., ->, [], (), ++, --, ::)
-        //}
         break;
     case TOKEN_NOT:
         Protect(dst, exp_priority, priority);
@@ -2417,6 +2464,7 @@ int  CppSynth::GetUnopCppPriority(Token token)
     case TOKEN_ROUND_OPEN:  // function call
     case TOKEN_INC:
     case TOKEN_DEC:
+    case TOKEN_DOT:
         return(2);
     case TOKEN_SIZEOF:
         return(KForcedPriority);
@@ -2427,6 +2475,7 @@ int  CppSynth::GetUnopCppPriority(Token token)
     case TOKEN_LOGICAL_NOT:
     case TOKEN_MPY:         // dereference
     default:                // casts
+        assert(false);
         break;
     }
     return(3);
@@ -2488,6 +2537,9 @@ int CppSynth::AddCast(string *dst, int priority, const char *cast_type) {
     //    // if casting to a different type than the ones above, fallthrough to the standard case.
     //}
 
+    if (cast_type == nullptr || cast_type[0] == 0) {
+        return(priority);
+    }
     if (priority > KCastPriority) {
         sprintf(prefix, "(%s)(", cast_type);
         dst->insert(0, prefix);
@@ -2600,19 +2652,17 @@ int CppSynth::PromoteToInt32(Token target, string *dst, int priority)
 
 // adds brackets if adding the next operator would invert the priority 
 // to be done to operands after casts and before operation 
-int CppSynth::Protect(string *dst, int priority, int next_priority, bool is_right_term) {
+void CppSynth::Protect(string *dst, int priority, int next_priority, bool is_right_term) {
 
     // a function-like operator: needs no protection and causes no inversion
-    if (priority == KForcedPriority || next_priority == KForcedPriority) return(priority);
+    if (priority == KForcedPriority || next_priority == KForcedPriority) return;
 
     // protect the priority of this branch from adjacent operators
     // note: if two binary operators have same priority, use brackets if right-associativity is required
     if (next_priority < priority  || is_right_term && priority > 3 && next_priority == priority) {
         dst->insert(0, "(");
         *dst += ')';
-        return(KLeafPriority);
     }
-    return(priority);
 }
 
 bool CppSynth::IsPOD(IAstTypeNode *node)

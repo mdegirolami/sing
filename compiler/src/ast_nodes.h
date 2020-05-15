@@ -58,6 +58,13 @@ enum AstNodeType {
     ANT_INDEXING, ANT_ARGUMENT, ANT_FUNCALL, ANT_BINOP, ANT_UNOP, ANT_EXP_LEAF
 };
 
+// implementation mode for a built-in function
+// sing = sing::name(T);
+// cast = (T)name(T);       // cast if not double
+// plain = name(T);
+// memeber = T.member()
+enum class BInSynthMode { sing, cast, plain, member };
+
 struct PositionInfo {
     int32_t start_row;
     int32_t start_col;
@@ -142,11 +149,12 @@ public:
     vector<VarDeclaration*>     arguments_;
     IAstTypeNode                *return_type_;
     PositionInfo                pos_;
+    bool                        is_owning_;     // i.e. pointer to return_type is owning.
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstFuncType();
-    AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL), is_member_(false) { arguments_.reserve(8); }
+    AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL), is_member_(false), is_owning_(true) { arguments_.reserve(8); }
     virtual AstNodeType GetType(void) { return(ANT_FUNC_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
@@ -156,7 +164,8 @@ public:
     void AddArgument(VarDeclaration *arg) { arguments_.push_back(arg); }
     void SetReturnType(IAstTypeNode *type) { return_type_ = type; }
     bool ReturnsVoid(void);
-    void SetIsMember(void) { is_member_ = true; };
+    void SetIsMember(void) { is_member_ = true; }
+    void SetOwning(bool value) { is_owning_ = value; }
 };
 
 class AstPointerType : public IAstTypeNode {
@@ -369,17 +378,15 @@ class AstArgument : public IAstNode {
 public:
     string          name_;
     IAstExpNode     *expression_;
-    IAstTypeNode    *cast_to_;
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstArgument();
-    AstArgument() : expression_(NULL), cast_to_(NULL) {}
+    AstArgument() : expression_(nullptr) {}
     virtual AstNodeType GetType(void) { return(ANT_ARGUMENT); }
     void AddName(const char *value) { name_ = value; }
     void SetExpression(IAstExpNode *exp) { expression_ = exp; }
-    void CastTo(IAstTypeNode *type) { cast_to_ = type; }
 };
 
 class AstExpressionLeaf : public IAstExpNode {
@@ -438,14 +445,18 @@ public:
     IAstExpNode    *operand_right_;
     PositionInfo    pos_;
 
+    // attributes
     ExpressionAttributes attr_;
+    AstFuncType     *builtin_;      // if this dotop is followed by a builtin function, this is the type (pointer is owning !). 
+    BInSynthMode    builtin_mode_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
-    virtual ~AstBinop() { if (operand_left_ != NULL) delete operand_left_; if (operand_right_ != NULL) delete operand_right_; }
-    AstBinop(Token type, IAstExpNode *left, IAstExpNode*right) : subtype_(type), operand_left_(left), operand_right_(right) {}
+    AstBinop(Token type, IAstExpNode *left, IAstExpNode*right) : subtype_(type), operand_left_(left), operand_right_(right), builtin_(nullptr) {}
+    virtual ~AstBinop();
     virtual AstNodeType GetType(void) { return(ANT_BINOP); }
+    void SetBuitInMode(BInSynthMode mode) { builtin_mode_ = mode; }
 };
 
 class AstFunCall : public IAstExpNode {
@@ -461,7 +472,7 @@ public:
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstFunCall();
-    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(NULL) {}
+    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr) {}
     virtual AstNodeType GetType(void) { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
 };
@@ -723,10 +734,10 @@ public:
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
-    virtual ~VarDeclaration() { if (type_spec_ != NULL) delete type_spec_; if (initer_ != NULL) delete initer_; }
+    virtual ~VarDeclaration() { if (type_spec_ != nullptr) delete type_spec_; if (initer_ != nullptr) delete initer_; }
     VarDeclaration(const char *name) : 
-        name_(name), flags_(0), type_spec_(NULL), initer_(NULL), 
-        weak_type_spec_(NULL), is_public_(false), weak_iterated_var_(nullptr) {}
+        name_(name), flags_(0), type_spec_(nullptr), initer_(nullptr), 
+        weak_type_spec_(nullptr), is_public_(false), weak_iterated_var_(nullptr) {}
     virtual AstNodeType GetType(void) { return(ANT_VAR); }
     void SetType(IAstTypeNode *node) { type_spec_ = node; weak_type_spec_ = node; }
     void SetIniter(IAstNode *node) { initer_ = node; }

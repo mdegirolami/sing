@@ -27,7 +27,7 @@ public:
                 if (_count >= _allocated) {
                     GrowTo(_count + 1);
                 }
-                _count++;
+                SetCount(_count + 1);
             } else {
                 throw(std::out_of_range("array index"));
             }
@@ -108,6 +108,43 @@ public:
         GrowTo(count);
     }
 
+    int32_t capacity(void) const {
+        return(_allocated);
+    }
+
+    void resize(size_t count) {
+        if (count < _count) {
+            SetCount(count);
+            trim();
+        } else {
+            reserve(count);
+            SetCount(count);
+        }
+    }
+
+    bool isempty(void) const {
+        return(_count == 0);
+    }
+
+    T& last(void) {
+        if (_count == 0) throw(std::out_of_range("array index"));
+        return(*(_first + _count - 1));
+    }
+
+    const T& last(void) const {
+        return(*(_first + _count - 1));
+    }
+
+    void push_back(T value) {
+        (*this)[_count] = value;
+    }
+
+    void pop_back(void) {
+        if (_count > 0) {
+            SetCount(_count - 1);
+        }
+    }
+
     bool erase(size_t first, size_t last)
     {
         if (last > (size_t)_count) last = (size_t)_count;
@@ -119,23 +156,27 @@ public:
         while (src < (size_t)_count) {
             _first[dst++] = _first[src++];
         }
-        SetCount(_count);
+        SetCount(dst);
         return(true);
     }
 
-    void insert(size_t position, T value)
+    void insert(size_t position, size_t count, T value)
     {
-        if (position >(size_t)_count) return;
-        if (_count >= _allocated) {
-            GrowTo(_count + 1);
+        size_t  ii;
+
+        if (position > (size_t)_count) position = (size_t)_count;
+        if (_count + count > _allocated) {
+            GrowTo(_count + count);
         }
-        size_t dst = (size_t)_count;
-        while (dst > position) {
-            _first[dst] = _first[dst - 1];
-            --dst;
+        size_t dst = (size_t)_count + count - 1;
+        size_t src = (size_t)_count - 1;
+        for (ii = _count - position; ii; --ii) {
+            _first[dst--] = _first[src--];
         }
-        _first[position] = value;
-        ++_count;
+        for (ii = 0; ii < count; ++ii) {
+            _first[position + ii] = value;
+        }
+        SetCount(_count + count);
     }
 
     void insert_range(size_t position, size_t count, const T *values)
@@ -154,7 +195,7 @@ public:
         for (ii = 0; ii < count; ++ii) {
             _first[position + ii] = values[ii];
         }
-        _count += count;
+        SetCount(_count + count);
     }
 
     void append(const vect<T> &other)
@@ -172,6 +213,7 @@ public:
     }
 
     virtual void SetCount(size_t count) {};
+    virtual void trim(void) {};
 
 protected:
     T       *_first;
@@ -253,6 +295,8 @@ public:
     void operator=(const dvect<T> &right) { vect<T>::operator=(right); }
     void operator=(const std::initializer_list<T> &list) { vect<T>::operator=(list); }
 
+    virtual void trim(void) { if (this->_allocated > this->_count) set_size(this->_count); }
+
 protected:
     void GrowTo(size_t itemscount)
     {
@@ -263,6 +307,15 @@ protected:
         size_t newsize = this->_allocated;
         if (newsize == 0) newsize = 1;
         while (newsize < itemscount) newsize <<= 1;
+        this->set_size(newsize);
+    }
+    virtual void SetCount(size_t count) { this->_count = count; }
+
+private:
+    void set_size(size_t newsize)
+    {
+        // allocate a new buffer
+        if (newsize < this->_count) newsize = this->_count;
         T *newone = new T[newsize];
 
         // copy the old values
@@ -275,8 +328,7 @@ protected:
 
         this->_first = newone;
         this->_allocated = newsize;
-    }
-    virtual void SetCount(size_t count) { this->_count = count; };
+    };
 };
 
 // dynamic vector for plain old data types
@@ -351,6 +403,8 @@ public:
     void operator=(const dpvect<T> &right) { vect<T>::operator=(right); }
     void operator=(const std::initializer_list<T> &list) { vect<T>::operator=(list); }
 
+    virtual void trim(void) { if (this->_allocated > this->_count) set_size(this->_count); }
+
 protected:
     void GrowTo(size_t itemscount)
     {
@@ -361,6 +415,15 @@ protected:
         size_t newsize = this->_allocated;
         if (newsize == 0) newsize = 1;
         while (newsize < itemscount) newsize <<= 1;
+        this->set_size(newsize);
+    }
+    virtual void SetCount(size_t count) { this->_count = count; }
+
+private:
+    void set_size(size_t newsize)
+    {
+        // allocate a new buffer
+        if (newsize < this->_count) newsize = this->_count;
         T *newone = new T[newsize];
 
         // copy the old values
@@ -374,8 +437,7 @@ protected:
 
         this->_first = newone;
         this->_allocated = newsize;
-    }
-    virtual void SetCount(size_t count) { this->_count = count; }
+    };
 };
 
 // static vector for objects with a constructor
@@ -599,6 +661,11 @@ protected:
             base->SetCount(count + first);
             this->_count = base->size() - first;
         }
+    }
+
+    void trim(void)
+    {
+        base->trim();
     }
 };
 

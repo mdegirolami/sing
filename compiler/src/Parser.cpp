@@ -1183,7 +1183,7 @@ expression :: = prefix_expression | expression binop expression
 binop ::=  '+' | '-' | '*' | '/' | '^' | '%' | 
 	  '&' | '|' | '>>' | '<<' |
 	  '<' | '<=' | '>' | '>=' | '==' | '!=' | 
-	  xor | && | || 
+	  '**' | && | || 
 */
 IAstExpNode *Parser::ParseExpression()
 {
@@ -1337,16 +1337,16 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
             }
             if (!Advance()) goto recovery;
             break;
-        case TOKEN_ROUND_OPEN:
-            if (!Advance()) goto recovery;
-            node = ParseExpression();
-            if (on_error_) goto recovery;
-            if (m_token != TOKEN_ROUND_CLOSE) {
-                Error("Expecting ')'");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            break;
+        // case TOKEN_ROUND_OPEN:
+        //     if (!Advance()) goto recovery;
+        //     node = ParseExpression();
+        //     if (on_error_) goto recovery;
+        //     if (m_token != TOKEN_ROUND_CLOSE) {
+        //         Error("Expecting ')'");
+        //         goto recovery;
+        //     }
+        //     if (!Advance()) goto recovery;
+        //     break;
         case TOKEN_MINUS:
         case TOKEN_PLUS:
         case TOKEN_AND:
@@ -1486,7 +1486,8 @@ IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
             break;
         case TOKEN_ROUND_OPEN:
             if (!Advance()) goto recovery;
-            node = ParseLeftTerm();
+            node = ParseExpression();       // es: (...).sqrt()
+            //node = ParseLeftTerm();
             if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");

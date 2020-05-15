@@ -23,10 +23,8 @@ build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pk
 build $src/synth_test_pkg.h   | $src/synth_test_pkg.cpp  : sc $sing_src/synth_test_pkg.sing  
 build $src/synth_test_pkg2.h  | $src/synth_test_pkg2.cpp : sc $sing_src/synth_test_pkg2.sing  
 build $src/types_and_vars.h   | $src/types_and_vars.cpp  : sc $sing_src/types_and_vars.sing  
-build $src/siege.h            | $src/siege.cpp           : sc $sing_src/siege.sing
-  skip_usage =
-
 build $src/synth_test_oop.h | $src/synth_test_oop.cpp : sc $sing_src/synth_test_oop.sing
+build $src/siege.h            | $src/siege.cpp           : sc $sing_src/siege.sing
   skip_usage =
 
 build main.o             : cc $src/main.cpp

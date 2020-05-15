@@ -10,12 +10,12 @@
             "request": "launch",
             "program": "${workspaceFolder}\\bin\\sing_d.exe",
             //"args": [],
-            //"args": ["-g", "-I", "../../tests", "-MF", "-o", "../../tests_results/synth_test_oop.cpp", "../../tests/synth_test_oop.sing"],
-            "args": ["-^", "3", "-I", "./", "checker_test.sing"],
+            "args": ["-g", "-I", "../../tests", "-u", "-MF", "-o", "../../tests_results/synth_test_oop.cpp", "../../tests/synth_test_oop.sing"],
+            //"args": ["-^", "3", "-I", "./", "checker_test_classes.sing"],
             "stopAtEntry": false,
             //"cwd": "${workspaceFolder}\\bin",
-            //"cwd": "${workspaceFolder}\\..\\test\\build\\obj_d",
-            "cwd": "${workspaceFolder}\\..\\test\\tests",
+            "cwd": "${workspaceFolder}\\..\\test\\build\\obj_d",
+            //"cwd": "${workspaceFolder}\\..\\test\\tests",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -24,6 +24,11 @@
                 {
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Enable all-exceptions",
+                    "text": "catch throw",
                     "ignoreFailures": true
                 }
             ]
