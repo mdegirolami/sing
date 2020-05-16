@@ -6,7 +6,7 @@ namespace SingNames {
 CppFormatter::CppFormatter()
 {
     max_line_len_ = 160;
-    remarks_tabs = 20;
+    remarks_tabs_ = 20;
     Reset();
 }
 
@@ -14,7 +14,9 @@ void CppFormatter::Reset(void)
 {
     remarks_ = nullptr;
     remarks_count_ = 0;
+    line_num_ = 1;
     place_line_break_ = false;
+    linenum_map.clear();
 }
 
 void CppFormatter::SetRemarks(RemarkDescriptor **remarks, int count)
@@ -29,7 +31,7 @@ void CppFormatter::SetRemarks(RemarkDescriptor **remarks, int count)
 //
 void CppFormatter::Format(string *source, int indent)
 {
-    int minsplit, maxsplit;
+    int minsplit, maxsplit, first_cpp_line;
 
     // format on a single or multiple lines, with correct indent.
     GetMaxAndMinSplit(source, &minsplit, &maxsplit);
@@ -52,9 +54,10 @@ void CppFormatter::Format(string *source, int indent)
     // add remarks and a terminating \r\n.
     // adds a starting \r\n if there is a user placed empy row just before the code
     if (remarks_ != nullptr && remarks_count_ > 0) {
-        AddComments(&pool_[1], &pool_[0]);
+        first_cpp_line = AddComments(&pool_[1], &pool_[0]);
         out_str_ = 1;
     } else {
+        first_cpp_line = line_num_;
         AppendLf(&pool_[0]);
     }
 
@@ -62,8 +65,18 @@ void CppFormatter::Format(string *source, int indent)
     // and not yet present, add a starting empty line
     if (place_line_break_ && pool_[out_str_][0] != '\r') {
         pool_[out_str_].insert(0, "\r\n");
+        ++first_cpp_line;
     }
     place_line_break_ = false;
+
+    // if was a statement save a record in linenum_map
+    if (formatting_a_statement_) {
+        formatting_a_statement_ = false;
+        line_nums record = { node_pos_.start_row, first_cpp_line};
+        linenum_map.push_back(record);
+    }
+
+    UpdateLineNum();
 }
 
 void CppFormatter::FormatResidualRemarks(void)
@@ -94,6 +107,15 @@ void CppFormatter::FormatResidualRemarks(void)
         pool_[0].erase(pool_[0].length() - 2);
         AddLineBreak();
     }
+    UpdateLineNum();
+}
+
+void CppFormatter::UpdateLineNum(void) 
+{ 
+    const char *retstr = pool_[out_str_].c_str();
+    for (const char *scan = retstr; *scan != 0; ++scan) {
+        if (*scan == '\n') ++line_num_;
+    } 
 }
 
 void CppFormatter::GetMaxAndMinSplit(string *source, int *minsplit, int *maxsplit)
@@ -131,7 +153,6 @@ void CppFormatter::Split(string *formatted, string *source, int minsplit, int ma
                 *formatted += "\r\n";
 
                 // indent
-                //int full_indent = indent + MAX(maxsplit, split_limit_) - val + 1;
                 int full_indent = indent + 1;
                 AddIndent(formatted, full_indent);
                 linelen = full_indent << 2;
@@ -269,11 +290,11 @@ void CppFormatter::FilterSplitMarkers(string *out_str, string *in_str)
     }
 }
 
-void CppFormatter::AddComments(string *formatted, string *source)
+int CppFormatter::AddComments(string *formatted, string *source)
 {
     *formatted = "";
     const char *src_scan = source->c_str();
-    while (processed_remarks_ < remarks_count_ && remarks_[processed_remarks_]->row < node_pos.start_row) {
+    while (processed_remarks_ < remarks_count_ && remarks_[processed_remarks_]->row < node_pos_.start_row) {
         RemarkDescriptor *rem = remarks_[processed_remarks_++];
         if (!rem->emptyline) {
             for (int ii = rem->col; ii > 0; --ii) {
@@ -284,8 +305,13 @@ void CppFormatter::AddComments(string *formatted, string *source)
         AppendEmptyLine(formatted);
     }
 
-    int currow = node_pos.start_row;
-    int rem_pos = (Maxlen(source) / remarks_tabs + 1) * remarks_tabs;
+    int retvalue = line_num_;   // line on which we place the first nonremark nonblank code.
+    for (const char *scan = formatted->c_str(); *scan != 0; ++scan) {
+        if (*scan == '\n') ++retvalue;
+    }
+
+    int currow = node_pos_.start_row;
+    int rem_pos = (Maxlen(source) / remarks_tabs_ + 1) * remarks_tabs_;
     while (*src_scan != 0) {
 
         // copy a line
@@ -304,12 +330,10 @@ void CppFormatter::AddComments(string *formatted, string *source)
         }
 
         // add just one comment, if any
-        if (processed_remarks_ < remarks_count_ && remarks_[processed_remarks_]->row <= node_pos.last_row) {
+        if (processed_remarks_ < remarks_count_ && remarks_[processed_remarks_]->row <= node_pos_.last_row) {
             RemarkDescriptor *rem = remarks_[processed_remarks_];
             if (!rem->emptyline) {
                 processed_remarks_++;
-
-                //for (int ii = (col / remarks_tabs + 1) * remarks_tabs - col; ii > 0; --ii) {
                 for (int ii = rem_pos - col; ii > 0; --ii) {
                     *formatted += " ";
                 }
@@ -320,6 +344,7 @@ void CppFormatter::AddComments(string *formatted, string *source)
         // close the line
         AppendLf(formatted);
     }
+    return(retvalue);
 }
 
 // don't append if terminating with a line break

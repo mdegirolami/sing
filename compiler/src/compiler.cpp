@@ -131,6 +131,15 @@ int Compiler::CompileSinglePackage(void)
         //     unlink(output_name.c_str());
         // }
 
+        FileName::ExtensionSet(&output_name, "map");
+        FILE *mfd = fopen(output_name.c_str(), "wb");
+        if (mfd == NULL) {
+            printf("\ncan't open map file: %s", output_name.c_str());
+            return(1);
+        }
+        cpp_synthesizer_.SynthMapFile(mfd);
+        fclose(mfd);
+
         if (options_.MustCreateDFile()) {
             FileName::ExtensionSet(&output_name, "h");
             FILE *dfd = fopen((output_name + ".d").c_str(), "wb");

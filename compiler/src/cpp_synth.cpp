@@ -797,7 +797,7 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
     AstNodeType type;
 
     type = node->GetType();
-    formatter_.SetNodePos(node->GetPositionRecord());
+    formatter_.SetNodePos(node->GetPositionRecord(), type != ANT_VAR && type != ANT_BLOCK);
 
     // place an empty line before the first non-var statement following one or more var declarations 
     if (oldtype != nullptr) {
@@ -1387,7 +1387,6 @@ int CppSynth::SynthExpression(string *dst, IAstExpNode *node)
 {
     int             priority = 0;
 
-    formatter_.LockSplitIndent(split_level_ - 1);    // here on indent of all splits the same 
     switch (node->GetType()) {
     case ANT_INDEXING:
         priority = SynthIndices(dst, (AstIndexing*)node);
@@ -3057,6 +3056,23 @@ void CppSynth::SynthDFile(FILE *dfd, Package *package, const char *target_name)
             fprintf(dfd, " %s", dep->full_package_path_.c_str());
         } else {
             fprintf(dfd, " %s \\", dep->full_package_path_.c_str());
+        }
+    }
+}
+
+void CppSynth::SynthMapFile(FILE *mfd)
+{
+    fprintf(mfd, "prefix = %s\r\n", member_prefix_.c_str());
+    fprintf(mfd, "suffix = %s\r\n", member_suffix_.c_str());
+    const vector<line_nums> *lines = formatter_.GetLines();
+    int top = lines->size() - 1;
+    if (top < 0) {
+        fprintf(mfd, "top_lines = 0, 0\r\n");
+    } else {
+        fprintf(mfd, "top_lines = %d, %d\r\n", (*lines)[top].sing_line, (*lines)[top].cpp_line);
+        fprintf(mfd, "lines:\r\n");
+        for (int ii = 0; ii <= top; ++ii) {
+            fprintf(mfd, "%d, %d\r\n", (*lines)[ii].sing_line, (*lines)[ii].cpp_line);
         }
     }
 }
