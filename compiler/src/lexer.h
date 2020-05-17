@@ -71,7 +71,7 @@ enum Token {
     TOKEN_BIND,         // currently unused
 
     TOKEN_SIZEOF,
-    TOKEN_DIMOF,
+    TOKEN_DIMOF,        // currently unused
     TOKEN_XOR,
     TOKEN_CASE,
     TOKEN_TYPESWITCH,

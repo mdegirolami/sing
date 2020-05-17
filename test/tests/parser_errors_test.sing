@@ -254,6 +254,8 @@ fn test10() void
         case 0 : ++counter;
         case 1                   // if emits an error here did resync on inner ;
         default : return;
-    }        
+    }  
+
+	1234;	// expression without effect      
 }
     

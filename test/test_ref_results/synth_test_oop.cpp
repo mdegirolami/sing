@@ -292,15 +292,9 @@ static void check_builtin()
     f1 = log10(f1);
     f1 = sing::exp10(f1);
     f1 = floor(f1);
-    //f1 = f64(0.3).ceil();
-    //f1 = f64(-0.3).round();
-    //f1 = f64(-0.7).round();
-    f1 = 0.3f;
-    f1 = ceil(f1);
-    f1 = -0.3f;
-    f1 = round(f1);
-    f1 = -0.7f;
-    f1 = round(f1);
+    f1 = ceil(0.3);
+    f1 = round(-0.3);
+    f1 = round(-0.7);
 
     std::complex<float> cpl = -1.0f + std::complex<float>(0.0f, 1.0f);
 

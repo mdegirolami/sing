@@ -117,7 +117,6 @@ public fn sinth_test() i32
     var v_int32 i32;
     v_int32 = sizeof((in a1 i32) i8);
     v_int32 = sizeof(onheap[2]);
-    v_int32 = dimof(onheap);
       
     // simplifying &*
     var intonheap i32 = 10;

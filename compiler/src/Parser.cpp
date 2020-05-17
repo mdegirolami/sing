@@ -1092,7 +1092,7 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             node = aid;
             RecordPosition(aid);
             if (!Advance()) goto recovery;
-            aid->SetLeftTerm(ParseLeftTerm());
+            aid->SetLeftTerm(ParsePrefixExpression(""));
             if (on_error_) goto recovery;
             CheckSemicolon();
         }
@@ -1126,7 +1126,7 @@ IAstNode *Parser::ParseLeftTermStatement(void)
     PositionInfo            pinfo;
 
     {
-        assignee = ParseLeftTerm("Expecting a statement");
+        assignee = ParsePrefixExpression("Expecting a statement");
         if (on_error_) goto recovery;
         FillPositionInfo(&pinfo);   // start with token
         token = m_token;
@@ -1156,14 +1156,17 @@ IAstNode *Parser::ParseLeftTermStatement(void)
             assignee = NULL;
             if (!Advance()) goto recovery;
             break;
-        default:
+        case TOKEN_SEMICOLON:
             if (assignee->GetType() != ANT_FUNCALL) {
                 Error("Expression or part of it has no effects");
                 goto recovery;
             }
             node = assignee;
-            assignee = NULL;
+            assignee = nullptr;
             break;      // let's assume it is a function call.
+        default:
+            Error("Expecting an assignment, increment/decrement or semicolon");
+            goto recovery;
         }
         UpdateEndPosition(node);
         CheckSemicolon();
@@ -1197,7 +1200,7 @@ IAstExpNode *Parser::ParseExpression()
 
     {
         do {
-            nodes[num_nodes++] = ParsePrefixExpression();
+            nodes[num_nodes++] = ParsePrefixExpression("");
             if (on_error_) goto recovery;
             m_lexer->ConvertToPower(&m_token);              // if appropriate convert to the power operator
             priority = m_lexer->GetBinopPriority(m_token);
@@ -1226,18 +1229,100 @@ recovery:
 }
 
 //
-// an expression made only by a name with prefix and postfix operators.
+// an expression made only by a term with prefix and postfix operators.
 // (no binary operators)
 //
-//prefix_expression :: = null | false | true | err_ok | err_bounds |
-//          <Numeral> | <LiteralString> | <LiteralComplex> |
-//          left_term | sizeof '(' left_term ')' | sizeof '(' type_specification ')' | dimof '(' left_term ')' |
-//           base_type '(' expression ')'|
-//          unop prefix_expression | '(' expression ')'
+// prefix_expression :: =  unop prefix_expression | postfix_expression
 //
-// unop :: = ' - ' | '!' | '~' | '&'
+// unop :: = ' - ' | '+' | '!' | '~' | '&' | '*'
 //
-IAstExpNode *Parser::ParsePrefixExpression(void)
+IAstExpNode *Parser::ParsePrefixExpression(const char *errmess)
+{
+    IAstExpNode    *node = nullptr;
+
+    switch (m_token) {
+    case TOKEN_MINUS:
+    case TOKEN_PLUS:
+    case TOKEN_AND:
+    case TOKEN_NOT:
+    case TOKEN_LOGICAL_NOT:
+    case TOKEN_MPY:
+        node = new AstUnop(m_token);
+        RecordPosition(node);
+        if (Advance()) {
+            ((AstUnop*)node)->SetOperand(ParsePrefixExpression(errmess));
+        }
+        break;
+
+    default:
+        node = ParsePostfixExpression(errmess);
+        break;
+    }
+    if (on_error_) {
+        if (node != nullptr) delete node;
+        node = nullptr;
+    }
+    return(node);
+}
+
+//
+// postfix_expression :: = expression_term | 
+//                         postfix_expression '[' indices_or_rages ']' | 
+//                         postfix_expression '.' <name> | postfix_expression '(' arguments ')'
+//
+IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
+{
+    IAstExpNode *node = ParseExpressionTerm(errmess);
+    bool        done = false;
+
+    while (!done && !on_error_) {
+        switch (m_token) {
+        case TOKEN_SQUARE_OPEN:
+            node = ParseRangesOrIndices(node);
+            break;
+        case TOKEN_DOT:
+            {
+                PositionInfo pnfo;
+                FillPositionInfo(&pnfo);
+                if (!Advance()) goto recovery;
+                if (m_token != TOKEN_NAME) {
+                    Error("Expecting a field name or a symbol");
+                    goto recovery;                
+                }
+                AstExpressionLeaf *leaf = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
+                RecordPosition(leaf);
+                node = new AstBinop(TOKEN_DOT, node, leaf);
+                *(node->GetPositionRecord()) = pnfo;
+                Advance();
+            }
+            break;
+        case TOKEN_ROUND_OPEN:
+            node = new AstFunCall(node);
+            RecordPosition(node);
+            ParseArguments((AstFunCall*)node);
+            if (on_error_) goto recovery;                
+            UpdateEndPosition(node);
+            break;
+        default:
+            done = true;
+            break;
+        }
+    }
+recovery:    
+    if (on_error_) {
+        if (node != NULL) delete node;
+        node = nullptr;
+    }
+    return(node);
+}
+
+//
+// expression_term :: = null | false | true | <Numeral> | <LiteralString> | <LiteralComplex> |
+//                      sizeof '(' prefix_expression ')' | sizeof '(' type_specification ')' | 
+//                      base_type '(' expression ')'| '(' expression ')' | 
+//                      <var_name> | this
+//
+IAstExpNode *Parser::ParseExpressionTerm(const char *errmess)
 {
     IAstExpNode    *node = NULL;
 
@@ -1278,27 +1363,10 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
             }
             if (!Advance()) goto recovery;
             if (m_token == TOKEN_NAME || m_token == TOKEN_MPY) {
-                ((AstUnop*)node)->SetOperand(ParseLeftTerm());
+                ((AstUnop*)node)->SetOperand(ParsePrefixExpression(errmess));
             } else {
                 ((AstUnop*)node)->SetTypeOperand(ParseTypeSpecification());
             }
-            if (on_error_) goto recovery;
-            if (m_token != TOKEN_ROUND_CLOSE) {
-                Error("Expecting ')'");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_DIMOF:
-            node = new AstUnop(TOKEN_DIMOF);
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            if (m_token != TOKEN_ROUND_OPEN) {
-                Error("Expecting '('");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            ((AstUnop*)node)->SetOperand(ParseLeftTerm());
             if (on_error_) goto recovery;
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
@@ -1337,30 +1405,32 @@ IAstExpNode *Parser::ParsePrefixExpression(void)
             }
             if (!Advance()) goto recovery;
             break;
-        // case TOKEN_ROUND_OPEN:
-        //     if (!Advance()) goto recovery;
-        //     node = ParseExpression();
-        //     if (on_error_) goto recovery;
-        //     if (m_token != TOKEN_ROUND_CLOSE) {
-        //         Error("Expecting ')'");
-        //         goto recovery;
-        //     }
-        //     if (!Advance()) goto recovery;
-        //     break;
-        case TOKEN_MINUS:
-        case TOKEN_PLUS:
-        case TOKEN_AND:
-        case TOKEN_NOT:
-        case TOKEN_LOGICAL_NOT:
-        //case TOKEN_DOT:
-            node = new AstUnop(m_token);
+        case TOKEN_ROUND_OPEN:
+            if (!Advance()) goto recovery;
+            node = ParseExpression();
+            if (on_error_) goto recovery;
+            if (m_token != TOKEN_ROUND_CLOSE) {
+                Error("Expecting ')'");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+            break;
+        case TOKEN_NAME:
+            node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
             RecordPosition(node);
             if (!Advance()) goto recovery;
-            ((AstUnop*)node)->SetOperand(ParsePrefixExpression());
+            break;
+        case TOKEN_THIS:
+            node = new AstExpressionLeaf(TOKEN_THIS, "");
+            RecordPosition(node);
+            if (!Advance()) goto recovery;
             break;
         default:
-            node = ParseLeftTerm("Expecting an expression");
-            break;
+            if (errmess != nullptr && errmess[0] != 0) {
+                Error(errmess);
+            } else {
+                Error("Expression syntax error: expecting a literal, variable, '(', 'sizeof' a base type or 'this'");
+            }
         }
     } 
 recovery:    
@@ -1467,92 +1537,6 @@ AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
             return(NULL);
         }       
     }
-}
-
-//left_term :: = <var_name> | '(' left_term ')' | '*'left_term
-//               left_term '[' indices_or_rages ']' | left_term '.' <name> | left_term '(' arguments ')' | this
-IAstExpNode *Parser::ParseLeftTerm(const char *errmess)
-{
-    IAstExpNode    *node = NULL;
-
-    {
-        switch (m_token) {
-        case TOKEN_MPY:
-            node = new AstUnop(TOKEN_MPY);
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            ((AstUnop*)node)->SetOperand(ParseLeftTerm());
-            if (on_error_) goto recovery;
-            break;
-        case TOKEN_ROUND_OPEN:
-            if (!Advance()) goto recovery;
-            node = ParseExpression();       // es: (...).sqrt()
-            //node = ParseLeftTerm();
-            if (on_error_) goto recovery;
-            if (m_token != TOKEN_ROUND_CLOSE) {
-                Error("Expecting ')'");
-                goto recovery;                
-            }
-            if (!Advance()) goto recovery;  // absorb ')'
-            break;
-        case TOKEN_NAME:
-            node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_THIS:
-            node = new AstExpressionLeaf(TOKEN_THIS, "");
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            break;
-        default:
-            Error(errmess != NULL ? errmess : "Expecting a left term (an assignable expression)");
-            goto recovery;                
-        }
-
-        // postfixed ?
-        bool done = false;
-        while (!done) {
-            switch (m_token) {
-            case TOKEN_SQUARE_OPEN:
-                node = ParseRangesOrIndices(node);
-                if (on_error_) goto recovery;
-                break;
-            case TOKEN_DOT:
-                {
-                    PositionInfo pnfo;
-                    FillPositionInfo(&pnfo);
-                    if (!Advance()) goto recovery;
-                    if (m_token != TOKEN_NAME) {
-                        Error("Expecting a field name or a symbol");
-                        goto recovery;                
-                    }
-                    AstExpressionLeaf *leaf = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
-                    RecordPosition(leaf);
-                    node = new AstBinop(TOKEN_DOT, node, leaf);
-                    *(node->GetPositionRecord()) = pnfo;
-                    if (!Advance()) goto recovery;
-                }
-                break;
-            case TOKEN_ROUND_OPEN:
-                node = new AstFunCall(node);
-                RecordPosition(node);
-                ParseArguments((AstFunCall*)node);
-                if (on_error_) goto recovery;                
-                UpdateEndPosition(node);
-                break;
-            default:
-                done = true;
-                break;
-            }
-        }
-    } 
-recovery:    
-    if (on_error_) {
-        if (node != NULL) delete node;
-        node = nullptr;
-    }
-    return(node);
 }
 
 AstIndexing *Parser::ParseRangesOrIndices(IAstExpNode *indexed)

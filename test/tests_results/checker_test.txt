@@ -291,7 +291,6 @@ ERROR !! file checker_test.sing:632:12: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:643:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
 ERROR !! file checker_test.sing:646:37: Duplicated argument name
 ERROR !! file checker_test.sing:655:9: Sizeof doesn't apply to this type (it has variable size)
-ERROR !! file checker_test.sing:658:9: You can apply the dimof operator only to objects of type 'map' or 'array'
 ERROR !! file checker_test.sing:666:14: Array size must be '*' (for dynamic) or a positive integer value
 ERROR !! file checker_test.sing:667:5: Symbol 'fvecdimf' is duplicated
 ERROR !! file checker_test.sing:667:14: Array size must be '*' (for dynamic) or a positive integer value

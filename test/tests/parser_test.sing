@@ -65,7 +65,7 @@ fn myclass.chebello pure(in uno i32, out due i8, io tre string, ...) bool
 		var a f32;
 		myclass.member = 10;
 		a = pippo + 10 * (mm[1,1] + package1.extvar) / myclass.member;
-		*returning_pointer(a : singlepar) = sizeof(f32) + dimof(mm[0]) + u64(pippo) + -a;
+		*returning_pointer(a : singlepar) = sizeof(f32) + u64(pippo) + -a;
 		var test = pippo**3 * 2 + pippo**2 * 5 > 3 && pippo < 0 || pippo > 100;
 		test = test || myclass.thebool && 10 < pippo + mm[0][0] * 5**2;
         

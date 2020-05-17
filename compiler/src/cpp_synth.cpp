@@ -1878,11 +1878,6 @@ int CppSynth::SynthUnop(string *dst, AstUnop *node)
         dst->insert(0, "sizeof(");
         *dst += ')';
         break;
-    case TOKEN_DIMOF:
-        priority = GetBinopCppPriority(TOKEN_DOT);
-        Protect(dst, exp_priority, priority);
-        *dst += ".size()";
-        break;                      // TODO
     case TOKEN_MINUS:
         Protect(dst, exp_priority, priority);
         dst->insert(0, "-");

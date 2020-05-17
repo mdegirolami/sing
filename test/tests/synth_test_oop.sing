@@ -263,15 +263,9 @@ fn check_builtin() void
     f1 = f1.log10();
     f1 = f1.exp10();
     f1 = f1.floor();
-    //f1 = f64(0.3).ceil();
-    //f1 = f64(-0.3).round();
-    //f1 = f64(-0.7).round();
-    f1 = 0.3;
-    f1 = f1.ceil();
-    f1 = -0.3;
-    f1 = f1.round();
-    f1 = -0.7;
-    f1 = f1.round();
+    f1 = f64(0.3).ceil();
+    f1 = f64(-0.3).round();
+    f1 = f64(-0.7).round();
 
     var cpl c64 = -1.0 + 1i;
     f0 = cpl.abs();

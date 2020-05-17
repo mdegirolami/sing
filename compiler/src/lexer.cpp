@@ -70,7 +70,7 @@ TokenDesc keywords[] = {
     {TOKEN_BIND, "bind"},
     
     {TOKEN_SIZEOF, "sizeof"},
-    {TOKEN_DIMOF, "dimof"},
+    {TOKEN_DIMOF, "dimof"},     // unused
     {TOKEN_XOR, "^"},
     {TOKEN_CASE, "case"},
     {TOKEN_TYPESWITCH, "typeswitch"},

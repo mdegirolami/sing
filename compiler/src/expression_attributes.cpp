@@ -607,15 +607,6 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
     case TOKEN_SIZEOF:
         assert(false);
         break;                      // do nothing. in case of 'sizeof', attr is reinited with InitWithInt32().
-    case TOKEN_DIMOF:
-        if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
-            *error = "You can apply the dimof operator only to objects of type 'map' or 'array'";
-            exp_type_ = BT_ERROR;
-        } else {
-            exp_type_ = BT_INT32;
-            is_writable_ = false;
-        }
-        break;
     case TOKEN_MINUS:
         exp_type_ = IntegerPromote(exp_type_);
         if ((exp_type_ & (BT_ALL_THE_NUMBERS - BT_ALL_UINTS)) == 0) {

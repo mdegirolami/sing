@@ -425,16 +425,7 @@ Func myclass.chebello {
                 }
                 Binop + Operation {
                     Binop + Operation {
-                        Binop + Operation {
-                            Unop sizeof Operation {
-                            }
-                            Unop dimof Operation {
-                                Indexing {
-                                     0
-                                    Missing upper value
-                                     mm
-                                }
-                            }
+                        Unop sizeof Operation {
                         }
                         Unop u64 Operation {
                              pippo

@@ -61,8 +61,9 @@ class Parser {
     IAstNode                *ParseStatement(bool allow_let_and_var);
     IAstNode                *ParseLeftTermStatement(void);
     IAstExpNode             *ParseExpression(/*int max_priority = Lexer::max_priority + 1*/);
-    IAstExpNode             *ParsePrefixExpression(void);
-    IAstExpNode             *ParseLeftTerm(const char *errmess = NULL);
+    IAstExpNode             *ParsePrefixExpression(const char *errmess);
+    IAstExpNode             *ParsePostfixExpression(const char *errmess);
+    IAstExpNode             *ParseExpressionTerm(const char *errmess);
     AstIndexing             *ParseRangesOrIndices(IAstExpNode *indexed);
     void                    ParseArguments(AstFunCall *node);
     AstWhile                *ParseWhile(void);

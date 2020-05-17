@@ -140,7 +140,6 @@ int32_t sinth_test()
 
     v_int32 = sizeof(int8_t (*)(const int32_t a1));
     v_int32 = sizeof((*onheap)[2]);
-    v_int32 = (*onheap).size();
 
     // simplifying &*
     sing::ptr<int32_t> intonheap(new sing::wrapper<int32_t>(10));
