@@ -17,7 +17,7 @@ type xxx map;
 type xxx map(i8;
 type xxx matrix;
 type xxx weak string;
-type xxx extern.;
+type xxx external.;
 
 fn () void
 {

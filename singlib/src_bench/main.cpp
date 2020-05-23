@@ -18,12 +18,12 @@ int main() {
     //test_types_and_vars();
     //sinth_test();
     //using_strings();
-    test_intrinsics();
+    //test_intrinsics();
     //test_vectors(5);
     //CheckLiterals();
     //ptrtest();
     //print_primes_to(100);
     //test_ptr_speed();
-    //speed_test();
+    speed_test();
     return(0);
 }

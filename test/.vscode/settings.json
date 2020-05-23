@@ -12,6 +12,8 @@
         "streambuf": "cpp",
         "vector": "cpp",
         "xiosbase": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "cmath": "cpp",
+        "array": "cpp"
     }
 }

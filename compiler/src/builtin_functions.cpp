@@ -33,6 +33,7 @@ static VarDeclaration *GetVarFromSignature(const char type_id, const ExpressionA
 // c = (cast)name(T); // cast if not double
 // p = name(T); // plain
 // m = T.member()
+// S = std::name(T)
 // NOTE: functions on integers are all with 0 values and not muting (apply also to right values)
 // the two letters are the returned value and the implementation type.
 IFDesc g_integer_functs[] = {{"abs", "Ts"}, {"sqrt", "Tc"}, {"sgn", "is"}, {"", ""}};
@@ -45,10 +46,10 @@ IFDesc g_float_functs[] = {
 };
 
 IFDesc g_complex_functs[] = {
-{"abs", "ep"}, {"arg", "ep"}, {"imag", "ep"}, {"real", "ep"}, {"norm", "ep"}, 
-{"sqrt", "Tp"},
-{"sin", "Tp"}, {"cos", "Tp"}, {"tan", "Tp"}, {"asin", "Tp"}, {"acos", "Tp"}, {"atan", "Tp"},
-{"log", "Tp"}, {"exp", "Tp"}, {"", ""}
+{"abs", "eS"}, {"arg", "eS"}, {"imag", "eS"}, {"real", "eS"}, {"norm", "eS"}, 
+{"sqrt", "TS"},
+{"sin", "TS"}, {"cos", "TS"}, {"tan", "TS"}, {"asin", "TS"}, {"acos", "TS"}, {"atan", "TS"},
+{"log", "TS"}, {"exp", "TS"}, {"", ""}
 };
 
 IFDesc g_array_functs[] = {
@@ -118,6 +119,9 @@ AstFuncType *GetFuncSignature(bool *ismuting, BInSynthMode *mode, const char *na
     switch (signature[strlen(signature) - 1]) {
     case 's':
         *mode = BInSynthMode::sing;
+        break;
+    case 'S':
+        *mode = BInSynthMode::std;
         break;
     case 'c':
         *mode = BInSynthMode::cast;

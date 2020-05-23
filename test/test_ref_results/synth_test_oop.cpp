@@ -231,88 +231,88 @@ static int32_t check_typeswitch2(const sing::iptr<tester> object)
 static void check_builtin()
 {
     int32_t sign = 0;
-
+    const int32_t atan = 5;             // conflicts with functions ?
     int8_t int8 = (int8_t)-100;
 
     int8 = sing::abs(int8);
-    int8 = (int8_t)sqrt(int8);
+    int8 = (int8_t)::sqrt(int8);
     sign = sing::sgn(int8);
 
     int32_t int32 = -100;
 
     int32 = sing::abs(int32);
-    int32 = (int32_t)sqrt(int32);
+    int32 = (int32_t)::sqrt(int32);
     sign = sing::sgn(int32);
 
     uint64_t uint64 = (uint64_t)10000;
 
     uint64 = sing::abs(uint64);
-    uint64 = (uint64_t)sqrt(uint64);
+    uint64 = (uint64_t)::sqrt(uint64);
     sign = sing::sgn(uint64);
 
     float f0 = -10000.0f;
 
     f0 = sing::abs(f0);
-    f0 = (float)sqrt(f0);
+    f0 = (float)::sqrt(f0);
     sign = sing::sgn(f0);
-    f0 = (float)sin(f0);
-    f0 = (float)cos(f0);
-    f0 = (float)tan(f0);
+    f0 = (float)::sin(f0);
+    f0 = (float)::cos(f0);
+    f0 = (float)::tan(f0);
     f0 = 0.5f;
-    f0 = (float)asin(f0);
-    f0 = (float)acos(f0);
-    f0 = (float)atan(f0);
-    f0 = (float)log(f0);
-    f0 = (float)exp(f0);
-    f0 = (float)log2(f0);
-    f0 = (float)exp2(f0);
-    f0 = (float)log10(f0);
+    f0 = (float)::asin(f0);
+    f0 = (float)::acos(f0);
+    f0 = (float)::atan(f0);
+    f0 = (float)::log(f0);
+    f0 = (float)::exp(f0);
+    f0 = (float)::log2(f0);
+    f0 = (float)::exp2(f0);
+    f0 = (float)::log10(f0);
     f0 = sing::exp10(f0);
-    f0 = (float)floor(f0);
-    f0 = (float)ceil(0.3f);
-    f0 = (float)round(-0.3f);
-    f0 = (float)round(-0.7f);
+    f0 = (float)::floor(f0);
+    f0 = (float)::ceil(0.3f);
+    f0 = (float)::round(-0.3f);
+    f0 = (float)::round(-0.7f);
 
     double f1 = -10000.0;
 
     f1 = sing::abs(f1);
-    f1 = sqrt(f1);
+    f1 = ::sqrt(f1);
     sign = sing::sgn(f1);
-    f1 = sin(f1);
-    f1 = cos(f1);
-    f1 = tan(f1);
+    f1 = ::sin(f1);
+    f1 = ::cos(f1);
+    f1 = ::tan(f1);
     f1 = 0.5f;
-    f1 = asin(f1);
-    f1 = acos(f1);
-    f1 = atan(f1);
-    f1 = log(f1);
-    f1 = exp(f1);
-    f1 = log2(f1);
-    f1 = exp2(f1);
-    f1 = log10(f1);
+    f1 = ::asin(f1);
+    f1 = ::acos(f1);
+    f1 = ::atan(f1);
+    f1 = ::log(f1);
+    f1 = ::exp(f1);
+    f1 = ::log2(f1);
+    f1 = ::exp2(f1);
+    f1 = ::log10(f1);
     f1 = sing::exp10(f1);
-    f1 = floor(f1);
-    f1 = ceil(0.3);
-    f1 = round(-0.3);
-    f1 = round(-0.7);
+    f1 = ::floor(f1);
+    f1 = ::ceil(0.3);
+    f1 = ::round(-0.3);
+    f1 = ::round(-0.7);
 
     std::complex<float> cpl = -1.0f + std::complex<float>(0.0f, 1.0f);
 
-    f0 = abs(cpl);
-    f0 = arg(cpl);
-    f0 = imag(cpl);
-    f0 = real(cpl);
-    f0 = norm(cpl);
-    cpl = sqrt(cpl);
-    cpl = sin(cpl);
-    cpl = cos(cpl);
-    cpl = tan(cpl);
+    f0 = std::abs(cpl);
+    f0 = std::arg(cpl);
+    f0 = std::imag(cpl);
+    f0 = std::real(cpl);
+    f0 = std::norm(cpl);
+    cpl = std::sqrt(cpl);
+    cpl = std::sin(cpl);
+    cpl = std::cos(cpl);
+    cpl = std::tan(cpl);
     cpl = std::complex<float>(0.0f, 1.0f);
-    cpl = asin(cpl);
-    cpl = acos(cpl);
-    cpl = atan(cpl);
-    cpl = log(cpl);
-    cpl = exp(cpl);
+    cpl = std::asin(cpl);
+    cpl = std::acos(cpl);
+    cpl = std::atan(cpl);
+    cpl = std::log(cpl);
+    cpl = std::exp(cpl);
 
     sing::dpvect<float> aa = {1, 2, 3};
 

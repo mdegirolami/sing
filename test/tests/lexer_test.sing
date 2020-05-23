@@ -4,13 +4,7 @@
 /* nested /**/*/ identifyer67876 _id+alsk_89// end id"string"
 "string with escapes \' \" \\ \? \a \b \f \n \r \t \v \x67 \u76aa" 123e3+123e-3 112.13e5 0x23i 12.1e-3i
 
-
-
-null true false package requires var const type matrix map weak i8 i16 i32 i64 u8 u16 u32
-u64 f32 f64 c64 c128 let string rune bool size_t errcode fn pure in out io if else
-while for return break continue error cleanup run bind sizeof dimof ** as typeswitch case default public
-private enum struct class finalize interface static implements bypass template argument volatile throw
-try catch this mut ()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&=|=&&=||='a''\ueeee'
+'a''\ueeee'
 ;
 '
 'f
@@ -40,6 +34,114 @@ try catch this mut ()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&
 id__double
 id_single_
 _
-by switch flagset
+
+null true false void
+mut requires namespace var const type map weak i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 c64 c128 let string bool
+fn pure in out io if else while for return break continue
+sizeof ** ^ case typeswitch switch default 
+public private enum class this interface flagset by step
+
+alignas
+alignof
+and
+and_eq
+asm
+atomic_cancel
+atomic_commit
+atomic_noexcept
+auto
+bitand
+bitor
+bool
+break
+case
+catch
+char
+char8_t
+char16_t
+char32_t
+class
+compl
+concept
+const
+consteval
+constexpr
+constinit
+const_cast
+continue
+co_await
+co_return
+co_yield
+decltype
+default
+delete
+do
+double
+dynamic_cast
+else
+enum
+explicit
+export
+extern
+false
+float
+for
+friend
+goto
+if
+inline
+int
+long
+mutable
+namespace
+new
+noexcept
+not
+not_eq
+nullptr
+operator
+or
+or_eq
+private
+protected
+public
+reflexpr
+register
+reinterpret_cast
+requires
+return
+short
+signed
+sizeof
+static
+static_assert
+static_cast
+struct
+switch
+synchronized
+template
+this
+thread_local
+throw
+true
+try
+typedef
+typeid
+typename
+union
+unsigned
+using
+virtual
+void
+volatile
+wchar_t
+while
+xor
+xor_eq
+()[]{}<>,=++--.+-*/^%>><<~&|>=<=!===!&&||:+=-=*=/=^=%=>>=<<=&=|=&&=||=
+
+int8_t int16_t int32_t int64_t
+uint8_t uint16_t uint32_t uint64_t
+
 /*
 		

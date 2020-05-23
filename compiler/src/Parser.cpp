@@ -663,7 +663,6 @@ IAstTypeNode *Parser::ParseTypeSpecification(void)
         case TOKEN_COMPLEX128:
         case TOKEN_STRING:
         case TOKEN_BOOL:
-        case TOKEN_ERRORCODE:
         case TOKEN_VOID:
             node = new AstBaseType(m_token);
             RecordPosition(node);
@@ -2080,10 +2079,10 @@ bool Parser::OnDeclarationToken(void)
     case TOKEN_TYPE:
     case TOKEN_FUNC:
     case TOKEN_ENUM:
-    case TOKEN_STRUCT:
+    //case TOKEN_STRUCT:
     case TOKEN_CLASS:
     case TOKEN_INTERFACE:
-    case TOKEN_TEMPLATE:
+    //case TOKEN_TEMPLATE:
     case TOKEN_EOF:
     case TOKEN_REQUIRES:
         return(true);
@@ -2100,10 +2099,10 @@ bool Parser::OutOfFunctionToken(void)
     case TOKEN_TYPE:
     case TOKEN_FUNC:
     case TOKEN_ENUM:
-    case TOKEN_STRUCT:
+    //case TOKEN_STRUCT:
     case TOKEN_CLASS:
     case TOKEN_INTERFACE:
-    case TOKEN_TEMPLATE:
+    //case TOKEN_TEMPLATE:
     case TOKEN_EOF:
     case TOKEN_REQUIRES:
         return(true);

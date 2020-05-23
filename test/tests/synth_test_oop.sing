@@ -207,7 +207,7 @@ fn check_typeswitch2(in object *tester) i32
 fn check_builtin() void
 {
     var sign i32;
-
+    let atan = 5;       // conflicts with functions ?
     var int8 i8 = -100;
     int8 = int8.abs();
     int8 = int8.sqrt();
@@ -309,5 +309,7 @@ fn check_builtin() void
     let bbp = &bb;
     bbp.push_back(1); 
     ss = bb.size();
+
+
 }
 

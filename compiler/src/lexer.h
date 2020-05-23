@@ -44,12 +44,9 @@ enum Token {
     TOKEN_FLOAT64,
     TOKEN_COMPLEX64,
     TOKEN_COMPLEX128,
-    TOKEN_INT,
-    TOKEN_FLOAT, 
     TOKEN_LET,
     TOKEN_STRING,
     TOKEN_BOOL,
-    TOKEN_ERRORCODE,    // currently unused
 
     TOKEN_FUNC,
     TOKEN_PURE,
@@ -65,13 +62,8 @@ enum Token {
     TOKEN_RETURN,
     TOKEN_BREAK,
     TOKEN_CONTINUE,
-    TOKEN_ERROR,        // currently unused
-    TOKEN_CLEANUP,      // currently unused
-    TOKEN_RUN,          // currently unused
-    TOKEN_BIND,         // currently unused
 
     TOKEN_SIZEOF,
-    TOKEN_DIMOF,        // currently unused
     TOKEN_XOR,
     TOKEN_CASE,
     TOKEN_TYPESWITCH,
@@ -81,19 +73,11 @@ enum Token {
     TOKEN_PUBLIC,
     TOKEN_PRIVATE,
     TOKEN_ENUM,
-    TOKEN_STRUCT,
     TOKEN_CLASS,
     TOKEN_THIS,
     TOKEN_INTERFACE,
-    TOKEN_STATIC,       // currently unused
     TOKEN_FLAGSET,      // currently unused
     TOKEN_BY,
-    TOKEN_TEMPLATE,     // currently unused
-    TOKEN_ARGUMENT,     // currently unused
-    TOKEN_VOLATILE,     // currently unused
-    TOKEN_THROW,        // currently unused
-    TOKEN_TRY,          // currently unused
-    TOKEN_CATCH,        // currently unused
     TOKEN_STEP,
 
     TOKEN_ROUND_OPEN,
@@ -142,6 +126,8 @@ enum Token {
     TOKEN_UPD_AND,
     TOKEN_UPD_OR,
 
+    TOKEN_UNUSED,
+
     TOKENS_COUNT
 };
 
@@ -153,14 +139,14 @@ enum LexerError {LE_TRUNCATED_CONSTANT, LE_WRONG_ESCAPE_SEQUENCE, LE_APEX_EXPECT
                  LE_UNDERSCORE_UNALLOWED};
 
 class Lexer {
-    static const int ASH_BITS = 10;
+    static const int ASH_BITS = 11;
     static const int TABLE_SIZE = (1 << ASH_BITS);
     static const int ASH_MASK = (TABLE_SIZE - 1);
 
     // ash table of interpunctuation and ketworks
-    static int             ash_table[TABLE_SIZE];
-    static int             ash_next_item[TOKENS_COUNT];
-    static const char      *token_to_string[TOKENS_COUNT];
+    static int             ash_table[];
+    static int             ash_next_item[];
+    static const char      *token_to_string[];
     static bool            ash_table_inited;
 
     FILE            *m_fd;

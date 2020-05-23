@@ -1577,11 +1577,21 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
             (*dst) += ")";
             priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
             break;
+        case BInSynthMode::std:
+            dst->insert(0, "(");
+            dst->insert(0, right_leaf->value_);
+            dst->insert(0, "std::");
+            (*dst) += ")";
+            priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
+            break;
         case BInSynthMode::cast:
         case BInSynthMode::plain:
             {
                 dst->insert(0, "(");
                 dst->insert(0, right_leaf->value_);
+                if (root_->namespace_.length() > 0) {
+                    dst->insert(0, "::");
+                }
                 (*dst) += ")";
                 priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
                 Token base_type = node->operand_left_->GetAttr()->GetAutoBaseType();
@@ -2401,8 +2411,6 @@ const char *CppSynth::GetBaseTypeName(Token token)
         return("sing::string");
     case TOKEN_BOOL:
         return("bool");
-    case TOKEN_ERRORCODE:
-        return("int32_t");
     case TOKEN_VOID:
         return("void");
     }

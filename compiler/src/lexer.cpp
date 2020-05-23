@@ -5,6 +5,7 @@
 #include <string.h>
 #include "lexer.h"
 #include "helpers.h"
+#include "vector.h"
 
 namespace SingNames {
 
@@ -23,9 +24,9 @@ TokenDesc keywords[] = {
     {TOKEN_FALSE, "false"},
     {TOKEN_VOID, "void"},
 
-    { TOKEN_MUT, "mut"},
-    { TOKEN_REQUIRES, "requires" },
-    { TOKEN_NAMESPACE, "namespace" },
+    {TOKEN_MUT, "mut"},
+    {TOKEN_REQUIRES, "requires" },
+    {TOKEN_NAMESPACE, "namespace" },
     {TOKEN_VAR, "var"},
     {TOKEN_CONST, "const"},
     {TOKEN_TYPE, "type"},
@@ -43,12 +44,9 @@ TokenDesc keywords[] = {
     {TOKEN_FLOAT64, "f64"},
     {TOKEN_COMPLEX64, "c64"},
     {TOKEN_COMPLEX128,"c128"},
-    {TOKEN_INT, "int"},
-    {TOKEN_FLOAT, "float"},
     {TOKEN_LET, "let"},
     {TOKEN_STRING, "string"},
     {TOKEN_BOOL, "bool"},
-    {TOKEN_ERRORCODE, "errcode"},
     
     {TOKEN_FUNC, "fn"},
     {TOKEN_PURE, "pure"},
@@ -64,13 +62,8 @@ TokenDesc keywords[] = {
     {TOKEN_RETURN, "return"},
     {TOKEN_BREAK, "break"},
     {TOKEN_CONTINUE, "continue"},
-    {TOKEN_ERROR, "error"},
-    {TOKEN_CLEANUP, "cleanup"},
-    {TOKEN_RUN, "run"},
-    {TOKEN_BIND, "bind"},
     
     {TOKEN_SIZEOF, "sizeof"},
-    {TOKEN_DIMOF, "dimof"},     // unused
     {TOKEN_XOR, "^"},
     {TOKEN_CASE, "case"},
     {TOKEN_TYPESWITCH, "typeswitch"},
@@ -80,19 +73,11 @@ TokenDesc keywords[] = {
     {TOKEN_PUBLIC, "public"},
     {TOKEN_PRIVATE, "private"},
     {TOKEN_ENUM, "enum"},
-    {TOKEN_STRUCT, "struct"},
     {TOKEN_CLASS, "class"},
-    { TOKEN_THIS, "this"},
+    {TOKEN_THIS, "this"},
     {TOKEN_INTERFACE, "interface"},
-    {TOKEN_STATIC, "static"},
     {TOKEN_FLAGSET, "flagset"},
     {TOKEN_BY, "by"},
-    {TOKEN_TEMPLATE, "template"},
-    {TOKEN_ARGUMENT, "argument"},
-    {TOKEN_VOLATILE, "volatile"},
-    {TOKEN_THROW, "throw"},
-    {TOKEN_TRY, "try"},
-    {TOKEN_CATCH, "catch"},
     {TOKEN_STEP, "step"},
     
     {TOKEN_ROUND_OPEN, "("},
@@ -140,6 +125,113 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_SHL, "<<=" },
     {TOKEN_UPD_AND, "&=" },
     {TOKEN_UPD_OR, "|=" },
+
+    {TOKEN_UNUSED, "alignas"},
+    {TOKEN_UNUSED, "alignof"},
+    {TOKEN_UNUSED, "and"},
+    {TOKEN_UNUSED, "and_eq"},
+    {TOKEN_UNUSED, "asm"},
+    {TOKEN_UNUSED, "atomic_cancel"},
+    {TOKEN_UNUSED, "atomic_commit"},
+    {TOKEN_UNUSED, "atomic_noexcept"},
+    {TOKEN_UNUSED, "auto"},
+    {TOKEN_UNUSED, "bitand"},
+    {TOKEN_UNUSED, "bitor"},
+    //{TOKEN_UNUSED, "bool"},
+    //{TOKEN_UNUSED, "break"},
+    //{TOKEN_UNUSED, "case"},
+    {TOKEN_UNUSED, "catch"},
+    {TOKEN_UNUSED, "char"},
+    {TOKEN_UNUSED, "char8_t"},
+    {TOKEN_UNUSED, "char16_t"},
+    {TOKEN_UNUSED, "char32_t"},
+    //{TOKEN_UNUSED, "class"},
+    {TOKEN_UNUSED, "compl"},
+    {TOKEN_UNUSED, "concept"},
+    //{TOKEN_UNUSED, "const"},
+    {TOKEN_UNUSED, "consteval"},
+    {TOKEN_UNUSED, "constexpr"},
+    {TOKEN_UNUSED, "constinit"},
+    {TOKEN_UNUSED, "const_cast"},
+    //{TOKEN_UNUSED, "continue"},
+    {TOKEN_UNUSED, "co_await"},
+    {TOKEN_UNUSED, "co_return"},
+    {TOKEN_UNUSED, "co_yield"},
+    {TOKEN_UNUSED, "decltype"},
+    //{TOKEN_UNUSED, "default"},
+    {TOKEN_UNUSED, "delete"},
+    {TOKEN_UNUSED, "do"},
+    {TOKEN_UNUSED, "double"},
+    {TOKEN_UNUSED, "dynamic_cast"},
+    //{TOKEN_UNUSED, "else"},
+    //{TOKEN_UNUSED, "enum"},
+    {TOKEN_UNUSED, "explicit"},
+    {TOKEN_UNUSED, "export"},
+    {TOKEN_UNUSED, "extern"},
+    //{TOKEN_UNUSED, "false"},
+    {TOKEN_UNUSED, "float"},
+    //{TOKEN_UNUSED, "for"},
+    {TOKEN_UNUSED, "friend"},
+    {TOKEN_UNUSED, "goto"},
+    //{TOKEN_UNUSED, "if"},
+    {TOKEN_UNUSED, "inline"},
+    {TOKEN_UNUSED, "int"},
+    {TOKEN_UNUSED, "long"},
+    {TOKEN_UNUSED, "mutable"},
+    //{TOKEN_UNUSED, "namespace"},
+    {TOKEN_UNUSED, "new"},
+    {TOKEN_UNUSED, "noexcept"},
+    {TOKEN_UNUSED, "not"},
+    {TOKEN_UNUSED, "not_eq"},
+    {TOKEN_UNUSED, "nullptr"},
+    {TOKEN_UNUSED, "operator"},
+    {TOKEN_UNUSED, "or"},
+    {TOKEN_UNUSED, "or_eq"},
+    //{TOKEN_UNUSED, "private"},
+    {TOKEN_UNUSED, "protected"},
+    //{TOKEN_UNUSED, "public"},
+    {TOKEN_UNUSED, "reflexpr"},
+    {TOKEN_UNUSED, "register"},
+    {TOKEN_UNUSED, "reinterpret_cast"},
+    //{TOKEN_UNUSED, "requires"},
+    //{TOKEN_UNUSED, "return"},
+    {TOKEN_UNUSED, "short"},
+    {TOKEN_UNUSED, "signed"},
+    //{TOKEN_UNUSED, "sizeof"},
+    {TOKEN_UNUSED, "static"},
+    {TOKEN_UNUSED, "static_assert"},
+    {TOKEN_UNUSED, "static_cast"},
+    {TOKEN_UNUSED, "struct"},
+    //{TOKEN_UNUSED, "switch"},
+    {TOKEN_UNUSED, "synchronized"},
+    {TOKEN_UNUSED, "template"},
+    //{TOKEN_UNUSED, "this"},
+    {TOKEN_UNUSED, "thread_local"},
+    {TOKEN_UNUSED, "throw"},
+    //{TOKEN_UNUSED, "true"},
+    {TOKEN_UNUSED, "try"},
+    {TOKEN_UNUSED, "typedef"},
+    {TOKEN_UNUSED, "typeid"},
+    {TOKEN_UNUSED, "typename"},
+    {TOKEN_UNUSED, "union"},
+    {TOKEN_UNUSED, "unsigned"},
+    {TOKEN_UNUSED, "using"},
+    {TOKEN_UNUSED, "virtual"},
+    //{TOKEN_UNUSED, "void"},
+    {TOKEN_UNUSED, "volatile"},
+    {TOKEN_UNUSED, "wchar_t"},
+    //{TOKEN_UNUSED, "while"},
+    {TOKEN_UNUSED, "xor"},
+    {TOKEN_UNUSED, "xor_eq"},
+
+    {TOKEN_UNUSED, "int8_t"},
+    {TOKEN_UNUSED, "int16_t"},
+    {TOKEN_UNUSED, "int32_t"},
+    {TOKEN_UNUSED, "int64_t"},
+    {TOKEN_UNUSED, "uint8_t"},
+    {TOKEN_UNUSED, "uint16_t"},
+    {TOKEN_UNUSED, "uint32_t"},
+    {TOKEN_UNUSED, "uint64_t"}
 };
 
 static const char *error_desc[] = {
@@ -160,8 +252,10 @@ static const char *error_desc[] = {
     "In numerics, underscores are allowed only between decimal/exadecimal digits"
 };
 
+static const int num_tokens = sizeof(keywords) / sizeof(keywords[0]);
+
 int         Lexer::ash_table[TABLE_SIZE];
-int         Lexer::ash_next_item[TOKENS_COUNT];
+int         Lexer::ash_next_item[num_tokens];
 const char  *Lexer::token_to_string[TOKENS_COUNT];
 bool        Lexer::ash_table_inited = false;
 
@@ -170,16 +264,18 @@ Lexer::Lexer()
     m_fd = NULL;
     if (!ash_table_inited) {
         int         ii, ash;
-        int         num_tokens = sizeof(keywords) / sizeof(keywords[0]);
+        
         TokenDesc   *td;
 
         ash_table_inited = true;
         for (ii = 0; ii < TOKENS_COUNT; ++ii) {
-            ash_next_item[ii] = -1;
             token_to_string[ii] = "";
         }
         for (ii = 0; ii < TABLE_SIZE; ++ii) {
             ash_table[ii] = -1;
+        }
+        for (ii = 0; ii < num_tokens; ++ii) {
+            ash_next_item[ii] = -1;
         }
 
         for (ii = 0; ii < num_tokens; ++ii) {
@@ -192,10 +288,10 @@ Lexer::Lexer()
             ash = ComputeAsh(td->token_string);
 
             // ash to token
-            if (ash_table[ash] != -1) {
-                ash_next_item[td->token] = ash_table[ash];
+            if (ash_table[ash] != -1) {                
+                ash_next_item[ii] = ash_table[ash];
             } 
-            ash_table[ash] = td->token;
+            ash_table[ash] = ii;
         }
 
         // just to know
@@ -986,10 +1082,10 @@ bool Lexer::ReadComment(void)
 
 Token Lexer::AshLookUp(int ash, const char *name)
 {
-    int token = ash_table[ash];
-    while (token >= 0) {
-        if (strcmp(token_to_string[token], name) == 0) return((Token)token);
-        token = ash_next_item[token];
+    int index = ash_table[ash];
+    while (index >= 0) {
+        if (strcmp(keywords[index].token_string, name) == 0) return(keywords[index].token);
+        index = ash_next_item[index];
     }
     return(TOKEN_NAME);
 }

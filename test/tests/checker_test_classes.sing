@@ -185,7 +185,7 @@ fn nearlygood.fn1() void
     this.v0 = 3;     // ok
 }
 
-fn extern() void
+fn external() void
 {
     var instance nearlygood;
     

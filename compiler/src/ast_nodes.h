@@ -63,7 +63,7 @@ enum AstNodeType {
 // cast = (T)name(T);       // cast if not double
 // plain = name(T);
 // memeber = T.member()
-enum class BInSynthMode { sing, cast, plain, member };
+enum class BInSynthMode { sing, cast, plain, member, std };
 
 struct PositionInfo {
     int32_t start_row;

@@ -201,7 +201,6 @@ int AstBaseType::SizeOf(void)
     case TOKEN_COMPLEX128:
         return(16);
     case TOKEN_STRING:
-    case TOKEN_ERRORCODE:
     case TOKEN_VOID:
         return(0);
     case TOKEN_BOOL:
