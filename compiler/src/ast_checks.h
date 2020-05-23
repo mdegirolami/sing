@@ -17,8 +17,6 @@ enum TypeSpecCheckMode {
     TSCM_REFERENCED     // allow class forward ref (if in a class) and interfaces
 };
 
-enum class ExpressionUsage {WRITE, READ, NONE, BOTH};
-
 class AstChecker : public ITypedefSolver {
     vector<Package*>        *packages_;
     AstFile                 *root_;         // not owned !!!
@@ -99,6 +97,7 @@ class AstChecker : public ITypedefSolver {
 
     void SetUsageOnExpression(IAstExpNode *node, ExpressionUsage usage);
     void SetUsageOnIndices(AstIndexing *node, ExpressionUsage usage);
+    void SetUsageOnFunCall(AstFunCall *node, ExpressionUsage usage);
     void SetUsageOnDotOp(AstBinop *node, ExpressionUsage usage, bool dotop_left);
     void SetUsageOnLeaf(AstExpressionLeaf *node, ExpressionUsage usage, bool dotop_left);
     void SetUsageOnNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop);
@@ -121,7 +120,6 @@ class AstChecker : public ITypedefSolver {
     bool BlockReturnsExplicitly(AstBlock *block);
     void CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location);
     void CheckIfFunCallIsLegal(AstFuncType *func, IAstNode *location);
-    void SetUsageFlags(VarDeclaration *var, ExpressionUsage usage);
     VarDeclaration *GetIteratedVar(IAstExpNode *node);
     void CheckInnerBlockVarUsage(void);
     void CheckPrivateDeclarationsUsage(void);

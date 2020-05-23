@@ -747,6 +747,7 @@ public:
     bool HasOneOfFlags(int32_t flags) { return((flags_ & flags) != 0); }
     bool HasAllFlags(int32_t flags) { return((flags_ & flags) == flags); }
     void SetTheIteratedVar(VarDeclaration *iterated) { weak_iterated_var_ = iterated; }
+    void SetUsageFlags(ExpressionUsage usage);
 };
 
 class TypeDeclaration : public IAstDeclarationNode

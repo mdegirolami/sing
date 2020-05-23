@@ -14,6 +14,9 @@ class AstArgument;
 class AstFuncType;
 class AstIndexing;
 class AstMapType;
+class VarDeclaration;
+
+enum class ExpressionUsage {WRITE, READ, NONE, BOTH};
 
 enum ExpBaseTypes {
 
@@ -60,7 +63,7 @@ public:
     ExpressionAttributes();
 
     // use these to init and update the attribute descriptor.
-    void InitWithTree(IAstTypeNode *tree, bool is_a_variable, bool is_writable, ITypedefSolver *solver);
+    void InitWithTree(IAstTypeNode *tree, VarDeclaration *var, bool is_a_variable, bool is_writable, ITypedefSolver *solver);
     void SetTheValueFrom(const ExpressionAttributes *attr);
     void SetEnumValue(int32_t value);
     void InitWithInt32(int value);
@@ -76,6 +79,7 @@ public:
                             AstMapType **map_typedesc, ITypedefSolver *solver, string *error);
     void SetError(void) { exp_type_ = BT_ERROR; value_is_valid_ = false; }
     bool TakeAddress(void);
+    void SetUsageFlags(ExpressionUsage usage);
 
     // Queries. Don't affect the object
     bool IsOnError(void) const { return(exp_type_ == BT_ERROR); }
@@ -128,8 +132,10 @@ private:
     IAstTypeNode    *type_tree_;            // in case exp_type_ == BT_CT_TREE
     IAstTypeNode    *original_tree_;        // before typedef solution. Used solely for auto typing.
     bool            is_writable_;           // is valid if is_a_variable_. in case exp_type_ == BT_ADDRESS_OF keeps info about the pointed var.
-    bool            is_a_variable_;         // the expression is backed by a variable.
     bool            is_a_literal_;          // a literal expression can be cast to a lesser type if range and precision are preserved
+
+    bool            is_a_variable_;         // the expression is backed by a variable.
+    VarDeclaration  *variable_;             // backing var.
 
     NumericValue    value_;                 // numeric value of the expression
     bool            value_is_valid_;        // always true for BT_LITERAL_NUMBER, often true for numeric values

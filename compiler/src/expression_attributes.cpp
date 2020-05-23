@@ -61,15 +61,17 @@ ExpressionAttributes::ExpressionAttributes()
     is_a_variable_ = false;
     value_is_valid_ = false;
     is_a_literal_ = false;
+    variable_ = nullptr;
 }
 
-void ExpressionAttributes::InitWithTree(IAstTypeNode *tree, bool is_a_variable, bool is_writable, ITypedefSolver *solver)
+void ExpressionAttributes::InitWithTree(IAstTypeNode *tree, VarDeclaration *var, bool is_a_variable, bool is_writable, ITypedefSolver *solver)
 {
     exp_type_ = tree == nullptr ? BT_ERROR : BT_TREE;
     type_tree_ = original_tree_ = tree;
     is_a_variable_ = is_a_variable;
     is_writable_ = is_writable;
     value_is_valid_ = is_a_literal_ = false;
+    variable_ = is_a_variable_ ? var : nullptr;
     Normalize(solver);
 }
 
@@ -84,6 +86,7 @@ void ExpressionAttributes::SetEnumValue(int32_t value)
     is_a_variable_ = is_writable_ = false;
     value_is_valid_ = is_a_literal_ = true;
     value_.InitFromInt32(value);
+    variable_ = nullptr;
 }
 
 bool ExpressionAttributes::InitWithLiteral(Token literal_type, const char *value, const char *img_value, 
@@ -155,6 +158,7 @@ bool ExpressionAttributes::InitWithLiteral(Token literal_type, const char *value
     }
     type_tree_ = original_tree_ = nullptr;
     is_a_variable_ = is_writable_ = false;
+    variable_ = nullptr;
     return(true);
 }
 
@@ -165,6 +169,7 @@ void ExpressionAttributes::InitWithInt32(int size)
     is_a_variable_ = is_writable_ = false;
     value_is_valid_ = is_a_literal_ = true;
     value_.InitFromInt32(size);
+    variable_ = nullptr;
 }
 
 bool ExpressionAttributes::ApplyTheIndirectionOperator(ITypedefSolver *solver)
@@ -183,7 +188,7 @@ bool ExpressionAttributes::ApplyTheIndirectionOperator(ITypedefSolver *solver)
     AstPointerType *pointer_decl = (AstPointerType*)type_tree_;
     IAstTypeNode *newtree = pointer_decl->pointed_type_;
     if (newtree == nullptr) return(false);
-    InitWithTree(newtree, true, !pointer_decl->isconst_, solver);
+    InitWithTree(newtree, nullptr, true, !pointer_decl->isconst_, solver);
     return(true);
 }
 
@@ -223,6 +228,7 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
 {
     is_a_variable_ = false;         // is a temporary value
     is_writable_ = false;
+    variable_ = nullptr;
 
     if (exp_type_ == BT_ERROR || attr_right->exp_type_ == BT_ERROR) {
         exp_type_ = BT_ERROR;
@@ -500,6 +506,7 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ITypedefSolver *solver,
     is_writable_ = false;
     value_is_valid_ = false;
     is_a_literal_ = false;
+    variable_ = nullptr;
 
     if (exp_type_ == BT_ERROR || attr_right->exp_type_ == BT_ERROR) {
         exp_type_ = BT_ERROR;
@@ -557,6 +564,7 @@ bool ExpressionAttributes::UpdateWithBoolOperation(ExpressionAttributes *attr_ri
     is_writable_ = false;
     value_is_valid_ = false;
     is_a_literal_ = false;
+    variable_ = nullptr;
 
     if (exp_type_ == BT_ERROR || attr_right->exp_type_ == BT_ERROR) {
         exp_type_ = BT_ERROR;
@@ -585,6 +593,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
 {
     is_a_variable_ = false;         // except for *, as fixed in ApplyTheIndirectionOperator()
     is_writable_ = false;
+    variable_ = nullptr;
 
     if (operation != TOKEN_MINUS && operation != TOKEN_PLUS && operation != TOKEN_NOT) {
         is_a_literal_ = false;
@@ -782,7 +791,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
 
         // check types compatibility
         ITypedefSolver::TypeMatchResult typematch = ITypedefSolver::OK;
-        argdecl_attr.InitWithTree(argdecl->weak_type_spec_, true, true, solver);
+        argdecl_attr.InitWithTree(argdecl->weak_type_spec_, nullptr, true, true, solver);
         if (argdecl->HasOneOfFlags(VF_READONLY)) {
             // NOTE: is read only inside the function, but must be written by the caller !!!
             if (GetParameterPassingMethod(argdecl->weak_type_spec_, true) == PPM_VALUE) {
@@ -833,7 +842,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             return(false);
         }
     }
-    InitWithTree(typedesc->return_type_, false, false, solver);
+    InitWithTree(typedesc->return_type_, nullptr, false, false, solver);
     return(true);
 }
 
@@ -870,9 +879,9 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
             *error = "Maps accept a single index (not ranges)";
             return(false);
         }
-        argdecl_attr.InitWithTree(typedesc->key_type_, true, true, solver);
+        argdecl_attr.InitWithTree(typedesc->key_type_, nullptr, true, true, solver);
         if (argdecl_attr.CanAssign(low_attr, solver, error)) {
-            InitWithTree(typedesc->returned_type_, true, is_writable_, solver);
+            InitWithTree(typedesc->returned_type_, variable_, true, is_writable_, solver);
             return(true);
         }
     } else {
@@ -908,7 +917,7 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
                 }
             }
         }
-        InitWithTree(typedesc->element_type_, true, is_writable_, solver);
+        InitWithTree(typedesc->element_type_, variable_, true, is_writable_, solver);
         return(true);
     }
     return(false);
@@ -926,6 +935,14 @@ bool ExpressionAttributes::TakeAddress(void)
     exp_type_ = BT_ADDRESS_OF;
     is_a_variable_ = false;
     return(true);
+}
+
+void ExpressionAttributes::SetUsageFlags(ExpressionUsage usage)
+{
+    if (variable_ == nullptr || !is_a_variable_) {
+        return;
+    }
+    variable_->SetUsageFlags(usage);
 }
 
 IAstTypeNode *ExpressionAttributes::GetIteratorType(void) const

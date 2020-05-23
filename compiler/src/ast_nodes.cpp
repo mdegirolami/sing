@@ -467,6 +467,29 @@ AstIniter::~AstIniter()
     }
 }
 
+void VarDeclaration::SetUsageFlags(ExpressionUsage usage)
+{
+    if (HasOneOfFlags(VF_IS_REFERENCE)) {
+        if (weak_iterated_var_ != nullptr) {
+            weak_iterated_var_->SetUsageFlags(usage);
+            return;
+        }
+    }
+    switch (usage) {
+    case ExpressionUsage::WRITE:
+        SetFlags(VF_WASWRITTEN);
+        break;
+    case ExpressionUsage::READ:
+        SetFlags(VF_WASREAD);
+        break;
+    case ExpressionUsage::NONE:
+        break;
+    case ExpressionUsage::BOTH:
+        SetFlags(VF_WASREAD | VF_WASWRITTEN);
+        break;
+    }    
+}
+
 void FuncDeclaration::SetNames(const char *name1, const char *name2)
 {
     if (name2 == nullptr || name2[0] == 0) {

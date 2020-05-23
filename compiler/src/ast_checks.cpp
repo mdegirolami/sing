@@ -229,7 +229,7 @@ void AstChecker::CheckMemberVar(VarDeclaration *declaration)
                 ExpressionAttributes dst_attr;
 
                 IAstTypeNode *type_spec = SolveTypedefs(declaration->type_spec_);
-                dst_attr.InitWithTree(type_spec, true, true, this);
+                dst_attr.InitWithTree(type_spec, nullptr, true, true, this);
                 CanAssign(&dst_attr, &attr, declaration->initer_);
             }
         }
@@ -316,7 +316,7 @@ void AstChecker::CheckFuncBody(FuncDeclaration *declaration)
     if (!declaration->type_is_ok_ || declaration->block_ == nullptr) {
         return;
     }
-    return_fake_variable_.InitWithTree(functype->return_type_, true, true, this);
+    return_fake_variable_.InitWithTree(functype->return_type_, nullptr, true, true, this);
     symbols_->OpenScope();
     for (ii = 0; ii < (int)functype->arguments_.size(); ++ii) {
 
@@ -529,7 +529,7 @@ bool AstChecker::CheckIniter(IAstTypeNode *type_spec, IAstNode *initer)
         } else {
             ExpressionAttributes dst_attr, src_attr;
 
-            dst_attr.InitWithTree(type_spec, true, true, this);
+            dst_attr.InitWithTree(type_spec, nullptr, true, true, this);
             CheckExpression((IAstExpNode*)initer, &src_attr, ExpressionUsage::READ);
             if (dst_attr.IsOnError() || src_attr.IsOnError()) {
                 return(false);
@@ -747,7 +747,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
             for (int jj = 0; jj < num_vars; ++jj) {
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
-                    SetUsageFlags(declaration->member_vars_[jj], ExpressionUsage::BOTH);
+                    declaration->member_vars_[jj]->SetUsageFlags(ExpressionUsage::BOTH);
                     IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
@@ -804,7 +804,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
             for (int jj = 0; jj < num_vars; ++jj) {
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
-                    SetUsageFlags(declaration->member_vars_[jj], ExpressionUsage::BOTH);
+                    declaration->member_vars_[jj]->SetUsageFlags(ExpressionUsage::BOTH);
                     IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
@@ -1597,12 +1597,12 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
     int pkg_index = -1;
     if (node->operand_left_->GetType() == ANT_EXP_LEAF) {
         AstExpressionLeaf* left_leaf = (AstExpressionLeaf*)node->operand_left_;
-        CheckDotOpLeftLeaf(left_leaf, attr, usage);
+        CheckDotOpLeftLeaf(left_leaf, attr, ExpressionUsage::READ);
         pkg_index = left_leaf->pkg_index_;
     } else if (node->operand_left_->GetType() == ANT_BINOP && ((AstBinop*)node->operand_left_)->subtype_ == TOKEN_DOT) {
-        CheckDotOp((AstBinop*)node->operand_left_, attr, usage, true);
+        CheckDotOp((AstBinop*)node->operand_left_, attr, ExpressionUsage::READ, true);
     } else {
-        CheckExpression(node->operand_left_, attr, usage);
+        CheckExpression(node->operand_left_, attr, ExpressionUsage::READ);
     }
 
     // check the right branch
@@ -1664,7 +1664,7 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                 //          this.<member function/variable>
                 if (nodetype == ANT_POINTER_TYPE) {
                     AstPointerType *ptrnode = (AstPointerType*)tnode;
-                    attr->InitWithTree(ptrnode->pointed_type_, true, !ptrnode->isconst_, this);
+                    attr->InitWithTree(ptrnode->pointed_type_, nullptr, true, !ptrnode->isconst_, this);
                     tnode = attr->GetTypeTree();
                 }
                 if (tnode != nullptr) {
@@ -1697,11 +1697,11 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                 if (ismuting) {
                     if (!attr->IsWritable()) {
                         Error("Can't call a muting member function on a constant variable/field", right_leaf);
-                    // } else if (attr->IsAVariable()) {
-                    //     SetUsageFlags(VarDeclaration *var, ExpressionUsage::WRITE);
+                    } else {
+                        attr->SetUsageFlags(ExpressionUsage::WRITE);
                     }
                 } 
-                attr->InitWithTree(node->builtin_, false, false, this);
+                attr->InitWithTree(node->builtin_, nullptr, false, false, this);
             }
         }
     }
@@ -1733,7 +1733,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
             FuncDeclaration *decl = (*member_functions)[fun_idx];
             if (has_private_access || decl->IsPublic()) {
                 accessed->wp_decl_ = decl;
-                attr->InitWithTree(decl->function_type_, false, false, this);
+                attr->InitWithTree(decl->function_type_, nullptr, false, false, this);
                 decl->SetUsed();
                 CheckIfFunCallIsLegal(decl->function_type_, accessed);
                 if (decl->is_muting_) {
@@ -1757,8 +1757,8 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 VarDeclaration *decl = (*member_vars)[var_idx];
                 if (has_private_access || decl->IsPublic()) {
                     accessed->wp_decl_ = decl;
-                    attr->InitWithTree(decl->weak_type_spec_, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
-                    SetUsageFlags(decl, usage);
+                    attr->InitWithTree(decl->weak_type_spec_, decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
+                    decl->SetUsageFlags(usage);
                     CheckIfVarReferenceIsLegal(decl, accessed);
                     accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
                 } else {
@@ -1779,7 +1779,7 @@ void AstChecker::CheckDotOpLeftLeaf(AstExpressionLeaf *node, ExpressionAttribute
     if (node->subtype_ == TOKEN_THIS) {
         if (current_class_ != nullptr && current_function_ != nullptr)
         {
-            attr->InitWithTree(current_class_, true, current_function_->is_muting_, this);
+            attr->InitWithTree(current_class_, nullptr, true, current_function_->is_muting_, this);
             this_was_accessed_ = true;
         } else {
             Error("'This' is allowed only in member functions", node);
@@ -1835,19 +1835,19 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
         } else {
             readonly = var->HasOneOfFlags(VF_READONLY);
         }
-        attr->InitWithTree(var->weak_type_spec_, true, !readonly, this);
+        attr->InitWithTree(var->weak_type_spec_, var, true, !readonly, this);
         if (var->HasOneOfFlags(VF_READONLY)) {
             if (var->initer_ != nullptr && var->initer_->GetType() != ANT_INITER) {
                 attr->SetTheValueFrom(((IAstExpNode*)var->initer_)->GetAttr());
             }
         }
-        SetUsageFlags(var, usage);
+        var->SetUsageFlags(usage);
         CheckIfVarReferenceIsLegal(var, node);
     } else if (decl->GetType() == ANT_FUNC) {
         node->wp_decl_ = decl;
         FuncDeclaration *func = (FuncDeclaration*)decl;
         func->SetUsed();
-        attr->InitWithTree(func->function_type_, false, false, this);
+        attr->InitWithTree(func->function_type_, nullptr, false, false, this);
     } else if (preceeds_dotop) {
         bool is_allowed_type = false;
         if (decl->GetType() == ANT_TYPE) {
@@ -1857,7 +1857,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
                 if (tspec->GetType() == ANT_ENUM_TYPE/* || tspec->GetType() == ANT_CLASS_TYPE || tspec->GetType() == ANT_INTERFACE_TYPE*/) {
                     is_allowed_type = true;
                     node->wp_decl_ = decl;
-                    attr->InitWithTree(tdecl->type_spec_, false, false, this);
+                    attr->InitWithTree(tdecl->type_spec_, nullptr, false, false, this);
                     tdecl->SetUsed();
                 }
             } else {
@@ -1877,10 +1877,36 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
 
 void AstChecker::SetUsageOnExpression(IAstExpNode *node, ExpressionUsage usage)
 {
-
+    switch (node->GetType()) {
+    case ANT_INDEXING:
+        SetUsageOnIndices((AstIndexing*)node, usage);
+        break;
+    case ANT_FUNCALL:    
+        SetUsageOnFunCall((AstFunCall*)node, usage);
+        break;
+    case ANT_BINOP:
+        if (((AstBinop*)node)->subtype_ == TOKEN_DOT) {
+            SetUsageOnDotOp((AstBinop*)node, usage, false);
+        } else {
+            // this function is actually used for WRITE usage.
+            // it doesn't apply to left and right expressions of a binop.
+        }
+        break;
+    case ANT_UNOP:
+        //CheckUnop((AstUnop*)node, attr);
+        break;
+    case ANT_EXP_LEAF:
+        //CheckLeaf((AstExpressionLeaf*)node, attr, usage);
+        break;
+    }
 }
 
 void AstChecker::SetUsageOnIndices(AstIndexing *node, ExpressionUsage usage)
+{
+
+}
+
+void AstChecker::SetUsageOnFunCall(AstFunCall *node, ExpressionUsage usage)
 {
 
 }
@@ -2572,29 +2598,6 @@ void AstChecker::CheckIfFunCallIsLegal(AstFuncType *func, IAstNode *location)
 {
     if (in_function_block_ && current_function_->function_type_->ispure_ && !func->ispure_) {
         Error("A pure function can only call pure functions !!", location);
-    }
-}
-
-void AstChecker::SetUsageFlags(VarDeclaration *var, ExpressionUsage usage)
-{
-    if (var->HasOneOfFlags(VF_IS_REFERENCE)) {
-        if (var->weak_iterated_var_ != nullptr) {
-            SetUsageFlags(var->weak_iterated_var_, usage);
-            return;
-        }
-    }
-    switch (usage) {
-    case ExpressionUsage::WRITE:
-        var->SetFlags(VF_WASWRITTEN);
-        break;
-    case ExpressionUsage::READ:
-        var->SetFlags(VF_WASREAD);
-        break;
-    case ExpressionUsage::NONE:
-        break;
-    case ExpressionUsage::BOTH:
-        var->SetFlags(VF_WASREAD | VF_WASWRITTEN);
-        break;
     }
 }
 

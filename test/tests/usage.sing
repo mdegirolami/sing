@@ -42,6 +42,11 @@ fn fun3(in p0 i32, io p1 i32, out p2 i32, out p3 i32) i32
     
     p3 = 3;
 
+    var written [*]i32 = {0, 1, 2};
+    var unwritten [*]i32 = {0, 1, 2};
+    written.push_back(0);
+    unwritten.size();
+
     return(p2 + p3);     // p2 read but not written !!
 }
 
