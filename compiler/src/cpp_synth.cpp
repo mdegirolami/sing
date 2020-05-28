@@ -817,6 +817,9 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
     case ANT_INCDEC:
         SynthIncDec((AstIncDec*)node);
         break;
+    case ANT_SWAP:
+        SynthSwap((AstSwap*)node);
+        break;
     case ANT_WHILE:
         SynthWhile((AstWhile*)node);
         break;
@@ -926,6 +929,25 @@ void CppSynth::SynthIncDec(AstIncDec *node)
     Protect(&text, priority, GetUnopCppPriority(node->operation_));
     text.insert(0, Lexer::GetTokenString(node->operation_));
     Write(&text);
+}
+
+void CppSynth::SynthSwap(AstSwap *node)
+{
+    string text, expression;
+
+    --split_level_;
+    text = "std::swap(";
+    AddSplitMarker(&text);
+    SynthExpression(&expression, node->left_term_);
+    text += expression;
+    text += ", ";
+    AddSplitMarker(&text);
+    expression = "";
+    SynthExpression(&expression, node->right_term_);
+    text += expression;
+    text += ")";
+    Write(&text);
+    ++split_level_;
 }
 
 void CppSynth::SynthWhile(AstWhile *node)
@@ -1507,6 +1529,8 @@ int CppSynth::SynthBinop(string *dst, AstBinop *node)
     case TOKEN_SHL:
     case TOKEN_OR:
     case TOKEN_XOR:
+    case TOKEN_MIN:
+    case TOKEN_MAX:
         --split_level_;
         priority = SynthMathOperator(dst, node);
         ++split_level_;
@@ -1728,15 +1752,27 @@ int CppSynth::SynthMathOperator(string *dst, AstBinop *node)
     Protect(&right, right_priority, priority, true);
 
     // sinthesize the operation
-    if (node->subtype_ == TOKEN_XOR) {
-        *dst += " ^ ";
+    if (node->subtype_ == TOKEN_MIN || node->subtype_ == TOKEN_MAX) {
+        if (node->subtype_ == TOKEN_MIN) {
+            dst->insert(0, "std::min(");
+        } else {
+            dst->insert(0, "std::max(");
+        }
+        *dst += ", ";
+        AddSplitMarker(dst);
+        *dst += right;
+        *dst += ')';
     } else {
-        *dst += ' ';
-        *dst += Lexer::GetTokenString(node->subtype_);
-        *dst += ' ';
+        if (node->subtype_ == TOKEN_XOR) {
+            *dst += " ^ ";
+        } else {
+            *dst += ' ';
+            *dst += Lexer::GetTokenString(node->subtype_);
+            *dst += ' ';
+        }
+        AddSplitMarker(dst);
+        *dst += right;
     }
-    AddSplitMarker(dst);
-    *dst += right;
     return(priority);
 }
 
@@ -2421,6 +2457,8 @@ int  CppSynth::GetBinopCppPriority(Token token)
 {
     switch (token) {
     case TOKEN_POWER:
+    case TOKEN_MIN:
+    case TOKEN_MAX:
         return(KForcedPriority);      // means "doesn't require parenthesys/doesn't take precedence over childrens."
     case TOKEN_DOT:
         return(2);

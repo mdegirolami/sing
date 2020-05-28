@@ -339,3 +339,10 @@ fn funwithdefs(a0 i32 = i32(100.0), a1 string = "ciccio" + "franco", a3 bool = v
     let aaa = "ciccio" + a1;
     let bbb = a1 + "ciccio";
 }
+
+fn minmaxswap() void
+{
+    var pippo = max(3, 6);
+    var pluto = min(3, 6);
+    swap(pippo, pluto); 
+}

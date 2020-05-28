@@ -257,5 +257,20 @@ fn test10() void
     }  
 
 	1234;	// expression without effect      
+
+	swap;	// missing args
+	swap(;  // missing...
+	swap(5; // left term !!
+	swap(table[0][0];
+	swap(table[0][0],;
+	swap(table[0][0],table[0][1];
+	swap(table[0][0],table[0][1]);	// ok !!
+
+	table[0][0] = min;
+	table[0][0] = min(;
+	table[0][0] = min(table[0][0];
+	table[0][0] = min(table[0][0],;
+	table[0][0] = min(table[0][0], table[0][1];
+	table[0][0] = min(table[0][0], table[0][1]); // ok	
 }
     

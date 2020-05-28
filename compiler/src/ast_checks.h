@@ -59,6 +59,7 @@ class AstChecker : public ITypedefSolver {
     AstNodeType CheckStatement(IAstNode *statement);
     void CheckUpdateStatement(AstUpdate *node);
     void CheckIncDec(AstIncDec *node);
+    void CheckSwap(AstSwap *node);
     void CheckWhile(AstWhile *node);
     void CheckIf(AstIf *node);
     void CheckFor(AstFor *node);

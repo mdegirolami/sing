@@ -54,6 +54,7 @@ class CppSynth {
     void SynthUpdateStatement(AstUpdate *node);
     void SynthPowerUpdateOperator(string *dst, AstUpdate *node);
     void SynthIncDec(AstIncDec *node);
+    void SynthSwap(AstSwap *node);
     void SynthWhile(AstWhile *node);
     void SynthIf(AstIf *node);
     void SynthSwitch(AstSwitch *node);

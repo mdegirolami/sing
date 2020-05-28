@@ -79,7 +79,10 @@ TokenDesc keywords[] = {
     {TOKEN_FLAGSET, "flagset"},
     {TOKEN_BY, "by"},
     {TOKEN_STEP, "step"},
-    
+    {TOKEN_MIN, "min"},
+    {TOKEN_MAX, "max"},
+    {TOKEN_SWAP,"swap"},
+
     {TOKEN_ROUND_OPEN, "("},
     {TOKEN_ROUND_CLOSE, ")"},
     {TOKEN_SQUARE_OPEN, "["},

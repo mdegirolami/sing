@@ -972,6 +972,9 @@ AstNodeType AstChecker::CheckStatement(IAstNode *node)
     case ANT_INCDEC:
         CheckIncDec((AstIncDec*)node);
         break;
+    case ANT_SWAP:
+        CheckSwap((AstSwap*)node);
+        break;
     case ANT_WHILE:
         CheckWhile((AstWhile*)node);
         break;
@@ -1053,6 +1056,17 @@ void AstChecker::CheckIncDec(AstIncDec *node)
     CheckExpression(node->left_term_, &attr, ExpressionUsage::BOTH);
     if (!attr.IsOnError() && !attr.CanIncrement()) {
         Error("Increment and Decrement operations can be applied only to writable integer variables", node);
+    }
+}
+
+void AstChecker::CheckSwap(AstSwap *node)
+{
+    ExpressionAttributes attr_left, attr_right;
+
+    CheckExpression(node->left_term_, &attr_left, ExpressionUsage::BOTH);
+    CheckExpression(node->right_term_, &attr_right, ExpressionUsage::BOTH);
+    if (!attr_left.IsOnError() && !attr_right.IsOnError() && !attr_left.CanSwap(&attr_right, this)) {
+        Error("You can only swap two writable variables of IDENTICAL type", node);
     }
 }
 
@@ -1507,6 +1521,8 @@ void AstChecker::CheckBinop(AstBinop *node, ExpressionAttributes *attr)
     case TOKEN_MINUS:
     case TOKEN_OR:
     case TOKEN_XOR:
+    case TOKEN_MIN:
+    case TOKEN_MAX:
         if (!attr->UpdateWithBinopOperation(&attr_right, node->subtype_, &error)) {
             Error(error.c_str(), node);
         }

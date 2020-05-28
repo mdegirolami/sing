@@ -1091,11 +1091,44 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             node = aid;
             RecordPosition(aid);
             if (!Advance()) goto recovery;
-            aid->SetLeftTerm(ParsePrefixExpression(""));
+            aid->SetLeftTerm(ParsePrefixExpression("Expecting a left term"));
             if (on_error_) goto recovery;
             CheckSemicolon();
         }
         break;
+    case TOKEN_SWAP:
+        {
+            PositionInfo pos;
+            FillPositionInfo(&pos);
+
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
+                Error("Expecting '('");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+
+            node = ParsePrefixExpression("Expecting a left term");
+            if (on_error_) goto recovery;
+
+            if (m_token != TOKEN_COMMA) {
+                Error("Expecting ','");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+
+            node = new AstSwap((IAstExpNode*)node, ParsePrefixExpression("Expecting a left term"));
+            if (on_error_) goto recovery;
+            *node->GetPositionRecord() = pos;
+
+            if (m_token != TOKEN_ROUND_CLOSE) {
+                Error("Expecting ')'");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+            CheckSemicolon();
+        }
+        break; 
         default:
             node = ParseLeftTermStatement();
             break;
@@ -1112,10 +1145,14 @@ recovery:
     return(node);
 }
 
-//left_term = expression |
-//left_term update_operator expression |
-//left_term++ | left_term-- |
-//functioncall |    ====>>> i.e. a left term
+//
+// a statement beninnng with a left term:
+// left_term_statement = prefix_expression (1) | 
+//                      prefix_expression update_operator expression | 
+//                      prefix_expression++ | prefix_expression--
+//
+// note (1): a single prefix_expression must be a function call.
+//
 IAstNode *Parser::ParseLeftTermStatement(void)
 {
     bool                    done = false;
@@ -1319,122 +1356,155 @@ recovery:
 // expression_term :: = null | false | true | <Numeral> | <LiteralString> | <LiteralComplex> |
 //                      sizeof '(' prefix_expression ')' | sizeof '(' type_specification ')' | 
 //                      base_type '(' expression ')'| '(' expression ')' | 
-//                      <var_name> | this
+//                      <var_name> | this | builtin_op '(' expression ',' expression ')'
+// builtin_op = min | max | swap
 //
 IAstExpNode *Parser::ParseExpressionTerm(const char *errmess)
 {
-    IAstExpNode    *node = NULL;
+    IAstExpNode    *node = nullptr;
 
-    {
-        switch (m_token) {
-        case TOKEN_NULL:
-        case TOKEN_FALSE:
-        case TOKEN_TRUE:
-            node = new AstExpressionLeaf(m_token, "");
-            RecordPosition(node);
+    switch (m_token) {
+    case TOKEN_NULL:
+    case TOKEN_FALSE:
+    case TOKEN_TRUE:
+        node = new AstExpressionLeaf(m_token, "");
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_LITERAL_STRING:
+        node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        while (m_token == TOKEN_LITERAL_STRING)
+        {
+            ((AstExpressionLeaf*)node)->AppendToValue("\xff");
+            ((AstExpressionLeaf*)node)->AppendToValue(m_lexer->CurrTokenVerbatim());
             if (!Advance()) goto recovery;
-            break;
-        case TOKEN_LITERAL_STRING:
-            node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            while (m_token == TOKEN_LITERAL_STRING)
-            {
-                ((AstExpressionLeaf*)node)->AppendToValue("\xff");
-                ((AstExpressionLeaf*)node)->AppendToValue(m_lexer->CurrTokenVerbatim());
-                if (!Advance()) goto recovery;
-            };
-            break;
-        case TOKEN_LITERAL_UINT:
-        case TOKEN_LITERAL_FLOAT:
-        case TOKEN_LITERAL_IMG:
-            node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_SIZEOF:
-            node = new AstUnop(TOKEN_SIZEOF);
-            RecordPosition(node);
+        };
+        break;
+    case TOKEN_LITERAL_UINT:
+    case TOKEN_LITERAL_FLOAT:
+    case TOKEN_LITERAL_IMG:
+        node = new AstExpressionLeaf(m_token, m_lexer->CurrTokenVerbatim());
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_SIZEOF:
+        node = new AstUnop(TOKEN_SIZEOF);
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_ROUND_OPEN) {
+            Error("Expecting '('");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        if (m_token == TOKEN_NAME || m_token == TOKEN_MPY) {
+            ((AstUnop*)node)->SetOperand(ParsePrefixExpression(errmess));
+        } else {
+            ((AstUnop*)node)->SetTypeOperand(ParseTypeSpecification());
+        }
+        if (on_error_) goto recovery;
+        if (m_token != TOKEN_ROUND_CLOSE) {
+            Error("Expecting ')'");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_INT8:
+    case TOKEN_INT16:
+    case TOKEN_INT32:
+    case TOKEN_INT64:
+    case TOKEN_UINT8:
+    case TOKEN_UINT16:
+    case TOKEN_UINT32:
+    case TOKEN_UINT64:
+    case TOKEN_FLOAT32:
+    case TOKEN_FLOAT64:
+    case TOKEN_COMPLEX64:
+    case TOKEN_COMPLEX128:
+    case TOKEN_STRING:
+    case TOKEN_BOOL:
+        node = new AstUnop(m_token);
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_ROUND_OPEN) {
+            Error("Expecting '('");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        ((AstUnop*)node)->SetOperand(ParseExpression());
+        if (on_error_) goto recovery;
+        node = CheckForCastedLiterals((AstUnop*)node);
+        if (m_token != TOKEN_ROUND_CLOSE) {
+            Error("Expecting ')'");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_ROUND_OPEN:
+        if (!Advance()) goto recovery;
+        node = ParseExpression();
+        if (on_error_) goto recovery;
+        if (m_token != TOKEN_ROUND_CLOSE) {
+            Error("Expecting ')'");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_NAME:
+        node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_THIS:
+        node = new AstExpressionLeaf(TOKEN_THIS, "");
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        break;
+    case TOKEN_MIN:            
+    case TOKEN_MAX:
+        {
+            PositionInfo pos;
+            FillPositionInfo(&pos);
+            Token op = m_token;
+
             if (!Advance()) goto recovery;
             if (m_token != TOKEN_ROUND_OPEN) {
                 Error("Expecting '('");
                 goto recovery;
             }
             if (!Advance()) goto recovery;
-            if (m_token == TOKEN_NAME || m_token == TOKEN_MPY) {
-                ((AstUnop*)node)->SetOperand(ParsePrefixExpression(errmess));
-            } else {
-                ((AstUnop*)node)->SetTypeOperand(ParseTypeSpecification());
-            }
-            if (on_error_) goto recovery;
-            if (m_token != TOKEN_ROUND_CLOSE) {
-                Error("Expecting ')'");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_INT8:
-        case TOKEN_INT16:
-        case TOKEN_INT32:
-        case TOKEN_INT64:
-        case TOKEN_UINT8:
-        case TOKEN_UINT16:
-        case TOKEN_UINT32:
-        case TOKEN_UINT64:
-        case TOKEN_FLOAT32:
-        case TOKEN_FLOAT64:
-        case TOKEN_COMPLEX64:
-        case TOKEN_COMPLEX128:
-        case TOKEN_STRING:
-        case TOKEN_BOOL:
-            node = new AstUnop(m_token);
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            if (m_token != TOKEN_ROUND_OPEN) {
-                Error("Expecting '('");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            ((AstUnop*)node)->SetOperand(ParseExpression());
-            if (on_error_) goto recovery;
-            node = CheckForCastedLiterals((AstUnop*)node);
-            if (m_token != TOKEN_ROUND_CLOSE) {
-                Error("Expecting ')'");
-                goto recovery;
-            }
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_ROUND_OPEN:
-            if (!Advance()) goto recovery;
+
             node = ParseExpression();
             if (on_error_) goto recovery;
+
+            if (m_token != TOKEN_COMMA) {
+                Error("Expecting ','");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+
+            node = new AstBinop(op, node, ParseExpression());
+            if (on_error_) goto recovery;
+            *node->GetPositionRecord() = pos;
+
             if (m_token != TOKEN_ROUND_CLOSE) {
                 Error("Expecting ')'");
                 goto recovery;
             }
             if (!Advance()) goto recovery;
-            break;
-        case TOKEN_NAME:
-            node = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            break;
-        case TOKEN_THIS:
-            node = new AstExpressionLeaf(TOKEN_THIS, "");
-            RecordPosition(node);
-            if (!Advance()) goto recovery;
-            break;
-        default:
-            if (errmess != nullptr && errmess[0] != 0) {
-                Error(errmess);
-            } else {
-                Error("Expression syntax error: expecting a literal, variable, '(', 'sizeof' a base type or 'this'");
-            }
         }
-    } 
+        break; 
+    default:
+        if (errmess != nullptr && errmess[0] != 0) {
+            Error(errmess);
+        } else {
+            Error("Expression syntax error: expecting a literal, variable, '(', 'sizeof' a base type or 'this'");
+        }
+    }
 recovery:    
     if (on_error_) {
-        if (node != NULL) delete node;
+        if (node != nullptr) delete node;
         node = nullptr;
     }
     return(node);

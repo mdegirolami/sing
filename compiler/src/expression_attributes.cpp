@@ -265,6 +265,12 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
         return(false);
     }
 
+    if (!OperationSupportsComplex(operation) && ((exp_type_ & BT_ALL_COMPLEX) != 0 || (right_type & BT_ALL_COMPLEX) != 0)) {
+        *error = "Operation doesn't suppot complex operands";
+        exp_type_ = BT_ERROR;
+        return(false);
+    }
+
     // integer promotion
     ExpBaseTypes left_type = IntegerPromote(exp_type_);
     right_type = IntegerPromote(right_type);
@@ -287,22 +293,6 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
     } else if ((left_type & (BT_COMPLEX128 | BT_FLOAT64)) != 0 && (right_type & (BT_COMPLEX128 | BT_FLOAT64)) != 0) {
         exp_type_ = BT_COMPLEX128;
         return(true);
-    //} else if (value_is_valid_ && !attr_right->value_is_valid_) {
-    //    if (!IsValueCompatible(right_type)) {
-    //        *error = "Left constant value doesn't fit the range of the right operand type.";
-    //        exp_type_ = BT_ERROR;
-    //    } else {
-    //        value_.PerformConversion(ExpBase2TokenTypes(right_type));
-    //        exp_type_ = right_type;
-    //    }
-    //} else if (!value_is_valid_ && attr_right->value_is_valid_) {
-    //    if (!attr_right->IsValueCompatible(left_type)) {
-    //        *error = "Right constant value doesn't fit the range of the left operand type.";
-    //        exp_type_ = BT_ERROR;
-    //    } else {
-    //        attr_right->value_.PerformConversion(ExpBase2TokenTypes(left_type));
-    //        exp_type_ = left_type;
-    //    }
     } else {
         *error = "Operand types mismatch.";
         exp_type_ = BT_ERROR;
@@ -429,6 +419,21 @@ bool ExpressionAttributes::IsValueCompatible(ExpBaseTypes the_type)
 }
 
 bool ExpressionAttributes::OperationSupportsFloatingPoint(Token operation)
+{
+    switch (operation) {
+    case TOKEN_POWER:
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+    case TOKEN_MPY:
+    case TOKEN_DIVIDE:
+    case TOKEN_MIN:
+    case TOKEN_MAX:
+        return(true);
+    }
+    return(false);
+}
+
+bool ExpressionAttributes::OperationSupportsComplex(Token operation)
 {
     switch (operation) {
     case TOKEN_POWER:
@@ -1117,6 +1122,25 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
         *error = "Type mismatch/No known conversion";
     }
     return(can_assign);
+}
+
+bool ExpressionAttributes::CanSwap(ExpressionAttributes *src, ITypedefSolver *solver) const
+{
+    if (exp_type_ == BT_ERROR || src->exp_type_ == BT_ERROR) {
+        return(true); // be silent
+    }
+    if (!is_a_variable_ || !src->is_a_variable_ || !is_writable_ || !src->is_writable_) {
+        return(false);
+    }
+    if (exp_type_ != src->exp_type_) {
+        return(false);
+    }
+    if (exp_type_ == BT_TREE) {        
+        if  (solver->AreTypeTreesCompatible(type_tree_, src->type_tree_, FOR_EQUALITY) != ITypedefSolver::OK) {
+            return(false);
+        }
+    }
+    return(true);
 }
 
 bool ExpressionAttributes::HasIntegerType(void) const

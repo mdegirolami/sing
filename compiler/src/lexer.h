@@ -79,7 +79,10 @@ enum Token {
     TOKEN_FLAGSET,      // currently unused
     TOKEN_BY,
     TOKEN_STEP,
-
+    TOKEN_MIN,
+    TOKEN_MAX,
+    TOKEN_SWAP,
+    
     TOKEN_ROUND_OPEN,
     TOKEN_ROUND_CLOSE,
     TOKEN_SQUARE_OPEN,

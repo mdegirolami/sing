@@ -39,7 +39,7 @@ null true false void
 mut requires namespace var const type map weak i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 c64 c128 let string bool
 fn pure in out io if else while for return break continue
 sizeof ** ^ case typeswitch switch default 
-public private enum class this interface flagset by step
+public private enum class this interface flagset by step min max swap
 
 alignas
 alignof

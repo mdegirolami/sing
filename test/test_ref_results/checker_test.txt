@@ -323,3 +323,16 @@ ERROR !! file checker_test.sing:747:24: You can only return values of type: nume
 ERROR !! file checker_test.sing:749:2: Function must return a value !!
 ERROR !! file checker_test.sing:751:12: Public global variables are forbidden !
 ERROR !! file checker_test.sing:756:19: Need a const pointer here
+ERROR !! file checker_test.sing:768:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:769:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:772:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:773:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:776:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:777:11: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:779:13: Operation doesn't suppot complex operands
+ERROR !! file checker_test.sing:780:13: Operation doesn't suppot complex operands
+ERROR !! file checker_test.sing:782:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:783:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:784:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:785:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:786:5: You can only swap two writable variables of IDENTICAL type

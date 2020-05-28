@@ -50,7 +50,7 @@ enum AstNodeType {
     ANT_ARGUMENT_DECLARE,
 
     // statements
-    ANT_BLOCK, ANT_UPDATE, ANT_INCDEC,
+    ANT_BLOCK, ANT_UPDATE, ANT_INCDEC, ANT_SWAP,
     ANT_WHILE, ANT_IF, ANT_FOR, ANT_SIMPLE, ANT_RETURN,
     ANT_SWITCH, ANT_TYPESWITCH,
 
@@ -537,6 +537,20 @@ public:
     AstIncDec(Token op) : operation_(op), left_term_(NULL) {}
     virtual AstNodeType GetType(void) { return(ANT_INCDEC); }
     void SetLeftTerm(IAstExpNode *exp) { left_term_ = exp; }
+};
+
+class AstSwap : public IAstNode {
+public:
+    Token           operation_;
+    IAstExpNode     *left_term_;
+    IAstExpNode     *right_term_;
+    PositionInfo    pos_;
+
+    virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+
+    virtual ~AstSwap() { if (left_term_ != NULL) delete left_term_; }
+    AstSwap(IAstExpNode *left, IAstExpNode *right) : left_term_(left), right_term_(right) {}
+    virtual AstNodeType GetType(void) { return(ANT_SWAP); }
 };
 
 class AstUpdate : public IAstNode {

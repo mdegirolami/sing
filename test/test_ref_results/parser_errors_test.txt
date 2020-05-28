@@ -98,3 +98,14 @@ ERROR !! file parser_errors_test.sing:244:9: Expecting a statement
 ERROR !! file parser_errors_test.sing:249:5: The only declarations allowed in a function are Let and Var
 ERROR !! file parser_errors_test.sing:251:15: Expecting '''
 ERROR !! file parser_errors_test.sing:259:9: Expression or part of it has no effects
+ERROR !! file parser_errors_test.sing:261:9: Expecting '('
+ERROR !! file parser_errors_test.sing:262:10: Expecting a left term
+ERROR !! file parser_errors_test.sing:263:11: Expecting ','
+ERROR !! file parser_errors_test.sing:264:21: Expecting ','
+ERROR !! file parser_errors_test.sing:265:22: Expecting a left term
+ERROR !! file parser_errors_test.sing:266:33: Expecting ')'
+ERROR !! file parser_errors_test.sing:269:22: Expecting '('
+ERROR !! file parser_errors_test.sing:270:23: Expression syntax error: expecting a literal, variable, '(', 'sizeof' a base type or 'this'
+ERROR !! file parser_errors_test.sing:271:34: Expecting ','
+ERROR !! file parser_errors_test.sing:272:35: Expression syntax error: expecting a literal, variable, '(', 'sizeof' a base type or 'this'
+ERROR !! file parser_errors_test.sing:273:47: Expecting ')'

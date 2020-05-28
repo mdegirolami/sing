@@ -9,11 +9,11 @@ void print_primes_to(const int32_t top)
 
     // note: for all the numbers in the range excluing even numbers
     for(int32_t totry = 3, totry__top = top; totry < totry__top; totry += 2) {
-        const int32_t max = (int32_t)uint32_sqrt((uint32_t)totry);              // max divisor who need to check
+        const int32_t max_val = (int32_t)uint32_sqrt((uint32_t)totry);          // max divisor who need to check
         bool isprime = true;
 
         for(int32_t *value = primes.begin(); value < primes.end(); ++value) {
-            if (*value > max) {
+            if (*value > max_val) {
                 break;
             }
             if (totry % *value == 0) {

@@ -11,6 +11,7 @@ static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout);
 static void forward(const myint val);
 static void expressions();
 static void funwithdefs(const int32_t a0 = 100, const sing::string &a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
+static void minmaxswap();
 
 static sing::cptr<sing::string> gp;
 
@@ -363,4 +364,12 @@ static void funwithdefs(const int32_t a0, const sing::string &a1, const bool a3,
 {
     const sing::string aaa = "ciccio" + a1;
     const sing::string bbb = a1 + "ciccio";
+}
+
+static void minmaxswap()
+{
+    int32_t pippo = std::max(3, 6);
+    int32_t pluto = std::min(3, 6);
+
+    std::swap(pippo, pluto);
 }

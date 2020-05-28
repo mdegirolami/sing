@@ -87,6 +87,7 @@ public:
     static bool GetIntegerIteratorType(Token *ittype, ExpressionAttributes* low, ExpressionAttributes *high, ExpressionAttributes *step);
     bool GetSignedIntegerValue(int64_t *value) const;
     bool CanAssign(ExpressionAttributes *src, ITypedefSolver *solver, string *error) const;
+    bool CanSwap(ExpressionAttributes *src, ITypedefSolver *solver) const;
     bool IsVoid(void)  const { return(exp_type_ == BT_VOID); }
     bool IsBool(void)  const { return(exp_type_ == BT_BOOL); }
     bool IsString(void) const { return(exp_type_ == BT_STRING); }
@@ -147,6 +148,7 @@ private:
     void Normalize(ITypedefSolver *solver);                     // if the pointed tree is a basic type, move it to attr->exp_type_
     bool ApplyTheIndirectionOperator(ITypedefSolver *solver);   // returns false if fails
     bool OperationSupportsFloatingPoint(Token operation);
+    bool OperationSupportsComplex(Token operation);
     ExpBaseTypes CanPromote(ExpBaseTypes op1, ExpBaseTypes op2);
     static void GetBaseTypePrecision(ExpBaseTypes the_type, int32_t *num_bits, int32_t *num_exp_bits, bool *has_sign, bool *is_complex);
     static ExpBaseTypes IntegerPromote(ExpBaseTypes the_type);

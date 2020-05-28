@@ -480,6 +480,30 @@ NumericValue::OpError NumericValue::PerformIntOp(NumericValue *other, Token op, 
             signed_ = 0;
         }
         break;
+    case TOKEN_MIN:
+        if (op1neg && op2neg && op2mod > op1mod || !op1neg && op2neg || !op1neg && !op2neg && op2mod < op1mod) {
+            result_mod = op2mod;
+            result_neg = op2neg;
+        } else {
+            result_mod = op1mod;
+            result_neg = op1neg;
+        }
+        if (!SetModAndSign(result_mod, result_neg, nbits, is_signed)) {
+            return(OE_INTEGER_OVERFLOW);
+        }
+        break;
+    case TOKEN_MAX: 
+        if (op1neg && op2neg && op2mod > op1mod || !op1neg && op2neg || !op1neg && !op2neg && op2mod < op1mod) {
+            result_mod = op1mod;
+            result_neg = op1neg;
+        } else {
+            result_mod = op2mod;
+            result_neg = op2neg;
+        }
+        if (!SetModAndSign(result_mod, result_neg, nbits, is_signed)) {
+            return(OE_INTEGER_OVERFLOW);
+        }
+        break;
     default:
         return(OE_ILLEGAL_OP);
     }
@@ -508,6 +532,12 @@ NumericValue::OpError NumericValue::PerformFloatOp(NumericValue *other, Token op
             return(OE_DIV_BY_0);
         }
         float_ = op1 / op2;
+        break;
+    case TOKEN_MIN:
+        float_ = std::min(op1, op2);
+        break;
+    case TOKEN_MAX:
+        float_ = std::max(op1, op2);
         break;
     default:
         return(OE_ILLEGAL_OP);
@@ -539,6 +569,12 @@ NumericValue::OpError NumericValue::PerformDoubleOp(NumericValue *other, Token o
             return(OE_DIV_BY_0);
         }
         float_ = op1 / op2;
+        break;
+    case TOKEN_MIN:
+        float_ = std::min(op1, op2);
+        break;
+    case TOKEN_MAX:
+        float_ = std::max(op1, op2);
         break;
     default:
         return(OE_ILLEGAL_OP);

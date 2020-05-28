@@ -756,3 +756,33 @@ fn constptrtest() void
 	let p0 *i32 = &cvar;
 	let p1 = &cvar;
 }
+
+fn minmaxswap() void
+{
+	var small i8;
+	let smallc i8 = 0;
+	var small2 i8;
+	var anint = 0;
+
+	small = min(10, 1000);
+	small = max(10, 1000);	// error
+	small = min(-10, -1000); // error
+	small = max(-10, -1000);
+	small = min(5.0, 5.1);
+	small = max(5.0, 5.1);	// error
+	small = min(5.0, 4.1);	// error
+	small = max(5.0, 4.1);
+	small = min(f64(5.0), f64(5.1));
+	small = max(f64(5.0), f64(5.1));	// error
+	small = min(f64(5.0), f64(4.1));	// error
+	small = max(f64(5.0), f64(4.1));
+	small = min(5.0+3i, 5.0);			// can't apply to complex
+	small = min(c128(5.0+3i), 5.0);			// can't apply to complex
+
+	swap(small, 3);			// must be var !
+	swap(3, small);
+	swap(small, smallc); 	// must be writable
+	swap(smallc, small);
+	swap(anint, small);		// must be same type
+	swap(small2, small);	// ok
+}
