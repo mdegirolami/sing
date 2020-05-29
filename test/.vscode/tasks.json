@@ -42,6 +42,46 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "clean release",
+
+            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "args": ["-v", "-f", "../build_release.ninja", "-t", "clean"],
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}\\build\\obj_r"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "clean debug",
+
+            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "args": ["-v", "-f", "../build_debug.ninja", "-t", "clean"],
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}\\build\\obj_d"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

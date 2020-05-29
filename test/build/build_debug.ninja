@@ -1,4 +1,5 @@
 debug_flags = -g
+sing_debug_flags = -g
 
 src = ../../tests_results
 bin_target = ../../bin/tests_d.exe

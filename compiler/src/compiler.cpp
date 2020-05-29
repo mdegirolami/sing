@@ -1,5 +1,6 @@
 #include <limits.h>
 #include <float.h>
+#include <assert.h>
 #include "compiler.h"
 #include "helpers.h"
 #include "ast_nodes_print.h"

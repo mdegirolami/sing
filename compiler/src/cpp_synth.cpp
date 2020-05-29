@@ -3096,7 +3096,7 @@ void CppSynth::SynthDFile(FILE *dfd, Package *package, const char *target_name)
         if (ii == vdep->size() - 1) {
             fprintf(dfd, " %s", dep->full_package_path_.c_str());
         } else {
-            fprintf(dfd, " %s \\", dep->full_package_path_.c_str());
+            fprintf(dfd, " %s \\\n", dep->full_package_path_.c_str());
         }
     }
 }

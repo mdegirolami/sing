@@ -12,18 +12,18 @@ rule cc
 rule sc
   deps = gcc
   depfile = $out.d
-  command = $singcc $debug_flags $skip_usage -I ../../tests -MF -o $out $in
+  command = $singcc $sing_debug_flags $skip_usage -I ../../tests -MF -o $out $in
 
 rule ln
   command = g++ -o $out $in $singlib
 
+build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pkgs_test.sing  
 build $src/main.h             | $src/main.cpp            : sc $sing_src/main.sing
 build $src/sinth_test.h       | $src/sinth_test.cpp      : sc $sing_src/sinth_test.sing  
-build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pkgs_test.sing  
 build $src/synth_test_pkg.h   | $src/synth_test_pkg.cpp  : sc $sing_src/synth_test_pkg.sing  
 build $src/synth_test_pkg2.h  | $src/synth_test_pkg2.cpp : sc $sing_src/synth_test_pkg2.sing  
 build $src/types_and_vars.h   | $src/types_and_vars.cpp  : sc $sing_src/types_and_vars.sing  
-build $src/synth_test_oop.h | $src/synth_test_oop.cpp : sc $sing_src/synth_test_oop.sing
+build $src/synth_test_oop.h   | $src/synth_test_oop.cpp  : sc $sing_src/synth_test_oop.sing
 build $src/siege.h            | $src/siege.cpp           : sc $sing_src/siege.sing
   skip_usage =
 
