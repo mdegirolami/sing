@@ -273,10 +273,11 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool
             AstMapType *node = (AstMapType*)type_spec;
             string fulldecl, the_type;
 
-            fulldecl = "std::unordered_map<";
+            fulldecl = "sing::map<";
             SynthTypeSpecification(&the_type, node->key_type_);
             fulldecl += the_type;
             fulldecl += ", ";
+            the_type = "";
             SynthTypeSpecification(&the_type, node->returned_type_);
             fulldecl += the_type;
             fulldecl += ">";
@@ -703,37 +704,45 @@ void CppSynth::SynthIniter(string *dst, IAstTypeNode *type_spec, IAstNode *inite
 
 void CppSynth::SynthIniterCore(string *dst, IAstTypeNode *type_spec, IAstNode *initer)
 {
-    if (initer->GetType() == ANT_INITER) {
+    while (type_spec != nullptr && type_spec->GetType() == ANT_NAMED_TYPE) {
+        type_spec = ((AstNamedType*)type_spec)->wp_decl_->type_spec_;
+    }
+    if (initer->GetType() == ANT_INITER) {        
         AstIniter *ast_initer = (AstIniter*)initer;
         int ii;
-        int oldrow = 0;
+        int oldrow = initer->GetPositionRecord()->start_row;
 
-        //--split_level_;
         *dst += '{';
-        if (ast_initer->elements_.size() > 0) {
-            if (initer->GetPositionRecord()->start_row < ast_initer->elements_[0]->GetPositionRecord()->start_row) {
-                *dst += 0xff;
-            }
-            //AddSplitMarker(dst);
+        if (type_spec->GetType() == ANT_ARRAY_TYPE) {
+            AstArrayType *arraytype = (AstArrayType*)type_spec;
             for (ii = 0; ii < (int)ast_initer->elements_.size(); ++ii) {
                 IAstNode *element = ast_initer->elements_[ii];
-                if (ii != 0) {
+                oldrow = AddForcedSplit(dst, element, oldrow);
+                SynthIniterCore(dst, arraytype->element_type_, element);
+                if (ii != (int)ast_initer->elements_.size() - 1) {
                     *dst += ", ";
-                    if (element->GetPositionRecord()->start_row > oldrow) {
-                        *dst += 0xff;
-                    } else {
-                        //AddSplitMarker(dst);
-                    }
                 }
-                oldrow = element->GetPositionRecord()->last_row;
-                SynthIniterCore(dst, type_spec, element);
             }
-            if (initer->GetPositionRecord()->last_row > ast_initer->elements_[ast_initer->elements_.size()-1]->GetPositionRecord()->last_row) {
-                *dst += 0xff;
+        } else if (type_spec->GetType() == ANT_MAP_TYPE) {
+            AstMapType *maptype = (AstMapType*)type_spec;
+            IAstNode **element = &ast_initer->elements_[0];
+            for (ii = (int)ast_initer->elements_.size() >> 1; ii > 0; --ii) {
+                oldrow = AddForcedSplit(dst, element[0], oldrow);
+                *dst += "{";
+                SynthIniterCore(dst, maptype->key_type_, element[0]);
+                *dst += ", ";
+                SynthIniterCore(dst, maptype->returned_type_, element[1]);
+                *dst += "}";
+                if (ii != 1) {
+                    *dst += ", ";
+                }
+                element += 2;
             }
-            *dst += '}';
         }
-        //++split_level_;
+        if (initer->GetPositionRecord()->last_row > oldrow) {
+            *dst += 0xff;
+        }
+        *dst += '}';
     } else {
         string exp;
 
@@ -1353,24 +1362,6 @@ void CppSynth::SynthExpressionAndCastToInt(string *dst, IAstExpNode *node, bool 
     CastIfNeededTo(target, node->GetAttr()->GetAutoBaseType(), dst, priority, false);
 }
 
-/*
-types:
-- w/o index
-- [not] existing iterator/index
-- map/vector/string/int iterator
-- step
-
-NOTE: iterators are pointers !! (or references)
-
-VarDeclaration  *index_;        // optional
-VarDeclaration  *iterator_;
-IAstExpNode     *set_;          // if iteration in map/vector/string
-IAstExpNode     *low_;          // if int iterator
-IAstExpNode     *high_;         // if int iterator
-IAstExpNode     *step_;         // if int iterator (optional)
-AstBlock        *block_;
-*/
-
 void CppSynth::SynthSimpleStatement(AstSimpleStatement *node)
 {
     // check: is in an inner block who is continuable/breakable ?
@@ -1393,6 +1384,20 @@ void CppSynth::SynthReturn(AstReturn *node)
     Write(&text);
 }
 
+//
+// Adds a final conversion in view of the assignment. Sing allows some numeric conversions c++ doesn't:
+// - If the value is a compile time constant and fits the target value.
+// - if the conversion is not narrowing but the target is a complex and the source is not a value of same precision.
+//
+// You DONT' need SynthFullExpression() if:
+// - the espression is strictly constant (recognized as such by legacy C compilers), currently:
+// 	- enum case initers
+// 	- array size
+// - left terms (or in general if the value is not written)
+// - values that are known not being numerics (es. typeswitch expression)
+// - values that are required to be integers (not automatically downcasted, even if constant: indices) 
+// - consider SynthExpressionAndCastToInt() for values that are known to be signed ints;
+//
 int CppSynth::SynthFullExpression(Token target_type, string *dst, IAstExpNode *node)
 {
     int             priority;
@@ -2395,6 +2400,16 @@ void CppSynth::AddSplitMarker(string *dst)
 {
     *dst += MAX(split_level_, 0xf8);
 }
+
+int CppSynth::AddForcedSplit(string *dst, IAstNode *node1, int row)
+{
+    int newrow = node1->GetPositionRecord()->start_row;
+    if (newrow != row) {
+        *dst += 0xff;
+    }
+    return(newrow);
+}
+
 
 void  CppSynth::SetFormatterRemarks(IAstNode *node)
 {

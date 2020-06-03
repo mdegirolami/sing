@@ -13,6 +13,7 @@ void test_vectors(int size);
 void test_ptr_speed();
 void test_intrinsics(void);
 void speed_test(void);
+void test_map(void);
 
 int main() {
     //test_types_and_vars();
@@ -24,6 +25,7 @@ int main() {
     //ptrtest();
     //print_primes_to(100);
     //test_ptr_speed();
-    speed_test();
+    //speed_test();
+    test_map();
     return(0);
 }

@@ -799,7 +799,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         argdecl_attr.InitWithTree(argdecl->weak_type_spec_, nullptr, true, true, solver);
         if (argdecl->HasOneOfFlags(VF_READONLY)) {
             // NOTE: is read only inside the function, but must be written by the caller !!!
-            if (GetParameterPassingMethod(argdecl->weak_type_spec_, true) == PPM_VALUE) {
+            if (GetParameterPassingMethod(argdecl->weak_type_spec_, true) == PPM_VALUE || argvalue_attr->type_tree_ == nullptr) {
                 if (!argdecl_attr.CanAssign(argvalue_attr, solver, error)) {  
 
                     // note: error message provided by CanAssign                 
@@ -869,27 +869,32 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
     if (exp_type_ == BT_ERROR) {
         return(true);
     }
-    if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
-        *error = "You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)";
+    if (exp_type_ != BT_TREE || type_tree_ == nullptr || type_tree_->GetType() != ANT_ARRAY_TYPE) {
+        *error = "You can apply an index list only to objects of type 'array' (did you specify too many indices ?)";
         exp_type_ = BT_ERROR;
         return(false);
     }
+    // if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
+    //     *error = "You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)";
+    //     exp_type_ = BT_ERROR;
+    //     return(false);
+    // }
     exp_type_ = BT_ERROR;
-    if (type_tree_->GetType() == ANT_MAP_TYPE) {
-        AstMapType *typedesc = (AstMapType*)type_tree_;
-        *map_typedesc = typedesc;
-        ExpressionAttributes argdecl_attr;                          // of a fake expression where we pretend the map input is a variable.
+    // if (type_tree_->GetType() == ANT_MAP_TYPE) {
+    //     AstMapType *typedesc = (AstMapType*)type_tree_;
+    //     *map_typedesc = typedesc;
+    //     ExpressionAttributes argdecl_attr;                          // of a fake expression where we pretend the map input is a variable.
 
-        if (!node->is_single_index_) {
-            *error = "Maps accept a single index (not ranges)";
-            return(false);
-        }
-        argdecl_attr.InitWithTree(typedesc->key_type_, nullptr, true, true, solver);
-        if (argdecl_attr.CanAssign(low_attr, solver, error)) {
-            InitWithTree(typedesc->returned_type_, variable_, true, is_writable_, solver);
-            return(true);
-        }
-    } else {
+    //     if (!node->is_single_index_) {
+    //         *error = "Maps accept a single index (not ranges)";
+    //         return(false);
+    //     }
+    //     argdecl_attr.InitWithTree(typedesc->key_type_, nullptr, true, true, solver);
+    //     if (argdecl_attr.CanAssign(low_attr, solver, error)) {
+    //         InitWithTree(typedesc->returned_type_, variable_, true, is_writable_, solver);
+    //         return(true);
+    //     }
+    // } else {
         AstArrayType *typedesc = (AstArrayType*)type_tree_;
 
         // let's make typedesc->dimensions_ valid
@@ -924,8 +929,8 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
         }
         InitWithTree(typedesc->element_type_, variable_, true, is_writable_, solver);
         return(true);
-    }
-    return(false);
+    //}
+    //return(false);
 }
 
 bool ExpressionAttributes::TakeAddress(void)

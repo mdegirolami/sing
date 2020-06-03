@@ -127,6 +127,7 @@ class CppSynth {
     void GetFullExternName(string *full, int pkg_index, const char *local_name);
     bool IsLiteralString(IAstExpNode *node);
     void AddSplitMarker(string *dst);
+    int  AddForcedSplit(string *dst, IAstNode *node1, int row);
     void SetFormatterRemarks(IAstNode *node);
     AstClassType *GetLocalClassTypeDeclaration(const char *classname);
     void AppendMemberName(string *dst, IAstDeclarationNode *src);

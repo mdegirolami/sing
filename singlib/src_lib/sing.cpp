@@ -370,27 +370,13 @@ void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *
     }
 }
 
-/*
-string format(const char *format, ...)
+int32_t hash_from_bytes(const uint8_t *buffer, int count)
 {
-
-    va_start
-
-    for (;count != 0; --count) {
-        int i = ;
-            std::cout << i << '\n';
-        } else if (*fmt == 'c') {
-            // note automatic conversion to integral type
-            int c = va_arg(args, int);
-            std::cout << static_cast<char>(c) << '\n';
-        } else if (*fmt == 'f') {
-            double d = va_arg(args, double);
-            std::cout << d << '\n';
-        }
-        ++fmt;
+    int32_t acc = 0x811c9dc5;
+    for (; count > 0; --count) {
+        acc = (acc * 0x01000193) ^ *buffer++;
     }
-
+    return(acc);
 }
-*/
 
 } // namespace

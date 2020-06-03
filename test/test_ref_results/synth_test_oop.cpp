@@ -42,6 +42,8 @@ private:
     c0_test implementor_;
 };
 
+typedef sing::map<sing::string, int32_t> maptype;
+
 static int32_t check_typeswitch(const tester &object);
 static int32_t check_typeswitch2(const sing::iptr<tester> object);
 static void check_builtin();
@@ -314,7 +316,7 @@ static void check_builtin()
     cpl = std::log(cpl);
     cpl = std::exp(cpl);
 
-    sing::dpvect<float> aa = {1, 2, 3};
+    sing::dpvect<float> aa = {(float)1, (float)2, (float)3};
 
     aa.reserve(100);
     int32_t cc = aa.capacity();
@@ -339,11 +341,41 @@ static void check_builtin()
     aa.erase(1, 4);
 
     sing::ptr<sing::dpvect<float>> bb(new sing::wrapper<sing::dpvect<float>>);
-    *bb = {1, 2, 3};
+    *bb = {(float)1, (float)2, (float)3};
     const sing::ptr<sing::dpvect<float>> bbp = bb;
 
     (*bbp).push_back((float)1);
     ss = (*bb).size();
+
+    // map constructors
+    maptype map1;
+    maptype map2 = {{"one", 1}, {"two", 2}, {"three", 3}};
+    maptype map3 = map1;
+    sing::ptr<maptype> map4(new sing::wrapper<maptype>);    // on heap with initializzation !
+    *map4 = {{"one", 1}, {"two", 2}, {"three", 3}};
+    const sing::ptr<maptype> mapp = map4;
+
+    map1.reserve(100);
+    int32 = map1.capacity();
+    map1.insert("first", 10101);
+    map1.insert("second", 89);
+    map1.trim();
+    int32 = map1.capacity();
+    int32 = map1.size();
+    bool test = map1.isempty();
+
+    map1.clear();
+    int32 = map1.size();
+    test = map1.isempty();
+    map2.erase("two");
+    int32 = map2.get("one");
+    int32 = map2.get_safe("one", -1);
+    int32 = map2.get_safe("two", -1);
+    test = map2.has("one");
+    test = map2.has("two");
+    sing::string ts = map2.key_at(1);
+
+    int32 = map2.value_at(1);
 }
 
 }   // namespace

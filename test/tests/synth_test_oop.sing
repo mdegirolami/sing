@@ -204,6 +204,8 @@ fn check_typeswitch2(in object *tester) i32
     return(-1);   
 }
 
+type maptype map(string)i32;
+
 fn check_builtin() void
 {
     var sign i32;
@@ -310,6 +312,31 @@ fn check_builtin() void
     bbp.push_back(1); 
     ss = bb.size();
 
+    // map constructors
+    var map1 maptype;
+    var map2 maptype = {"one", 1, "two", 2, "three", 3};
+    var map3 = map1;
+    var map4 maptype = {"one", 1, "two", 2, "three", 3};    // on heap with initializzation !
+    let mapp = &map4;
 
+    map1.reserve(100);
+    int32 = map1.capacity();
+    map1.insert("first", 10101);
+    map1.insert("second", 89);
+    map1.trim();
+    int32 = map1.capacity();
+    int32 = map1.size();
+    var test bool = map1.isempty();
+    map1.clear();
+    int32 = map1.size();
+    test = map1.isempty();
+    map2.erase("two");
+    int32 = map2.get("one");
+    int32 = map2.get_safe("one", -1);
+    int32 = map2.get_safe("two", -1);
+    test = map2.has("one");
+    test = map2.has("two");
+    var ts string = map2.key_at(1);
+    int32 = map2.value_at(1);
 }
 

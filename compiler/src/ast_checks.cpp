@@ -428,6 +428,9 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
             AstMapType *node = (AstMapType*)type_spec;
             if (!CheckTypeSpecification(node->key_type_, TSCM_STD)) {
                 success = false;
+            } else if (!node->key_type_->SupportsEqualOperator()) {
+                Error("Key type must support the == operator (not be a class/interface/map)", node->key_type_);
+                success = false;
             }
             if (!CheckTypeSpecification(node->returned_type_, TSCM_STD)) {
                 success = false;
@@ -2771,7 +2774,7 @@ AstClassType *AstChecker::GetLocalClassTypeDeclaration(const char *classname, bo
     if (node != nullptr && node->GetType() == ANT_TYPE) {
         IAstTypeNode *ntype = ((TypeDeclaration*)node)->type_spec_;
         if (solve_typedefs) {
-            IAstTypeNode *ntype = SolveTypedefs(ntype);
+            ntype = SolveTypedefs(ntype);
         }
         if (ntype != nullptr && ntype->GetType() == ANT_CLASS_TYPE) {
             return((AstClassType*)ntype);

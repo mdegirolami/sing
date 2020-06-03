@@ -7,6 +7,7 @@
 #include "sing_vectors.h"
 #include "sing_pointers.h"
 #include "sing_string.h"
+#include "sing_map.h"
 
 #define SING_STORAGE(name) name, 0, sizeof(name)/sizeof(name[0])
 

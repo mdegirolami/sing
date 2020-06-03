@@ -61,11 +61,12 @@ IFDesc g_array_functs[] = {
 };
 
 IFDesc g_map_functs[] = {
-{"reserve", "Mvs"}, {"capacity", "i"}, {"trim", "Mv"},
-{"clear" ,"Mv"}, {"size", "i"}, {"isempty", "b"},
-{"key_at", "kx"}, {"value_at", "vx"}, {"has", "bk"}, {"erase", "Mvk"},
-{"sort_by_key", "Mvxsf"}, {"radix_sort_by_key", "Mvxsf"}, {"sort_by_value", "Mvxsf"}, {"radix_sort_by_value", "Mvxsf"}, 
-{"find_value", "ie"}, {"binary_search_value", "ie"}, {"upper_bound_value", "ie"}, {"lower_bound_value", "ie"},
+{"reserve", "Mvsm"}, {"capacity", "im"}, {"trim", "Mvm"},
+{"clear" ,"Mvm"}, {"size", "im"}, {"isempty", "bm"},
+{"insert", "Mvkem"}, {"erase", "Mvkm"}, {"get", "ekm"}, {"get_safe", "ekem"}, {"has", "bkm"},
+{"key_at", "kxm"}, {"value_at", "exm"},
+//{"sort_by_key", "Mvxsf"}, {"radix_sort_by_key", "Mvxsf"}, {"sort_by_value", "Mvxsf"}, {"radix_sort_by_value", "Mvxsf"}, 
+//{"find_value", "ie"}, {"binary_search_value", "ie"}, {"upper_bound_value", "ie"}, {"lower_bound_value", "ie"},
 {"", ""}
 };
 
