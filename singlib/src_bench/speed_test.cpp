@@ -18,14 +18,16 @@ void vect_of_int(void);
 void vect_of_classes(void);
 void map_speed(void);
 void string_speed(void);
+void format_speed(void);
 
 void speed_test(void)
 {
     //printf("Hallo world");
     // vect_of_int();
     // vect_of_classes();
-    map_speed();
+    // map_speed();
     // string_speed();
+    format_speed();
 }
 
 void vect_of_int(void)
@@ -228,5 +230,65 @@ void string_speed(void)
         singacc += singstrings[ii+2];
     }
     printf("\n\nsing::concatenate = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    */
+}
+
+void format_speed(void) 
+{
+    clock_t start;
+    std::string s0 = "the_first";
+    std::string s1 = "the_second";
+    volatile float f0 = 5.0f;
+    volatile int32_t v_int32 = 123;
+    volatile int8_t v_int8 = -21;
+    volatile uint32_t v_uint32 = 0x10000;
+    volatile uint8_t v_uint8 = 33;
+    std::complex<float> c0(1.0f, 3.0f);
+    std::complex<double> c1(1.0, 3.0);
+    //sing::string sout;
+    //std::string stdsout;
+
+    start = clock();
+    for (int ii = 0; ii < 100000; ii += 3) {
+        sing::string sout = sing::format("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
+        v_int32 += sout.length();
+    }
+    printf("\n\nsing::format = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+
+    start = clock();
+    for (int ii = 0; ii < 100000; ii += 3) {
+        std::string stdsout = s0 + s1 + std::to_string(f0) + std::to_string(v_int32) + std::to_string(false) +
+        std::to_string(v_int8) + std::to_string(v_uint32) + std::to_string(v_uint8) + 
+        std::to_string(c0.real()) + std::to_string(c0.imag()) + "i" + 
+        std::to_string(c1.real()) + std::to_string(c1.imag()) + "i";
+        v_int32 += stdsout.length();
+    }
+    printf("\n\nstd sums = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+
+    start = clock();
+    for (int ii = 0; ii < 100000; ii += 3) {
+        std::string stdsout = sing::sfmt("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
+        v_int32 += stdsout.length();
+    }
+    printf("\n\nsing::sfmt = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+
+    start = clock();
+    for (int ii = 0; ii < 100000; ii += 3) {
+        std::string stdsout = sing::s_format("%s%s%f%d%s%d%u%u%f+%fi%f+%fi", 
+        s0.c_str(), s1.c_str(), f0, v_int32, false ? "true" : "false", v_int8, v_uint32, v_uint8, 
+        c0.real(), c0.imag(), c1.real(), c1.imag());
+        v_int32 += stdsout.length();
+    }
+    printf("\n\nsing::string_format = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+
+/* c++20 !!
+    start = clock();
+    for (int ii = 0; ii < 100000; ii += 3) {
+        sing::string sout = std::format("{}{}{f}{d}{b}{d}{u}{u}{}{}", 
+        s0.c_str(), s1.c_str(), f0, v_int32, 
+        false, v_int8, v_uint32, v_uint8, c0, c1);
+        v_int32 += sout.length();
+    }
+    printf("\n\nsing::format = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
     */
 }

@@ -15,7 +15,7 @@ public:
     static char id__;
 
 private:
-    sing::string message_;
+    std::string message_;
     bool istough_;
 };
 
@@ -42,7 +42,7 @@ private:
     c0_test implementor_;
 };
 
-typedef sing::map<sing::string, int32_t> maptype;
+typedef sing::map<std::string, int32_t> maptype;
 
 static int32_t check_typeswitch(const tester &object);
 static int32_t check_typeswitch2(const sing::iptr<tester> object);
@@ -174,7 +174,7 @@ void test_oop()
     (*t_p2).tough_test(true);
 
     // switch noninteger constant
-    const sing::string switch_base = "xxx";
+    const std::string switch_base = "xxx";
 
     if (switch_base + "y" == "xxxy") {  // should double
         avg *= 2.0f;
@@ -373,7 +373,7 @@ static void check_builtin()
     int32 = map2.get_safe("two", -1);
     test = map2.has("one");
     test = map2.has("two");
-    sing::string ts = map2.key_at(1);
+    std::string ts = map2.key_at(1);
 
     int32 = map2.value_at(1);
 }

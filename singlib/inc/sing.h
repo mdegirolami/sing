@@ -122,6 +122,7 @@ namespace sing {
     std::complex<float> string2complex64(const char *instring);
     std::complex<double> string2complex128(const char *instring);
 
+    // sing::string stuff
     inline int64_t string2int(const string &instring) { return(string2int(instring.c_str())); }
     inline uint64_t string2uint(const string &instring) { return(string2uint(instring.c_str())); }
     inline double string2double(const string &instring) { return(string2double(instring.c_str())); }
@@ -140,6 +141,21 @@ namespace sing {
 
     string add_strings(int count, ...);
     string format(const char *format, ...);
+
+    // std::string stuff
+    inline int64_t string2int(const std::string &instring) { return(string2int(instring.c_str())); }
+    inline uint64_t string2uint(const std::string &instring) { return(string2uint(instring.c_str())); }
+    inline double string2double(const std::string &instring) { return(string2double(instring.c_str())); }
+    inline std::complex<float> string2complex64(const std::string &instring) { return(string2complex64(instring.c_str())); }
+    inline std::complex<double> string2complex128(const std::string &instring) { return(string2complex128(instring.c_str())); }
+
+    std::string to_string(std::complex<float> value);
+    std::string to_string(std::complex<double> value);
+    std::string to_string(bool value);
+
+    std::string sfmt(const char *format, ...);
+    std::string s_format(const char *fmt, ...);
+
 
     template<class T>
     inline int32_t sgn(T value)

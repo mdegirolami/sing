@@ -4,26 +4,26 @@ typedef int32_t myint;
 
 static const int32_t vvv = 5;
 
-static void receiver(const sing::vect<sing::svect<sing::string, 4>> &vin, sing::vect<sing::svect<sing::string, 4>> &vout);
-static sing::ptr<sing::string> get_a_string();
+static void receiver(const sing::vect<sing::svect<std::string, 4>> &vin, sing::vect<sing::svect<std::string, 4>> &vout);
+static sing::ptr<std::string> get_a_string();
 static int32_t add_int(const int32_t val0, const int32_t val1 = 5);
 static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout);
 static void forward(const myint val);
 static void expressions();
-static void funwithdefs(const int32_t a0 = 100, const sing::string &a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
+static void funwithdefs(const int32_t a0 = 100, const std::string &a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
 static void minmaxswap();
 
-static sing::cptr<sing::string> gp;
+static sing::cptr<std::string> gp;
 
 static const sing::dpvect<myint> mivv;
 
-static void receiver(const sing::vect<sing::svect<sing::string, 4>> &vin, sing::vect<sing::svect<sing::string, 4>> &vout)
+static void receiver(const sing::vect<sing::svect<std::string, 4>> &vin, sing::vect<sing::svect<std::string, 4>> &vout)
 {
 }
 
-static sing::ptr<sing::string> get_a_string()
+static sing::ptr<std::string> get_a_string()
 {
-    sing::ptr<sing::string> to_return(new sing::wrapper<sing::string>("the_test"));
+    sing::ptr<std::string> to_return(new sing::wrapper<std::string>("the_test"));
 
     return (to_return);
 }
@@ -41,7 +41,7 @@ static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout)
 int32_t sinth_test()
 {
     // consts declarations (heap and not-heap)
-    sing::cptr<sing::string> cs(new sing::wrapper<sing::string>("test"));
+    sing::cptr<std::string> cs(new sing::wrapper<std::string>("test"));
     const int32_t ci = 123;
 
     gp = cs;
@@ -50,13 +50,13 @@ int32_t sinth_test()
     const myint miv = 0;
 
     // array of array passing (the first index is wildcharted)
-    sing::svect<sing::svect<sing::string, 4>, 4> arr;
+    sing::svect<sing::svect<std::string, 4>, 4> arr;
 
     receiver(arr, arr);
 
     // weak pointers
     gp = get_a_string();
-    sing::cwptr<sing::string> wp = gp;
+    sing::cwptr<std::string> wp = gp;
 
     gp = nullptr;
 
@@ -161,7 +161,7 @@ int32_t sinth_test()
     float autofloat = 10.0f;
     std::complex<float> autocomplex = std::complex<float>(0.0f, 10.0f);
     bool autobool = autoint < 0;
-    sing::string autostring = "goophy";
+    std::string autostring = "goophy";
 
     // return needs conversion
     return ((int32_t)10.0f);
@@ -188,14 +188,14 @@ static void expressions()
     std::complex<double> c1 = std::complex<double>(1.0, 1.0);
 
     // sum of srings
-    sing::string s0 = "aaa";
-    sing::string s1 = "bbb";
+    std::string s0 = "aaa";
+    std::string s1 = "bbb";
 
     s0 = s0 + s1;
     c0 = 1.0f + std::complex<float>(0.0f, 1.0f);
     c1 = std::complex<double>(1.0, 1.0);
-    s0 = sing::format("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
-    s0 = sing::format("scsscc", s0.c_str(), (uint32_t)'f', "alse", s1.c_str(), v_int32, v_uint8);
+    s0 = sing::sfmt("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
+    s0 = sing::sfmt("scsscc", s0.c_str(), (uint32_t)'f', "alse", s1.c_str(), v_int32, v_uint8);
 
     // power + cases which require conversion
     v_int32 = sing::pow2((int32_t)v_int8);                  // **2 integer promotion
@@ -266,9 +266,9 @@ static void expressions()
     c0 = (std::complex<float>)f0;
     c0 = (std::complex<float>)v_int8;
     c0 = (std::complex<float>)(float)v_int32;
-    s0 = sing::tostring(v_int32);
-    s0 = sing::tostring(f0);
-    s0 = sing::tostring(b0);
+    s0 = std::to_string(v_int32);
+    s0 = std::to_string(f0);
+    s0 = sing::to_string(b0);
     s0 = "100 + 3i";
     c0 = sing::string2complex64(s0);
     c1 = sing::string2complex128(s0);
@@ -360,10 +360,10 @@ static void expressions()
 }
 
 // functions with defaults
-static void funwithdefs(const int32_t a0, const sing::string &a1, const bool a3, const sing::ptr<int32_t> a4)
+static void funwithdefs(const int32_t a0, const std::string &a1, const bool a3, const sing::ptr<int32_t> a4)
 {
-    const sing::string aaa = "ciccio" + a1;
-    const sing::string bbb = a1 + "ciccio";
+    const std::string aaa = "ciccio" + a1;
+    const std::string bbb = a1 + "ciccio";
 }
 
 static void minmaxswap()

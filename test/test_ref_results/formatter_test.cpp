@@ -16,15 +16,15 @@ static const sing::svect<sing::spvect<int32_t, 3>, 6> table = {{1, 2, 3}, {1, 2,
 };
 // attached to prev
 
-static const sing::svect<sing::svect<sing::svect<sing::string, 3>, 3>, 3> table2 = {{{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}};
+static const sing::svect<sing::svect<sing::svect<std::string, 3>, 3>, 3> table2 = {{{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}};
 
 static const sing::svect<sing::spvect<int32_t, 3>, 6> table3 = {                // just one remark
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3}, 
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3}
 };
 
-static const sing::string stest = "kjdhfkhfdkhskdfhkshghkhl"                    // rem1
-    "hfdslkjflkjasdlkfjlksdjflkj";                                              // rem2
+static const std::string stest = "kjdhfkhfdkhskdfhkshghkhl" // rem1
+    "hfdslkjflkjasdlkfjlksdjflkj";                          // rem2
 
 static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
     const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4)

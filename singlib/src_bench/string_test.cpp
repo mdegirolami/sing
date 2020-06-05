@@ -79,4 +79,14 @@ void using_strings(void)
     string_receiver(vs0[0], &vs1[0]);
     string_receiver("boia", &vs1[0]);
     string_vect_receiver(vs0, &vs1);
+
+    // compare formatting from several functions
+    std::string s0 = std::to_string(1240);
+    std::string s1 = std::to_string(14000LL);
+    std::string s2 = std::to_string(1240u);
+    std::string s3 = std::to_string(13309llu);
+    std::string s4 = std::to_string(128.0);    
+    std::string s5 = std::to_string(128.0f);
+
+
 }

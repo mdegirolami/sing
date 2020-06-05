@@ -41,7 +41,7 @@ public:
 // very simple: NO costructor/destructor/private stuff/inheritance
 class simple final {
 public:
-    sing::string xxx_;
+    std::string xxx_;
 };
 
 void test_oop();

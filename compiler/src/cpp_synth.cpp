@@ -1721,7 +1721,7 @@ int CppSynth::SynthMathOperator(string *dst, AstBinop *node)
         ProcessStringSumOperand(&format, &parms, node->operand_left_);
         ProcessStringSumOperand(&format, &parms, node->operand_right_);
         if (format != "ss") {
-            *dst = "sing::format(\"";
+            *dst = "sing::sfmt(\"";
             *dst += format;
             *dst += "\"";
             *dst += parms;
@@ -1917,7 +1917,7 @@ int CppSynth::SynthUnop(string *dst, AstUnop *node)
     } else {
         priority = 3;
     }
-    if (node->operand_ != NULL) {
+    if (node->operand_ != nullptr) {
         exp_priority = SynthExpression(dst, node->operand_);
     }
 
@@ -2072,7 +2072,17 @@ int CppSynth::SynthCastToComplex(string *dst, AstUnop *node, int priority)
 
 int CppSynth::SynthCastToString(string *dst, AstUnop *node)
 {
-    dst->insert(0, "sing::tostring(");
+    bool use_sing_fun = false;
+
+    if (node->operand_ != nullptr) {
+        const ExpressionAttributes *attr = node->operand_->GetAttr();
+        use_sing_fun = attr->IsComplex() || attr->IsBool();
+    }
+    if (use_sing_fun) {
+        dst->insert(0, "sing::to_string(");
+    } else {
+        dst->insert(0, "std::to_string(");
+    }
     *dst += ")";
     return(KForcedPriority);
 }
@@ -2459,7 +2469,7 @@ const char *CppSynth::GetBaseTypeName(Token token)
     case TOKEN_COMPLEX128:
         return("std::complex<double>");
     case TOKEN_STRING:
-        return("sing::string");
+        return("std::string");
     case TOKEN_BOOL:
         return("bool");
     case TOKEN_VOID:
