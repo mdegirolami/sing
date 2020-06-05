@@ -180,7 +180,6 @@ class Lexer {
     int         ComputeAsh(const char *symbol);
     int         GetNewLine(void);
     bool        IsEmptyLine(vector<int32_t> *line);
-    bool        ReadCharacterLiteral(void);
     bool        ReadStringLiteral(void);
     bool        ReadEscapeSequence(int32_t *value);
     bool        HexToChar(int32_t *retv, int32_t *cps, int maxlength);

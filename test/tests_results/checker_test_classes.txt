@@ -2,7 +2,7 @@
 ERROR !! file checker_test_classes.sing:11:19: Values are not numbers nor of same type or the type doesn't support the == operator
 ERROR !! file checker_test_classes.sing:14:12: You can't compare two enums of different type
 ERROR !! file checker_test_classes.sing:18:11: Index value is out of bound
-ERROR !! file checker_test_classes.sing:19:14: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test_classes.sing:19:14: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test_classes.sing:23:4: Can't find the function's class declaration
 ERROR !! file checker_test_classes.sing:38:16: Inherited Function "conflicting" has not an implementation
 ERROR !! file checker_test_classes.sing:38:16: Inherited Function "from_if0" has not an implementation

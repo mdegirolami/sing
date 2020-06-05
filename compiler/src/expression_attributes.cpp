@@ -237,19 +237,16 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
 
     ExpBaseTypes right_type = attr_right->exp_type_;
 
-    // string-char sums. The output of a string (literal or not) and any unsigned integer in the 0..0x3fffff range is a string
-    // NOTE: at least one of the twos must be a string
-    if (operation == TOKEN_PLUS && ((right_type | exp_type_) & BT_STRING) != 0) { 
-        if (IsGoodForStringAddition() && attr_right->IsGoodForStringAddition()) {
-            exp_type_ = BT_STRING;
-            return(true);
-        }
+    // string-string sums.
+    if (operation == TOKEN_PLUS && (right_type & exp_type_ & BT_STRING) != 0) { 
+        exp_type_ = BT_STRING;
+        return(true);
     }
 
     // if not on a string must operate on a number (NOTE: relationals and booleans are processed by other routines).
     if ((exp_type_ & BT_ALL_THE_NUMBERS) == 0 || (right_type & BT_ALL_THE_NUMBERS) == 0) {
         if (operation == TOKEN_PLUS) {
-            *error = "Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range";
+            *error = "Sum operands must be all numbers or all strings.";
         } else if (operation == TOKEN_AND || operation == TOKEN_OR) {
             *error = "Arithmetic '&' and '|' operands must be integer numbers.";
         } else {
@@ -325,10 +322,7 @@ bool ExpressionAttributes::BinopRequiresNumericConversion(const ExpressionAttrib
 
 bool ExpressionAttributes::IsGoodForStringAddition(void) const
 {
-    if (exp_type_ == BT_STRING) return(true);
-    if (!IsInteger()) return(false);
-    if (!value_is_valid_) return(true);
-    return(value_.IsAValidCharValue());
+    return(exp_type_ == BT_STRING);
 }
 
 bool ExpressionAttributes::UpdateValueWithBinopOperation(ExpressionAttributes *attr_right, Token operation, string *error)
@@ -1062,7 +1056,7 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
         }
     } else if (exp_type_ == BT_STRING) {
         if (!src->IsGoodForStringAddition()) {
-            *error = "You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range";
+            *error = "You can only assign to a string another string";
             return(false);
         }
         can_assign = true;

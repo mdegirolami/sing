@@ -110,7 +110,7 @@ fn withargs(out a0 f32, in a1 i32, in a2 i32 = 3) f64
 fn assignments() void
 {
 	var aa string = "abc";
-	var bb i32 = 'a';
+	var bb i32 = 0x61;
 	var cc f32 ;
 	var dd bool; 
 	var smallint i8;
@@ -435,7 +435,7 @@ fn assignments() void
 	
 	uns8 = "pippo";		// not a number
 	
-	aa = 'a';
+	aa = 0x61;
 	aa = "ksadhfkdjsh";
 	aa = 123;
 	aa = 0x400000;		// out of range

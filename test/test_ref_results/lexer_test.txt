@@ -17,17 +17,15 @@
 5	0x23i
 5	12.1e-3i
 8	
-4	'a'
-4	'\ueeee'
 100	;
 
-ERROR !! Truncated numeric literal at 9, 1
+ERROR !! Illegal name: only alpha ,digits and '_' are allowed. at 9, 1
 
 
-ERROR !! Truncated numeric literal at 10, 2
+ERROR !! Illegal name: only alpha ,digits and '_' are allowed. at 10, 2
 
 
-ERROR !! Expecting ''' at 11, 3
+ERROR !! Illegal name: only alpha ,digits and '_' are allowed. at 11, 6
 
 
 ERROR !! Truncated string at 12, 7

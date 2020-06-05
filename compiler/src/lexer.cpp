@@ -480,10 +480,7 @@ bool Lexer::Advance(Token *token)
         m_curr_token_col = m_curcol;
 
         ch = m_line_buffer[m_curcol++];
-        if (ch == '\'') {                         // char constant unallowed. We just use one-char strings
-            m_curr_token = TOKEN_LITERAL_UINT;
-            if (!ReadCharacterLiteral()) return(false);
-        } else if (ch == '\"') {
+        if (ch == '\"') {
             m_curr_token = TOKEN_LITERAL_STRING;
             if (!ReadStringLiteral()) return(false);
         } else if (ch >= '0' && ch <= '9') {
@@ -535,34 +532,6 @@ void Lexer::ClearError(void)
     while (m_curcol < (int)m_line_buffer.size() && !iswspace(m_line_buffer[m_curcol])) {
         ++m_curcol;
     }
-}
-
-bool Lexer::ReadCharacterLiteral(void)
-{
-    int32_t ch;
-
-    if (ResidualCharacters() < 1) {
-        Error(LE_TRUNCATED_CONSTANT, m_curcol-1);
-        return(false);
-    }
-    ch = m_line_buffer[m_curcol++];
-    if (ch == '\\') {
-        if (!ReadEscapeSequence(&ch)) {
-            return(false);
-        }
-    }
-    m_curr_token_string = "";
-    m_curr_token_string.utf8_encode(&ch, 1);
-    if (m_line_buffer.size() == m_curcol) {
-        Error(LE_TRUNCATED_CONSTANT, m_curcol - 1);
-        return(false);
-    }
-    if (m_line_buffer[m_curcol] != '\'') {
-        Error(LE_APEX_EXPECTED, m_curcol);
-        return(false);
-    }
-    m_curcol++;
-    return(true);
 }
 
 bool Lexer::ReadStringLiteral(void)

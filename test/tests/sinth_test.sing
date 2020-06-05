@@ -168,7 +168,7 @@ fn expressions() void
     c0 = 1.0 + 1i;
     c1 = c128(1.0 + 1i);
     s0 = s0 + s1 + string(f0) + string(v_int32) + string(false) + string(v_int8) + string(v_uint32) + string(v_uint8) + string(c0) + string(c1);
-    s0 = s0 + 'f' + "alse" + s1 + v_int32 + v_uint8;
+    s0 = s0 + "f" + "alse" + s1;
     
     // power + cases which require conversion
     v_int32 = v_int8 ** 2;           // **2 integer promotion

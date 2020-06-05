@@ -18,7 +18,7 @@ ERROR !! file checker_test.sing:22:26: You must init a map with an aggregate ini
 ERROR !! file checker_test.sing:23:26: The initializer #2 is not of the type of the map element
 ERROR !! file checker_test.sing:23:32: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:24:26: The initializer #1 is not of the type of the map key
-ERROR !! file checker_test.sing:24:27: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
+ERROR !! file checker_test.sing:24:27: You can only assign to a string another string
 ERROR !! file checker_test.sing:25:26: The initializer of a map must have an even number of items (alternating keys and values)
 ERROR !! file checker_test.sing:30:10: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
 ERROR !! file checker_test.sing:32:19: Too many initializers
@@ -28,7 +28,7 @@ ERROR !! file checker_test.sing:36:23: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:37:10: Array size must be '*' (for dynamic) or a positive integer value
 ERROR !! file checker_test.sing:41:9: Symbol 'uno' is duplicated
 ERROR !! file checker_test.sing:45:7: Type mismatch/No known conversion
-ERROR !! file checker_test.sing:47:7: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:47:7: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:49:6: Increment and Decrement operations can be applied only to writable integer variables
 ERROR !! file checker_test.sing:50:12: Expression must evaluate to a bool
 ERROR !! file checker_test.sing:53:13: Expression must evaluate to a bool
@@ -41,8 +41,8 @@ ERROR !! file checker_test.sing:62:5: You can only break/continue a for or while
 ERROR !! file checker_test.sing:63:5: You can't return a value from a void function.
 ERROR !! file checker_test.sing:68:5: You must return a value from a non-void function.
 ERROR !! file checker_test.sing:73:15: Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing:79:15: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing:80:16: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:79:15: Sum operands must be all numbers or all strings.
+ERROR !! file checker_test.sing:80:16: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:81:5: Undefined symbol
 ERROR !! file checker_test.sing:82:8: Indices must be positive integers
 ERROR !! file checker_test.sing:83:8: Index value is out of bound
@@ -52,16 +52,17 @@ ERROR !! file checker_test.sing:89:8: You can apply an index list only to object
 ERROR !! file checker_test.sing:90:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
 ERROR !! file checker_test.sing:91:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
 ERROR !! file checker_test.sing:93:7: You can apply an argument list only to an object of type 'function'
-ERROR !! file checker_test.sing:94:22: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:94:22: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:95:13: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:96:5: Undefined symbol
 ERROR !! file checker_test.sing:97:13: Argument 2 is not specified and has no default value
 ERROR !! file checker_test.sing:99:13: Argument 1 is an output argument and needs to be a writable variable
 ERROR !! file checker_test.sing:100:13: Argument 2 is not specified and has no default value
-ERROR !! file checker_test.sing:122:8: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
-ERROR !! file checker_test.sing:123:8: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:119:13: Sum operands must be all numbers or all strings.
+ERROR !! file checker_test.sing:122:8: Sum operands must be all numbers or all strings.
+ERROR !! file checker_test.sing:123:8: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:124:13: Operands must be numbers
-ERROR !! file checker_test.sing:125:15: Sum operands must be numbers or strings, you can add strings to UNSIGNED ints in the 0..0x3fffff range
+ERROR !! file checker_test.sing:125:15: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:129:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
 ERROR !! file checker_test.sing:130:11: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
 ERROR !! file checker_test.sing:132:12: Operation causes an integer overflow
@@ -233,8 +234,11 @@ ERROR !! file checker_test.sing:430:10: Type mismatch in assignment. Please cast
 ERROR !! file checker_test.sing:431:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
 ERROR !! file checker_test.sing:434:10: Value doesn't fit the destination (assignment would cause loss of range or precision).
 ERROR !! file checker_test.sing:436:10: Type mismatch/No known conversion
-ERROR !! file checker_test.sing:441:8: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
-ERROR !! file checker_test.sing:444:8: You can assign to a string another string or an unsigned integer max 32 bits in the 0..0x3fffff range
+ERROR !! file checker_test.sing:438:8: You can only assign to a string another string
+ERROR !! file checker_test.sing:440:8: You can only assign to a string another string
+ERROR !! file checker_test.sing:441:8: You can only assign to a string another string
+ERROR !! file checker_test.sing:442:8: You can only assign to a string another string
+ERROR !! file checker_test.sing:444:8: You can only assign to a string another string
 ERROR !! file checker_test.sing:446:10: You can assign a bool only with a bool (use relational operators to generate bools)
 ERROR !! file checker_test.sing:455:12: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:463:10: Type mismatch/No known conversion

@@ -158,7 +158,7 @@ public fn test_types_and_vars() void
 
 	var ptrvec []*string = {&hv_string, &hvi_string};
 	for (ptriterator in ptrvec) {
-		*ptriterator += '-';
+		*ptriterator += "-";
 	}
 
 	var arrvec [][]string = { {"a", "b", "c"}, {"d", "e"}, {"f", "g"} };

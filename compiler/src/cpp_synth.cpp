@@ -2569,39 +2569,6 @@ void CppSynth::PrependWithSeparator(string *dst, const char *src)
 int CppSynth::AddCast(string *dst, int priority, const char *cast_type) {
     char prefix[100];
 
-    // special case: must cast a single literal
-    //if (priority == KLiteralPriority) {
-    //    if (strcmp(cast_type, "uint64_t") == 0) {
-    //        CutDecimalPortionAndSuffix(dst);
-    //        *dst += "ull";
-    //        return(KLeafPriority);                  // so that this thick is used just once
-    //    } else if (strcmp(cast_type, "int64_t") == 0) {
-    //        CutDecimalPortionAndSuffix(dst);
-    //        *dst += "ll";
-    //        return(KLeafPriority);
-    //    } else if (strcmp(cast_type, "uint32_t") == 0) {
-    //        CutDecimalPortionAndSuffix(dst);
-    //        *dst += "u";
-    //        return(KLeafPriority);
-    //    } else if (strcmp(cast_type, "int32_t") == 0) {
-    //        CutDecimalPortionAndSuffix(dst);
-    //        return(KLeafPriority);
-    //    } else if (strcmp(cast_type, "float") == 0) {
-    //        CutSuffix(dst);
-    //        if (dst->find('.') == string::npos) {
-    //            *dst += ".0f";
-    //        } else {
-    //            *dst += "f";
-    //        }
-    //        return(KLeafPriority);
-    //    } else if (strcmp(cast_type, "double") == 0) {
-    //        CutSuffix(dst);
-    //        *dst += ".0";
-    //        return(KLeafPriority);
-    //    }
-    //    // if casting to a different type than the ones above, fallthrough to the standard case.
-    //}
-
     if (cast_type == nullptr || cast_type[0] == 0) {
         return(priority);
     }

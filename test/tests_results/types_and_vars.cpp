@@ -177,7 +177,7 @@ void test_types_and_vars()
     sing::svect<sing::ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
 
     for(sing::ptr<std::string> *ptriterator = ptrvec.begin(); ptriterator < ptrvec.end(); ++ptriterator) {
-        **ptriterator += '-';
+        **ptriterator += "-";
     }
 
     sing::svect<sing::svect<std::string, 3>, 3> arrvec = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};

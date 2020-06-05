@@ -195,7 +195,7 @@ static void expressions()
     c0 = 1.0f + std::complex<float>(0.0f, 1.0f);
     c1 = std::complex<double>(1.0, 1.0);
     s0 = sing::sfmt("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
-    s0 = sing::sfmt("scsscc", s0.c_str(), (uint32_t)'f', "alse", s1.c_str(), v_int32, v_uint8);
+    s0 = sing::sfmt("ssss", s0.c_str(), "f", "alse", s1.c_str());
 
     // power + cases which require conversion
     v_int32 = sing::pow2((int32_t)v_int8);                  // **2 integer promotion
