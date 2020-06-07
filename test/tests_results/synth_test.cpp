@@ -1,4 +1,4 @@
-#include "sinth_test.h"
+#include "synth_test.h"
 
 typedef int32_t myint;
 
@@ -10,8 +10,10 @@ static int32_t add_int(const int32_t val0, const int32_t val1 = 5);
 static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout);
 static void forward(const myint val);
 static void expressions();
-static void funwithdefs(const int32_t a0 = 100, const std::string &a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
+static void funwithdefs(const int32_t a0 = 100, const char *a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
 static void minmaxswap();
+static void string_tests(const char *arg);
+static void string_copy(const char *arg, std::string *aout);
 
 static sing::cptr<std::string> gp;
 
@@ -38,7 +40,7 @@ static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout)
     *valout = val0 + val1;
 }
 
-int32_t sinth_test()
+int32_t synth_test()
 {
     // consts declarations (heap and not-heap)
     sing::cptr<std::string> cs(new sing::wrapper<std::string>("test"));
@@ -163,6 +165,8 @@ int32_t sinth_test()
     bool autobool = autoint < 0;
     std::string autostring = "goophy";
 
+    string_tests("bambam");
+
     // return needs conversion
     return ((int32_t)10.0f);
 }
@@ -194,8 +198,9 @@ static void expressions()
     s0 = s0 + s1;
     c0 = 1.0f + std::complex<float>(0.0f, 1.0f);
     c1 = std::complex<double>(1.0, 1.0);
-    s0 = sing::sfmt("ssfdbduurR", s0.c_str(), s1.c_str(), f0, v_int32, false, v_int8, v_uint32, v_uint8, c0, c1);
-    s0 = sing::sfmt("ssss", s0.c_str(), "f", "alse", s1.c_str());
+    s0 = sing::s_format("%s%s%f%d%s%d%u%u%f + %fi%f + %fi", s0.c_str(), s1.c_str(), f0, v_int32, false ? "true" : "false", v_int8, v_uint32, v_uint8,
+        c0.real(), c0.imag(), c1.real(), c1.imag());
+    s0 = sing::s_format("%s%s%s%s", s0.c_str(), "f", "alse", s1.c_str());
 
     // power + cases which require conversion
     v_int32 = sing::pow2((int32_t)v_int8);                  // **2 integer promotion
@@ -360,10 +365,10 @@ static void expressions()
 }
 
 // functions with defaults
-static void funwithdefs(const int32_t a0, const std::string &a1, const bool a3, const sing::ptr<int32_t> a4)
+static void funwithdefs(const int32_t a0, const char *a1, const bool a3, const sing::ptr<int32_t> a4)
 {
-    const std::string aaa = "ciccio" + a1;
-    const std::string bbb = a1 + "ciccio";
+    const std::string aaa = sing::s_format("%s%s", "ciccio", a1);
+    const std::string bbb = sing::s_format("%s%s", a1, "ciccio");
 }
 
 static void minmaxswap()
@@ -372,4 +377,54 @@ static void minmaxswap()
     int32_t pluto = std::min(3, 6);
 
     std::swap(pippo, pluto);
+}
+
+static void string_tests(const char *arg)
+{
+    std::string acc = "a";
+    std::string s0 = "b";
+    std::string s1 = "c";
+    bool comp = false;
+
+    // append
+    acc += arg;
+    acc += "literal";
+    acc += s0;
+
+    // add strings
+    acc = s0 + s1;
+
+    // add string + const string 
+    acc = s0 + arg;
+    acc = s0 + "literal";
+    acc = arg + s0;
+    acc = "literal" + s0;
+
+    // add const strings
+    acc = sing::s_format("%s%s", arg, "literal");
+    acc = sing::s_format("%s%s", arg, arg);
+    acc = sing::s_format("%s%s", "literal", arg);
+    acc = "lit" "eral";
+
+    // add three or more
+    acc = sing::s_format("%s%s%s", arg, s0.c_str(), "lit");
+
+    // compare 
+    comp = s0 < s1;
+    comp = s0 < "lit";
+    comp = "lit" < s0;
+    comp = s0 < arg;
+    comp = arg < s0;
+    comp = ::strcmp(arg, "lit") < 0;
+    comp = ::strcmp("lit", "literal") < 0;
+
+    // parm passing
+    string_copy(s0.c_str(), &acc);
+    string_copy(arg, &acc);
+    string_copy("k", &acc);
+}
+
+static void string_copy(const char *arg, std::string *aout)
+{
+    *aout = arg;
 }

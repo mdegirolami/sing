@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}\\bin\\sing_d.exe",
             //"args": [],
-            "args": ["-g", "-I", "../../tests", "-u", "-MF", "-o", "../../tests_results/synth_test_oop.cpp", "../../tests/synth_test_oop.sing"],
+            "args": ["-g", "-I", "../../tests", "-u", "-MF", "-o", "../../tests_results/synth_test.cpp", "../../tests/synth_test.sing"],
             //"args": ["-^", "3", "-I", "./", "checker_test.sing"],
             "stopAtEntry": false,
             //"cwd": "${workspaceFolder}\\bin",

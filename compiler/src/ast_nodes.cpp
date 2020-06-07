@@ -31,7 +31,7 @@ ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_
 {
     switch (type_spec->GetType()) {
     case ANT_BASE_TYPE:
-        if (input_parm && ((AstBaseType*)type_spec)->base_type_ == TOKEN_STRING) return(PPM_CONSTREF);
+        if (input_parm && ((AstBaseType*)type_spec)->base_type_ == TOKEN_STRING) return(PPM_INPUT_STRING);
         // fallthrough
     case ANT_POINTER_TYPE:
     case ANT_FUNC_TYPE:

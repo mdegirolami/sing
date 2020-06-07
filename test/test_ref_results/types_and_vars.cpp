@@ -4,7 +4,7 @@ typedef int32_t (*fref)(const int32_t arg0, const int32_t arg1, int32_t *arg2);
 
 static int32_t intsum(const int32_t arg0, const int32_t arg1, int32_t *arg2);
 static bool boolsum(const bool arg0, const bool arg1, bool *arg2);
-static std::string stringsum(const std::string &arg0, const std::string &arg1, std::string *arg2);
+static std::string stringsum(const char *arg0, const char *arg1, std::string *arg2);
 static fref frefshift(const fref arg0, fref *arg1, fref *arg2);
 static void arrayswap(const sing::vect<int32_t> &arg0, sing::vect<int32_t> &arg1);
 static void dynaswap(const sing::vect<int32_t> &arg0, sing::vect<int32_t> &arg1, const int32_t count);
@@ -43,9 +43,9 @@ static bool boolsum(const bool arg0, const bool arg1, bool *arg2)
     return (*arg2);
 }
 
-static std::string stringsum(const std::string &arg0, const std::string &arg1, std::string *arg2)
+static std::string stringsum(const char *arg0, const char *arg1, std::string *arg2)
 {
-    *arg2 = arg0 + arg1;
+    *arg2 = sing::s_format("%s%s", arg0, arg1);
     return (*arg2);
 }
 
@@ -219,7 +219,7 @@ void test_types_and_vars()
     lv_int32 = gvi_fref(lv_int32, lvi_int32, &lv_int32);
     lv_int32 = intsum(lv_int32, lvi_int32, &lv_int32);
     lv_bool = boolsum(lv_bool, lvi_bool, &lv_bool);
-    lv_string = stringsum(lv_string, lvi_string, &lv_string);
+    lv_string = stringsum(lv_string.c_str(), lvi_string.c_str(), &lv_string);
     gv_fref = frefshift(*hvi_fref, &lv_fref, &gvi_fref);
     arrayswap(lvi_array, lv_array);
     dynaswap(lvi_dyna, lv_dyna, 5);

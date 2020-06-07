@@ -2,4 +2,4 @@
 
 #include <sing.h>
 
-int32_t sinth_test();
+int32_t synth_test();

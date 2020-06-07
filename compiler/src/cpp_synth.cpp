@@ -338,16 +338,21 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
             ParmPassingMethod mode = GetParameterPassingMethod(arg->weak_type_spec_, arg->HasOneOfFlags(VF_READONLY));
 
             // sinth the parm
-            if (mode == PPM_POINTER) {
-                the_type = "*";
+            if (mode == PPM_INPUT_STRING) {
+                the_type = "char *";
                 the_type += arg->name_;
-            } else if (mode == PPM_CONSTREF || mode == PPM_REF) {
-                the_type = "&";
-                the_type += arg->name_;
-            } else {    // PPM_VALUE
-                the_type = arg->name_;
+            } else {
+                if (mode == PPM_POINTER) {
+                    the_type = "*";
+                    the_type += arg->name_;
+                } else if (mode == PPM_CONSTREF || mode == PPM_REF) {
+                    the_type = "&";
+                    the_type += arg->name_;
+                } else {    // PPM_VALUE
+                    the_type = arg->name_;
+                }
+                SynthTypeSpecification(&the_type, arg->weak_type_spec_, true);
             }
-            SynthTypeSpecification(&the_type, arg->weak_type_spec_, true);
 
             // add to dst
             if (ii != 0) {
@@ -1492,15 +1497,20 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
     for (ii = 0; ii < numargs; ++ii) {
         VarDeclaration *var = node->func_type_->arguments_[ii];
         Token var_type = GetBaseType(var->weak_type_spec_);
+        IAstExpNode *expression_node = node->arguments_[ii]->expression_;
         expression = "";
-        SynthFullExpression(var_type, &expression, node->arguments_[ii]->expression_);
-        if (!var->HasOneOfFlags(VF_READONLY) && GetParameterPassingMethod(var->weak_type_spec_, false) != PPM_REF) {
+        int priority = SynthFullExpression(var_type, &expression, expression_node);
+        ParmPassingMethod ppm = GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY));
+        if (ppm == PPM_POINTER) {
             // passed by pointer: get the address (or simplify *)
             if (expression[0] == '*') {
                 expression.erase(0, 1);
             } else {
                 expression.insert(0, "&");
             }
+        } else if (ppm == PPM_INPUT_STRING && !IsInputArg(expression_node) && !IsLiteralString(expression_node)) {
+            Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
+            expression += ".c_str()";
         }
         if (ii != 0) {
             *dst += ", ";
@@ -1715,27 +1725,31 @@ int CppSynth::SynthMathOperator(string *dst, AstBinop *node)
     Token right_type = right_attr->GetAutoBaseType();
     Token result_type = result_attr->GetAutoBaseType();
 
-    if (node->subtype_ == TOKEN_PLUS && (left_type == TOKEN_STRING || right_type == TOKEN_STRING)) {
+    if (node->subtype_ == TOKEN_PLUS && left_type == TOKEN_STRING && right_type == TOKEN_STRING) {
         string format, parms;
 
         ProcessStringSumOperand(&format, &parms, node->operand_left_);
         ProcessStringSumOperand(&format, &parms, node->operand_right_);
-        if (format != "ss") {
-            *dst = "sing::sfmt(\"";
-            *dst += format;
-            *dst += "\"";
-            *dst += parms;
-            *dst += ")";
-            return(KForcedPriority);
-        } else {
-            if (IsLiteralString(node->operand_left_) && IsLiteralString(node->operand_right_)) {
+        bool left_is_literal = IsLiteralString(node->operand_left_);
+        bool right_is_literal = IsLiteralString(node->operand_right_);
+        bool left_is_const_char = left_is_literal || IsInputArg(node->operand_left_);
+        bool right_is_const_char = right_is_literal || IsInputArg(node->operand_right_);
+        if (format != "%s%s" || left_is_const_char && right_is_const_char) {
+            if (left_is_literal && right_is_literal) {
                 *dst += ((AstExpressionLeaf*)node->operand_left_)->value_;
                 *dst += ' ';
                 *dst += ((AstExpressionLeaf*)node->operand_right_)->value_;
                 return(KForcedPriority);
+            } else {
+                *dst = "sing::s_format(\"";
+                *dst += format;
+                *dst += "\"";
+                *dst += parms;
+                *dst += ")";
+                return(KForcedPriority);
             }
-            // if not a couple of literals, falls through and uses the sum operator.
         }
+        // else can simply use the + operator.
     }
 
     int  priority = GetBinopCppPriority(node->subtype_);
@@ -1788,7 +1802,7 @@ int CppSynth::SynthRelationalOperator(string *dst, AstBinop *node)
 
 int CppSynth::SynthRelationalOperator3(string *dst, Token subtype, IAstExpNode *operand_left, IAstExpNode *operand_right)
 {
-    string          right;
+    string  right;
 
     int  priority = GetBinopCppPriority(subtype);
     int left_priority = SynthExpression(dst, operand_left);
@@ -1872,6 +1886,18 @@ int CppSynth::SynthRelationalOperator3(string *dst, Token subtype, IAstExpNode *
         }
     } else if (left_attr->IsNumber()) {
         CastForRelational(left_type, right_type, dst, &right, &left_priority, &right_priority);
+    } else if (left_attr->IsString() && right_attr->IsString()) {
+        if (IsLiteralString(operand_left) || IsInputArg(operand_left)) {
+            if (IsLiteralString(operand_right) || IsInputArg(operand_right)) {
+                dst->insert(0, "::strcmp(");
+                *dst += ", ";
+                *dst += right;
+                *dst += ") ";
+                *dst += Lexer::GetTokenString(subtype);
+                *dst += " 0";
+                return(priority);
+            }
+        }
     }
 
     // add brackets if needed
@@ -2100,39 +2126,46 @@ void CppSynth::ProcessStringSumOperand(string *format, string *parms, IAstExpNod
         case TOKEN_INT8: 
         case TOKEN_INT16:
         case TOKEN_INT32:
-            *format += 'd';
+            *format += "%d";
             break;
         case TOKEN_INT64:
-            *format += 'D';
+            *format += "%lld";
             break;
         case TOKEN_UINT8:
         case TOKEN_UINT16:
         case TOKEN_UINT32:
-            *format += 'u';
+            *format += "%u";
             break;
         case TOKEN_UINT64:
-            *format += 'U';
+            *format += "%llu";
             break;
         case TOKEN_FLOAT32:
         case TOKEN_FLOAT64:
-            *format += 'f';
+            *format += "%f";
             break;
         case TOKEN_COMPLEX64:
-            *format += 'r';
-            break;
         case TOKEN_COMPLEX128:
-            *format += 'R';
+            *format += "%f + %fi";
             break;
         case TOKEN_BOOL:
-            *format += 'b';
+            *format += "%s";
             break;
         case TOKEN_STRING:
-            *format += 's';
+            *format += "%s";
             break;
         default:
             assert(false);
         }
-        SynthExpression(&operand, child);
+        int priority = SynthExpression(&operand, child);
+        if (basetype == TOKEN_COMPLEX64 || basetype == TOKEN_COMPLEX128) {
+            Protect(&operand ,priority, GetBinopCppPriority(TOKEN_DOT));
+            string tmp = operand;
+            operand += ".real(), ";
+            operand += tmp;
+            operand += ".imag()";
+        } else if (basetype == TOKEN_BOOL) {
+            operand += " ? \"true\" : \"false\"";
+        }
     } else {
         if (node->GetType() == ANT_BINOP) {
             IAstExpNode *node_left  = ((AstBinop*)node)->operand_left_;
@@ -2149,38 +2182,13 @@ void CppSynth::ProcessStringSumOperand(string *format, string *parms, IAstExpNod
             assert(false);
         }
 
-        // CASE 3: something we can directly sum to a string. Another string or a number
+        // CASE 3: leaf string
         const ExpressionAttributes *attr = node->GetAttr();
-        if (attr->HasKnownValue()) {
-            *format += 'c';
-            SynthFullExpression(TOKEN_UINT32, &operand, node);
-        } else {
-            bool is_string = false;
-            switch (attr->GetAutoBaseType()) {
-            case TOKEN_INT8:
-            case TOKEN_INT16:
-            case TOKEN_INT32:
-            case TOKEN_UINT8:
-            case TOKEN_UINT16:
-            case TOKEN_UINT32:
-                *format += 'c';
-                break;
-            case TOKEN_INT64:
-            case TOKEN_UINT64:
-                *format += 'C';
-                break;
-            case TOKEN_STRING:
-                *format += 's';
-                is_string = true;
-                break;
-            default:
-                assert(false);
-            }
-            int priority = SynthExpression(&operand, node);
-            if (is_string && !IsLiteralString(node)) {
-                Protect(&operand, priority, GetBinopCppPriority(TOKEN_DOT));
-                operand += ".c_str()";
-            }
+        *format += "%s";
+        int priority = SynthExpression(&operand, node);
+        if (!IsLiteralString(node) && !IsInputArg(node)) {
+            Protect(&operand, priority, GetBinopCppPriority(TOKEN_DOT));
+            operand += ".c_str()";
         }
     }
     *parms += ", ";
@@ -2540,7 +2548,6 @@ int  CppSynth::GetUnopCppPriority(Token token)
     case TOKEN_LOGICAL_NOT:
     case TOKEN_MPY:         // dereference
     default:                // casts
-        assert(false);
         break;
     }
     return(3);
@@ -2772,6 +2779,24 @@ bool CppSynth::IsLiteralString(IAstExpNode *node)
     if (node->GetType() == ANT_EXP_LEAF) {
         AstExpressionLeaf *leaf = (AstExpressionLeaf*)node;
         return (leaf->subtype_ == TOKEN_LITERAL_STRING);
+    } else if (node->GetType() == ANT_BINOP) {
+        AstBinop *op = (AstBinop*)node;
+        return(IsLiteralString(op->operand_left_) && IsLiteralString(op->operand_right_));
+    }
+    return(false);
+}
+
+bool CppSynth::IsInputArg(IAstExpNode *node)
+{
+    if (node->GetType() == ANT_EXP_LEAF) {
+        AstExpressionLeaf *leaf = (AstExpressionLeaf*)node;
+        if (leaf->subtype_ == TOKEN_NAME) {
+            IAstDeclarationNode *decl = leaf->wp_decl_;
+            if (decl != nullptr && decl->GetType() == ANT_VAR) {
+                VarDeclaration *var = (VarDeclaration*)decl;
+                return(var->HasAllFlags(VF_ISARG | VF_READONLY));
+            }
+        }
     }
     return(false);
 }

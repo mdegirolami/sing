@@ -26,7 +26,7 @@ fn add_int3(in val0 i32, in val1 i32, out valout i32) void
     valout = val0 + val1;
 }
 
-public fn sinth_test() i32
+public fn synth_test() i32
 {
     // consts declarations (heap and not-heap)
     let cs string = "test";
@@ -136,6 +136,8 @@ public fn sinth_test() i32
     var autocomplex = 10.0i;
     var autobool = autoint < 0;
     var autostring = "goophy";
+
+    string_tests("bambam");
         
     // return needs conversion
     return(10.0);
@@ -345,4 +347,54 @@ fn minmaxswap() void
     var pippo = max(3, 6);
     var pluto = min(3, 6);
     swap(pippo, pluto); 
+}
+
+fn string_tests(in arg string) void
+{
+    var acc = "a";
+    var s0 = "b";
+    var s1 = "c";
+    var comp bool;
+
+    // append
+    acc += arg;
+    acc += "literal";
+    acc += s0;
+
+    // add strings
+    acc = s0 + s1;
+
+    // add string + const string 
+    acc = s0 + arg;
+    acc = s0 + "literal";
+    acc = arg + s0;
+    acc = "literal" + s0;
+
+    // add const strings
+    acc = arg + "literal";
+    acc = arg + arg;
+    acc = "literal" + arg;
+    acc = "lit" + "eral";
+
+    // add three or more
+    acc = arg + s0 + "lit";
+
+    // compare 
+    comp = s0 < s1;
+    comp = s0 < "lit";
+    comp = "lit" < s0;
+    comp = s0 < arg;
+    comp = arg < s0;
+    comp = arg < "lit";
+    comp = "lit" < "literal";
+
+    // parm passing
+    string_copy(s0, acc);
+    string_copy(arg, acc);
+    string_copy("k", acc);    
+}
+
+fn string_copy(in arg string, out aout string) void
+{
+    aout = arg;
 }

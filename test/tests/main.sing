@@ -1,11 +1,11 @@
 // requires "synth_test_oop";
-requires "sinth_test";
+requires "synth_test";
 requires "types_and_vars";
 
 public fn main() i32
 {
     // synth_test_oop.test_oop();
-    sinth_test.sinth_test();
+    synth_test.synth_test();
     types_and_vars.test_types_and_vars();
     return(1);
 }

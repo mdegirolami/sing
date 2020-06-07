@@ -108,7 +108,7 @@ enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can c
 
 enum ForwardReferenceType {FRT_NONE, FRT_PRIVATE, FRT_PUBLIC};
 
-enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_REF };
+enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_REF, PPM_INPUT_STRING };
 
 class IAstTypeNode : public IAstNode {
 public:
