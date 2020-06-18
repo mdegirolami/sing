@@ -11,14 +11,14 @@ static const int32_t veryveryveryveryveryverylong3 = 100;
 static const int32_t veryveryveryveryveryverylong4 = 100;
 
 // attached to next
-static const sing::svect<sing::spvect<int32_t, 3>, 6> table = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},     // hand formatted !!
+static const sing::array<sing::array<int32_t, 3>, 6> table = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},      // hand formatted !!
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3}                                                                 // following
 };
 // attached to prev
 
-static const sing::svect<sing::svect<sing::svect<std::string, 3>, 3>, 3> table2 = {{{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}};
+static const sing::array<sing::array<sing::array<std::string, 3>, 3>, 3> table2 = {{{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}, {{"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}, {"akjhdfk", "askjfhsad", "hgfksahgjh"}}};
 
-static const sing::svect<sing::spvect<int32_t, 3>, 6> table3 = {                // just one remark
+static const sing::array<sing::array<int32_t, 3>, 6> table3 = {                 // just one remark
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3}, 
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3}
 };

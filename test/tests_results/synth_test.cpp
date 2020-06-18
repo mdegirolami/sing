@@ -4,7 +4,7 @@ typedef int32_t myint;
 
 static const int32_t vvv = 5;
 
-static void receiver(const sing::vect<sing::svect<std::string, 4>> &vin, sing::vect<sing::svect<std::string, 4>> &vout);
+static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sing::array<sing::array<std::string, 4>, 4> *vout);
 static sing::ptr<std::string> get_a_string();
 static int32_t add_int(const int32_t val0, const int32_t val1 = 5);
 static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout);
@@ -17,9 +17,9 @@ static void string_copy(const char *arg, std::string *aout);
 
 static sing::cptr<std::string> gp;
 
-static const sing::dpvect<myint> mivv;
+static const std::vector<myint> mivv;
 
-static void receiver(const sing::vect<sing::svect<std::string, 4>> &vin, sing::vect<sing::svect<std::string, 4>> &vout)
+static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sing::array<sing::array<std::string, 4>, 4> *vout)
 {
 }
 
@@ -52,9 +52,9 @@ int32_t synth_test()
     const myint miv = 0;
 
     // array of array passing (the first index is wildcharted)
-    sing::svect<sing::svect<std::string, 4>, 4> arr;
+    sing::array<sing::array<std::string, 4>, 4> arr;
 
-    receiver(arr, arr);
+    receiver(arr, &arr);
 
     // weak pointers
     gp = get_a_string();
@@ -67,8 +67,8 @@ int32_t synth_test()
     const int32_t res2 = add_int(4);
 
     // init with automatic or computed length.
-    sing::spvect<int32_t, 4> arr2 = {1, 2, 3, 4};
-    sing::spvect<int32_t, 5 * 3> arr3;
+    sing::array<int32_t, 4> arr2 = {1, 2, 3, 4};
+    sing::array<int32_t, 5 * 3> arr3 = {0};
 
     // inc and dec
     ++arr2[0];
@@ -125,15 +125,16 @@ int32_t synth_test()
 
     it = 0;
     count = 0;
-    for(int32_t *iteratedint = arr2.begin(); iteratedint < arr2.end(); ++iteratedint, ++count) {
+    for(auto iteratedint = arr2.begin(); iteratedint < arr2.end(); ++iteratedint, ++count) {
         ++it;
     }
 
     expressions();
 
     // pointer
-    sing::ptr<sing::spvect<int32_t, 10>> onheap(new sing::wrapper<sing::spvect<int32_t, 10>>);
-    sing::ptr<sing::spvect<int32_t, 10>> ohp = onheap;
+    sing::ptr<sing::array<int32_t, 10>> onheap(new sing::wrapper<sing::array<int32_t, 10>>);
+    *onheap = {0};
+    sing::ptr<sing::array<int32_t, 10>> ohp = onheap;
 
     (*ohp)[3] = 100;
     (*onheap)[3] += 1;
@@ -154,7 +155,7 @@ int32_t synth_test()
 
     // using a const int to init an array size
     const int32_t arraydim = -100 / 2;
-    sing::spvect<float, -arraydim * 2> fvec;
+    sing::array<float, -arraydim * 2> fvec = {0};
 
     fvec[99] = (float)0;
 

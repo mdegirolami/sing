@@ -42,14 +42,18 @@ ERROR !! file checker_test.sing:63:5: You can't return a value from a void funct
 ERROR !! file checker_test.sing:68:5: You must return a value from a non-void function.
 ERROR !! file checker_test.sing:73:15: Array size must be '*' (for dynamic) or a positive integer value
 ERROR !! file checker_test.sing:79:15: Sum operands must be all numbers or all strings.
+ERROR !! file checker_test.sing:80:11: Missing index
+ERROR !! file checker_test.sing:80:16: Currently ranges are not supported
 ERROR !! file checker_test.sing:80:16: Sum operands must be all numbers or all strings.
 ERROR !! file checker_test.sing:81:5: Undefined symbol
 ERROR !! file checker_test.sing:82:8: Indices must be positive integers
 ERROR !! file checker_test.sing:83:8: Index value is out of bound
-ERROR !! file checker_test.sing:84:8: Indices must be positive integers
-ERROR !! file checker_test.sing:85:8: Index value is out of bound
+ERROR !! file checker_test.sing:84:10: Currently ranges are not supported
+ERROR !! file checker_test.sing:85:10: Currently ranges are not supported
+ERROR !! file checker_test.sing:86:13: Currently ranges are not supported
+ERROR !! file checker_test.sing:87:11: Missing index
 ERROR !! file checker_test.sing:89:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
-ERROR !! file checker_test.sing:90:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
+ERROR !! file checker_test.sing:90:10: Currently ranges are not supported
 ERROR !! file checker_test.sing:91:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
 ERROR !! file checker_test.sing:93:7: You can apply an argument list only to an object of type 'function'
 ERROR !! file checker_test.sing:94:22: Sum operands must be all numbers or all strings.
@@ -241,6 +245,7 @@ ERROR !! file checker_test.sing:442:8: You can only assign to a string another s
 ERROR !! file checker_test.sing:444:8: You can only assign to a string another string
 ERROR !! file checker_test.sing:446:10: You can assign a bool only with a bool (use relational operators to generate bools)
 ERROR !! file checker_test.sing:455:12: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:458:12: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:463:10: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:468:10: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:471:12: Type mismatch/No known conversion

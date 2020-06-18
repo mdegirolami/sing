@@ -7,7 +7,7 @@ namespace bb {
 
 typedef int32_t pkg_type;
 static const int32_t pkg_ctc = 100;
-typedef sing::spvect<int32_t, pkg_ctc> pkg_vectype;
+typedef sing::array<int32_t, pkg_ctc> pkg_vectype;
 
 int32_t pkg_fun(const pkg_vectype &p0);
 

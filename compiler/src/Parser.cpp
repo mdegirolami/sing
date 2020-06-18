@@ -772,41 +772,39 @@ recovery:
 
 AstArrayType *Parser::ParseIndices(void)
 {
-    AstArrayType    *root = NULL;
+    AstArrayType    *root = nullptr;
     AstArrayType    *last, *curr;
 
-    {
-        while (m_token == TOKEN_SQUARE_OPEN) {
-            do {
-                if (root == NULL) {
-                    root = last = curr = new AstArrayType();
-                } else {
+    while (m_token == TOKEN_SQUARE_OPEN) {
+        do {
+            if (root == nullptr) {
+                root = last = curr = new AstArrayType();
+            } else {
 
-                    // chain it now: if we need to delete root we don't cause a leak.
-                    curr = new AstArrayType();
-                    last->SetElementType(curr);
-                    last = curr;
-                }
+                // chain it now: if we need to delete root we don't cause a leak.
+                curr = new AstArrayType();
+                last->SetElementType(curr);
+                last = curr;
+            }
+            if (!Advance()) goto recovery;
+            RecordPosition(curr);
+            if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA && m_token != TOKEN_MPY) {
+                curr->SetDimensionExpression(ParseExpression());
+                if (on_error_) goto recovery;
+            } else if (m_token == TOKEN_MPY) {
+                curr->SetDynamic(true);
                 if (!Advance()) goto recovery;
-                RecordPosition(curr);
-                if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA && m_token != TOKEN_MPY) {
-                    curr->SetDimensionExpression(ParseExpression());
-                    if (on_error_) goto recovery;
-                } else if (m_token == TOKEN_MPY) {
-                    curr->SetDynamic(true);
-                    if (!Advance()) goto recovery;
-                    curr->SetRegular(m_token == TOKEN_COMMA);
-                }
-                UpdateEndPosition(curr);
-                if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
-                    Error("Expecting ']' or ','");
-                    goto recovery;
-                }
-            } while (m_token == TOKEN_COMMA);
-            if (!Advance()) goto recovery;  // absorb ']'
-        }
-        last->SetElementType(ParseTypeSpecification());
-    } 
+                curr->SetRegular(m_token == TOKEN_COMMA);
+            }
+            UpdateEndPosition(curr);
+            if (m_token != TOKEN_SQUARE_CLOSE && m_token != TOKEN_COMMA) {
+                Error("Expecting ']' or ','");
+                goto recovery;
+            }
+        } while (m_token == TOKEN_COMMA);
+        if (!Advance()) goto recovery;  // absorb ']'
+    }
+    last->SetElementType(ParseTypeSpecification());
 recovery:    
     if (on_error_) {
         if (root != nullptr) delete root;

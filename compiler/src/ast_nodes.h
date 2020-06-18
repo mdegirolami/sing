@@ -58,13 +58,6 @@ enum AstNodeType {
     ANT_INDEXING, ANT_ARGUMENT, ANT_FUNCALL, ANT_BINOP, ANT_UNOP, ANT_EXP_LEAF
 };
 
-// implementation mode for a built-in function
-// sing = sing::name(T);
-// cast = (T)name(T);       // cast if not double
-// plain = name(T);
-// memeber = T.member()
-enum class BInSynthMode { sing, cast, plain, member, std };
-
 struct PositionInfo {
     int32_t start_row;
     int32_t start_col;
@@ -108,7 +101,7 @@ enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can c
 
 enum ForwardReferenceType {FRT_NONE, FRT_PRIVATE, FRT_PUBLIC};
 
-enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_REF, PPM_INPUT_STRING };
+enum ParmPassingMethod { PPM_VALUE, PPM_POINTER, PPM_CONSTREF, PPM_INPUT_STRING };
 
 class IAstTypeNode : public IAstNode {
 public:
@@ -221,9 +214,9 @@ public:
     PositionInfo    pos_;
 
     // annotations
-    // value is 0 if: [*], before CheckArrayIndicesInTypes() execution. 
-    //                [expr], before CheckArrayIniter() execution. 
-    //                For []. 
+    // value is 0 if: [*]. 
+    //                [expr], before CheckArrayIndicesInTypes() execution. 
+    //                For [], before CheckArrayIniter() execution. 
     size_t          dimension_;
     bool            dimension_was_computed_;
 
@@ -237,7 +230,7 @@ public:
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
-    virtual bool SupportsEqualOperator(void) { return(false); }
+    virtual bool SupportsEqualOperator(void);
     void SetDimensionExpression(IAstExpNode *exp) { dimension_ = 0; expression_ = exp; }
     void SetElementType(IAstTypeNode *etype) { element_type_ = etype; }
     void SetDynamic(bool dyna) { is_dynamic_ = dyna; }
@@ -448,15 +441,15 @@ public:
     // attributes
     ExpressionAttributes attr_;
     AstFuncType     *builtin_;      // if this dotop is followed by a builtin function, this is the type (pointer is owning !). 
-    BInSynthMode    builtin_mode_;
+    const char      *builtin_signature_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
-    AstBinop(Token type, IAstExpNode *left, IAstExpNode*right) : subtype_(type), operand_left_(left), operand_right_(right), builtin_(nullptr) {}
+    AstBinop(Token type, IAstExpNode *left, IAstExpNode*right);
     virtual ~AstBinop();
     virtual AstNodeType GetType(void) { return(ANT_BINOP); }
-    void SetBuitInMode(BInSynthMode mode) { builtin_mode_ = mode; }
+    void SetSignature(const char *signature) { builtin_signature_ = signature; }
 };
 
 class AstFunCall : public IAstExpNode {
@@ -483,7 +476,7 @@ public:
     IAstExpNode   *lower_value_;
     IAstExpNode   *upper_value_;
     bool           is_single_index_;
-    PositionInfo    pos_;
+    PositionInfo   pos_;
 
     AstMapType           *map_type_;     // annotations
     ExpressionAttributes attr_;
@@ -492,11 +485,11 @@ public:
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstIndexing();
-    AstIndexing(IAstExpNode *left) : indexed_term_(left), lower_value_(NULL), upper_value_(NULL), map_type_(NULL) {}
+    AstIndexing(IAstExpNode *left) : indexed_term_(left), lower_value_(nullptr), upper_value_(nullptr), map_type_(nullptr) {}
     virtual AstNodeType GetType(void) { return(ANT_INDEXING); }
     void SetAnIndex(IAstExpNode *value) { 
         lower_value_ = value; 
-        upper_value_ = NULL; 
+        upper_value_ = nullptr; 
         is_single_index_ = true; 
     }
     void SetARange(IAstExpNode *lower, IAstExpNode *higher) { 
@@ -504,7 +497,7 @@ public:
         upper_value_ = higher; 
         is_single_index_ = false;
     }
-    void UnlinkIndexedTerm(void) { indexed_term_ = NULL; }
+    void UnlinkIndexedTerm(void) { indexed_term_ = nullptr; }
 };
 
 /////////////////////////

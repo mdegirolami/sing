@@ -6,10 +6,10 @@ typedef sing::ptr<aa::bb::pkg_type> gg; // good !!
 
 static void test();
 
-static sing::spvect<int32_t, aa::bb::pkg_ctc> vf;           // good !!
+static sing::array<int32_t, aa::bb::pkg_ctc> vf;            // good !!
 
 const std::complex<double> kk = std::complex<double>(100.3, 12.0);
-const sing::spvect<int32_t, 3> table = {100, 200, 300};
+const sing::array<int32_t, 3> table = {100, 200, 300};
 
 static void test()
 {

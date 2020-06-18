@@ -2,10 +2,21 @@
 #define BUILTIN_FUNCTIONS_H
 
 #include "expression_attributes.h"
-#include "ast_nodes.h"
 
 namespace SingNames {
-    AstFuncType *GetFuncSignature(bool *ismuting, BInSynthMode *mode, const char *name, const ExpressionAttributes *attr);
+    
+// implementation mode for a built-in function
+// sing = sing::name(T);
+// cast = (T)name(T);       // cast if not double
+// plain = name(T);
+// memeber = T.member()
+enum class BInSynthMode { sing, cast, plain, member, std };
+
+const char *GetFuncSignature(const char *name, const ExpressionAttributes *attr);
+AstFuncType *GetFuncTypeFromSignature(const char *signature, const ExpressionAttributes *attr);
+BInSynthMode GetBuiltinSynthMode(const char *signature);
+char GetBuiltinArgType(const char *signature, int idx); 
+
 }; // namespace
 
 #endif

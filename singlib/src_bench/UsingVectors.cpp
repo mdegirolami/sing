@@ -5,9 +5,9 @@ void vreceiver(const sing::vect<int> &v1, sing::vect<int> &v2)
     v2[0] = v1[0];
 }
 
-sing::dpvect<int> vv = { 0, 1, 2 ,3 };
-sing::spvect<int, 100> v2;
-sing::spvect<int, 100> v2b = { 0, 1, 2 ,3 };
+static sing::dpvect<int> vv = { 0, 1, 2 ,3 };
+static sing::spvect<int, 100> v2;
+static sing::spvect<int, 100> v2b = { 0, 1, 2 ,3 };
 
 void test_vectors(int size)
 {

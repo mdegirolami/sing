@@ -1,7 +1,6 @@
 public fn print_primes_to(in top i32) void
 {
 	var primes[*]i32;
-	var primes_count i32 = 0;
 	
     // note: for all the numbers in the range excluing even numbers
 	for (totry in 3:top step 2) {
@@ -17,9 +16,7 @@ public fn print_primes_to(in top i32) void
 			}
 		}
 		if (isprime) {
-			primes[primes_count] = totry;
-			primes_count++;
-			// print(totry);
+			primes.push_back(totry);
 		}
 	}
 }

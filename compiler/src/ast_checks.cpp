@@ -1445,10 +1445,14 @@ void AstChecker::CheckIndices(AstIndexing *node, ExpressionAttributes *attr, Exp
     if (node->lower_value_ != nullptr) {
         CheckExpression(node->lower_value_, &low_attr, ExpressionUsage::READ);
         failure = failure || low_attr.IsOnError();
+    } else {
+        Error("Missing index", node);
     }
     if (node->upper_value_ != nullptr) {
+        Error("Currently ranges are not supported", node->upper_value_);
         CheckExpression(node->upper_value_, &high_attr, ExpressionUsage::READ);
         failure = failure || high_attr.IsOnError();
+        failure = true;
     }
     if (!failure) {
         if (!attr->UpdateWithIndexing(&low_attr, &high_attr, node, &node->map_type_, this, &error)) {
@@ -1704,16 +1708,15 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
 
             // case 4: value.builtin_function()
             const char *name = right_leaf->value_.c_str();
-            bool ismuting = false;
-            BInSynthMode mode;
-            node->builtin_ = GetFuncSignature(&ismuting, &mode, name, attr);
+            const char *signature = GetFuncSignature(name, attr);
+            node->builtin_ = GetFuncTypeFromSignature(signature, attr);
             if (node->builtin_ == nullptr) {
                 //Error("Before the dot operator you can place a file tag, an enum type, an interface, 'this' or a class instance", node);
-                Error("Left operand is not compatible with the dot operator", node);
+                Error("Left operand is not compatible with the dot operator or the selected function", node);
                 attr->SetError();
             } else {
-                node->SetBuitInMode(mode);
-                if (ismuting) {
+                node->SetSignature(signature);
+                if (signature[0] == 'M') {
                     if (!attr->IsWritable()) {
                         Error("Can't call a muting member function on a constant variable/field", right_leaf);
                     } else {

@@ -97,6 +97,7 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
     }
     if (declaration->HasOneOfFlags(VF_ISPOINTED)) {
         bool init_on_second_row = declaration->initer_ != nullptr && declaration->initer_->GetType() == ANT_INITER;
+        init_on_second_row = init_on_second_row || initer[0] == '{';
 
         text += "sing::";
         if (declaration->HasOneOfFlags(VF_READONLY)) {
@@ -243,7 +244,7 @@ void CppSynth::SynthConstructor(string *classname, AstClassType *ctype)
     Write(&text, false);
 }
 
-void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool root_of_fun_parm)
+void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec)
 {
     switch (type_spec->GetType()) {
     case ANT_BASE_TYPE:
@@ -266,7 +267,7 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool
         }
         break;
     case ANT_ARRAY_TYPE:
-        SynthArrayTypeSpecification(dst, (AstArrayType*)type_spec, root_of_fun_parm);
+        SynthArrayTypeSpecification(dst, (AstArrayType*)type_spec);
         break;
     case ANT_MAP_TYPE:
         {
@@ -345,13 +346,13 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
                 if (mode == PPM_POINTER) {
                     the_type = "*";
                     the_type += arg->name_;
-                } else if (mode == PPM_CONSTREF || mode == PPM_REF) {
+                } else if (mode == PPM_CONSTREF) {
                     the_type = "&";
                     the_type += arg->name_;
                 } else {    // PPM_VALUE
                     the_type = arg->name_;
                 }
-                SynthTypeSpecification(&the_type, arg->weak_type_spec_, true);
+                SynthTypeSpecification(&the_type, arg->weak_type_spec_);
             }
 
             // add to dst
@@ -379,7 +380,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
     ++split_level_;
 }
 
-void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec, bool root_of_fun_parm)
+void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
 {
     char    intbuf[32];
     int     ndims = 1;
@@ -391,16 +392,14 @@ void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec,
     }
     bool is_pod = IsPOD(type_spec->element_type_);
     if (ndims == 1) {
-        decl = "sing::";
-        if (root_of_fun_parm) {
-            decl += "vect<";
+        if (type_spec->is_dynamic_) {
+            decl = "std::vector<";
         } else {
-            decl += type_spec->is_dynamic_ ? 'd' : 's';
-            decl += is_pod ? "pvect<" : "vect<";
+            decl = "sing::array<";
         }
         SynthTypeSpecification(&the_type, type_spec->element_type_);
         decl += the_type;
-        if (!type_spec->is_dynamic_ && !root_of_fun_parm) {
+        if (!type_spec->is_dynamic_) { // i.e.: is std::array
             if (type_spec->expression_ != nullptr) {
                 string exp;
 
@@ -784,6 +783,15 @@ void CppSynth::SynthZeroIniter(string *dst, IAstTypeNode *type_spec)
     case ANT_ENUM_TYPE:
         *dst = ((AstEnumType*)type_spec)->items_[0];
         break;
+    case ANT_ARRAY_TYPE:
+        if (!((AstArrayType*)type_spec)->is_dynamic_) {
+            SynthZeroIniter(dst, ((AstArrayType*)type_spec)->element_type_);
+            if ((*dst)[0] != 0) {
+                dst->insert(0, "{");
+                *dst += "}";
+            }
+        }
+        break;
     default:
         break;  
     }
@@ -871,22 +879,35 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
 void CppSynth::SynthUpdateStatement(AstUpdate *node)
 {
     string full;
+    string expression;
+    const ExpressionAttributes *left_attr = node->left_term_->GetAttr();
+    const ExpressionAttributes *right_attr = node->right_term_->GetAttr();
 
-    // if (node->operation_ == TOKEN_UPD_POWER) {
-    //     SynthPowerUpdateOperator(&full, node);
-    //     Write(&full);
-    // } else {
-        string expression;
-
+    // copying a static vector to a dynamic one ?
+    if (left_attr->IsArray() && 
+        ((AstArrayType*)left_attr->GetTypeTree())->is_dynamic_ &&
+        !((AstArrayType*)right_attr->GetTypeTree())->is_dynamic_) {
+        --split_level_;
+        SynthExpression(&expression, node->left_term_);
+        full = "sing::copy_array_to_vec(";
+        AddSplitMarker(&full);
+        full += expression;
+        expression = "";
+        SynthExpression(&expression, node->right_term_);
+        full += ", ";
+        AddSplitMarker(&full);
+        full += expression;
+        full += ")";
+        ++split_level_;
+    } else {
         SynthExpression(&full, node->left_term_);
         full += ' ';
         full += Lexer::GetTokenString(node->operation_);
         full += ' ';       
-        Token base_type = node->left_term_->GetAttr()->GetAutoBaseType();
-        SynthFullExpression(base_type, &expression, node->right_term_);
+        SynthFullExpression(left_attr->GetAutoBaseType(), &expression, node->right_term_);
         full += expression;
-        Write(&full);
-    // }
+    }
+    Write(&full);
 }
 
 void CppSynth::SynthPowerUpdateOperator(string *dst, AstUpdate *node)
@@ -1197,18 +1218,6 @@ void CppSynth::SynthFor(AstFor *node)
             Write(&text);
         }
     }
-    /* NO ! the iterator is in the block scope !!
-    if (!node->iterator_referenced_) {
-        if (node->iterator_->HasOneOfFlags(VF_IS_REFERENCE)) {
-            text = "*";
-        } else {
-            text = "";
-        }
-        text += node->iterator_->name_;
-        SynthTypeSpecification(&text, node->iterator_->weak_type_spec_);
-        Write(&text);
-    }
-    */
     if (node->set_ != NULL) {
         SynthForEachOnDyna(node);
     } else {
@@ -1226,10 +1235,14 @@ void CppSynth::SynthForEachOnDyna(AstFor *node)
     AddSplitMarker(&text);
 
     // iterator declaration
-    expression = "*";
-    expression += node->iterator_->name_;
-    SynthTypeSpecification(&expression, node->iterator_->weak_type_spec_);
-    text += expression;
+    // expression = "*";
+    // expression += node->iterator_->name_;
+    // SynthTypeSpecification(&expression, node->iterator_->weak_type_spec_);
+    // text += expression;
+
+    // iterator declaration
+    text += "auto ";
+    text += node->iterator_->name_;
 
     // iterator initialization
     text += " = ";
@@ -1470,7 +1483,8 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
     bool builtin = false;
 
     if (node->left_term_->GetType() == ANT_BINOP) {
-        builtin = ((AstBinop*)node->left_term_)->builtin_ != nullptr;
+        AstBinop *bnode = (AstBinop*)node->left_term_;
+        builtin = bnode->builtin_ != nullptr;
     }
 
     --split_level_;
@@ -1481,7 +1495,7 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
         dst->erase(dst->length() - 1);  // just delete ')' - reopen the arg list
         bool has_already_args = (*dst)[dst->length() - 1] != '(';
         if (has_already_args && numargs > 0) {
-            // seperate the two groups 
+            // separate the two groups 
             *dst += ", ";
         }
         if (has_already_args || numargs > 0) {
@@ -1608,7 +1622,8 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
             dst->insert(0, "*");
             priority = GetUnopCppPriority(TOKEN_MPY);
         }
-        switch (node->builtin_mode_) {
+        BInSynthMode builtin_mode = GetBuiltinSynthMode(node->builtin_signature_);
+        switch (builtin_mode) {
         case BInSynthMode::sing:
             dst->insert(0, "(");
             dst->insert(0, right_leaf->value_);
@@ -1634,7 +1649,7 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
                 (*dst) += ")";
                 priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
                 Token base_type = node->operand_left_->GetAttr()->GetAutoBaseType();
-                if (base_type != TOKEN_FLOAT64 && node->builtin_mode_ != BInSynthMode::plain) {
+                if (base_type != TOKEN_FLOAT64 && builtin_mode != BInSynthMode::plain) {
                     priority = AddCast(dst, priority, GetBaseTypeName(base_type));
                 }
             }
@@ -2558,7 +2573,7 @@ bool CppSynth::VarNeedsDereference(VarDeclaration *var)
     if (var->HasOneOfFlags(VF_ISPOINTED | VF_IS_REFERENCE)) return(true);
     if (var->HasOneOfFlags(VF_ISARG)) {
         // output and not a vector
-        return (!var->HasOneOfFlags(VF_READONLY) && GetParameterPassingMethod(var->weak_type_spec_, false) != PPM_REF);
+        return(GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY)) == PPM_POINTER);
     }
     return(false);
 }

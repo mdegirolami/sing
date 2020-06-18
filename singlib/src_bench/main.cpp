@@ -14,11 +14,12 @@ void test_ptr_speed();
 void test_intrinsics(void);
 void speed_test(void);
 void test_map(void);
+void test_std_vectors(int size);
 
 int main() {
     //test_types_and_vars();
     //sinth_test();
-    using_strings();
+    //using_strings();
     //test_intrinsics();
     //test_vectors(5);
     //CheckLiterals();
@@ -27,5 +28,6 @@ int main() {
     //test_ptr_speed();
     //speed_test();
     //test_map();
+    test_std_vectors(10);
     return(0);
 }

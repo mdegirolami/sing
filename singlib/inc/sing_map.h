@@ -195,7 +195,7 @@ public:
         reash(count << 1);
     }
 
-    void trim(void) {
+    void shrink_to_fit(void) {
         pairs_.shrink_to_fit();
     }
 

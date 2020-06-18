@@ -194,6 +194,18 @@ public fn test_types_and_vars() void
 	hv_dyna		   =  gvi_dyna;     
 	hv_stringarr   =  gvi_stringarr;
 
+	// comparisons
+	let c0 = hv_array == gvi_array;
+	let c1 = hv_dyna == gvi_dyna;
+
+	// x-type assignment
+	hv_dyna = gvi_array;
+
+	// init of arrays with arrays
+	let newarray = hv_array;
+	let newvector = hv_dyna;
+	let newvect2 = hv_array;
+
     // passing arguments
     lv_int32 = gvi_fref(lv_int32, lvi_int32, lv_int32);
     lv_int32 = intsum(lv_int32, lvi_int32, lv_int32);

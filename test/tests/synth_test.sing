@@ -6,7 +6,7 @@ type myint i32;
 
 let mivv [*] myint;
 
-fn receiver(in vin [*][4]string, out vout [4][4]string) void
+fn receiver(in vin [4][4]string, out vout [4][4]string) void
 {
 }
 

@@ -62,19 +62,5 @@ void test_intrinsics(void)
     arr.erase(3, 8);
     sing::dvect<int32_t> arr2 = arr;
     arr.append(arr2);
-    
-
-
-
-
-// {"sort", "Mvxsf"}, {"radix_sort", "Mvxsf"}, {"find", "ie"}, {"binary_search", "ie"}, {"upper_bound", "ie"}, {"lower_bound", "ie"},
-// {"", ""}
-
-// {"reserve", "Mvs"}, {"capacity", "i"}, {"trim", "Mv"},
-// {"clear" ,"Mv"}, {"size", "i"}, {"isempty", "b"},
-// {"key_at", "kx"}, {"value_at", "vx"}, {"has", "bk"}, {"erase", "Mvk"},
-// {"sort_by_key", "Mvxsf"}, {"radix_sort_by_key", "Mvxsf"}, {"sort_by_value", "Mvxsf"}, {"radix_sort_by_value", "Mvxsf"}, 
-// {"find_value", "ie"}, {"binary_search_value", "ie"}, {"upper_bound_value", "ie"}, {"lower_bound_value", "ie"},
-// {"", ""}
 }
 

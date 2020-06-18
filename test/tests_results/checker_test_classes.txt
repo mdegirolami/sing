@@ -58,7 +58,7 @@ ERROR !! file checker_test_classes.sing:158:9: Undefined symbol
 ERROR !! file checker_test_classes.sing:159:9: Cannot access private symbol
 ERROR !! file checker_test_classes.sing:160:9: Need a variable/const/function name here
 ERROR !! file checker_test_classes.sing:161:29: Not a case of the enumeration
-ERROR !! file checker_test_classes.sing:162:9: Left operand is not compatible with the dot operator
+ERROR !! file checker_test_classes.sing:162:9: Left operand is not compatible with the dot operator or the selected function
 ERROR !! file checker_test_classes.sing:170:8: Function has not an implementation
 ERROR !! file checker_test_classes.sing:176:5: Undefined symbol
 ERROR !! file checker_test_classes.sing:177:10: Can't call a muting member function from a non-muting one

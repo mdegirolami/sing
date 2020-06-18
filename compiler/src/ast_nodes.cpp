@@ -39,7 +39,6 @@ ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_
     case ANT_NAMED_TYPE:
         return(GetParameterPassingMethod(((AstNamedType*)type_spec)->wp_decl_->type_spec_, input_parm));
     case ANT_ARRAY_TYPE:
-        return(input_parm ? PPM_CONSTREF : PPM_REF);
     case ANT_MAP_TYPE:
     default:
         break;
@@ -123,16 +122,30 @@ bool AstArrayType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
     AstArrayType *other = (AstArrayType*)src_tree;
-    if (dimension_ != other->dimension_) {
-
-        // for assignment, we fail only if both dimensions are known at compile time 
-        if (mode == FOR_EQUALITY || dimension_ * other->dimension_ > 0) {
+    switch (mode) {
+    case FOR_EQUALITY:
+        if (is_dynamic_ != other->is_dynamic_ || dimension_ != other->dimension_) {
             return(false);
         }
+        break;
+    case FOR_ASSIGNMENT:
+        if (!is_dynamic_ && (other->is_dynamic_ || dimension_ != other->dimension_)) {
+            return(false);
+        }
+        break;
+    case FOR_REFERENCING:
+        if (is_dynamic_ != other->is_dynamic_ || dimension_ != other->dimension_) {
+            return(false);
+        }
+        break;
     }
     assert(element_type_ != nullptr);
     assert(other->element_type_ != nullptr);
     return(true);
+}
+
+bool AstArrayType::SupportsEqualOperator(void) { 
+    return(element_type_ != nullptr ? element_type_->SupportsEqualOperator() : false); 
 }
 
 bool AstNamedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
@@ -367,6 +380,14 @@ AstExpressionLeaf::AstExpressionLeaf(Token type, const char *value)
     pkg_index_ = -1;
     real_is_int_ = real_is_negated_ = img_is_negated_ = false;
     unambiguous_member_access = false;
+}
+
+AstBinop::AstBinop(Token type, IAstExpNode *left, IAstExpNode*right) {
+    subtype_ = type;
+    operand_left_ = left;
+    operand_right_ = right;
+    builtin_ = nullptr;
+    builtin_signature_ = nullptr;
 }
 
 AstBinop::~AstBinop() 

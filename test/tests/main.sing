@@ -1,11 +1,13 @@
-// requires "synth_test_oop";
-requires "synth_test";
+requires "synth_test_oop";
+//requires "synth_test";
 requires "types_and_vars";
+requires "siege";
 
 public fn main() i32
 {
-    // synth_test_oop.test_oop();
-    synth_test.synth_test();
+    synth_test_oop.test_oop();
+    //synth_test.synth_test();
     types_and_vars.test_types_and_vars();
+    siege.print_primes_to(100);
     return(1);
 }

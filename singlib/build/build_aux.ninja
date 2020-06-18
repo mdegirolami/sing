@@ -29,7 +29,8 @@ build UsingVectors.o     : cc $src_b/UsingVectors.cpp
 build intrinsics.o       : cc $src_b/intrinsics.cpp
 build speed_test.o       : cc $src_b/speed_test.cpp
 build map_test.o         : cc $src_b/map_test.cpp
+build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp 
 
-build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o intrinsics.o speed_test.o map_test.o $lib_target
+build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o $lib_target
 
 default $bin_target

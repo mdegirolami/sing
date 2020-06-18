@@ -4,10 +4,12 @@
 #include <cstdint>
 #include <vector>
 #include <complex>
+#include <array>
 #include "sing_vectors.h"
 #include "sing_pointers.h"
 #include "sing_string.h"
 #include "sing_map.h"
+#include "sing_arrays.h"
 
 #define SING_STORAGE(name) name, 0, sizeof(name)/sizeof(name[0])
 
@@ -190,6 +192,57 @@ namespace sing {
         return(exp(value * 2.30258509299));
     }
 
+    template<class T, size_t N>
+    inline void copy_array_to_vec(std::vector<T> &dst, const sing::array<T, N> &source)
+    {
+        dst.clear();
+        dst.reserve(source.size());
+        for (auto &element : source) {
+            dst.push_back(element);
+        }
+    }
+
+    template<class T, size_t N>
+    inline bool iseq(const std::vector<T> &it0, const sing::array<T, N> &it1)
+    {
+        return(it0.size() == it1.size() && std::equal(it0.begin(), it0.end(), it1.begin()));
+    }
+
+    template<class T, size_t N>
+    inline bool iseq(const sing::array<T, N> &it0, const std::vector<T> &it1)
+    {
+        return(it0.size() == it1.size() && std::equal(it0.begin(), it0.end(), it1.begin()));
+    }
+
+    template<class T>
+    inline void insert(std::vector<T> &dst, int64_t idx, int64_t count, const T &value)
+    {
+        if (idx < 0) return;
+        if (idx > dst.size()) idx = dst.size();
+        dst.insert(dst.begin() + idx, count, value);
+    }
+
+    template<class T>
+    inline void erase(std::vector<T> &dst, int64_t idx, int64_t top)
+    {
+        if (idx < 0 || idx >= dst.size() || top <= idx) return;
+        if (top > dst.size()) top = dst.size();
+        dst.erase(dst.begin() + idx, dst.begin() + top);
+    }
+
+    template<class T>
+    inline void insert_v(std::vector<T> &dst, int64_t idx, const std::vector<T> &src)
+    {
+        if (idx < 0) return;
+        if (idx > dst.size()) idx = dst.size();
+        dst.insert(dst.begin() + idx, src.begin(), src.end());
+    }
+
+    template<class T>
+    inline void append(std::vector<T> &dst, const std::vector<T> &src)
+    {
+        dst.insert(dst.end(), src.begin(), src.end());
+    }
 
 void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context);
 

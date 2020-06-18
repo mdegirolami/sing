@@ -35,9 +35,9 @@ class CppSynth {
 
     void SynthFunOpenBrace(string &text);
     void SynthConstructor(string *classname, AstClassType *ctype);
-    void SynthTypeSpecification(string *dst, IAstTypeNode *type_spec, bool root_of_fun_parm = false);   // init dst with the var/const/type name
-    void SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, bool prototype);           // init dst with the func name
-    void SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec, bool root_of_fun_parm);
+    void SynthTypeSpecification(string *dst, IAstTypeNode *type_spec);                      // first please init dst with the var/const/type name
+    void SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, bool prototype);   // init dst with the func name
+    void SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec);
     void SynthClassDeclaration(const char *name, AstClassType *type_spec);
     void SynthClassHeader(const char *name, vector<AstNamedType*> *bases, bool is_interface);
     int  SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, vector<string> *implementors,

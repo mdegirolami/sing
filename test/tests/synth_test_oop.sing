@@ -290,7 +290,7 @@ fn check_builtin() void
     aa.reserve(100);
     var cc = aa.capacity();
     var ss = aa.size();
-    aa.trim(); 
+    aa.shrink_to_fit(); 
     cc = aa.capacity();
     ss = aa.size();
     aa.resize(10);
@@ -299,18 +299,24 @@ fn check_builtin() void
     aa.clear();
     cc = aa.capacity();
     ss = aa.size();
-    let isempty = aa.isempty();
+    var isempty = aa.empty();
     aa.push_back(5);
     aa.push_back(6);
-    f0 = aa.last();
     aa.pop_back();
     aa.insert(0, 5, 10:element);
     aa.erase(1,4);
+    var tt = aa;
+    aa.insert_v(1, tt);
+    aa.append(tt);
 
     var bb [*]f32 = {1, 2, 3};
     let bbp = &bb;
     bbp.push_back(1); 
     ss = bb.size();
+
+    // built-in on static vectors
+    var sv [3]string;
+    ss = sv.size();
 
     // map constructors
     var map1 maptype;
@@ -323,7 +329,7 @@ fn check_builtin() void
     int32 = map1.capacity();
     map1.insert("first", 10101);
     map1.insert("second", 89);
-    map1.trim();
+    map1.shrink_to_fit();
     int32 = map1.capacity();
     int32 = map1.size();
     var test bool = map1.isempty();

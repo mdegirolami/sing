@@ -868,63 +868,41 @@ bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, Ex
         exp_type_ = BT_ERROR;
         return(false);
     }
-    // if (exp_type_ != BT_TREE || type_tree_ == nullptr || (type_tree_->GetType() != ANT_MAP_TYPE && type_tree_->GetType() != ANT_ARRAY_TYPE)) {
-    //     *error = "You can apply an index list only to objects of type 'map' or 'array' (did you specify too many indices ?)";
-    //     exp_type_ = BT_ERROR;
-    //     return(false);
-    // }
     exp_type_ = BT_ERROR;
-    // if (type_tree_->GetType() == ANT_MAP_TYPE) {
-    //     AstMapType *typedesc = (AstMapType*)type_tree_;
-    //     *map_typedesc = typedesc;
-    //     ExpressionAttributes argdecl_attr;                          // of a fake expression where we pretend the map input is a variable.
+    AstArrayType *typedesc = (AstArrayType*)type_tree_;
 
-    //     if (!node->is_single_index_) {
-    //         *error = "Maps accept a single index (not ranges)";
-    //         return(false);
-    //     }
-    //     argdecl_attr.InitWithTree(typedesc->key_type_, nullptr, true, true, solver);
-    //     if (argdecl_attr.CanAssign(low_attr, solver, error)) {
-    //         InitWithTree(typedesc->returned_type_, variable_, true, is_writable_, solver);
-    //         return(true);
-    //     }
-    // } else {
-        AstArrayType *typedesc = (AstArrayType*)type_tree_;
+    // let's make typedesc->dimensions_ valid
+    assert(typedesc->dimension_was_computed_);
+    //solver->CheckArrayIndicesInTypes(typedesc);
 
-        // let's make typedesc->dimensions_ valid
-        assert(typedesc->dimension_was_computed_);
-        //solver->CheckArrayIndicesInTypes(typedesc);
-
-        // if dimension_ is defined (>0) the index must fall in the range.
-        size_t  index_value;
-        if (!low_attr->IsOnError()) {   // uninited descriptors are marked as on error !
-            if (!low_attr->IsAValidArrayIndex(&index_value)) {
-                *error = "Indices must be positive integers";
+    // if dimension_ is defined (>0) the index must fall in the range.
+    size_t  index_value;
+    if (!low_attr->IsOnError()) {   // uninited descriptors are marked as on error !
+        if (!low_attr->IsAValidArrayIndex(&index_value)) {
+            *error = "Indices must be positive integers";
+            return(false);
+        } else {
+            size_t array_size = typedesc->dimension_;
+            if (array_size > 0 && index_value >= array_size) {
+                *error = "Index value is out of bound";
                 return(false);
-            } else {
-                size_t array_size = typedesc->dimension_;
-                if (array_size > 0 && index_value >= array_size) {
-                    *error = "Index value is out of bound";
-                    return(false);
-                }
             }
         }
-        if (!high_attr->IsOnError()) {   // uninited descriptors are marked as on error !
-            if (!high_attr->IsAValidArrayIndex(&index_value)) {
-                *error = "Indices must be positive integers";
+    }
+    if (!high_attr->IsOnError()) {   // uninited descriptors are marked as on error !
+        if (!high_attr->IsAValidArrayIndex(&index_value)) {
+            *error = "Indices must be positive integers";
+            return(false);
+        } else {
+            size_t array_size = typedesc->dimension_;
+            if (array_size > 0 && index_value >= array_size) {
+                *error = "Index value is out of bound";
                 return(false);
-            } else {
-                size_t array_size = typedesc->dimension_;
-                if (array_size > 0 && index_value >= array_size) {
-                    *error = "Index value is out of bound";
-                    return(false);
-                }
             }
         }
-        InitWithTree(typedesc->element_type_, variable_, true, is_writable_, solver);
-        return(true);
-    //}
-    //return(false);
+    }
+    InitWithTree(typedesc->element_type_, variable_, true, is_writable_, solver);
+    return(true);
 }
 
 bool ExpressionAttributes::TakeAddress(void)

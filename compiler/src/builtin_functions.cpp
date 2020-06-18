@@ -53,15 +53,22 @@ IFDesc g_complex_functs[] = {
 };
 
 IFDesc g_array_functs[] = {
-{"reserve", "Mvsm"}, {"capacity", "im"}, {"trim", "Mvm"},
-{"resize", "Mvsm"}, {"clear", "Mvm"}, {"size", "im"}, {"isempty", "bm"},
-{"last", "em"}, {"push_back", "Mvem"}, {"pop_back", "Mvm"}, {"insert", "Mvxsem"}, {"erase", "Mvxxm"},
+{"size", "im"},
+//{"sort", "Mvxsf"}, {"radix_sort", "Mvxsf"}, {"find", "ie"}, {"binary_search", "ie"}, {"upper_bound", "ie"}, {"lower_bound", "ie"},
+{"", ""}
+};
+
+IFDesc g_vector_functs[] = {
+{"reserve", "Mvsm"}, {"capacity", "im"}, {"shrink_to_fit", "Mvm"},
+{"resize", "Mvsm"}, {"clear", "Mvm"}, {"size", "im"}, {"empty", "bm"},
+{"push_back", "Mvem"}, {"pop_back", "Mvm"}, 
+{"insert", "Mvxses"}, {"erase", "Mvxxs"}, {"insert_v", "MvxTs"}, {"append", "MvTs"},
 //{"sort", "Mvxsf"}, {"radix_sort", "Mvxsf"}, {"find", "ie"}, {"binary_search", "ie"}, {"upper_bound", "ie"}, {"lower_bound", "ie"},
 {"", ""}
 };
 
 IFDesc g_map_functs[] = {
-{"reserve", "Mvsm"}, {"capacity", "im"}, {"trim", "Mvm"},
+{"reserve", "Mvsm"}, {"capacity", "im"}, {"shrink_to_fit", "Mvm"},
 {"clear" ,"Mvm"}, {"size", "im"}, {"isempty", "bm"},
 {"insert", "Mvkem"}, {"erase", "Mvkm"}, {"get", "ekm"}, {"get_safe", "ekem"}, {"has", "bkm"},
 {"key_at", "kxm"}, {"value_at", "exm"},
@@ -81,7 +88,7 @@ static const char *GetSignatureByKey(IFDesc *map, const char *name)
     return(nullptr);
 }
 
-AstFuncType *GetFuncSignature(bool *ismuting, BInSynthMode *mode, const char *name, const ExpressionAttributes *attr)
+const char *GetFuncSignature(const char *name, const ExpressionAttributes *attr)
 {
     IFDesc *table;
     if (attr->IsInteger()) {
@@ -91,18 +98,22 @@ AstFuncType *GetFuncSignature(bool *ismuting, BInSynthMode *mode, const char *na
     } else if (attr->IsComplex()) {
         table = g_complex_functs;
     } else if (attr->IsArray()) {
-        table = g_array_functs;
+        if (((AstArrayType*)attr->GetTypeTree())->is_dynamic_) {
+            table = g_vector_functs;
+        } else {
+            table = g_array_functs;
+        }
     } else if (attr->IsMap()) {
         table = g_map_functs;
     }
-    const char *signature = GetSignatureByKey(table, name);
-    if (signature == nullptr || signature[0] == 0) return(nullptr);
-    if (signature[0] == 'M') {
-        *ismuting = true;
-        ++signature;
-    } else {
-        *ismuting = false;
-    }
+    return(GetSignatureByKey(table, name));
+}
+
+AstFuncType *GetFuncTypeFromSignature(const char *signature, const ExpressionAttributes *attr) 
+{
+    if (signature == nullptr) return(nullptr);
+    if (signature[0] == 'M') ++signature;
+    if (signature[0] == 0) return(nullptr);
     int numargs = strlen(signature) - 2;
     if (numargs < 0) {
         return(nullptr);
@@ -116,25 +127,35 @@ AstFuncType *GetFuncSignature(bool *ismuting, BInSynthMode *mode, const char *na
         retvalue->AddArgument(GetVarFromSignature(*signature++, attr));
     }
     retvalue->SetIsMember();    // to prevent undue copying
+    return(retvalue);
+}
 
+BInSynthMode GetBuiltinSynthMode(const char *signature)
+{
     switch (signature[strlen(signature) - 1]) {
     case 's':
-        *mode = BInSynthMode::sing;
-        break;
+        return(BInSynthMode::sing);
     case 'S':
-        *mode = BInSynthMode::std;
-        break;
+        return(BInSynthMode::std);
     case 'c':
-        *mode = BInSynthMode::cast;
-        break;
+        return(BInSynthMode::cast);
     case 'm':
-        *mode = BInSynthMode::member;
-        break;
+        return(BInSynthMode::member);
     case 'p':
     default:
-        *mode = BInSynthMode::plain;
+        break;
     }
-    return(retvalue);
+    return(BInSynthMode::plain);
+}
+
+char GetBuiltinArgType(const char *signature, int idx)
+{
+    if (signature[0] == 'M') ++idx;
+    ++idx;
+    if (idx < strlen(signature) - 1) {
+        return(signature[idx]);
+    }
+    return('s');    // default
 }
 
 static IAstTypeNode *GetTypeFromSignature(const char type_id, const ExpressionAttributes *attr, bool *owning)

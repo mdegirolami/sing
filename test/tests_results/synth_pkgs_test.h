@@ -6,4 +6,4 @@
 void test2(const pkg_type2 p0);
 
 extern const std::complex<double> kk;
-extern const sing::spvect<int32_t, 3> table;
+extern const sing::array<int32_t, 3> table;

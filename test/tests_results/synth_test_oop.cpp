@@ -316,13 +316,13 @@ static void check_builtin()
     cpl = std::log(cpl);
     cpl = std::exp(cpl);
 
-    sing::dpvect<float> aa = {(float)1, (float)2, (float)3};
+    std::vector<float> aa = {(float)1, (float)2, (float)3};
 
     aa.reserve(100);
     int32_t cc = aa.capacity();
     int32_t ss = aa.size();
 
-    aa.trim();
+    aa.shrink_to_fit();
     cc = aa.capacity();
     ss = aa.size();
     aa.resize(10);
@@ -331,21 +331,29 @@ static void check_builtin()
     aa.clear();
     cc = aa.capacity();
     ss = aa.size();
-    const bool isempty = aa.isempty();
+    bool isempty = aa.empty();
 
     aa.push_back((float)5);
     aa.push_back((float)6);
-    f0 = aa.last();
     aa.pop_back();
-    aa.insert(0, 5, (float)10);
-    aa.erase(1, 4);
+    sing::insert(aa, 0, 5, (float)10);
+    sing::erase(aa, 1, 4);
+    std::vector<float> tt = aa;
 
-    sing::ptr<sing::dpvect<float>> bb(new sing::wrapper<sing::dpvect<float>>);
+    sing::insert_v(aa, 1, tt);
+    sing::append(aa, tt);
+
+    sing::ptr<std::vector<float>> bb(new sing::wrapper<std::vector<float>>);
     *bb = {(float)1, (float)2, (float)3};
-    const sing::ptr<sing::dpvect<float>> bbp = bb;
+    const sing::ptr<std::vector<float>> bbp = bb;
 
     (*bbp).push_back((float)1);
     ss = (*bb).size();
+
+    // built-in on static vectors
+    sing::array<std::string, 3> sv;
+
+    ss = sv.size();
 
     // map constructors
     maptype map1;
@@ -359,7 +367,7 @@ static void check_builtin()
     int32 = map1.capacity();
     map1.insert("first", 10101);
     map1.insert("second", 89);
-    map1.trim();
+    map1.shrink_to_fit();
     int32 = map1.capacity();
     int32 = map1.size();
     bool test = map1.isempty();

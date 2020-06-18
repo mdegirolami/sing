@@ -30,7 +30,7 @@ void test_map(void)
     val = map1.size();
     val = map1.capacity();
     val = map2.capacity();
-    map2.trim();
+    map2.shrink_to_fit();
     val = map2.capacity();
     eq1 = map1.isempty();
     map1.clear();
