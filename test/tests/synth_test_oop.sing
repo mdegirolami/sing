@@ -139,7 +139,6 @@ public fn test_oop() void
         case result.ko: avg *= 0.5;
     }
 
-    // switch compiled as switch has default and  block statement
     switch(9) {
         case 9: {
             v_stat.add(3.0);
@@ -151,23 +150,6 @@ public fn test_oop() void
     // access through pointer
     let t_p2 = &t_instance;
     t_p2.tough_test(true);
-
-    // switch noninteger constant
-    let switch_base = "xxx";
-    switch (switch_base + "y") {
-        case "xxxy": avg *= 2.0;  // should double
-        default: {
-            let avgsqr = avg * avg;
-            if (avgsqr < 10) {
-                avg *= 2.0;
-            }
-        }
-    }
-
-    switch (switch_base) {
-    case "ax": avg *= 2.0;  // should NOT double
-    default:
-    }
 
     let alternate c0_test;
 

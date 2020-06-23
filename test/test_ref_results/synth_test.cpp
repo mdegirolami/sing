@@ -104,7 +104,7 @@ int32_t synth_test()
     // requiring conversions or not.
     int32_t it = 0;
 
-    uint64_t count = 0;
+    int64_t count = 0;
     for(int32_t idx = 1, idx__step = arr2[0]; idx__step > 0 ? (idx < 10) : (idx > 10); idx += idx__step, ++count) {
         ++it;
     }
@@ -124,8 +124,9 @@ int32_t synth_test()
     }
 
     it = 0;
-    count = 0;
-    for(auto iteratedint = arr2.begin(); iteratedint < arr2.end(); ++iteratedint, ++count) {
+    count = -1;
+    for(auto &iteratedint : arr2) {
+        ++count;
         ++it;
     }
 
@@ -199,9 +200,13 @@ static void expressions()
     s0 = s0 + s1;
     c0 = 1.0f + std::complex<float>(0.0f, 1.0f);
     c1 = std::complex<double>(1.0, 1.0);
-    s0 = sing::s_format("%s%s%f%d%s%d%u%u%f + %fi%f + %fi", s0.c_str(), s1.c_str(), f0, v_int32, false ? "true" : "false", v_int8, v_uint32, v_uint8,
-        c0.real(), c0.imag(), c1.real(), c1.imag());
+    s0 = sing::s_format("%s%s%f%d%s%d%u%u%s%s", s0.c_str(), s1.c_str(), f0, v_int32, "false", v_int8, v_uint32, v_uint8, sing::to_string(c0).c_str(),
+        sing::to_string(c1).c_str());
     s0 = sing::s_format("%s%s%s%s", s0.c_str(), "f", "alse", s1.c_str());
+    const bool b_for_print = true;
+    const bool b_for_false = false;
+
+    s0 = sing::s_format("%s%s%s", b_for_print ? "true" : "false", "true", b_for_false ? "true" : "false");
 
     // power + cases which require conversion
     v_int32 = sing::pow2((int32_t)v_int8);                  // **2 integer promotion

@@ -71,9 +71,10 @@ static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg
 {
     const int32_t top = count - 1;
 
-    uint64_t idx = 0;
-    for(auto dst = (*arg1).begin(); dst < (*arg1).end(); ++dst, ++idx) {
-        *dst = arg0[top - (int32_t)idx];
+    int64_t idx = -1;
+    for(auto &dst : *arg1) {
+        ++idx;
+        dst = arg0[top - (int32_t)idx];
     }
 }
 
@@ -81,9 +82,10 @@ static void stringswap(const std::vector<std::string> &arg0, std::vector<std::st
 {
     const int32_t top = count - 1;
 
-    uint64_t idx = 0;
-    for(auto dst = (*arg1).begin(); dst < (*arg1).end(); ++dst, ++idx) {
-        *dst = arg0[top - (int32_t)idx];
+    int64_t idx = -1;
+    for(auto &dst : *arg1) {
+        ++idx;
+        dst = arg0[top - (int32_t)idx];
     }
 }
 
@@ -154,46 +156,46 @@ void test_types_and_vars()
     pv_stringarr = hvi_stringarr;
 
     // iterators and iterators' references: several addressings
-    for(auto intiterator = lvi_array.begin(); intiterator < lvi_array.end(); ++intiterator) {
-        ++(*intiterator);
+    for(auto &intiterator : lvi_array) {
+        ++intiterator;
     }
-    for(auto intiterator = (*hvi_array).begin(); intiterator < (*hvi_array).end(); ++intiterator) {
-        ++(*intiterator);
+    for(auto &intiterator : *hvi_array) {
+        ++intiterator;
     }
-    for(auto intiterator = (*pv_array).begin(); intiterator < (*pv_array).end(); ++intiterator) {
-        ++(*intiterator);
+    for(auto &intiterator : *pv_array) {
+        ++intiterator;
     }
 
     // iterators on several iterated types
     sing::array<bool, 3> boolvec = {false, false, true};
 
-    for(auto booliterator = boolvec.begin(); booliterator < boolvec.end(); ++booliterator) {
-        *booliterator = !*booliterator;
+    for(auto &booliterator : boolvec) {
+        booliterator = !booliterator;
     }
 
-    for(auto stringiterator = lvi_stringarr.begin(); stringiterator < lvi_stringarr.end(); ++stringiterator) {
-        *stringiterator += "!";
+    for(auto &stringiterator : lvi_stringarr) {
+        stringiterator += "!";
     }
 
     sing::array<sing::ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
 
-    for(auto ptriterator = ptrvec.begin(); ptriterator < ptrvec.end(); ++ptriterator) {
-        **ptriterator += "-";
+    for(auto &ptriterator : ptrvec) {
+        *ptriterator += "-";
     }
 
     sing::array<sing::array<std::string, 3>, 3> arrvec = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};
 
-    for(auto arrayiterator = arrvec.begin(); arrayiterator < arrvec.end(); ++arrayiterator) {
-        for(auto stringiterator = (*arrayiterator).begin(); stringiterator < (*arrayiterator).end(); ++stringiterator) {
-            *stringiterator += "_ok";
+    for(auto &arrayiterator : arrvec) {
+        for(auto &stringiterator : arrayiterator) {
+            stringiterator += "_ok";
         }
     }
 
     std::vector<std::vector<std::string>> arrdyna = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};
 
-    for(auto arrayiterator = arrdyna.begin(); arrayiterator < arrdyna.end(); ++arrayiterator) {
-        for(auto stringiterator = (*arrayiterator).begin(); stringiterator < (*arrayiterator).end(); ++stringiterator) {
-            *stringiterator += "_ok";
+    for(auto &arrayiterator : arrdyna) {
+        for(auto &stringiterator : arrayiterator) {
+            stringiterator += "_ok";
         }
     }
 

@@ -327,3 +327,18 @@ public fn builtin_functs() void
     var v3 [*]i32 = {1, 2, 3};
     v3.erase(0,1);                  // ok
 }
+
+fn getnum() i32
+{
+    return(1);
+}
+
+fn switchtest2(in vv [*]*if1) void
+{
+    var imp if1implementor;
+    var int0 = 0;
+
+    typeswitch(tref = vv[getnum()]) {
+    case *if1implementor: imp = *tref;
+    }
+}

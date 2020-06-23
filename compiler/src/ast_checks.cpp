@@ -1246,11 +1246,8 @@ void AstChecker::CheckSwitch(AstSwitch *node)
                 attr.InitWithInt32(0);  // just done to force the type to int32.
             }
         } else {
-            ExpressionAttributes attr2 = attr;
-            if (!attr2.UpdateWithRelationalOperation(this, &attr, TOKEN_EQUAL, &error)) {
-                Error("Switch expression must be of a type which supports the == operator", node->switch_value_);
-                switch_error = true;
-            }
+            Error("Switch expression must be of integer or enum type", node->switch_value_);
+            switch_error = true;
         }
     } else {
         switch_error = true;
@@ -1275,6 +1272,8 @@ void AstChecker::CheckSwitch(AstSwitch *node)
                         if (!VerifyIndexConstness(exp) || is_integer &&
                             !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
                             node->SetCCompatibility(false);
+                            Error("Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.", exp);
+                            has_errors = true;
                         } else {
                             int64_t value = 0;
                             cmp_attr.GetSignedIntegerValue(&value);
@@ -1329,6 +1328,9 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
 
     ExpressionAttributes    attr;
     CheckExpression(node->expression_, &attr, ExpressionUsage::READ);
+    if (node->expression_->HasFunction()) {
+        Error("The typeswitch expression can't include function calls", node->expression_);
+    }
     IAstTypeNode *referenced_type = attr.GetTypeTree();
     IAstTypeNode *pointed_type = SolveTypedefs(attr.GetPointedType());
     bool is_interface = referenced_type != nullptr && referenced_type->GetType() == ANT_INTERFACE_TYPE;

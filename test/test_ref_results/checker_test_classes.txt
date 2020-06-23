@@ -49,7 +49,8 @@ ERROR !! file checker_test_classes.sing:120:21: Inherited Function "f1" has not 
 ERROR !! file checker_test_classes.sing:120:21: Inherited Function "f1" has not an implementation
 ERROR !! file checker_test_classes.sing:120:21: Inherited Function "f2" has not an implementation
 ERROR !! file checker_test_classes.sing:120:21: Inherited Function "f3" has not an implementation
-ERROR !! file checker_test_classes.sing:128:12: Switch expression must be of a type which supports the == operator
+ERROR !! file checker_test_classes.sing:128:12: Switch expression must be of integer or enum type
+ERROR !! file checker_test_classes.sing:136:10: Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.
 ERROR !! file checker_test_classes.sing:137:10: Switch cases must match the switch expression type (or be scalar values)
 ERROR !! file checker_test_classes.sing:140:16: The reference name must be a new name
 ERROR !! file checker_test_classes.sing:143:23: The expression must evaluate to an interface or interface pointer type
@@ -96,3 +97,4 @@ ERROR !! file checker_test_classes.sing:317:32: The enum case value must be gret
 ERROR !! file checker_test_classes.sing:318:6: The enum case value overflows i32 capacity.
 ERROR !! file checker_test_classes.sing:324:5: Left operand is not compatible with the dot operator
 ERROR !! file checker_test_classes.sing:326:8: Can't call a muting member function on a constant variable/field
+ERROR !! file checker_test_classes.sing:341:26: The typeswitch expression can't include function calls

@@ -117,6 +117,7 @@ ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_
 class IAstExpNode : public IAstNode {
 public:
     virtual const ExpressionAttributes *GetAttr(void) = 0;
+    virtual bool HasFunction(void) = 0;
 };
 
 class IAstDeclarationNode : public IAstNode {
@@ -408,6 +409,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_EXP_LEAF); }
     void AppendToValue(const char *to_append) { value_ += to_append; }
     void SetUMA(bool value) { unambiguous_member_access = value; }
+    virtual bool HasFunction(void) { return(false); }
 };
 
 // includes (), *, cast, sizeof, dimof.
@@ -428,6 +430,7 @@ public:
     virtual AstNodeType GetType(void) { return(ANT_UNOP); }
     void SetOperand(IAstExpNode *op) { operand_ = op; }
     void SetTypeOperand(IAstTypeNode *op) { type_ = op; }
+    virtual bool HasFunction(void) { return(operand_ != nullptr && operand_->HasFunction()); }
 };
 
 // includes '.' (field access, scope resolution)
@@ -450,6 +453,7 @@ public:
     virtual ~AstBinop();
     virtual AstNodeType GetType(void) { return(ANT_BINOP); }
     void SetSignature(const char *signature) { builtin_signature_ = signature; }
+    virtual bool HasFunction(void);
 };
 
 class AstFunCall : public IAstExpNode {
@@ -468,6 +472,7 @@ public:
     AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr) {}
     virtual AstNodeType GetType(void) { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
+    virtual bool HasFunction(void) { return(true); }
 };
 
 class AstIndexing : public IAstExpNode {
@@ -498,6 +503,7 @@ public:
         is_single_index_ = false;
     }
     void UnlinkIndexedTerm(void) { indexed_term_ = nullptr; }
+    virtual bool HasFunction(void);
 };
 
 /////////////////////////

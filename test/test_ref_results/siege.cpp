@@ -11,11 +11,11 @@ void print_primes_to(const int32_t top)
         const int32_t max_val = (int32_t)uint32_sqrt((uint32_t)totry);          // max divisor who need to check
         bool isprime = true;
 
-        for(auto value = primes.begin(); value < primes.end(); ++value) {
-            if (*value > max_val) {
+        for(auto &value : primes) {
+            if (value > max_val) {
                 break;
             }
-            if (totry % *value == 0) {
+            if (totry % value == 0) {
                 isprime = false;
                 break;
             }

@@ -397,6 +397,12 @@ AstBinop::~AstBinop()
     if (builtin_ != nullptr) delete builtin_; 
 }
 
+bool AstBinop::HasFunction(void) 
+{ 
+    return(operand_left_ != nullptr && operand_left_->HasFunction() ||
+           operand_right_ != nullptr && operand_right_->HasFunction()); 
+}
+
 AstFunCall::~AstFunCall()
 {
     for (int ii = 0; ii < (int)arguments_.size(); ++ii) {
@@ -415,6 +421,13 @@ AstIndexing::~AstIndexing()
     if (lower_value_ != nullptr) delete lower_value_;
     if (upper_value_ != nullptr) delete upper_value_;
     if (indexed_term_ != nullptr) delete indexed_term_;
+}
+
+bool AstIndexing::HasFunction(void) 
+{ 
+    return(indexed_term_ != nullptr && indexed_term_->HasFunction() ||
+           lower_value_ != nullptr && lower_value_->HasFunction() ||
+           upper_value_ != nullptr && upper_value_->HasFunction()); 
 }
 
 /////////////////////////

@@ -1173,11 +1173,11 @@ void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
                     text += switch_exp;
                     text += ".get_wrapper()";
                 } else {
-                    // es: Derived *localname = (Derived *)&inparm;
+                    // es: Derived &localname = *(Derived *)&inparm;
                     text = clause_typename;
-                    text += " *";
+                    text += " &";
                     text += node->reference_->name_;
-                    text += " = (";
+                    text += " = *(";
                     text += clause_typename;
                     text += " *)&";
                     text += switch_exp;
@@ -1206,25 +1206,27 @@ void CppSynth::SynthFor(AstFor *node)
 
     // declare or init the index
     // (can't do in the init clause of the for because it is a declaration, not a statement !!
-    if (node->index_ != NULL) {
+    if (node->index_ != nullptr) {
         if (!node->index_referenced_) {
-            text = "uint64_t ";
+            text = "int64_t ";
             text += node->index_->name_;
-            text += " = 0";
-            Write(&text);
         } else {
             text = node->index_->name_;
-            text += " = 0";
-            Write(&text);
         }
+        if (node->set_ != nullptr) {
+            text += " = -1";
+        } else {
+            text += " = 0";
+        }
+        Write(&text);
     }
-    if (node->set_ != NULL) {
+    if (node->set_ != nullptr) {
         SynthForEachOnDyna(node);
     } else {
         SynthForIntRange(node);
     }
 }
-
+/*
 void CppSynth::SynthForEachOnDyna(AstFor *node)
 {
     string  expression, text;
@@ -1271,6 +1273,28 @@ void CppSynth::SynthForEachOnDyna(AstFor *node)
     text += ") {";
     Write(&text, false);
     ++split_level_;
+    SynthBlock(node->block_);
+}
+*/
+
+void CppSynth::SynthForEachOnDyna(AstFor *node)
+{
+    string  expression, text;
+
+    text = "for(auto &";
+    text += node->iterator_->name_;
+    text += " : ";
+    SynthExpression(&expression, node->set_);
+    text += expression;
+    text += ") {";
+    Write(&text, false);
+    if (node->index_ != nullptr) {
+        ++indent_;
+        text = "++";
+        text += node->index_->name_;
+        Write(&text);
+        --indent_;
+    }
     SynthBlock(node->block_);
 }
 
@@ -2160,7 +2184,7 @@ void CppSynth::ProcessStringSumOperand(string *format, string *parms, IAstExpNod
             break;
         case TOKEN_COMPLEX64:
         case TOKEN_COMPLEX128:
-            *format += "%f + %fi";
+            *format += "%s";
             break;
         case TOKEN_BOOL:
             *format += "%s";
@@ -2173,13 +2197,15 @@ void CppSynth::ProcessStringSumOperand(string *format, string *parms, IAstExpNod
         }
         int priority = SynthExpression(&operand, child);
         if (basetype == TOKEN_COMPLEX64 || basetype == TOKEN_COMPLEX128) {
-            Protect(&operand ,priority, GetBinopCppPriority(TOKEN_DOT));
-            string tmp = operand;
-            operand += ".real(), ";
-            operand += tmp;
-            operand += ".imag()";
+            operand.insert(0, "sing::to_string(");
+            operand += ").c_str()";            
         } else if (basetype == TOKEN_BOOL) {
-            operand += " ? \"true\" : \"false\"";
+            if (operand == "true" || operand == "false") {
+                operand.insert(0, "\"");
+                operand += "\"";
+            } else {
+                operand += " ? \"true\" : \"false\"";
+            }
         }
     } else {
         if (node->GetType() == ANT_BINOP) {
@@ -2570,7 +2596,7 @@ int  CppSynth::GetUnopCppPriority(Token token)
 
 bool CppSynth::VarNeedsDereference(VarDeclaration *var)
 {
-    if (var->HasOneOfFlags(VF_ISPOINTED | VF_IS_REFERENCE)) return(true);
+    if (var->HasOneOfFlags(VF_ISPOINTED)) return(true);
     if (var->HasOneOfFlags(VF_ISARG)) {
         // output and not a vector
         return(GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY)) == PPM_POINTER);

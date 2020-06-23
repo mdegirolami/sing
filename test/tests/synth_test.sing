@@ -171,6 +171,9 @@ fn expressions() void
     c1 = c128(1.0 + 1i);
     s0 = s0 + s1 + string(f0) + string(v_int32) + string(false) + string(v_int8) + string(v_uint32) + string(v_uint8) + string(c0) + string(c1);
     s0 = s0 + "f" + "alse" + s1;
+    let b_for_print = true;
+    let b_for_false = false;
+    s0 = string(b_for_print) + string(true) + string(b_for_false);
     
     // power + cases which require conversion
     v_int32 = v_int8 ** 2;           // **2 integer promotion

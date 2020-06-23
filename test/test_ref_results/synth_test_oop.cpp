@@ -155,7 +155,6 @@ void test_oop()
         break;
     }
 
-    // switch compiled as switch has default and  block statement
     switch (9) {
     case 9: 
         {
@@ -173,23 +172,6 @@ void test_oop()
 
     (*t_p2).tough_test(true);
 
-    // switch noninteger constant
-    const std::string switch_base = "xxx";
-
-    if (switch_base + "y" == "xxxy") {  // should double
-        avg *= 2.0f;
-    } else {
-        const float avgsqr = avg * avg;
-
-        if (avgsqr < (float)10) {
-            avg *= 2.0f;
-        }
-    }
-
-    if (switch_base == "ax") {          // should NOT double
-        avg *= 2.0f;
-    }
-
     const c0_test alternate;
 
     check_typeswitch(alternate);
@@ -203,8 +185,8 @@ static int32_t check_typeswitch(const tester &object)
     if (object.get__id() == &c0_test::id__) {               // must select this
         return (0);
     } else if (object.get__id() == &delegating::id__) {
-        delegating *ref = (delegating *)&object;
-        if ((*ref).isgood() == result::ok) {
+        delegating &ref = *(delegating *)&object;
+        if (ref.isgood() == result::ok) {
             return (1);
         }
     } else {

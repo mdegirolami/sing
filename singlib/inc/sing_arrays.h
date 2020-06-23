@@ -111,6 +111,11 @@ public:
         return(data);
     }
 
+    T *end(void)
+    {
+        return(data + N);
+    }
+
     const T *begin(void) const
     {
         return(data);
