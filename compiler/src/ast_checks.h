@@ -112,9 +112,6 @@ class AstChecker : public ITypedefSolver {
 
     bool FlagLocalVariableAsPointed(IAstExpNode *node);
     bool IsGoodForIndex(IAstDeclarationNode *declaration);
-    //bool IsGoodForIterator(IAstDeclarationNode *declaration, IAstTypeNode *type);
-    bool IsGoodStringIterator(IAstDeclarationNode *declaration);
-    bool IsGoodIntegerIterator(IAstDeclarationNode *declaration, Token type);
     bool CanAssign(ExpressionAttributes *dst, ExpressionAttributes *src, IAstNode *err_location);
     bool AreInterfaceAndClass(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
     bool NodeIsConcrete(IAstTypeNode *tt);

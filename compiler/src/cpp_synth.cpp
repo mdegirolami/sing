@@ -910,51 +910,6 @@ void CppSynth::SynthUpdateStatement(AstUpdate *node)
     Write(&full);
 }
 
-void CppSynth::SynthPowerUpdateOperator(string *dst, AstUpdate *node)
-{
-    string          right, left;
-    bool            integer_power = false;
-
-    int left_priority = SynthExpression(&left, node->left_term_);
-    int right_priority = SynthExpression(&right, node->right_term_);
-
-    const ExpressionAttributes *left_attr = node->left_term_->GetAttr();
-    const ExpressionAttributes *right_attr = node->right_term_->GetAttr();
-
-    const NumericValue *left_value = left_attr->GetValue();
-    const NumericValue *right_value = right_attr->GetValue();
-
-    Token target = left_attr->GetAutoBaseType();
-    Token right_type = right_attr->GetAutoBaseType();
-
-    *dst = left;
-
-    // pow2 ?
-    if (right_attr->HasKnownValue() && !right_value->IsComplex() && right_value->GetDouble() == 2) {
-        *dst += " = sing::pow2(";
-        *dst += left;
-        *dst += ")";
-    } else {
-        if (left_attr->IsInteger()) {
-            if (!right_attr->IsInteger()) {
-                assert(false);  // shouldn't happen
-                right_priority = CastIfNeededTo(target, right_type, &right, right_priority, true);
-            }
-            *dst += " = sing::pow(";
-        } else {
-            if (ExpressionAttributes::BinopRequiresNumericConversion(left_attr, right_attr, TOKEN_POWER)) {
-                assert(false);  // shouldn't happen
-                right_priority = CastIfNeededTo(target, right_type, &right, right_priority, true);
-            }
-            *dst += " = std::pow(";
-        }
-        *dst += left;
-        *dst += ", ";
-        *dst += right;
-        *dst += ")";
-    }
-}
-
 void CppSynth::SynthIncDec(AstIncDec *node)
 {
     int priority;
@@ -1029,83 +984,36 @@ void CppSynth::SynthSwitch(AstSwitch *node)
 {
     string text;
     --split_level_;
-    if (node->c_switch_compatible) {
-        SynthExpression(&text, node->switch_value_);
-        text.insert(0, "switch (");
-        text += ") {";
-        Write(&text, false);
-        int cases = 0;
-        for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
-            int top_case = node->statement_top_case_[ii];
-            if (top_case == cases) {
-                text = "default:";
-                Write(&text, false);
-            } else {
-                while (cases < top_case) {
-                    IAstExpNode *clause = node->case_values_[cases];
-                    if (clause != nullptr) {
-                        SynthExpression(&text, clause);
-                        text.insert(0, "case ");
-                        text += ": ";
-                       Write(&text, false);
-                    }
-                    ++cases;
-                }
-            }
-            IAstNode *statement = node->statements_[ii];
-            ++indent_;
-            if (statement != nullptr) {
-                SynthStatementOrAutoVar(statement, nullptr);
-            }
-            text = "break";
-            Write(&text);            
-            --indent_;
-        }
-    } else {
-        int cases = 0;
-        for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
-            int top_case = node->statement_top_case_[ii];
-            IAstNode *statement = node->statements_[ii];
-            if (top_case == cases) {
-                if (statement != nullptr) {
-                    assert(ii != 0);
-                    text = "} else {";
+    SynthExpression(&text, node->switch_value_);
+    text.insert(0, "switch (");
+    text += ") {";
+    Write(&text, false);
+    int cases = 0;
+    for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
+        int top_case = node->statement_top_case_[ii];
+        if (top_case == cases) {
+            text = "default:";
+            Write(&text, false);
+        } else {
+            while (cases < top_case) {
+                IAstExpNode *clause = node->case_values_[cases];
+                if (clause != nullptr) {
+                    SynthExpression(&text, clause);
+                    text.insert(0, "case ");
+                    text += ": ";
                     Write(&text, false);
                 }
-            } else {
-                bool first = true;
-                while (cases < top_case) {
-                    if (first) {
-                        SynthRelationalOperator3(&text, TOKEN_EQUAL, node->switch_value_, node->case_values_[cases]);
-                    } else {
-                        string single_clause;
-                        SynthRelationalOperator3(&single_clause, TOKEN_EQUAL, node->switch_value_, node->case_values_[cases]);
-                        text += " || ";
-                        text += single_clause;
-                    }
-                    first = false;
-                    ++cases;
-                }
-                if (ii == 0) {
-                    text.insert(0, "if (");
-                } else {
-                    text.insert(0, "} else if (");
-                }
-                text += ") {";                    
-                Write(&text, false);
-            }
-            if (statement != nullptr) {
-
-                // this is all about avoiding double {}
-                if (statement->GetType() == ANT_BLOCK) {
-                    SynthBlock((AstBlock*)statement, false);
-                } else {
-                    ++indent_;
-                    SynthStatementOrAutoVar(statement, nullptr);
-                    --indent_;
-                }
+                ++cases;
             }
         }
+        IAstNode *statement = node->statements_[ii];
+        ++indent_;
+        if (statement != nullptr) {
+            SynthStatementOrAutoVar(statement, nullptr);
+        }
+        text = "break";
+        Write(&text);            
+        --indent_;
     }
     text = "}";
     ++split_level_;
@@ -1226,56 +1134,6 @@ void CppSynth::SynthFor(AstFor *node)
         SynthForIntRange(node);
     }
 }
-/*
-void CppSynth::SynthForEachOnDyna(AstFor *node)
-{
-    string  expression, text;
-    int     priority;
-
-    --split_level_;
-    text = "for(";
-    AddSplitMarker(&text);
-
-    // iterator declaration
-    // expression = "*";
-    // expression += node->iterator_->name_;
-    // SynthTypeSpecification(&expression, node->iterator_->weak_type_spec_);
-    // text += expression;
-
-    // iterator declaration
-    text += "auto ";
-    text += node->iterator_->name_;
-
-    // iterator initialization
-    text += " = ";
-    priority = SynthExpression(&expression, node->set_);
-    Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
-    text += expression;
-    text += ".begin(); ";
-    AddSplitMarker(&text);
-
-    // end of loop clause and iterator increment
-    text += node->iterator_->name_;
-    text += " < ";
-    text += expression;
-    text += ".end(); ";
-    AddSplitMarker(&text);
-
-    text += "++";
-    text += node->iterator_->name_;
-
-    // index increment
-    if (node->index_ != NULL) {
-        text += ", ++";
-        text += node->index_->name_;
-    }
-    
-    text += ") {";
-    Write(&text, false);
-    ++split_level_;
-    SynthBlock(node->block_);
-}
-*/
 
 void CppSynth::SynthForEachOnDyna(AstFor *node)
 {

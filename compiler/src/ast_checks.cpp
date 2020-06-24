@@ -1228,7 +1228,7 @@ void AstChecker::CheckSwitch(AstSwitch *node)
 {
     ExpressionAttributes attr;
     bool switch_error = false;
-    bool has_errors = false;
+    bool cases_errors = false;    
     AstEnumType *enum_type = nullptr;
     vector<int64_t> case_values;
     bool is_integer = false; 
@@ -1237,10 +1237,8 @@ void AstChecker::CheckSwitch(AstSwitch *node)
     CheckExpression(node->switch_value_, &attr, ExpressionUsage::READ);
     if (!attr.IsOnError()) {
         if (attr.IsEnum()) {
-            node->SetCCompatibility(true);  // may be compiled to a C switch
             enum_type = (AstEnumType*)attr.GetTypeTree();
         } else if (attr.IsInteger()) {
-            node->SetCCompatibility(true);
             is_integer = true;
             if (attr.RequiresPromotion()) {
                 attr.InitWithInt32(0);  // just done to force the type to int32.
@@ -1264,28 +1262,21 @@ void AstChecker::CheckSwitch(AstSwitch *node)
                 ExpressionAttributes tmp = cmp_attr;
                 if (!tmp.UpdateWithRelationalOperation(this, &attr, TOKEN_EQUAL, &error)) {
                     Error("Switch cases must match the switch expression type (or be scalar values)", exp);
-                    has_errors = true;
+                    cases_errors = true;
+                } else if (!VerifyIndexConstness(exp) || is_integer &&
+                    !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
+                    Error("Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.", exp);
+                    cases_errors = true;
                 } else {
-
-                    // is the case value compatible with C switch ?
-                    if (node->c_switch_compatible) {
-                        if (!VerifyIndexConstness(exp) || is_integer &&
-                            !cmp_attr.IsCaseValueCompatibleWithSwitchExpression(&attr)) {
-                            node->SetCCompatibility(false);
-                            Error("Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.", exp);
-                            has_errors = true;
-                        } else {
-                            int64_t value = 0;
-                            cmp_attr.GetSignedIntegerValue(&value);
-                            case_values.push_back(value);
-                        }
-                    }                     
+                    int64_t value = 0;
+                    cmp_attr.GetSignedIntegerValue(&value);
+                    case_values.push_back(value);
                 }
             }
         }
     }
 
-    if (!has_errors && !switch_error && node->c_switch_compatible) {
+    if (!cases_errors && !switch_error) {
         case_values.sort_shallow_copy(0, case_values.size());
         bool is_ok = true;
         for (int ii = 1; is_ok && ii < case_values.size(); ++ii) {
@@ -2094,54 +2085,6 @@ bool AstChecker::IsGoodForIndex(IAstDeclarationNode *declaration)
     if (declaration->GetType() != ANT_VAR) return(false);
     VarDeclaration *var = (VarDeclaration*)declaration;
     return (var->HasOneOfFlags(VF_ISFORINDEX) && !var->HasOneOfFlags(VF_ISBUSY));
-}
-
-//bool AstChecker::IsGoodForIterator(IAstDeclarationNode *declaration, IAstTypeNode *type)
-//{
-//    if (declaration == nullptr) return(false);
-//    if (declaration->GetType() != ANT_VAR) return(false);
-//    VarDeclaration *var = (VarDeclaration*)declaration;
-//    if (!var->HasAllFlags(VF_ISFORITERATOR | VF_IS_REFERENCE) || var->HasOneOfFlags(VF_ISBUSY)) {
-//        return(false);
-//    }
-//    return(AreTypeTreesCompatible(type, var->weak_type_spec_, FOR_EQUALITY) == OK);
-//}
-
-bool AstChecker::IsGoodStringIterator(IAstDeclarationNode *declaration)
-{
-    if (declaration == nullptr) return(false);
-    if (declaration->GetType() != ANT_VAR) return(false);
-    VarDeclaration *var = (VarDeclaration*)declaration;
-    if (!var->HasAllFlags(VF_ISFORITERATOR | VF_IS_REFERENCE) || var->HasOneOfFlags(VF_ISBUSY)) {
-        return(false);
-    }
-    if (var->weak_type_spec_ == nullptr || var->weak_type_spec_->GetType() != ANT_BASE_TYPE) {
-        return(false);
-    }
-    return(((AstBaseType*)var->weak_type_spec_)->base_type_ == TOKEN_UINT32);
-}
-
-bool AstChecker::IsGoodIntegerIterator(IAstDeclarationNode *declaration, Token type)
-{
-    if (declaration == nullptr) return(false);
-    if (declaration->GetType() != ANT_VAR) return(false);
-    VarDeclaration *var = (VarDeclaration*)declaration;
-    if (!var->HasOneOfFlags(VF_ISFORITERATOR) || var->HasOneOfFlags(VF_ISBUSY | VF_IS_REFERENCE)) {
-        return(false);
-    }
-    if (var->weak_type_spec_ == nullptr || var->weak_type_spec_->GetType() != ANT_BASE_TYPE) {
-        return(false);
-    }
-    Token var_type = ((AstBaseType*)var->weak_type_spec_)->base_type_;
-    switch (type) {
-    case TOKEN_INT32:
-        return(var_type == TOKEN_INT64 || var_type == TOKEN_INT32);
-    case TOKEN_INT64:
-        return(var_type == type);
-    default:
-        break;
-    }
-    return(false);
 }
 
 bool AstChecker::CanAssign(ExpressionAttributes *dst, ExpressionAttributes *src, IAstNode *err_location)

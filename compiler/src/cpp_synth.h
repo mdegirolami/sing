@@ -52,7 +52,6 @@ class CppSynth {
     void SynthBlock(AstBlock *block, bool write_closing_bracket = true);    // assumes { has been written !
     void SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype);
     void SynthUpdateStatement(AstUpdate *node);
-    void SynthPowerUpdateOperator(string *dst, AstUpdate *node);
     void SynthIncDec(AstIncDec *node);
     void SynthSwap(AstSwap *node);
     void SynthWhile(AstWhile *node);

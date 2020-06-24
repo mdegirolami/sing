@@ -665,12 +665,10 @@ public:
     PositionInfo    pos_;
 
     // attributes
-    bool    c_switch_compatible; // if true can be compiled into a c switch
-
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~AstSwitch();
-    AstSwitch() : switch_value_(NULL), c_switch_compatible(false), has_default(false) {}
+    AstSwitch() : switch_value_(nullptr), has_default(false) {}
     virtual AstNodeType GetType(void) { return(ANT_SWITCH); }
     void AddSwitchValue(IAstExpNode *exp) { switch_value_ = exp; }
     void AddCase(IAstExpNode *exp) { case_values_.push_back(exp); }
@@ -682,7 +680,6 @@ public:
         AddStatement(statement);
         has_default = true;
     }
-    void SetCCompatibility(bool value) { c_switch_compatible = value; }
 };
 
 class AstTypeSwitch : public IAstNode {
