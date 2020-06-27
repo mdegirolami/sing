@@ -9,8 +9,6 @@
 namespace SingNames {
 
 class CppSynth {
-    FILE                *cppfd_;
-    FILE                *hfd_;
     FILE                *file_;         // output for the current declaration
     vector<Package*>    *packages_;
     AstFile             *root_;
@@ -133,7 +131,7 @@ class CppSynth {
     void AppendMemberName(string *dst, IAstDeclarationNode *src);
 public:
     void Init() { newline_before_function_bracket_ = true; member_suffix_ = "_"; use_final_ = true; use_override_ = true; }
-    void Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, int pkg_index, bool *empty_cpp);
+    void Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Options *options, int pkg_index, bool *empty_cpp);
     void SynthDFile(FILE *dfd, Package *package, const char *target_name);
     void SynthMapFile(FILE *mfd);   // can call this only after Synthetize (and before another call)
 };

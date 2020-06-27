@@ -15,13 +15,11 @@ static const int KCastPriority = 3;
 
 bool IsFloatFormat(const char *num);
 
-void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, int pkg_index, bool *empty_cpp)
+void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Options *options, int pkg_index, bool *empty_cpp)
 {
     string      text;
     int         num_levels, num_items;
 
-    cppfd_ = cppfd;
-    hfd_ = hfd;
     packages_ = packages;
     root_ = (*packages)[pkg_index]->root_;
     indent_ = 0;
@@ -52,6 +50,11 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, in
     WriteExternalDeclarations();
 
     WriteNamespaceClosing(num_levels);
+
+    if (options->GenerateHOnly()) {
+        *empty_cpp = true;
+        return;
+    }
 
     // CPP file
     /////////////////

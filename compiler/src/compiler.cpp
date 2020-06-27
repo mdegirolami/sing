@@ -90,11 +90,12 @@ void Compiler::TestLexer(void)
 
 int Compiler::CompileSinglePackage(void)
 {
-    Package     *pkg = new Package;
+    Package *pkg = new Package;
+    bool h_only = options_.GenerateHOnly();
 
     packages_.push_back(pkg);
     pkg->Init(options_.GetSourceName());    // -p improperly used !!
-    if (!pkg->Load(PkgStatus::FULL)) {
+    if (!pkg->Load(h_only ? PkgStatus::FOR_REFERENCIES : PkgStatus::FULL)) {
         PrintPkgErrors(pkg);
     } else if (!checker_.CheckAll(&packages_, &options_, 0, true)) {
         PrintAllPkgErrors();
@@ -107,11 +108,13 @@ int Compiler::CompileSinglePackage(void)
         cpp_synthesizer_.Init();
         output_name = options_.GetOutputFile();
 
-        FileName::ExtensionSet(&output_name, "cpp");
-        cppfd = fopen(output_name.c_str(), "wb");
-        if (cppfd == NULL) {
-            printf("\ncan't open output file: %s", output_name.c_str());
-            return(1);
+        if (!h_only) {
+            FileName::ExtensionSet(&output_name, "cpp");
+            cppfd = fopen(output_name.c_str(), "wb");
+            if (cppfd == nullptr) {
+                printf("\ncan't open output file: %s", output_name.c_str());
+                return(1);
+            }
         }
 
         FileName::ExtensionSet(&output_name, "h");
@@ -122,9 +125,13 @@ int Compiler::CompileSinglePackage(void)
             return(1);
         }
 
-        cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, 0, &empty_cpp);
-        fclose(cppfd);
+        cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, &options_, 0, &empty_cpp);
+        if (cppfd != nullptr) fclose(cppfd);
         fclose(hfd);
+
+        if (h_only) {
+            return(0);
+        }
 
         // dont delete an empty cpp: this would cause ninja to repeat the build !!
         // if (empty_cpp) {

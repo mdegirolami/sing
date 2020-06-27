@@ -140,7 +140,7 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
         }
     }
 
-    if (fully_parsed) {
+    if (fully_parsed && !options_->GenerateHOnly()) {
         CheckMemberFunctionsDeclarationsPresence();
     }
     

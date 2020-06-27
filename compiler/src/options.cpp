@@ -77,6 +77,9 @@ void Options::ParseSingleArg(const char *arg)
             case 'u':
                 skip_usage_errors_ = true;
                 break;
+            case 'p':
+                generate_h_only_ = true;
+                break;
             case 'h':
             case '?':
                 must_print_help_ = true;
@@ -122,6 +125,7 @@ void Options::PrintHelp(void)
         "\n -o <file>   output filename (3 files are generated with extensions: .h, .cpp and .sm)"
         "\n -u          skip usage test on declarations"      
         "\n -v          verbose"
+        "\n -p          generate header only"
         "\n @<file>      to read command line arguments from <file>"
         "\n"
         "\nPlease note the space between the option flag and the option value !!\n\n"
@@ -186,6 +190,7 @@ bool Options::ParseArgs(int argc, char *argv[])
     skip_usage_errors_ = false;
     debug_build_ = false;
     create_d_file_ = false;
+    generate_h_only_ = false;
 
     waiting_a_value_ = false;
     error_ = false;
