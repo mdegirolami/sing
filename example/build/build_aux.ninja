@@ -1,0 +1,39 @@
+# directories
+singsrc = ../../sing
+temp = ../../out
+cppsrc = ../../src
+
+# programs
+singcc = ../../../sing/compiler/bin/sing
+
+# flags
+cflags = -fsigned-char -I $cppsrc -I $temp -I../../../sing/singlib/inc
+skip_usage = 
+
+# rules
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
+
+rule sc
+  deps = gcc
+  depfile = $out.d
+  command = $singcc $debug_flags $skip_usage -I $singsrc -MF -o $out $in
+
+rule ln
+  command = g++ -o $out $in $singlib
+
+# sing->temp
+build $temp/siege.h | $temp/siege.cpp : sc $singsrc/siege.sing
+
+# temp -> obj
+build siege.o : cc $temp/siege.cpp
+
+# cpp -> obj
+build main.o : cc $cppsrc/main.cpp
+
+# link
+build $bin_target: ln main.o siege.o
+
+default $bin_target
