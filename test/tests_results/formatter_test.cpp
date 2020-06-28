@@ -1,14 +1,14 @@
 #include "formatter_test.h"
 
-static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
-    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4);
-static void fn1(const int32_t a, const int32_t b, int32_t *c);
-static void fn2(const int32_t a, const int32_t b, int32_t *c);
-
 static const int32_t veryveryveryveryveryverylong1 = 100;
 static const int32_t veryveryveryveryveryverylong2 = 100;
 static const int32_t veryveryveryveryveryverylong3 = 100;
 static const int32_t veryveryveryveryveryverylong4 = 100;
+
+static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
+    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4);
+static void fn1(const int32_t a, const int32_t b, int32_t *c);
+static void fn2(const int32_t a, const int32_t b, int32_t *c);
 
 // attached to next
 static const sing::array<sing::array<int32_t, 3>, 6> table = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},      // hand formatted !!

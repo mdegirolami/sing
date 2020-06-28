@@ -89,7 +89,7 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
     string  text, typedecl, initer;
 
     if (!declaration->HasOneOfFlags(VF_ISLOCAL) && 
-        (!declaration->IsPublic() || declaration->HasOneOfFlags(VF_INVOLVED_IN_TYPE_DEFINITION))
+        (!declaration->IsPublic() || declaration->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT))
         ) {
         text = "static ";
     }
@@ -2795,7 +2795,7 @@ int CppSynth::WriteTypeDefinitions(bool public_defs)
         case ANT_VAR:
             {
                 VarDeclaration *var = (VarDeclaration*)declaration;
-                if (var->HasOneOfFlags(VF_INVOLVED_IN_TYPE_DEFINITION)) {
+                if (var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
                     SetFormatterRemarks(var);
                     formatter_.SetNodePos(var->GetPositionRecord());
                     SynthVar(var);
@@ -2856,7 +2856,7 @@ void CppSynth::WriteExternalDeclarations(void)
         if (!declaration->IsPublic()) continue;
         if (declaration->GetType() == ANT_VAR) {
             VarDeclaration *var = (VarDeclaration*)declaration;
-            if (!var->HasOneOfFlags(VF_INVOLVED_IN_TYPE_DEFINITION)) {
+            if (!var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
                 text = var->name_;
                 SynthTypeSpecification(&text, var->weak_type_spec_);
                 text.insert(0, "extern const ");
@@ -2879,7 +2879,7 @@ int CppSynth::WriteVariablesDefinitions(void)
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_VAR) {
             VarDeclaration *var = (VarDeclaration*)declaration;
-            if (!var->HasOneOfFlags(VF_INVOLVED_IN_TYPE_DEFINITION)) {
+            if (!var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
                 SetFormatterRemarks(declaration);
                 formatter_.SetNodePos(declaration->GetPositionRecord());
                 SynthVar((VarDeclaration*)declaration);

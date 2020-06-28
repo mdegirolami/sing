@@ -154,6 +154,8 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
 
 void AstChecker::CheckVar(VarDeclaration *declaration)
 {
+    bool check_constness = true;
+
     // insert now so that we can check conflicts with names in initers
     InsertName(declaration->name_.c_str(), declaration);
     
@@ -163,7 +165,9 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
     if (declaration->type_spec_ != nullptr) {
         if (CheckTypeSpecification(declaration->type_spec_, declaration->initer_ != nullptr ? TSCM_INITEDVAR : TSCM_STD)) {
             if (declaration->initer_ != nullptr) {
-                CheckIniter(declaration->type_spec_, declaration->initer_);
+                if (!CheckIniter(declaration->type_spec_, declaration->initer_)) {
+                    check_constness = false;
+                }
             }
         }
     } else if (declaration->initer_ == nullptr || declaration->initer_->GetType() == ANT_INITER) {
@@ -194,8 +198,27 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
 
                         // can't derive the type !
                         Error("The initer for an auto variable must be typed", declaration);
+                        check_constness = false;
                     }
                 }
+            }
+        } else {
+            check_constness = false;
+        }
+    }
+
+    // if appropriate, set the VF_IMPLEMENTED_AS_CONSTINT flag
+    // const with a single initer...
+    if (declaration->HasOneOfFlags(VF_READONLY) && declaration->initer_ != nullptr && declaration->initer_->GetType() != ANT_INITER) {
+
+        // ...of type integer and known value...
+        IAstExpNode* exp = (IAstExpNode*)declaration->initer_;
+        const ExpressionAttributes *attr = exp->GetAttr();
+        if ((attr->IsInteger() || attr->IsEnum()) && attr->HasKnownValue()) {
+
+            // ...using only some allowed operators.
+            if (VerifyIndexConstness(exp)) {
+                declaration->SetFlags(VF_IMPLEMENTED_AS_CONSTINT);
             }
         }
     }
@@ -2221,14 +2244,7 @@ bool AstChecker::VerifyLeafForIndexConstness(AstExpressionLeaf *node)
             IAstDeclarationNode *decl = node->wp_decl_;
             if (decl->GetType() == ANT_VAR) {
                 VarDeclaration *var = (VarDeclaration*)decl;
-                if (var->HasOneOfFlags(VF_READONLY) && var->initer_ != nullptr && var->initer_->GetType() != ANT_INITER) {
-
-                    // note: we want this to be an int.
-                    // only const ints preceed prototypes in compiled cpp, only them are suitable to be argument defaults 
-                    if (!VerifyIndexConstness((IAstExpNode*)var->initer_)) {
-                        return(false);
-                    }
-                    var->SetFlags(VF_INVOLVED_IN_TYPE_DEFINITION);
+                if (var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
                     return(true);
                 }
             } else if (decl->GetType() == ANT_TYPE) {
@@ -2633,7 +2649,7 @@ void AstChecker::CheckPrivateDeclarationsUsage(void)
 void AstChecker::CheckPrivateVarUsage(VarDeclaration *var, bool is_member)
 {
     bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->weak_type_spec_);
-    if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_INVOLVED_IN_TYPE_DEFINITION)) {
+    if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_IMPLEMENTED_AS_CONSTINT)) {
         if (!var->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN)) {
             UsageError("Variable/Constant unused !!", var);
         } else if (check_all && !var->HasOneOfFlags(VF_READONLY) && !var->HasOneOfFlags(VF_WASWRITTEN)) {

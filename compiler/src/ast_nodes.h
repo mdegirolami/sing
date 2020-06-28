@@ -35,7 +35,7 @@ enum VarFlags {
     VF_ISFORITERATOR = 0x800,
     VF_IS_REFERENCE = 0x1000,   // for iterator or typeswitch placement name
     VF_ISLOCAL = 0x2000,
-    VF_INVOLVED_IN_TYPE_DEFINITION = 0x4000, // is a const integer used to size a vector in a type declaration
+    VF_IMPLEMENTED_AS_CONSTINT = 0x4000, // is implemented as a static const int (run time constant).
     VF_IS_ITERATED = 0x8000
 };
 
