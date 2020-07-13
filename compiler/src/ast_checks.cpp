@@ -302,6 +302,9 @@ void AstChecker::CheckMemberFunc(FuncDeclaration *declaration)
                 found = true;
                 FuncDeclaration *func = ctype->member_functions_[ii];
                 declaration->SetMuting(func->is_muting_);
+                if (ii >= ctype->first_hinherited_member_) {
+                    declaration->SetVirtual(true);
+                }
                 if (ctype->implemented_[ii]) {
                     Error("Double defined function", declaration);
                     isok = false;
@@ -363,9 +366,9 @@ void AstChecker::CheckFuncBody(FuncDeclaration *declaration)
     current_class_ = nullptr;
     current_function_ = nullptr;
 
-    if (declaration->is_class_member_ && !this_was_accessed_)
+    if (declaration->is_class_member_ && !declaration->is_virtual_ && !this_was_accessed_)
     {
-        Error("A member function should access at least a class member", declaration);
+        Error("A not inherited member function should access at least a class member", declaration);
     }
     if (!return_fake_variable_.IsVoid()) {
         if (!BlockReturnsExplicitly(declaration->block_)) {

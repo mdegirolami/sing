@@ -1,0 +1,1 @@
+..\..\compiler\bin\sing -p -o ../inc/str.h -u str.sing

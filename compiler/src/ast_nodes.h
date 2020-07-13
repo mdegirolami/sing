@@ -798,6 +798,7 @@ public:
 
     bool            is_used_;           // annotations
     bool            type_is_ok_;
+    bool            is_virtual_;
 
     virtual bool IsPublic(void) { return(is_public_); }
     virtual void SetPublic(bool value) { is_public_ = value; }
@@ -805,7 +806,7 @@ public:
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
 
     virtual ~FuncDeclaration() { if (function_type_ != NULL) delete function_type_; if (block_ != NULL) delete block_; }
-    FuncDeclaration() : function_type_(NULL), block_(NULL), is_public_(false), is_used_(false), type_is_ok_(false), is_muting_(false) {}
+    FuncDeclaration() : function_type_(NULL), block_(NULL), is_public_(false), is_used_(false), type_is_ok_(false), is_muting_(false), is_virtual_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_FUNC); }
     void SetNames(const char *name1, const char *name2);
     void AddType(AstFuncType *type) { function_type_ = type; }
@@ -813,6 +814,7 @@ public:
     void SetUsed(void) { is_used_ = true; }
     void SetOk(void) { type_is_ok_ = true; }
     void SetMuting(bool is_muting) { is_muting_ = is_muting; }
+    void SetVirtual(bool is_virtual) { is_virtual_ = is_virtual; }
 };
 
 enum class DependencyUsage {UNUSED, PRIVATE, PUBLIC};   // referred by private or public symbols ?

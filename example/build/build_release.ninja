@@ -1,7 +1,7 @@
 debug_flags = -O2 -s -DNDEBUG
 
 bin_target = ../../bin/tests.exe
-singlib = ../../../sing/singlib/bin/singlib.a
+singlib = ../../../singlib/bin/singlib.a
 
 include ../build_aux.ninja
 

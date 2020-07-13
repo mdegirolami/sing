@@ -4,10 +4,10 @@ temp = ../../out
 cppsrc = ../../src
 
 # programs
-singcc = ../../../sing/compiler/bin/sing
+singcc = ../../../compiler/bin/sing
 
 # flags
-cflags = -fsigned-char -I $cppsrc -I $temp -I../../../sing/singlib/inc
+cflags = -fsigned-char -I $cppsrc -I $temp -I../../../singlib/inc
 skip_usage = 
 
 # rules

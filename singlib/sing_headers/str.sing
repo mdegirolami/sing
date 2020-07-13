@@ -1,0 +1,89 @@
+namespace sing;
+
+public enum SplitMode {sm_separator_left, sm_separator_right, sm_drop}
+
+public let npos = -1;
+
+public interface Selector {
+    fn is_good(cp i32) bool;
+}
+
+public class Range {
+public:
+    var begin = npos;
+    var end = npos;
+}
+
+// getting info
+public fn len(src string) i32;
+public fn numchars(src string) i32;
+public fn count(src string, to_search string, insensitive bool = false) i32;
+
+// casing
+public fn toupper(src string) string;
+public fn tolower(src string) string;
+public fn totitle(src string) string;
+public fn compare(first string, second string, insensitive bool = false) i32;
+public fn compare_at(first string, at_pos i32, contained string, out end_pos i32, insensitive bool = false) i32;
+
+// splitting
+public fn split(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
+public fn split_any(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
+public fn rsplit(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
+public fn rsplit_any(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
+
+// replacing
+public fn replace(io src string, old_sub string, new_sub string, insensitive bool = false, from i32 = 0) i32;
+public fn replace_all(io src string, old_sub string, new_sub string, insensitive bool = false) i32;
+
+// prefix/suffix
+public fn has_prefix(src string, prefix string, insensitive bool = false) bool;
+public fn has_suffix(src string, suffix string, insensitive bool = false) bool;
+public fn cut_prefix(io str string, prefix string, insensitive bool = false) void;
+public fn cut_suffix(io str string, suffix string, insensitive bool = false) void;
+
+// cleanup
+public fn cut_leading_spaces(io str string) void;
+public fn cut_trailing_spaces(io str string) void;
+public fn cut_leading(io str string, to_keep Selector) void;
+public fn cut_trailing(io str string, to_keep Selector) void;
+public fn cut_fun(io str string, to_keep Selector) void;
+public fn make_utf8_compliant(io str string) void;
+
+// working with indices
+public fn find(src string, to_search string, out range Range, insensitive bool = false, from i32 = 0) bool;
+public fn rfind(src string, to_search string, out range Range, insensitive bool = false, from i32 = npos) bool;
+public fn find_any(src string, to_search string, out range Range, insensitive bool = false, from i32 = 0) bool;
+public fn rfind_any(src string, to_search string, out range Range, insensitive bool = false, from i32 = npos) bool;
+public fn find_fnc(src string, matches Selector, out range Range, from i32 = 0) bool;
+public fn rfind_fnc(src string, matches Selector, out range Range, from i32 = npos) bool;
+
+public fn sub(src string, first i32, last i32 = npos) string;
+public fn sub_range(src string, range Range) string;
+public fn pos2idx(src string, pos i32) i32;
+public fn idx2pos(src string, idx i32) i32;
+public fn insert(io str string, idx i32, to_insert string) void;
+public fn erase(io str string, first i32, last i32 = npos) void;
+public fn erase_range(io str string, range Range) void;
+public fn skip_fwd(str string, start i32, numchars i32) i32;
+public fn skip_bkw(str string, start i32, numchars i32) i32;
+
+// unicode
+public fn encode(src [*]i32) string;
+public fn decode(src string, out dst [*]i32) void;
+public fn decode_one(src string, io at i32) i32;
+public fn encode_one(src i32) string;
+
+// char classify
+public fn is_digit(cc i32) bool;
+public fn is_xdigit(cc i32) bool;
+public fn is_letter(cc i32) bool;
+public fn is_upper(cc i32) bool;
+public fn is_lower(cc i32) bool;
+public fn is_title(cc i32) bool;
+public fn is_space(cc i32) bool;
+
+// char case conversion
+public fn cc_toupper(cc i32) i32;
+public fn cc_tolower(cc i32) i32;
+public fn cc_totitle(cc i32) i32;

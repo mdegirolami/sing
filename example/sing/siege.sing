@@ -5,10 +5,10 @@ public fn print_primes_to(in top i32) void
 	
     // note: for all the numbers in the range excluing even numbers
 	for (totry in 3:top step 2) {
-        let max = i32(uint32_sqrt(u32(totry))); // max divisor who need to check
+        let vmax = i32(uint32_sqrt(u32(totry))); // max divisor who need to check
         var isprime = true;
         for (value in primes) {
-            if (value > max) {
+            if (value > vmax) {
                 break;
             }
             if (totry % value == 0) {

@@ -1,5 +1,19 @@
+# directories
+singsrc = ../../sing_bench
+singlibs = ../../sing_headers
+temp = ../../out_bench
+
+# programs
+singcc = ../../../compiler/bin/sing
+
 cflags = -fsigned-char -I $src_b -I../../inc
 obj = .
+
+#rules
+rule sc
+  deps = gcc
+  depfile = $out.d
+  command = $singcc $debug_flags $skip_usage -I $singsrc -I $singlibs -MF -o $out $in
 
 rule cc
   deps = gcc
@@ -16,11 +30,20 @@ rule aa
 
 build sing.o        : cc $src_l/sing.cpp      
 build sing_string.o : cc $src_l/sing_string.cpp
+build str.o         : cc $src_l/str.cpp
+build str_tables.o  : cc $src_l/str_tables.cpp
 
-build $lib_target : aa  sing.o sing_string.o
+build $lib_target : aa  sing.o sing_string.o str.o str_tables.o
 
 # the bench
 
+# sing->temp
+build $temp/str_test.h | $temp/str_test.cpp : sc $singsrc/str_test.sing
+
+# temp -> obj
+build str_test.o : cc $temp/str_test.cpp
+
+# cpp -> obj
 build main.o             : cc $src_b/main.cpp
 build ptr_speed.o        : cc $src_b/ptr_speed.cpp
 build ptr_test.o         : cc $src_b/ptr_test.cpp  
@@ -31,6 +54,7 @@ build speed_test.o       : cc $src_b/speed_test.cpp
 build map_test.o         : cc $src_b/map_test.cpp
 build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp 
 
-build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o $lib_target
+#link
+build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o $lib_target
 
 default $bin_target
