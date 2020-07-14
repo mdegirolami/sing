@@ -95,7 +95,6 @@ float stat::variance() const
         return ((float)0);
     } else {
         const float avg = this->avg();
-
         return (sum2_ / (float)count_ - avg * avg);
     }
 }
@@ -169,7 +168,6 @@ void test_oop()
 
     // access through pointer
     const sing::ptr<delegating> t_p2 = t_instance;
-
     (*t_p2).tough_test(true);
 
     const c0_test alternate;
@@ -198,7 +196,6 @@ static int32_t check_typeswitch(const tester &object)
 static int32_t check_typeswitch2(const sing::iptr<tester> object)
 {
     sing::ptr<delegating> tmp;
-
     if ((*object).get__id() == &c0_test::id__) {            // must select this
         sing::ptr<c0_test> ref = (sing::wrapper<c0_test>*)object.get_wrapper();
         (*ref).tough_test(true);
@@ -217,25 +214,21 @@ static void check_builtin()
     int32_t sign = 0;
     const int32_t atan = 5;             // conflicts with functions ?
     int8_t int8 = (int8_t)-100;
-
     int8 = sing::abs(int8);
     int8 = (int8_t)::sqrt(int8);
     sign = sing::sgn(int8);
 
     int32_t int32 = -100;
-
     int32 = sing::abs(int32);
     int32 = (int32_t)::sqrt(int32);
     sign = sing::sgn(int32);
 
     uint64_t uint64 = (uint64_t)10000;
-
     uint64 = sing::abs(uint64);
     uint64 = (uint64_t)::sqrt(uint64);
     sign = sing::sgn(uint64);
 
     float f0 = -10000.0f;
-
     f0 = sing::abs(f0);
     f0 = (float)::sqrt(f0);
     sign = sing::sgn(f0);
@@ -258,7 +251,6 @@ static void check_builtin()
     f0 = (float)::round(-0.7f);
 
     double f1 = -10000.0;
-
     f1 = sing::abs(f1);
     f1 = ::sqrt(f1);
     sign = sing::sgn(f1);
@@ -281,7 +273,6 @@ static void check_builtin()
     f1 = ::round(-0.7);
 
     std::complex<float> cpl = -1.0f + std::complex<float>(0.0f, 1.0f);
-
     f0 = std::abs(cpl);
     f0 = std::arg(cpl);
     f0 = std::imag(cpl);
@@ -299,11 +290,9 @@ static void check_builtin()
     cpl = std::exp(cpl);
 
     std::vector<float> aa = {(float)1, (float)2, (float)3};
-
     aa.reserve(100);
     int32_t cc = aa.capacity();
     int32_t ss = aa.size();
-
     aa.shrink_to_fit();
     cc = aa.capacity();
     ss = aa.size();
@@ -314,27 +303,23 @@ static void check_builtin()
     cc = aa.capacity();
     ss = aa.size();
     bool isempty = aa.empty();
-
     aa.push_back((float)5);
     aa.push_back((float)6);
     aa.pop_back();
     sing::insert(aa, 0, 5, (float)10);
     sing::erase(aa, 1, 4);
     std::vector<float> tt = aa;
-
     sing::insert_v(aa, 1, tt);
     sing::append(aa, tt);
 
     sing::ptr<std::vector<float>> bb(new sing::wrapper<std::vector<float>>);
     *bb = {(float)1, (float)2, (float)3};
     const sing::ptr<std::vector<float>> bbp = bb;
-
     (*bbp).push_back((float)1);
     ss = (*bb).size();
 
     // built-in on static vectors
     sing::array<std::string, 3> sv;
-
     ss = sv.size();
 
     // map constructors
@@ -353,7 +338,6 @@ static void check_builtin()
     int32 = map1.capacity();
     int32 = map1.size();
     bool test = map1.isempty();
-
     map1.clear();
     int32 = map1.size();
     test = map1.isempty();
@@ -364,7 +348,6 @@ static void check_builtin()
     test = map2.has("one");
     test = map2.has("two");
     std::string ts = map2.key_at(1);
-
     int32 = map2.value_at(1);
 }
 

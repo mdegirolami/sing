@@ -52,7 +52,6 @@ static std::string stringsum(const char *arg0, const char *arg1, std::string *ar
 static fref frefshift(const fref arg0, fref *arg1, fref *arg2)
 {
     fref tmp = *arg2;
-
     *arg2 = *arg1;
     *arg1 = arg0;
     return (tmp);
@@ -70,7 +69,6 @@ static void arrayswap(const sing::array<int32_t, 5> &arg0, sing::array<int32_t, 
 static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, const int32_t count)
 {
     const int32_t top = count - 1;
-
     int64_t idx = -1;
     for(auto &dst : *arg1) {
         ++idx;
@@ -81,7 +79,6 @@ static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg
 static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, const int32_t count)
 {
     const int32_t top = count - 1;
-
     int64_t idx = -1;
     for(auto &dst : *arg1) {
         ++idx;
@@ -168,7 +165,6 @@ void test_types_and_vars()
 
     // iterators on several iterated types
     sing::array<bool, 3> boolvec = {false, false, true};
-
     for(auto &booliterator : boolvec) {
         booliterator = !booliterator;
     }
@@ -178,13 +174,11 @@ void test_types_and_vars()
     }
 
     sing::array<sing::ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
-
     for(auto &ptriterator : ptrvec) {
         *ptriterator += "-";
     }
 
     sing::array<sing::array<std::string, 3>, 3> arrvec = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};
-
     for(auto &arrayiterator : arrvec) {
         for(auto &stringiterator : arrayiterator) {
             stringiterator += "_ok";
@@ -192,7 +186,6 @@ void test_types_and_vars()
     }
 
     std::vector<std::vector<std::string>> arrdyna = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};
-
     for(auto &arrayiterator : arrdyna) {
         for(auto &stringiterator : arrayiterator) {
             stringiterator += "_ok";

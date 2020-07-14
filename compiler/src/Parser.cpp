@@ -307,7 +307,11 @@ FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
         if (is_member) ftype->SetIsMember();
         UpdateEndPosition(node);
         if (skip_body) {
-            SkipToNextDeclaration();
+            if (m_token == TOKEN_SEMICOLON) {
+                if (!Advance()) goto recovery;  // absorb semicolon, prototype declaration
+            } else {
+                SkipToNextDeclaration();        // has a body but we dont mind.
+            }
         } else {
             node->AddBlock(ParseBlock());
         }
@@ -2056,7 +2060,7 @@ bool Parser::Advance(void)
             m_lexer->ClearError();
             return(false);
         }
-        if ((m_token == TOKEN_INLINE_COMMENT || m_token == TOKEN_EMPTY_LINES) && !for_reference_) {
+        if ((m_token == TOKEN_INLINE_COMMENT || m_token == TOKEN_EMPTY_LINES)/* && !for_reference_*/) {
             RemarkDescriptor *rd = new RemarkDescriptor;
             rd->row = m_lexer->CurrTokenLine();
             rd->col = m_lexer->CurrTokenColumn();

@@ -30,7 +30,7 @@ ERROR !! file checker_test_classes.sing:71:19: The argument's initer must be a c
 ERROR !! file checker_test_classes.sing:74:8: Duplicated member name
 ERROR !! file checker_test_classes.sing:74:8: Function has not an implementation
 ERROR !! file checker_test_classes.sing:77:4: Function doesn't belong to the class
-ERROR !! file checker_test_classes.sing:81:4: A member function should access at least a class member
+ERROR !! file checker_test_classes.sing:81:4: A not inherited member function should access at least a class member
 ERROR !! file checker_test_classes.sing:85:4: Double defined function
 ERROR !! file checker_test_classes.sing:89:4: Function signature differs from class declaration
 ERROR !! file checker_test_classes.sing:93:11: Original declaration is not public !

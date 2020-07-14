@@ -1,6 +1,6 @@
 prefix = 
 suffix = _
-top_lines = 21, 24
+top_lines = 21, 23
 lines:
 14, 16
-21, 24
+21, 23

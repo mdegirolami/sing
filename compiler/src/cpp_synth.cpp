@@ -825,12 +825,12 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
     formatter_.SetNodePos(node->GetPositionRecord(), type != ANT_VAR && type != ANT_BLOCK);
 
     // place an empty line before the first non-var statement following one or more var declarations 
-    if (oldtype != nullptr) {
-        if (type != ANT_VAR && *oldtype == ANT_VAR) {
-            EmptyLine();
-        }
-        *oldtype = type;
-    }
+    // if (oldtype != nullptr) {
+    //     if (type != ANT_VAR && *oldtype == ANT_VAR) {
+    //         EmptyLine();
+    //     }
+    //     *oldtype = type;
+    // }
 
     switch (type) {
     case ANT_VAR:
@@ -2831,6 +2831,12 @@ void CppSynth::WritePrototypes(bool public_defs)
         if (declaration->GetType() == ANT_FUNC) {
             FuncDeclaration *func = (FuncDeclaration*)declaration;
             if (!func->is_class_member_) {
+                if (func->block_ == nullptr) {
+                    SetFormatterRemarks(declaration);
+                    formatter_.SetNodePos(declaration->GetPositionRecord());
+                } else {
+                    SetFormatterRemarks(nullptr);
+                }
                 text = func->name_;
                 SynthFuncTypeSpecification(&text, func->function_type_, true);
                 if (!public_defs) {
@@ -2842,6 +2848,7 @@ void CppSynth::WritePrototypes(bool public_defs)
         }
     }
     if (!empty_section) {
+        SetFormatterRemarks(nullptr);
         EmptyLine();
     }
 }

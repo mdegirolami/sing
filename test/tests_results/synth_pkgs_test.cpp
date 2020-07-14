@@ -20,6 +20,5 @@ static void test()
 void test2(const pkg_type2 p0)
 {
     aa::bb::pkg_type tt = 0;            // needed by a public, but not in the declaration: private inclusion.
-
     assert(true);
 }

@@ -26,7 +26,6 @@ static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sin
 static sing::ptr<std::string> get_a_string()
 {
     sing::ptr<std::string> to_return(new sing::wrapper<std::string>("the_test"));
-
     return (to_return);
 }
 
@@ -45,7 +44,6 @@ int32_t synth_test()
     // consts declarations (heap and not-heap)
     sing::cptr<std::string> cs(new sing::wrapper<std::string>("test"));
     const int32_t ci = 123;
-
     gp = cs;
 
     // 0 initer of defined type
@@ -53,13 +51,11 @@ int32_t synth_test()
 
     // array of array passing (the first index is wildcharted)
     sing::array<sing::array<std::string, 4>, 4> arr;
-
     receiver(arr, &arr);
 
     // weak pointers
     gp = get_a_string();
     sing::cwptr<std::string> wp = gp;
-
     gp = nullptr;
 
     // default parms
@@ -84,7 +80,6 @@ int32_t synth_test()
     // if else and block
     {
         int32_t res = 0;
-
         for(int32_t idx = 0; idx < 10; ++idx) {
             if (idx == 0) {
                 res += 1;
@@ -103,7 +98,6 @@ int32_t synth_test()
     // positive/negative step
     // requiring conversions or not.
     int32_t it = 0;
-
     int64_t count = 0;
     for(int32_t idx = 1, idx__step = arr2[0]; idx__step > 0 ? (idx < 10) : (idx > 10); idx += idx__step, ++count) {
         ++it;
@@ -136,20 +130,17 @@ int32_t synth_test()
     sing::ptr<sing::array<int32_t, 10>> onheap(new sing::wrapper<sing::array<int32_t, 10>>);
     *onheap = {0};
     sing::ptr<sing::array<int32_t, 10>> ohp = onheap;
-
     (*ohp)[3] = 100;
     (*onheap)[3] += 1;
 
     // sizeof and dimof
     int32_t v_int32 = 0;
-
     v_int32 = sizeof(int8_t (*)(const int32_t a1));
     v_int32 = sizeof((*onheap)[2]);
 
     // simplifying &*
     sing::ptr<int32_t> intonheap(new sing::wrapper<int32_t>(10));
     sing::ptr<int32_t> iohp = intonheap;
-
     add_int3(3, 2, intonheap);
 
     forward(5);
@@ -157,7 +148,6 @@ int32_t synth_test()
     // using a const int to init an array size
     const int32_t arraydim = -100 / 2;
     sing::array<float, -arraydim * 2> fvec = {0};
-
     fvec[99] = (float)0;
 
     // automatic types
@@ -196,7 +186,6 @@ static void expressions()
     // sum of srings
     std::string s0 = "aaa";
     std::string s1 = "bbb";
-
     s0 = s0 + s1;
     c0 = 1.0f + std::complex<float>(0.0f, 1.0f);
     c1 = std::complex<double>(1.0, 1.0);
@@ -205,7 +194,6 @@ static void expressions()
     s0 = sing::s_format("%s%s%s%s", s0.c_str(), "f", "alse", s1.c_str());
     const bool b_for_print = true;
     const bool b_for_false = false;
-
     s0 = sing::s_format("%s%s%s", b_for_print ? "true" : "false", "true", b_for_false ? "true" : "false");
 
     // power + cases which require conversion
@@ -233,7 +221,6 @@ static void expressions()
     // relationals
     bool b0 = v_int8 > 3;
     bool b1 = sing::ismore(v_uint32, v_int32);
-
     b0 = sing::ismore_eq(v_uint32, v_int32);
     b0 = sing::isless(v_uint32, v_int32);
     b0 = sing::isless_eq(v_uint32, v_int32);
@@ -381,7 +368,6 @@ static void minmaxswap()
 {
     int32_t pippo = std::max(3, 6);
     int32_t pluto = std::min(3, 6);
-
     std::swap(pippo, pluto);
 }
 
