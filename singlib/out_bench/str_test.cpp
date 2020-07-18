@@ -20,7 +20,6 @@ bool str_test()
     }
 
     const std::string s2 = "pppppp akdsjlaj pp fddjkj ppp dsahjppp";
-
     if (sing::count(s2.c_str(), "ppp") != 4 || sing::count(s2.c_str(), "PPP", true) != 4) {
         return (false);
     }
@@ -42,7 +41,6 @@ bool str_test()
         return (false);
     }
     int32_t last_pos = 0;
-
     if (sing::compare_at(s0.c_str(), 4, "Ϗl", &last_pos) >= 0) {
         return (false);
     }
@@ -53,13 +51,11 @@ bool str_test()
     std::string part;
     std::string left;
     std::string extension;
-
     sing::split(s1.c_str(), ":/", &drive, &s1, sing::SplitMode::sm_drop);
     sing::split_any(s1.c_str(), "\\/", &s1, &part, sing::SplitMode::sm_separator_left);
     sing::rsplit(part.c_str(), ".", &left, &extension, sing::SplitMode::sm_separator_right);
     sing::rsplit_any(left.c_str(), "T", &left, &part, sing::SplitMode::sm_drop, true);
     const bool res0 = sing::split(s1.c_str(), "X", &drive, &s1, sing::SplitMode::sm_drop);
-
     if (drive != "c" || s1 != "inside/" || extension != ".ext" || left != "thedir:/" || part != "hefile.k" || res0) {
         return (false);
     }
@@ -67,7 +63,6 @@ bool str_test()
     // replacing
     s1 = "bla          bla       bla";
     const int32_t n0 = sing::replace(&s1, "bla", "alb", false, 5);
-
     if (s1 != "bla          alb       bla" || n0 != 16) {
         return (false);
     }
@@ -138,7 +133,6 @@ bool str_test()
     }
     s1 = "jhgfjgd123aaaa123kjhssfhg";
     NumberSelector selector;
-
     sing::cut_leading(&s1, selector);
     sing::cut_trailing(&s1, selector);
     if (s1 != "123aaaa123") {
@@ -162,7 +156,6 @@ bool str_test()
     // We dont test most find routines - we keep for good split already used them 
     s1 = "aaaaa1aaaaa2aaaaa345";
     sing::Range r0;
-
     sing::find_fnc(s1.c_str(), selector, &r0);
     if (r0.begin_ != 5 || r0.end_ != 6) {
         return (false);
@@ -190,7 +183,6 @@ bool str_test()
 
     // must fail
     const std::string s3 = "xxxxxxxxxxxxxxxxxxx";
-
     if (sing::find(s1.c_str(), "notpresent", &r0) || sing::find_any(s1.c_str(), "notpresent", &r0) || sing::rfind(s1.c_str(), "notpresent", &r0) ||
         sing::rfind_any(s1.c_str(), "notpresent", &r0) || sing::find_fnc(s3.c_str(), selector, &r0) || sing::rfind_fnc(s3.c_str(), selector, &r0)) {
         return (false);
@@ -235,20 +227,17 @@ bool str_test()
 
     // unicode encode/decode
     std::vector<int32_t> cps;
-
     sing::decode(s1.c_str(), &cps);
     if (sing::encode(cps) != s1) {
         return (false);
     }
     int32_t at = 5;
-
     if (sing::decode_one(s1.c_str(), &at) != 0x3CF || sing::encode_one(0x3CF) != "Ϗ" || at != 7) {
         return (false);
     }
     cps.push_back(0x800);
     cps.push_back(0x10000);
     std::vector<int32_t> cps_verify;
-
     sing::decode(sing::encode(cps).c_str(), &cps_verify);
     if (cps != cps_verify) {
         return (false);

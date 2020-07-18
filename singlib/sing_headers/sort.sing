@@ -1,0 +1,21 @@
+namespace sing;
+
+public interface sortable {
+    fn cmp(first i32, second i32) i32;
+}
+
+public fn index_init(out index [*]i32, size i32) void;
+public fn qsort(io index [*]i32, tosort sortable) void;
+public fn msort(io index [*]i32, tosort sortable) void;
+public fn ksort_u8(io index [*]i32, keys [*]u8) void;
+public fn ksort_i8(io index [*]i32, keys [*]i8) void;
+public fn ksort_u16(io index [*]i32, keys [*]u16) void;
+public fn ksort_i16(io index [*]i32, keys [*]i16) void;
+public fn ksort_u32(io index [*]i32, keys [*]u32) void;
+public fn ksort_i32(io index [*]i32, keys [*]i32) void;
+public fn ksort_u64(io index [*]i32, keys [*]u64) void;
+public fn ksort_i64(io index [*]i32, keys [*]i64) void;
+public fn ksort_f32(io index [*]i32, keys [*]f32) void;
+public fn ksort_f64(io index [*]i32, keys [*]f64) void;
+public fn ksort_bool(io index [*]i32, keys [*]bool) void;
+public fn ksort_string(io index [*]i32, keys [*]string, insensitive bool = false) void;

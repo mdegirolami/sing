@@ -2239,6 +2239,7 @@ void Parser::AttachCommentsToNodes(void)
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         nodes.push_back(root_->declarations_[ii]);
     }
+    if (nodes.size() == 0) return;
 
     // assign !!
     int currem = 0;

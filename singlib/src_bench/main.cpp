@@ -16,6 +16,7 @@ void speed_test(void);
 void test_map(void);
 void test_std_vectors(int size);
 bool str_test();
+bool SortTest(int veclen);
 
 int main() {
     //test_types_and_vars();
@@ -30,10 +31,15 @@ int main() {
     //speed_test();
     //test_map();
     //test_std_vectors(10);
-    if (str_test()) {
-        printf("string lib: passed\r\n");
+    // if (str_test()) {
+    //     printf("string lib: passed\r\n");
+    // } else {
+    //     printf("string lib: failed !!\r\n");
+    // }
+    if (SortTest(100)) {
+        printf("\nsort lib: passed\r\n");
     } else {
-        printf("string lib: failed !!\r\n");
+        printf("\nsort lib: failed !!\r\n");
     }
     return(0);
 }
