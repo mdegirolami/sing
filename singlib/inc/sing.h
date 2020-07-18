@@ -5,9 +5,8 @@
 #include <vector>
 #include <complex>
 #include <array>
-#include "sing_vectors.h"
+#include <string.h>
 #include "sing_pointers.h"
-#include "sing_string.h"
 #include "sing_map.h"
 #include "sing_arrays.h"
 
@@ -124,26 +123,6 @@ namespace sing {
     std::complex<float> string2complex64(const char *instring);
     std::complex<double> string2complex128(const char *instring);
 
-    // sing::string stuff
-    inline int64_t string2int(const string &instring) { return(string2int(instring.c_str())); }
-    inline uint64_t string2uint(const string &instring) { return(string2uint(instring.c_str())); }
-    inline double string2double(const string &instring) { return(string2double(instring.c_str())); }
-    inline std::complex<float> string2complex64(const string &instring) { return(string2complex64(instring.c_str())); }
-    inline std::complex<double> string2complex128(const string &instring) { return(string2complex128(instring.c_str())); }
-
-    string tostring(int value);
-    string tostring(long long value);
-    string tostring(unsigned int value);
-    string tostring(unsigned long long value);
-    //string tostring(float value);
-    string tostring(double value);
-    string tostring(std::complex<float> value);
-    string tostring(std::complex<double> value);
-    string tostring(bool value);
-
-    string add_strings(int count, ...);
-    string format(const char *format, ...);
-
     // std::string stuff
     inline int64_t string2int(const std::string &instring) { return(string2int(instring.c_str())); }
     inline uint64_t string2uint(const std::string &instring) { return(string2uint(instring.c_str())); }
@@ -155,9 +134,7 @@ namespace sing {
     std::string to_string(std::complex<double> value);
     std::string to_string(bool value);
 
-    std::string sfmt(const char *format, ...);
     std::string s_format(const char *fmt, ...);
-
 
     template<class T>
     inline int32_t sgn(T value)
@@ -173,14 +150,6 @@ namespace sing {
         if (value >= 0) return(value);
         return(-value);
     }
-
-    // template<class T>
-    // inline void xchg(T value1, T value2)
-    // {
-    //     T tmp = value1;
-    //     value1 = value2;
-    //     value2 = tmp;
-    // }
 
     inline float exp10(float value)
     {
@@ -243,10 +212,7 @@ namespace sing {
     {
         dst.insert(dst.end(), src.begin(), src.end());
     }
-
-void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context);
-
-
+    
 }   // namespace
 
 #endif

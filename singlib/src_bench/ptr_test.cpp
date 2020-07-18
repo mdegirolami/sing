@@ -19,7 +19,7 @@ sing::ptr<int[100]> Create(void) {                          // func Create() *[1
 
     // inited and dyna versions
     sing::ptr<int> single(new sing::wrapper<int>(3));
-    sing::ptr<sing::dvect<int>> ax(new sing::wrapper<sing::dvect<int>>);    // var ax[*]int;
+    sing::ptr<std::vector<int>> ax(new sing::wrapper<std::vector<int>>);    // var ax[*]int;
     *ax = {1, 2, 3};
 
     // check what happens on deletion

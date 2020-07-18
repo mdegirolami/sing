@@ -50,16 +50,6 @@ public:
     }  
 };
 
-template<>
-class hash_functor<sing::string>
-{
-public:
-    int32_t hash_(const sing::string &key) const
-    {
-        return(hash_from_bytes((const uint8_t*)key.data(), ::strlen(key.data())));
-    }  
-};
-
 template<class K, class V>
 class map {
 public:

@@ -29,12 +29,11 @@ rule aa
 # the library
 
 build sing.o        : cc $src_l/sing.cpp      
-build sing_string.o : cc $src_l/sing_string.cpp
 build str.o         : cc $src_l/str.cpp
 build str_tables.o  : cc $src_l/str_tables.cpp
 build sort.o        : cc $src_l/sort.cpp
 
-build $lib_target : aa  sing.o sing_string.o str.o str_tables.o sort.o
+build $lib_target : aa  sing.o str.o str_tables.o sort.o
 
 # the bench
 
@@ -48,8 +47,6 @@ build str_test.o : cc $temp/str_test.cpp
 build main.o             : cc $src_b/main.cpp
 build ptr_speed.o        : cc $src_b/ptr_speed.cpp
 build ptr_test.o         : cc $src_b/ptr_test.cpp  
-build string_test.o      : cc $src_b/string_test.cpp
-build UsingVectors.o     : cc $src_b/UsingVectors.cpp 
 build intrinsics.o       : cc $src_b/intrinsics.cpp
 build speed_test.o       : cc $src_b/speed_test.cpp
 build map_test.o         : cc $src_b/map_test.cpp
@@ -57,6 +54,6 @@ build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp
 build SortTest.o         : cc $src_b/SortTest.cpp 
 
 #link
-build $bin_target: ln main.o ptr_speed.o ptr_test.o string_test.o UsingVectors.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o $lib_target
+build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o $lib_target
 
 default $bin_target

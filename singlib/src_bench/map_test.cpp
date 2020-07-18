@@ -1,15 +1,12 @@
 #include "sing.h"
 
-//#define STRINGTYPE std::string
-#define STRINGTYPE sing::string
-
 void test_map(void)
 {
     // constructors, copy operator, compare operator
-    sing::map<STRINGTYPE, int32_t> map1;
-    sing::map<STRINGTYPE, int32_t> map2 = { {"uno", 100}, {"due", 25}, {"tre", 150} };
+    sing::map<std::string, int32_t> map1;
+    sing::map<std::string, int32_t> map2 = { {"uno", 100}, {"due", 25}, {"tre", 150} };
     map1 =  { {"uno", 100}, {"due", 25} };
-    sing::map<STRINGTYPE, int32_t> map3 = map1;
+    sing::map<std::string, int32_t> map3 = map1;
     bool eq1 = map1 == map2;
     map1 = map2;
     bool eq2 = map1 == map2;
@@ -37,7 +34,7 @@ void test_map(void)
     eq2 = map1.isempty();
     map3.insert("uno", 101);    // overwrite
     for (int ii = 0; ii < map3.size(); ++ii) {
-        const STRINGTYPE *key = &map3.key_at(ii);
+        const std::string *key = &map3.key_at(ii);
         int val = map3.value_at(ii);
         printf("\n%s = %d", key->c_str(), val);
     }

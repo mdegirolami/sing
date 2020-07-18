@@ -43,24 +43,5 @@ void test_intrinsics(void)
     t3 = atan(t3);
     t3 = log(t3);
     t3 = exp(t3);
-
-    sing::dvect<int32_t> arr = {5, 6, 7};
-    
-    arr.reserve(100);
-    test = arr.capacity();
-    arr.trim();
-
-    test = arr.size();
-    arr.resize(100);
-    arr.clear();
-    bool empty = arr.isempty();
-    arr.push_back(0);
-    test = arr.last();
-    arr.push_back(5);
-    arr.pop_back();
-    arr.insert(2, 10, 3);
-    arr.erase(3, 8);
-    sing::dvect<int32_t> arr2 = arr;
-    arr.append(arr2);
 }
 

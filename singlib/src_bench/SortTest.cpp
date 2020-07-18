@@ -4,6 +4,7 @@
 #include <time.h>
 #include <string>
 #include <algorithm>
+#include <string.h>
 
 class string_sorter : public sing::sortable {
 private:
