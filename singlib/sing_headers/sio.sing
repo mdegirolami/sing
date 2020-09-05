@@ -1,0 +1,99 @@
+namespace sing;
+
+// Stream interface is here to access files / memory or other sources in a uniform way. 
+public type Error i64;
+
+public enum SeekMode { seek_set, seek_cur, seek_end }
+
+public interface Stream {
+    fn mut get(out value u8) Error;
+    fn mut gets(maxbytes i64, out value string) Error;
+    fn mut read(count i64, out dst [*]u8, append bool = true) Error;
+    
+    fn mut put(value u8) Error;
+    fn mut puts(value string) Error;
+    fn mut write(count i64, src [*]u8, from i64 = 0) Error;
+    
+    fn mut seek(pos i64, mode SeekMode = SeekMode.seek_set) Error;
+    fn mut tell(out pos i64) Error;
+    
+    fn eof() bool;
+}
+
+public class FileInfo {
+public:
+    var last_modification_time u64;
+    var length i64;
+    var is_dir bool;   
+}
+
+// open modes are modes: "r", "w", "r+", "w+"
+public class File : Stream {
+public:
+    fn mut open(name string, mode string) Error;    
+    fn mut close() Error;
+    fn mut flush() Error;
+    fn mut getInfo(out nfo FileInfo) Error;
+    
+    fn finalize() void;
+}
+    
+// files free functions    
+public fn fileRemove(filename string) Error;
+public fn fileRename(old_name string, new_name string) Error;
+public fn fileGetInfo(filename string, out nfo FileInfo) Error;
+public fn fileRead(filename string, out dst [*]u8) Error;
+public fn fileReadText(filename string, out dst string) Error;
+public fn fileWrite(filename string, src [*]u8) Error;
+public fn fileWriteText(filename string, src string) Error;
+
+// paths    
+public fn setCwd(directory string) Error; 
+public fn getCwd() string;
+public fn pathSplit(fullname string, out drive string, out path string, out base string, out extension string) void;
+public fn pathJoin(drive string, path string, base string, extension string) string;
+public fn pathSplitAll(fullname string, out drive i32, out absolute bool, out parts [*]string) void;
+public fn pathJoinAll(drive i32, absolute bool, parts [*]string) string;
+public fn pathFix(path string) string;
+public fn pathSetExtension(io path string, ext string) void;
+public fn pathToAbsolute(out result string, relpath string, basepath string = "") bool;
+public fn pathToRelative(out result string, abspath string, basepath string = "") bool;
+public fn pathIsAbsolute(path string) bool;
+public fn pathGetDriveIdx(path string) i32;
+
+// filtering option for dirRead
+public enum DirFilter { regularOnly, dirOnly, listAll }
+
+// dirs
+public fn dirRead(directory string, namespec string, filter DirFilter, out names [*]string, out info [*]FileInfo, recursive bool = false) Error;
+public fn dirReadNames(directory string, namespec string, filter DirFilter, out names [*]string, recursive bool = false) Error; 
+public fn dirRemove(directory string, if_not_empty bool = false) Error;   
+public fn dirCreate(directory string) Error;
+
+// string formatting flags/options 
+public let f_dont_omit_plus = 1;
+public let f_zero_prefix = 2;
+public let f_uppercase = 4;
+public let f_align_left = 8;
+
+// string formatting 
+public fn formatInt(val i64, field_len i32, flags i32 = 0) string;
+public fn formatUnsigned(val u64, field_len i32, flags i32 = 0) string;
+public fn formatUnsignedHex(val u64, field_len i32, flags i32 = 0) string;
+public fn formatFloat(val f64, field_len i32, fract_digits i32 = 6, flags i32 = 0) string;
+public fn formatFloatSci(val f64, field_len i32, fract_digits i32 = 6, flags i32 = 0) string;
+public fn formatFloatEng(val f64, field_len i32, fract_digits i32 = 6, flags i32 = 0) string;
+public fn formatString(val string, field_len i32, flags i32 = 0) string;                      
+
+// string parsing
+public fn parseInt(out value i64, from string, at i32, out last_pos i32) bool;
+public fn parseUnsignedInt(out value u64, from string, at i32, out last_pos i32) bool;
+public fn parseUnsignedHex(out value u64, from string, at i32, out last_pos i32) bool;
+public fn parseFloat(out value f64, from string, at i32, out last_pos i32) bool;
+
+// console
+public fn print(value string) void;
+public fn printError(value string) void;
+public fn scrClear() void;
+public fn kbdGet() string;
+public fn kbdInput(max_digits i32 = 0) string;

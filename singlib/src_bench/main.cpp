@@ -16,6 +16,7 @@ void test_map(void);
 void test_std_vectors(int size);
 bool str_test();
 bool SortTest(int veclen);
+bool sio_test();
 
 int main() {
     //test_types_and_vars();
@@ -34,7 +35,12 @@ int main() {
     // } else {
     //     printf("string lib: failed !!\r\n");
     // }
-    if (SortTest(100)) {
+    // if (SortTest(100)) {
+    //     printf("\nsort lib: passed\r\n");
+    // } else {
+    //     printf("\nsort lib: failed !!\r\n");
+    // }
+    if (sio_test()) {
         printf("\nsort lib: passed\r\n");
     } else {
         printf("\nsort lib: failed !!\r\n");

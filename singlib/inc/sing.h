@@ -1,11 +1,11 @@
 #ifndef SING_H_
 #define SING_H_
 
-#include <cstdint>
+#include <stdint.h>
+#include <string.h>
 #include <vector>
 #include <complex>
-#include <array>
-#include <string.h>
+#include <string>
 #include "sing_pointers.h"
 #include "sing_map.h"
 #include "sing_arrays.h"

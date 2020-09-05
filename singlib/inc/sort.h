@@ -25,6 +25,6 @@ void ksort_i64(std::vector<int32_t> *index, const std::vector<int64_t> &keys);
 void ksort_f32(std::vector<int32_t> *index, const std::vector<float> &keys);
 void ksort_f64(std::vector<int32_t> *index, const std::vector<double> &keys);
 void ksort_bool(std::vector<int32_t> *index, const std::vector<bool> &keys);
-void ksort_string(std::vector<int32_t> *index, const std::vector<std::string> &keys, bool insensitive = false);
+void ksort_string(std::vector<int32_t> *index, const std::vector<std::string> &keys, const bool insensitive = false);
 
 }   // namespace

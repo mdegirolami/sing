@@ -32,16 +32,19 @@ build sing.o        : cc $src_l/sing.cpp
 build str.o         : cc $src_l/str.cpp
 build str_tables.o  : cc $src_l/str_tables.cpp
 build sort.o        : cc $src_l/sort.cpp
+build sio.o          : cc $src_l/sio.cpp
 
-build $lib_target : aa  sing.o str.o str_tables.o sort.o
+build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o
 
 # the bench
 
 # sing->temp
 build $temp/str_test.h | $temp/str_test.cpp : sc $singsrc/str_test.sing
+build $temp/sio_test.h | $temp/sio_test.cpp : sc $singsrc/sio_test.sing
 
 # temp -> obj
 build str_test.o : cc $temp/str_test.cpp
+build sio_test.o  : cc $temp/sio_test.cpp
 
 # cpp -> obj
 build main.o             : cc $src_b/main.cpp
@@ -54,6 +57,6 @@ build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp
 build SortTest.o         : cc $src_b/SortTest.cpp 
 
 #link
-build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o $lib_target
+build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o $lib_target
 
 default $bin_target
