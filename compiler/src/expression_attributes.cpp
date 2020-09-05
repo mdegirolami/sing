@@ -818,6 +818,8 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
                 } else {
                     typematch = ITypedefSolver::OK;
                 }
+            } else {
+                typematch = ITypedefSolver::KO;
             }
         }
         if (typematch == ITypedefSolver::KO) {
