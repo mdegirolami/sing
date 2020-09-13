@@ -12,17 +12,6 @@ static bool test_unicode();
 
 bool sio_test()
 {
-    sing::File ff;
-    //var nfo sio.FileInfo;
-    int64_t len = 0;
-
-    ff.open("D:/SteamLibrary/steamapps/common/SleepingDogsDefinitiveEdition/GameHD.big", "r");
-    if (ff.seek(0, sing::SeekMode::seek_end) != 0) {
-        return (false);
-    }
-    ff.tell(&len);
-    ff.close();
-
     // fix the starting conditions
     sing::fileRemove("testfile1.txt");
     sing::fileRemove("犬.txt");

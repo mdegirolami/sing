@@ -17,6 +17,7 @@ void test_std_vectors(int size);
 bool str_test();
 bool SortTest(int veclen);
 bool sio_test();
+bool sys_test();
 
 int main() {
     //test_types_and_vars();
@@ -40,10 +41,15 @@ int main() {
     // } else {
     //     printf("\nsort lib: failed !!\r\n");
     // }
-    if (sio_test()) {
-        printf("\nsort lib: passed\r\n");
+    // if (sio_test()) {
+    //     printf("\nsio lib: passed\r\n");
+    // } else {
+    //     printf("\nsio lib: failed !!\r\n");
+    // }
+    if (sys_test()) {
+        printf("\nsys lib: passed\r\n");
     } else {
-        printf("\nsort lib: failed !!\r\n");
+        printf("\nssys lib: failed !!\r\n");
     }
     return(0);
 }

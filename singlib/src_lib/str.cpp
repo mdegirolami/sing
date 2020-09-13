@@ -966,4 +966,58 @@ static const char *skip_chars_reverse(const char *start, int32_t num_chars, cons
     return(base);
 }
 
+#ifdef _WIN32
+
+std::string utf16_to_8(const wchar_t *src)
+{
+    std::string result;
+    const wchar_t *scan;
+
+    int len = 0;
+    for (scan = src; *scan != 0; ++scan);
+    result.reserve((scan - src) * 3 + 1); // worst case
+
+    for (;;) {
+        wchar_t value = *src++;
+        if (value == 0) {
+            return(result);
+        } else if (value < 0xd800) {
+            cp_encode(&result, value);
+            //result += encode_one(value);
+        } else if (value < 0xdc00) {
+            wchar_t v_low = *src;
+            if (v_low >= 0xdc00 && v_low < 0xe000) {
+                cp_encode(&result, 0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
+                // result += encode_one(0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
+                ++src;
+            } else {
+                cp_encode(&result, value);
+                // result += encode_one(value);
+            }
+        } else {
+            cp_encode(&result, value);
+            // result += encode_one(value);
+        }
+    }
+}
+
+void utf8_to_16(const char *src, std::vector<wchar_t> *dst)
+{
+    int32_t at = 0;
+    int32_t cp;
+
+    dst->reserve(dst->size() + strlen(src) + 1);
+    do {
+        cp = decode_one(src, &at);
+        if (cp < 0x10000) {
+            dst->push_back(cp);
+        } else {
+            dst->push_back(((cp >> 10) & 0x3ff) + 0xd800);
+            dst->push_back((cp & 0x3ff) + 0xdc00);
+        }
+    } while (cp != 0);
+}
+
+#endif
+
 }   // namespace

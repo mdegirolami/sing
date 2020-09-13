@@ -33,6 +33,7 @@ Error dirRemove_r(WIN32_FIND_DATAW *desc, wchar_t *buffer);
 void synthFormat(char *dst, int32_t flags, const char *base_conversion, int size, int fract = -1);
 std::string formatFloatExp(const double val, int32_t exp_mult, const int32_t field_len, const int32_t fract_digits, const int32_t flags);
 
+// implemented in str.cpp
 #ifdef _WIN32
 std::string utf16_to_8(const wchar_t *src);
 void utf8_to_16(const char *src, std::vector<wchar_t> *dst);
@@ -206,11 +207,11 @@ Error File::write(const int64_t count, const std::vector<uint8_t> &src, const in
     dirswitch((FILE*)fd_, &dir_, dir_write); 
     int64_t towrite = std::min(count, (int64_t)src.size() - from);
     if (towrite > 0) {
-        if (fwrite(&src[0] + from, towrite, 1, (FILE*)fd_) == 1) {
-            return(0);
+        if (fwrite(&src[0] + from, towrite, 1, (FILE*)fd_) != 1) {
+            return(-1);
        }
     }
-    return(-1);
+    return(0);
 }
 
 Error File::seek(const int64_t pos, const SeekMode &mode)
@@ -1074,9 +1075,9 @@ void printError(const char *value)
 void scrClear()
 {
 #ifdef _WIN32
-    system("cls");
+    ::system("cls");
 #else    
-    system("clear");
+    ::system("clear");
 #endif
 }
 
@@ -1118,55 +1119,5 @@ std::string kbdInput(const int32_t max_digits)
     } while (cc != '\r' && cc != '\n');
     return(result);
 }
-
-#ifdef _WIN32
-
-std::string utf16_to_8(const wchar_t *src)
-{
-    std::string result;
-    const wchar_t *scan;
-
-    int len = 0;
-    for (scan = src; *scan != 0; ++scan);
-    result.reserve((scan - src) * 3 + 1); // worst case
-
-    for (;;) {
-        wchar_t value = *src++;
-        if (value == 0) {
-            return(result);
-        } else if (value < 0xd800) {
-            result += encode_one(value);
-        } else if (value < 0xdc00) {
-            wchar_t v_low = *src;
-            if (v_low >= 0xdc00 && v_low < 0xe000) {
-                result += encode_one(0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
-                ++src;
-            } else {
-                result += encode_one(value);
-            }
-        } else {
-            result += encode_one(value);
-        }
-    }
-}
-
-void utf8_to_16(const char *src, std::vector<wchar_t> *dst)
-{
-    int32_t at = 0;
-    int32_t cp;
-
-    dst->reserve(dst->size() + strlen(src) + 1);
-    do {
-        cp = decode_one(src, &at);
-        if (cp < 0x10000) {
-            dst->push_back(cp);
-        } else {
-            dst->push_back(((cp >> 10) & 0x3ff) + 0xd800);
-            dst->push_back((cp & 0x3ff) + 0xdc00);
-        }
-    } while (cp != 0);
-}
-
-#endif
 
 } // namespace

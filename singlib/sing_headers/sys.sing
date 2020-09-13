@@ -1,0 +1,51 @@
+namespace sing;
+requires "sio";
+
+// processes
+public type Phandle u64;
+
+public fn system(command string) void;
+public fn execute(command string) Phandle;
+public fn automate(command string, out sstdin *sio.Stream, out sstdout *sio.Stream, out sstderr *sio.Stream) Phandle; 
+public fn waitCommandExit(handle Phandle) i32; 
+public fn exit(retcode i32) void;
+
+// time management
+public fn wait(microseconds i32) void;
+public fn time() i64;                               // seconds resolution
+public fn clock() i64;
+public fn clocksDiff(before i64, after i64) i64;    // microseconds
+
+public class BrokenTime {
+public:
+    var second i8;   // seconds after the minute — [0, 60]
+    var minute i8;   // minutes after the hour — [0, 59]
+    var hour i8;     // hours since midnight — [0, 23]
+    var mday i8;     // day of the month — [1, 31]
+    var mon  i8;     // months since January — [0, 11]
+    var wday i8;     // days since Sunday — [0, 6]
+    var yday i16;    // days since January 1 — [0, 365]
+    var savings bool;  // Daylight Saving Time flag
+    var year i32;    // years since 1900
+
+    fn mut fillLocal(time i64) void;
+    fn mut fillUtc(time i64) void;
+}
+
+// random numbers
+public class RndGen {
+    var seed i64 = 0;
+public:
+    fn mut rndSeed(seed i64) void;
+    fn mut rndU64() u64;
+    fn mut rnd() f64;
+    fn mut rndNorm() f64;
+}
+
+// environment
+public fn getenv(name string) string;
+public fn setenv(name string, value string, override bool = true) void;
+
+// mix
+public fn validate(condition bool) void;
+
