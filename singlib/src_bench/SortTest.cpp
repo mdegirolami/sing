@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <string.h>
 
-class string_sorter : public sing::sortable {
+class string_sorter : public sing::Sortable {
 private:
     const std::vector<std::string> *keys_;
 public:
@@ -17,7 +17,7 @@ public:
     void setvector(const std::vector<std::string> *vv) { keys_ = vv; }
 };
 
-class int32_t_sorter : public sing::sortable {
+class int32_t_sorter : public sing::Sortable {
 private:
     const std::vector<std::int32_t> *keys_;
 public:
@@ -81,7 +81,7 @@ bool SortTest(int veclen)
     // qsort int32_t
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::qsort(&index, is);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -94,7 +94,7 @@ bool SortTest(int veclen)
     // qsort string
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::qsort(&index, ss);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -107,7 +107,7 @@ bool SortTest(int veclen)
     // msort int32_t
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::msort(&index, is);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -120,7 +120,7 @@ bool SortTest(int veclen)
     // msort string
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::msort(&index, ss);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -133,7 +133,7 @@ bool SortTest(int veclen)
     // ksorts
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_u8(&index, uint8_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -145,7 +145,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_i8(&index, int8_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -157,7 +157,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_u16(&index, uint16_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -169,7 +169,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_i16(&index, int16_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -181,7 +181,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_u32(&index, uint32_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -193,7 +193,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_i32(&index, int32_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -205,7 +205,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_u64(&index, uint64_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -217,7 +217,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_i64(&index, int64_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -229,7 +229,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_f32(&index, float_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -241,7 +241,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_f64(&index, double_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -253,7 +253,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_bool(&index, bool_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));
@@ -265,7 +265,7 @@ bool SortTest(int veclen)
 
     start = clock();
     for (int ii = 0; ii < prescaler; ++ii) {
-        sing::index_init(&index, veclen);
+        sing::indexInit(&index, veclen);
         sing::ksort_string(&index, string_keys);
     }
     et.push_back((clock() - start) * 1000.0f / (CLOCKS_PER_SEC * prescaler));

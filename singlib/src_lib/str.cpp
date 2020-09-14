@@ -80,7 +80,7 @@ std::string toupper(const char *src)
             }
             ++src;
         } else {
-            cp_encode(&dst, cc_toupper(cp_decode_impl(&src)));
+            cp_encode(&dst, ccToupper(cp_decode_impl(&src)));
         }
     }
     return(dst);
@@ -99,7 +99,7 @@ std::string tolower(const char *src)
             }
             ++src;
         } else {
-            cp_encode(&dst, cc_tolower(cp_decode_impl(&src)));
+            cp_encode(&dst, ccTolower(cp_decode_impl(&src)));
         }
     }
     return(dst);
@@ -118,7 +118,7 @@ std::string totitle(const char *src)
             }
             ++src;
         } else {
-            cp_encode(&dst, cc_totitle(cp_decode_impl(&src)));
+            cp_encode(&dst, ccTotitle(cp_decode_impl(&src)));
         }
     }
     return(dst);
@@ -130,14 +130,14 @@ int32_t compare(const char *first, const char *second, const bool insensitive)
         return(strcmp(first, second));
     }
     while (*first != 0 && *second != 0) {
-        int32_t cpf = cc_toupper(cp_decode(&first));
-        int32_t cps = cc_toupper(cp_decode(&second));
+        int32_t cpf = ccToupper(cp_decode(&first));
+        int32_t cps = ccToupper(cp_decode(&second));
         if (cpf != cps) return(cpf - cps);
     }
     return(*first - *second);
 }
 
-int32_t compare_at(const char *first, const int32_t at_pos, const char *contained, int32_t *end_pos, const bool insensitive)
+int32_t compareAt(const char *first, const int32_t at_pos, const char *contained, int32_t *end_pos, const bool insensitive)
 {
     const char *scan = first + at_pos;
     if (!insensitive) {
@@ -151,8 +151,8 @@ int32_t compare_at(const char *first, const int32_t at_pos, const char *containe
         }
     } else {
         while (*scan != 0 && *contained != 0) {
-            int32_t cpf = cc_toupper(cp_decode(&scan));
-            int32_t cps = cc_toupper(cp_decode(&contained));
+            int32_t cpf = ccToupper(cp_decode(&scan));
+            int32_t cps = ccToupper(cp_decode(&contained));
             if (cpf != cps) {
                 *end_pos = scan - first;
                 return(cpf - cps);
@@ -176,7 +176,7 @@ bool split_any(const char *src, const char *splitter,
            std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
 {
     Range range;
-    find_any(src, splitter, &range, insensitive);
+    findAny(src, splitter, &range, insensitive);
     return(split_impl(src, range, left, right, mode));    
 }
 
@@ -188,11 +188,11 @@ bool rsplit(const char *src, const char *splitter,
     return(split_impl(src, range, left, right, mode));    
 }
 
-bool rsplit_any(const char *src, const char *splitter, 
+bool rsplitAny(const char *src, const char *splitter, 
            std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
 {
     Range range;
-    rfind_any(src, splitter, &range, insensitive);
+    rfindAny(src, splitter, &range, insensitive);
     return(split_impl(src, range, left, right, mode));    
 }
 
@@ -235,7 +235,7 @@ int32_t replace(std::string *src, const char *old_sub, const char *new_sub, cons
     return(range.end_);
 }
 
-int32_t replace_all(std::string *src, const char *old_sub, const char *new_sub, const bool insensitive)
+int32_t replaceAll(std::string *src, const char *old_sub, const char *new_sub, const bool insensitive)
 {
     Range range;
     int new_len = strlen(new_sub);
@@ -317,36 +317,36 @@ int32_t replace_all(std::string *src, const char *old_sub, const char *new_sub, 
     return(all_pos.size());
 }
 
-bool has_prefix(const char *src, const char *prefix, const bool insensitive)
+bool hasPrefix(const char *src, const char *prefix, const bool insensitive)
 {
     int32_t end;
-    return(compare_at(src, 0, prefix, &end, insensitive) == 0);
+    return(compareAt(src, 0, prefix, &end, insensitive) == 0);
 }
 
-bool has_suffix(const char *src, const char *suffix, const bool insensitive)
+bool hasSuffix(const char *src, const char *suffix, const bool insensitive)
 {
     int32_t end;
-    return(compare_at(src, skip_bkw(src, npos, numchars(suffix)), suffix, &end, insensitive) == 0);
+    return(compareAt(src, skipBkw(src, npos, numchars(suffix)), suffix, &end, insensitive) == 0);
 }
 
-void cut_prefix(std::string *str, const char *prefix, const bool insensitive)
+void cutPrefix(std::string *str, const char *prefix, const bool insensitive)
 {
     int32_t end;
-    if (compare_at(str->c_str(), 0, prefix, &end, insensitive) == 0); {
+    if (compareAt(str->c_str(), 0, prefix, &end, insensitive) == 0); {
         str->erase(0, end);
     } 
 }
 
-void cut_suffix(std::string *str, const char *suffix, const bool insensitive)
+void cutSuffix(std::string *str, const char *suffix, const bool insensitive)
 {
     int32_t end;
-    int32_t suffix_pos = skip_bkw(str->c_str(), npos, numchars(suffix));
-    if (compare_at(str->c_str(), suffix_pos, suffix, &end, insensitive) == 0) {
+    int32_t suffix_pos = skipBkw(str->c_str(), npos, numchars(suffix));
+    if (compareAt(str->c_str(), suffix_pos, suffix, &end, insensitive) == 0) {
         str->resize(suffix_pos);
     }
 }
 
-void cut_leading_spaces(std::string *str)
+void cutLeadingSpaces(std::string *str)
 {
     const char *base = str->c_str();
     const char *src = base;
@@ -359,14 +359,14 @@ void cut_leading_spaces(std::string *str)
             *str = "";
             return;
         }
-    } while (is_space(cp));
+    } while (isSpace(cp));
     int to_erase = cutpoint - base;
     if (to_erase > 0) {
         str->erase(0, to_erase);
     }
 }
 
-void cut_trailing_spaces(std::string *str)
+void cutTrailingSpaces(std::string *str)
 {
     int top = str->length() - 1;
     int idx = 0;
@@ -375,7 +375,7 @@ void cut_trailing_spaces(std::string *str)
     for (idx = top; idx >= 0; --idx) {        
         src = str->c_str() + idx;
         if (starting(src)) {
-            if (!is_space(cp_decode(&src))) break;
+            if (!isSpace(cp_decode(&src))) break;
         }
     }
     if (idx < 0) {
@@ -385,7 +385,7 @@ void cut_trailing_spaces(std::string *str)
     }
 }
 
-void cut_leading(std::string *str, const Selector &to_keep)
+void cutLeading(std::string *str, const Selector &to_keep)
 {
     const char *base = str->c_str();
     const char *src = base;
@@ -398,14 +398,14 @@ void cut_leading(std::string *str, const Selector &to_keep)
             *str = "";
             return;
         }
-    } while (!to_keep.is_good(cp));
+    } while (!to_keep.isGood(cp));
     int to_erase = cutpoint - base;
     if (to_erase > 0) {
         str->erase(0, to_erase);
     }
 }
 
-void cut_trailing(std::string *str, const Selector &to_keep)
+void cutTrailing(std::string *str, const Selector &to_keep)
 {
     int top = str->length() - 1;
     int idx = 0;
@@ -415,7 +415,7 @@ void cut_trailing(std::string *str, const Selector &to_keep)
         src = str->c_str() + idx;
         if (starting(src)) {
             int32_t cp = cp_decode(&src);
-            if (to_keep.is_good(cp)) break;
+            if (to_keep.isGood(cp)) break;
         }
     }
     if (idx < 0) {
@@ -425,21 +425,21 @@ void cut_trailing(std::string *str, const Selector &to_keep)
     }
 }
 
-void cut_fun(std::string *str, const Selector &to_keep)
+void cutFun(std::string *str, const Selector &to_keep)
 {
     const char *src = str->c_str();
     std::string dst;
     int32_t cp = 0;
     do {
         cp = cp_decode(&src);
-        if (to_keep.is_good(cp)) {
+        if (to_keep.isGood(cp)) {
             cp_encode(&dst, cp);
         }
     } while (cp != 0);
     *str = dst;
 }
 
-void make_utf8_compliant(std::string *str)
+void makeUtf8Compliant(std::string *str)
 {
     const char *src = str->c_str();
     std::string dst;
@@ -455,7 +455,7 @@ bool find(const char *src, const char *to_search, Range *range, const bool insen
 {
     for (int idx = std::max(from, 0); src[idx] != 0; ++idx) {
         if (starting(src + idx)) {
-            if (compare_at(src, idx, to_search, &range->end_, insensitive) == 0) {
+            if (compareAt(src, idx, to_search, &range->end_, insensitive) == 0) {
                 range->begin_ = idx;
                 return(true);
             }
@@ -490,8 +490,8 @@ bool find(const char *src, const char *to_search, Range *range, const bool insen
 //                 const char *scan = src + idx;
 //                 const char *contained = to_search;
 //                 while (*scan != 0 && *contained != 0) {
-//                     int32_t cpf = cc_toupper(cp_decode(&scan));
-//                     int32_t cps = cc_toupper(cp_decode(&contained));
+//                     int32_t cpf = ccToupper(cp_decode(&scan));
+//                     int32_t cps = ccToupper(cp_decode(&contained));
 //                     if (cpf != cps) break;
 //                 }
 //                 if (*contained == 0) {
@@ -516,7 +516,7 @@ bool rfind(const char *src, const char *to_search, Range *range, const bool inse
     }
     for (int32_t idx = top - 1; idx >= 0; --idx) {
         if (starting(src + idx)) {
-            if (compare_at(src, idx, to_search, &range->end_, insensitive) == 0) {
+            if (compareAt(src, idx, to_search, &range->end_, insensitive) == 0) {
                 if (range->end_ <= top) {
                     range->begin_ = idx;
                     return(true);
@@ -527,14 +527,14 @@ bool rfind(const char *src, const char *to_search, Range *range, const bool inse
     return(false);
 }
 
-bool find_any(const char *src, const char *to_search, Range *range, const bool insensitive, const int32_t from)
+bool findAny(const char *src, const char *to_search, Range *range, const bool insensitive, const int32_t from)
 {
     std::vector<int32_t>    to_match;
 
     decode(to_search, &to_match);    
     if (insensitive) {
         for (int ii = 0; ii < to_match.size(); ++ii) {
-            to_match[ii] = cc_toupper(to_match[ii]);
+            to_match[ii] = ccToupper(to_match[ii]);
         }
     }
     for (int32_t idx = std::max(from, 0); src[idx] != 0; ++idx) {
@@ -542,7 +542,7 @@ bool find_any(const char *src, const char *to_search, Range *range, const bool i
         if (starting(fd)) {
             int32_t cp = cp_decode(&fd);
             if (insensitive) {
-                cp = cc_toupper(cp);
+                cp = ccToupper(cp);
             }
             for (int32_t idx2 = 0; idx2 < to_match.size(); ++idx2) {            
                 if (cp == to_match[idx2]) {
@@ -556,7 +556,7 @@ bool find_any(const char *src, const char *to_search, Range *range, const bool i
     return(false);
 }
 
-bool rfind_any(const char *src, const char *to_search, Range *range, const bool insensitive, const int32_t from)
+bool rfindAny(const char *src, const char *to_search, Range *range, const bool insensitive, const int32_t from)
 {
     std::vector<int32_t>    to_match;
     int32_t                 top;
@@ -564,7 +564,7 @@ bool rfind_any(const char *src, const char *to_search, Range *range, const bool 
     decode(to_search, &to_match);    
     if (insensitive) {
         for (int ii = 0; ii < to_match.size(); ++ii) {
-            to_match[ii] = cc_toupper(to_match[ii]);
+            to_match[ii] = ccToupper(to_match[ii]);
         }
     }
     if (from == npos) {
@@ -577,7 +577,7 @@ bool rfind_any(const char *src, const char *to_search, Range *range, const bool 
         if (starting(fd)) {
             int32_t cp = cp_decode(&fd);
             if (insensitive) {
-                cp = cc_toupper(cp);
+                cp = ccToupper(cp);
             }
             for (int32_t idx2 = 0; idx2 < to_match.size(); ++idx2) {            
                 if (cp == to_match[idx2]) {
@@ -591,13 +591,13 @@ bool rfind_any(const char *src, const char *to_search, Range *range, const bool 
     return(false);
 }
 
-bool find_fnc(const char *src, const Selector &matches, Range *range, const int32_t from)
+bool findFnc(const char *src, const Selector &matches, Range *range, const int32_t from)
 {
     for (int32_t idx = std::max(from, 0); src[idx] != 0; ++idx) {
         const char *fd = src + idx;
         if (starting(fd)) {
             int32_t cp = cp_decode(&fd);
-            if (matches.is_good(cp)) {
+            if (matches.isGood(cp)) {
                 range->begin_ = idx;
                 range->end_ = fd - src;
                 return(true);
@@ -607,7 +607,7 @@ bool find_fnc(const char *src, const Selector &matches, Range *range, const int3
     return(false);    
 }
 
-bool rfind_fnc(const char *src, const Selector &matches, Range *range, const int32_t from)
+bool rfindFnc(const char *src, const Selector &matches, Range *range, const int32_t from)
 {
     int32_t top;
 
@@ -620,7 +620,7 @@ bool rfind_fnc(const char *src, const Selector &matches, Range *range, const int
         const char *fd = src + idx;
         if (starting(fd)) {
             int32_t cp = cp_decode(&fd);
-            if (matches.is_good(cp)) {
+            if (matches.isGood(cp)) {
                 range->begin_ = idx;
                 range->end_ = fd - src;
                 return(true);
@@ -696,12 +696,12 @@ void erase_range(std::string *str, const Range &range)
     erase(str, range.begin_, range.end_);
 }
 
-int32_t skip_fwd(const char *str, const int32_t start, const int32_t numchars)
+int32_t skipFwd(const char *str, const int32_t start, const int32_t numchars)
 {
     return(skip_chars_forward(str + start, numchars) - str);
 }
 
-int32_t skip_bkw(const char *str, const int32_t start, const int32_t numchars)
+int32_t skipBkw(const char *str, const int32_t start, const int32_t numchars)
 {
     if (start == npos) {
         return(skip_chars_reverse(str + strlen(str), numchars, str) - str);
@@ -727,7 +727,7 @@ void decode(const char *src, std::vector<int32_t> *dst)
     }
 }
 
-int32_t decode_one(const char *src, int32_t *at)
+int32_t decodeOne(const char *src, int32_t *at)
 {
     const char *scan = src + *at;
     int32_t value = cp_decode(&scan);
@@ -735,29 +735,29 @@ int32_t decode_one(const char *src, int32_t *at)
     return(value);
 }
 
-std::string encode_one(const int32_t src) 
+std::string encodeOne(const int32_t src) 
 {
     std::string out;
     cp_encode(&out, src);
     return(out);
 }
 
-bool is_digit(const int32_t cc)
+bool isDigit(const int32_t cc)
 {
     return(cc >= '0' && cc <= '9');
 }
 
-bool is_xdigit(const int32_t cc)
+bool isXdigit(const int32_t cc)
 {
     return(cc >= '0' && cc <= '9' || cc >= 'a' && cc <= 'f' || cc >= 'A' && cc <= 'F');
 }
 
-bool is_letter(const int32_t cc)
+bool isLetter(const int32_t cc)
 {
     return(get_record(cc) != nullptr);
 }
 
-bool is_upper(const int32_t cc)
+bool isUpper(const int32_t cc)
 {
     const CaseRange *desc = get_record(cc);
     if (desc == nullptr) return(false);
@@ -765,7 +765,7 @@ bool is_upper(const int32_t cc)
     return (delta == 0 || delta == UpperLower && ((cc - desc->low) & 1) == 0);
 }
 
-bool is_lower(const int32_t cc)
+bool isLower(const int32_t cc)
 {
     const CaseRange *desc = get_record(cc);
     if (desc == nullptr) return(false);
@@ -773,7 +773,7 @@ bool is_lower(const int32_t cc)
     return (delta == 0 || delta == UpperLower && ((cc - desc->low) & 1) != 0);
 }
 
-bool is_title(const int32_t cc)
+bool isTitle(const int32_t cc)
 {
     const CaseRange *desc = get_record(cc);
     if (desc == nullptr) return(false);
@@ -781,7 +781,7 @@ bool is_title(const int32_t cc)
     return (delta == 0 || delta == UpperLower && ((cc - desc->low) & 1) == 0);
 }
 
-bool is_space(const int32_t cc)
+bool isSpace(const int32_t cc)
 {
     switch (cc) {
     case '\t':
@@ -803,7 +803,7 @@ bool is_space(const int32_t cc)
     return(cc >= 0x2000 && cc <= 0x200a);
 }
 
-int32_t cc_toupper(const int32_t cc)
+int32_t ccToupper(const int32_t cc)
 {
     if ((cc & 0x80) == 0) {
         if (cc >= 'a' && cc <= 'z') {
@@ -820,7 +820,7 @@ int32_t cc_toupper(const int32_t cc)
     return(cc + delta);
 }
 
-int32_t cc_tolower(const int32_t cc)
+int32_t ccTolower(const int32_t cc)
 {
     if ((cc & 0x80) == 0) {
         if (cc >= 'A' && cc <= 'Z') {
@@ -837,7 +837,7 @@ int32_t cc_tolower(const int32_t cc)
     return(cc + delta);
 }
 
-int32_t cc_totitle(const int32_t cc)
+int32_t ccTotitle(const int32_t cc)
 {
     if ((cc & 0x80) == 0) {
         if (cc >= 'a' && cc <= 'z') {
@@ -983,20 +983,20 @@ std::string utf16_to_8(const wchar_t *src)
             return(result);
         } else if (value < 0xd800) {
             cp_encode(&result, value);
-            //result += encode_one(value);
+            //result += encodeOne(value);
         } else if (value < 0xdc00) {
             wchar_t v_low = *src;
             if (v_low >= 0xdc00 && v_low < 0xe000) {
                 cp_encode(&result, 0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
-                // result += encode_one(0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
+                // result += encodeOne(0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
                 ++src;
             } else {
                 cp_encode(&result, value);
-                // result += encode_one(value);
+                // result += encodeOne(value);
             }
         } else {
             cp_encode(&result, value);
-            // result += encode_one(value);
+            // result += encodeOne(value);
         }
     }
 }
@@ -1008,7 +1008,7 @@ void utf8_to_16(const char *src, std::vector<wchar_t> *dst)
 
     dst->reserve(dst->size() + strlen(src) + 1);
     do {
-        cp = decode_one(src, &at);
+        cp = decodeOne(src, &at);
         if (cp < 0x10000) {
             dst->push_back(cp);
         } else {

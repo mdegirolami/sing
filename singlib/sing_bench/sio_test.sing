@@ -226,27 +226,27 @@ fn test_dirfileop() bool
     // dir listings
     var names [*]string;
     var nfos [*]sio.FileInfo;
-    if (sio.dirRead("dir1", "*.*", sio.DirFilter.regularOnly, names, nfos) != 0) {
+    if (sio.dirRead("dir1", "*.*", sio.DirFilter.regular, names, nfos) != 0) {
         return(false);
     }
     if (names.size() < 1 || names[0] != "dir1/in_dir1.txt") {
         return(false);
     }
     names.clear();
-    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.dirOnly, names) != 0) {
+    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.directory, names) != 0) {
         return(false);
     }
     if (names.size() < 1 || names[0] != "dir1/dir2") {
         return(false);
     }
     names.clear();
-    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.listAll, names) != 0) {
+    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.all, names) != 0) {
         return(false);
     }
     if (names.size() != 2) {
         return(false);
     }
-    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.listAll, names, true:recursive) != 0) {
+    if (sio.dirReadNames("dir1", "*.*", sio.DirFilter.all, names, true:recursive) != 0) {
         return(false);
     }
     if (names.size() != 3) {
@@ -543,7 +543,7 @@ fn test_unicode() bool
     // dir list
     var names [*]string;
     var nfos [*]sio.FileInfo;
-    if (sio.dirRead("その上", "*.*", sio.DirFilter.listAll, names, nfos, true:recursive) != 0) {
+    if (sio.dirRead("その上", "*.*", sio.DirFilter.all, names, nfos, true:recursive) != 0) {
         return(false);
     }
     if (names.size() != 2) {

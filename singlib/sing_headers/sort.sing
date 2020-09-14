@@ -1,12 +1,12 @@
 namespace sing;
 
-public interface sortable {
+public interface Sortable {
     fn cmp(first i32, second i32) i32;
 }
 
-public fn index_init(out index [*]i32, size i32) void;
-public fn qsort(io index [*]i32, tosort sortable) void;
-public fn msort(io index [*]i32, tosort sortable) void;
+public fn indexInit(out index [*]i32, size i32) void;
+public fn qsort(io index [*]i32, tosort Sortable) void;
+public fn msort(io index [*]i32, tosort Sortable) void;
 public fn ksort_u8(io index [*]i32, keys [*]u8) void;
 public fn ksort_i8(io index [*]i32, keys [*]i8) void;
 public fn ksort_u16(io index [*]i32, keys [*]u16) void;

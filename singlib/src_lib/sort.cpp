@@ -12,14 +12,14 @@ struct s_range
     int32_t count;
 };
 
-static void quick_sort_recursive(int32_t *vv, size_t count, int depth, const sortable &tosort);
-static void quick_sort_stack(int32_t *vv, size_t count, const sortable &tosort);
-static size_t sort_around_pivot(int32_t *vv, size_t count, const sortable &tosort);
-static void merge_multiple(const int32_t *src, size_t v_size, size_t total_size, std::vector<int32_t> *dst, const sortable &tosort);
-static void merge(const int32_t *src0, size_t src0_size, const int32_t *src1, size_t src1_size, std::vector<int32_t> *dst, const sortable &tosort);
+static void quick_sort_recursive(int32_t *vv, size_t count, int depth, const Sortable &tosort);
+static void quick_sort_stack(int32_t *vv, size_t count, const Sortable &tosort);
+static size_t sort_around_pivot(int32_t *vv, size_t count, const Sortable &tosort);
+static void merge_multiple(const int32_t *src, size_t v_size, size_t total_size, std::vector<int32_t> *dst, const Sortable &tosort);
+static void merge(const int32_t *src0, size_t src0_size, const int32_t *src1, size_t src1_size, std::vector<int32_t> *dst, const Sortable &tosort);
 static void bucket_sort(std::vector<int32_t> *index, std::vector<int32_t> *aux, const uint8_t *keys, size_t stride, size_t count, bool is_signed);
 
-void index_init(std::vector<int32_t> *index, const int32_t size)
+void indexInit(std::vector<int32_t> *index, const int32_t size)
 {
     index->clear();
     index->reserve(size);
@@ -28,7 +28,7 @@ void index_init(std::vector<int32_t> *index, const int32_t size)
     }
 }
 
-void qsort(std::vector<int32_t> *index, const sortable &tosort)
+void qsort(std::vector<int32_t> *index, const Sortable &tosort)
 {
     if (index->size() < 512) {
         quick_sort_recursive(index->data(), index->size(), 0, tosort);
@@ -37,7 +37,7 @@ void qsort(std::vector<int32_t> *index, const sortable &tosort)
     }
 }
 
-static void quick_sort_recursive(int32_t *vv, size_t count, int depth, const sortable &tosort)
+static void quick_sort_recursive(int32_t *vv, size_t count, int depth, const Sortable &tosort)
 {
     // trivial cases
     if (count < 2) return;
@@ -69,7 +69,7 @@ static void quick_sort_recursive(int32_t *vv, size_t count, int depth, const sor
     }
 }
 
-static void quick_sort_stack(int32_t *vv, size_t count, const sortable &tosort)
+static void quick_sort_stack(int32_t *vv, size_t count, const Sortable &tosort)
 {
     std::vector<s_range> stack;
 
@@ -93,7 +93,7 @@ static void quick_sort_stack(int32_t *vv, size_t count, const sortable &tosort)
     }
 }
 
-static size_t sort_around_pivot(int32_t *vv, size_t count, const sortable &tosort)
+static size_t sort_around_pivot(int32_t *vv, size_t count, const Sortable &tosort)
 {
     int32_t tmp;
     size_t lower = 0;
@@ -148,7 +148,7 @@ static size_t sort_around_pivot(int32_t *vv, size_t count, const sortable &tosor
     return(pivot);
 }
 
-void msort(std::vector<int32_t> *index, const sortable &tosort)
+void msort(std::vector<int32_t> *index, const Sortable &tosort)
 {
     std::vector<int32_t> aux;
     if (index->size() > 2) aux.reserve(index->size());
@@ -168,7 +168,7 @@ void msort(std::vector<int32_t> *index, const sortable &tosort)
 
 // the source is total_size long and split in internally ordered chunks, each one v_size long
 // the destination must be made on chunks  v_size * 2 long
-static void merge_multiple(const int32_t *src, size_t v_size, size_t total_size, std::vector<int32_t> *dst, const sortable &tosort)
+static void merge_multiple(const int32_t *src, size_t v_size, size_t total_size, std::vector<int32_t> *dst, const Sortable &tosort)
 {
     size_t dst_size = v_size << 1;  // length of destination chunks
     const int32_t *src0 = src;
@@ -189,7 +189,7 @@ static void merge_multiple(const int32_t *src, size_t v_size, size_t total_size,
     }
 }
 
-static void merge(const int32_t *src0, size_t src0_size, const int32_t *src1, size_t src1_size, std::vector<int32_t> *dst, const sortable &tosort)
+static void merge(const int32_t *src0, size_t src0_size, const int32_t *src1, size_t src1_size, std::vector<int32_t> *dst, const Sortable &tosort)
 {
     size_t scan0 = 0;
     size_t scan1 = 0;
@@ -328,7 +328,7 @@ void ksort_bool(std::vector<int32_t> *index, const std::vector<bool> &keys)
     }
 }
 
-class istring_sorter : public sortable {
+class istring_sorter : public Sortable {
 private:
     const std::vector<std::string> *keys_;
 public:
@@ -339,7 +339,7 @@ public:
     void setvector(const std::vector<std::string> *vv) { keys_ = vv; }
 };
 
-class string_sorter : public sortable {
+class string_sorter : public Sortable {
 private:
     const std::vector<std::string> *keys_;
 public:

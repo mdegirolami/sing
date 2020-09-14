@@ -62,7 +62,7 @@ public fn pathIsAbsolute(path string) bool;
 public fn pathGetDriveIdx(path string) i32;
 
 // filtering option for dirRead
-public enum DirFilter { regularOnly, dirOnly, listAll }
+public enum DirFilter { regular, directory, all }
 
 // dirs
 public fn dirRead(directory string, namespec string, filter DirFilter, out names [*]string, out info [*]FileInfo, recursive bool = false) Error;

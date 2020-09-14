@@ -2,9 +2,9 @@
 
 char NumberSelector::id__;
 
-bool NumberSelector::is_good(const int32_t cp) const
+bool NumberSelector::isGood(const int32_t cp) const
 {
-    return (sing::is_digit(cp));
+    return (sing::isDigit(cp));
 }
 
 bool str_test()
@@ -41,7 +41,7 @@ bool str_test()
         return (false);
     }
     int32_t last_pos = 0;
-    if (sing::compare_at(s0.c_str(), 4, "Ϗl", &last_pos) >= 0) {
+    if (sing::compareAt(s0.c_str(), 4, "Ϗl", &last_pos) >= 0) {
         return (false);
     }
 
@@ -54,7 +54,7 @@ bool str_test()
     sing::split(s1.c_str(), ":/", &drive, &s1, sing::SplitMode::sm_drop);
     sing::split_any(s1.c_str(), "\\/", &s1, &part, sing::SplitMode::sm_separator_left);
     sing::rsplit(part.c_str(), ".", &left, &extension, sing::SplitMode::sm_separator_right);
-    sing::rsplit_any(left.c_str(), "T", &left, &part, sing::SplitMode::sm_drop, true);
+    sing::rsplitAny(left.c_str(), "T", &left, &part, sing::SplitMode::sm_drop, true);
     const bool res0 = sing::split(s1.c_str(), "X", &drive, &s1, sing::SplitMode::sm_drop);
     if (drive != "c" || s1 != "inside/" || extension != ".ext" || left != "thedir:/" || part != "hefile.k" || res0) {
         return (false);
@@ -76,69 +76,68 @@ bool str_test()
     }
 
     s1 = "ppppp ppp ppp";
-    if (sing::replace_all(&s1, "PPP", "aaa", true) != 3 || s1 != "aaapp aaa aaa") {
+    if (sing::replaceAll(&s1, "PPP", "aaa", true) != 3 || s1 != "aaapp aaa aaa") {
         return (false);
     }
 
     s1 = "ppppp ppp ppp";
-    sing::replace_all(&s1, "ppp", "p");
+    sing::replaceAll(&s1, "ppp", "p");
     if (s1 != "ppp p p") {
         return (false);
     }
 
     s1 = "ppppp ppp ppp";
-    sing::replace_all(&s1, "ppp", "longer");
+    sing::replaceAll(&s1, "ppp", "longer");
     if (s1 != "longerpp longer longer") {
         return (false);
     }
 
-    if (sing::replace_all(&s1, "longeR", "longer") != 0) {
+    if (sing::replaceAll(&s1, "longeR", "longer") != 0) {
         return (false);
     }
 
     // prefix/suffix
     s1 = "pre str post";
-    if (sing::has_prefix(s1.c_str(), "ll") || sing::has_prefix(s1.c_str(), "PRE") || sing::has_suffix(s1.c_str(), "ll") ||
-        sing::has_suffix(s1.c_str(), "POST")) {
+    if (sing::hasPrefix(s1.c_str(), "ll") || sing::hasPrefix(s1.c_str(), "PRE") || sing::hasSuffix(s1.c_str(), "ll") || sing::hasSuffix(s1.c_str(), "POST")) {
         return (false);
     }
-    if (!sing::has_prefix(s1.c_str(), "pre") || !sing::has_prefix(s1.c_str(), "PRE", true) || !sing::has_suffix(s1.c_str(), "post") ||
-        !sing::has_suffix(s1.c_str(), "POST", true)) {
+    if (!sing::hasPrefix(s1.c_str(), "pre") || !sing::hasPrefix(s1.c_str(), "PRE", true) || !sing::hasSuffix(s1.c_str(), "post") ||
+        !sing::hasSuffix(s1.c_str(), "POST", true)) {
         return (false);
     }
-    sing::cut_prefix(&s1, "pre");
-    sing::cut_suffix(&s1, "post");
+    sing::cutPrefix(&s1, "pre");
+    sing::cutSuffix(&s1, "post");
     if (s1 != " str ") {
         return (false);
     }
 
     // cleanup
-    sing::cut_leading_spaces(&s1);
+    sing::cutLeadingSpaces(&s1);
     if (s1 != "str ") {
         return (false);
     }
-    sing::cut_trailing_spaces(&s1);
+    sing::cutTrailingSpaces(&s1);
     if (s1 != "str") {
         return (false);
     }
     s1 = "     \t    ";
-    sing::cut_leading_spaces(&s1);
+    sing::cutLeadingSpaces(&s1);
     if (s1 != "") {
         return (false);
     }
     s1 = "     \t    ";
-    sing::cut_trailing_spaces(&s1);
+    sing::cutTrailingSpaces(&s1);
     if (s1 != "") {
         return (false);
     }
     s1 = "jhgfjgd123aaaa123kjhssfhg";
     NumberSelector selector;
-    sing::cut_leading(&s1, selector);
-    sing::cut_trailing(&s1, selector);
+    sing::cutLeading(&s1, selector);
+    sing::cutTrailing(&s1, selector);
     if (s1 != "123aaaa123") {
         return (false);
     }
-    sing::cut_fun(&s1, selector);
+    sing::cutFun(&s1, selector);
     if (s1 != "123123") {
         return (false);
     }
@@ -147,7 +146,7 @@ bool str_test()
     if (s1 == "ϏϏϏϏ" || sing::compare(s1.c_str(), "ϏϏϏϏ", true) != 0) {
         return (false);
     }
-    sing::make_utf8_compliant(&s1);
+    sing::makeUtf8Compliant(&s1);
     if (s1 != "ϏϏϏϏ") {
         return (false);
     }
@@ -156,19 +155,19 @@ bool str_test()
     // We dont test most find routines - we keep for good split already used them 
     s1 = "aaaaa1aaaaa2aaaaa345";
     sing::Range r0;
-    sing::find_fnc(s1.c_str(), selector, &r0);
+    sing::findFnc(s1.c_str(), selector, &r0);
     if (r0.begin_ != 5 || r0.end_ != 6) {
         return (false);
     }
-    sing::find_fnc(s1.c_str(), selector, &r0, r0.end_);
+    sing::findFnc(s1.c_str(), selector, &r0, r0.end_);
     if (r0.begin_ != 11) {
         return (false);
     }
-    sing::rfind_fnc(s1.c_str(), selector, &r0);
+    sing::rfindFnc(s1.c_str(), selector, &r0);
     if (r0.begin_ != 19 || r0.end_ != 20) {
         return (false);
     }
-    sing::rfind_fnc(s1.c_str(), selector, &r0, r0.begin_);
+    sing::rfindFnc(s1.c_str(), selector, &r0, r0.begin_);
     if (r0.begin_ != 18) {
         return (false);
     }
@@ -176,15 +175,15 @@ bool str_test()
     if (r0.begin_ != 4) {
         return (false);
     }
-    sing::find_any(s1.c_str(), "A", &r0, true, 5);
+    sing::findAny(s1.c_str(), "A", &r0, true, 5);
     if (r0.begin_ != 6) {
         return (false);
     }
 
     // must fail
     const std::string s3 = "xxxxxxxxxxxxxxxxxxx";
-    if (sing::find(s1.c_str(), "notpresent", &r0) || sing::find_any(s1.c_str(), "notpresent", &r0) || sing::rfind(s1.c_str(), "notpresent", &r0) ||
-        sing::rfind_any(s1.c_str(), "notpresent", &r0) || sing::find_fnc(s3.c_str(), selector, &r0) || sing::rfind_fnc(s3.c_str(), selector, &r0)) {
+    if (sing::find(s1.c_str(), "notpresent", &r0) || sing::findAny(s1.c_str(), "notpresent", &r0) || sing::rfind(s1.c_str(), "notpresent", &r0) ||
+        sing::rfindAny(s1.c_str(), "notpresent", &r0) || sing::findFnc(s3.c_str(), selector, &r0) || sing::rfindFnc(s3.c_str(), selector, &r0)) {
         return (false);
     }
 
@@ -218,10 +217,10 @@ bool str_test()
         return (false);
     }
     s1 = "12345ϏϏϏϏϏ67890";
-    if (sing::skip_fwd(s1.c_str(), 5, 5) != 15 || sing::skip_fwd(s1.c_str(), 5, 100) != 20) {
+    if (sing::skipFwd(s1.c_str(), 5, 5) != 15 || sing::skipFwd(s1.c_str(), 5, 100) != 20) {
         return (false);
     }
-    if (sing::skip_bkw(s1.c_str(), 15, 6) != 4 || sing::skip_bkw(s1.c_str(), sing::npos, 100) != 0) {
+    if (sing::skipBkw(s1.c_str(), 15, 6) != 4 || sing::skipBkw(s1.c_str(), sing::npos, 100) != 0) {
         return (false);
     }
 
@@ -232,7 +231,7 @@ bool str_test()
         return (false);
     }
     int32_t at = 5;
-    if (sing::decode_one(s1.c_str(), &at) != 0x3CF || sing::encode_one(0x3CF) != "Ϗ" || at != 7) {
+    if (sing::decodeOne(s1.c_str(), &at) != 0x3CF || sing::encodeOne(0x3CF) != "Ϗ" || at != 7) {
         return (false);
     }
     cps.push_back(0x800);
@@ -244,24 +243,23 @@ bool str_test()
     }
 
     // char classify
-    if (sing::is_digit(0x2f) || sing::is_digit(0x3a) || !sing::is_digit(0x30) || !sing::is_digit(0x39)) {
+    if (sing::isDigit(0x2f) || sing::isDigit(0x3a) || !sing::isDigit(0x30) || !sing::isDigit(0x39)) {
         return (false);
     }
-    if (sing::is_xdigit(0x2f) || sing::is_xdigit(0x3a) || !sing::is_xdigit(0x30) || !sing::is_xdigit(0x39) || sing::is_xdigit(0x40) || sing::is_xdigit(
-        0x47) || !sing::is_xdigit(0x41) || !sing::is_xdigit(0x46) || sing::is_xdigit(0x60) || sing::is_xdigit(0x67) || !sing::is_xdigit(0x61) ||
-        !sing::is_xdigit(0x66)) {
+    if (sing::isXdigit(0x2f) || sing::isXdigit(0x3a) || !sing::isXdigit(0x30) || !sing::isXdigit(0x39) || sing::isXdigit(0x40) || sing::isXdigit(0x47) ||
+        !sing::isXdigit(0x41) || !sing::isXdigit(0x46) || sing::isXdigit(0x60) || sing::isXdigit(0x67) || !sing::isXdigit(0x61) || !sing::isXdigit(0x66)) {
         return (false);
     }
-    if (sing::is_letter(0x20) || !sing::is_letter(0x41) || !sing::is_letter(0x61) || !sing::is_letter(0x3CF) || !sing::is_letter(sing::cc_tolower(0x3CF))) {
+    if (sing::isLetter(0x20) || !sing::isLetter(0x41) || !sing::isLetter(0x61) || !sing::isLetter(0x3CF) || !sing::isLetter(sing::ccTolower(0x3CF))) {
         return (false);
     }
-    if (sing::is_upper(0x20) || !sing::is_upper(0x41) || sing::is_upper(0x61) || !sing::is_upper(0x3CF) || sing::is_upper(sing::cc_tolower(0x3CF))) {
+    if (sing::isUpper(0x20) || !sing::isUpper(0x41) || sing::isUpper(0x61) || !sing::isUpper(0x3CF) || sing::isUpper(sing::ccTolower(0x3CF))) {
         return (false);
     }
-    if (sing::is_lower(0x20) || sing::is_lower(0x41) || !sing::is_lower(0x61) || sing::is_lower(0x3CF) || !sing::is_lower(sing::cc_tolower(0x3CF))) {
+    if (sing::isLower(0x20) || sing::isLower(0x41) || !sing::isLower(0x61) || sing::isLower(0x3CF) || !sing::isLower(sing::ccTolower(0x3CF))) {
         return (false);
     }
-    if (sing::cc_tolower(0x41) != 0x61) {
+    if (sing::ccTolower(0x41) != 0x61) {
         return (false);
     }
 

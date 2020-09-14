@@ -374,11 +374,11 @@ void pathSplit(const char *fullname, std::string *drive, std::string *path, std:
     } else {
         *drive = "";
     }
-    if (!rsplit_any(fullname, "/\\", path, base, SplitMode::sm_separator_left)) {
+    if (!rsplitAny(fullname, "/\\", path, base, SplitMode::sm_separator_left)) {
         *base = fullname;
         *path = "";
     }
-    if (!rsplit_any(base->c_str(), ".", base, extension, SplitMode::sm_drop)) {
+    if (!rsplitAny(base->c_str(), ".", base, extension, SplitMode::sm_drop)) {
         *extension = "";
     }
 }
@@ -388,17 +388,17 @@ std::string pathJoin(const char *drive, const char *path, const char *base, cons
     std::string full;
     full.reserve(strlen(drive) + strlen(path) + strlen(base) + strlen(extension) + 3);
     full = drive;
-    if (!has_suffix(full.c_str(), ":")) {
+    if (!hasSuffix(full.c_str(), ":")) {
         full += ':';
     }
     full += path;
-    if (!has_suffix(full.c_str(), "/") && !has_suffix(full.c_str(), "\\")) {
+    if (!hasSuffix(full.c_str(), "/") && !hasSuffix(full.c_str(), "\\")) {
         full += '/';
     }
     full += base;
     int num_pts = 0;
-    if (has_suffix(full.c_str(), ".")) num_pts++;
-    if (has_prefix(extension, ".")) num_pts++;
+    if (hasSuffix(full.c_str(), ".")) num_pts++;
+    if (hasPrefix(extension, ".")) num_pts++;
     if (num_pts == 0) {
         full += '.';
     } else if (num_pts == 2) {
@@ -677,7 +677,7 @@ Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const wchar_t *name
             wcscpy(buffer + clip, desc->cFileName);
 
             bool isdir = (desc->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-            if (!(filter == DirFilter::regularOnly && isdir || filter == DirFilter::dirOnly && !isdir)) {
+            if (!(filter == DirFilter::regular && isdir || filter == DirFilter::directory && !isdir)) {
                 names->push_back(utf16_to_8(buffer));
                 if (info != nullptr) {
                     FileInfo nfo;

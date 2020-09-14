@@ -4,9 +4,9 @@ public class NumberSelector : str.Selector
 {
 }
 
-fn NumberSelector.is_good(cp i32) bool
+fn NumberSelector.isGood(cp i32) bool
 {
-    return(str.is_digit(cp));
+    return(str.isDigit(cp));
 }
 
 public fn str_test() bool
@@ -43,7 +43,7 @@ public fn str_test() bool
         return(false);
     }
     var last_pos i32;
-    if (str.compare_at(s0, 4, "Ϗl", last_pos) >= 0) {
+    if (str.compareAt(s0, 4, "Ϗl", last_pos) >= 0) {
         return(false);
     }
 
@@ -56,7 +56,7 @@ public fn str_test() bool
     str.split(s1, ":/", drive, s1, str.SplitMode.sm_drop);
     str.split_any(s1, "\\/", s1, part, str.SplitMode.sm_separator_left);
     str.rsplit(part, ".", left, extension, str.SplitMode.sm_separator_right);
-    str.rsplit_any(left, "T", left, part, str.SplitMode.sm_drop, true : insensitive);
+    str.rsplitAny(left, "T", left, part, str.SplitMode.sm_drop, true : insensitive);
     let res0 = str.split(s1, "X", drive, s1, str.SplitMode.sm_drop);
     if (drive != "c" || s1 != "inside/" || extension != ".ext" || left != "thedir:/" || part != "hefile.k" || res0) {
         return(false);
@@ -78,67 +78,67 @@ public fn str_test() bool
     }
 
     s1 = "ppppp ppp ppp";
-    if (str.replace_all(s1, "PPP", "aaa", true) != 3 || s1 != "aaapp aaa aaa") {
+    if (str.replaceAll(s1, "PPP", "aaa", true) != 3 || s1 != "aaapp aaa aaa") {
         return(false);
     }
 
     s1 = "ppppp ppp ppp";
-    str.replace_all(s1, "ppp", "p");
+    str.replaceAll(s1, "ppp", "p");
     if (s1 != "ppp p p") {
         return(false);
     }
 
     s1 = "ppppp ppp ppp";
-    str.replace_all(s1, "ppp", "longer");
+    str.replaceAll(s1, "ppp", "longer");
     if (s1 != "longerpp longer longer") {
         return(false);
     }
 
-    if (str.replace_all(s1, "longeR", "longer") != 0) {
+    if (str.replaceAll(s1, "longeR", "longer") != 0) {
         return(false);
     }
 
     // prefix/suffix
     s1 = "pre str post";
-    if (str.has_prefix(s1, "ll") || str.has_prefix(s1, "PRE") || str.has_suffix(s1, "ll") || str.has_suffix(s1, "POST")) {
+    if (str.hasPrefix(s1, "ll") || str.hasPrefix(s1, "PRE") || str.hasSuffix(s1, "ll") || str.hasSuffix(s1, "POST")) {
         return(false);
     }
-    if (!str.has_prefix(s1, "pre") || !str.has_prefix(s1, "PRE", true) || !str.has_suffix(s1, "post") || !str.has_suffix(s1, "POST", true)) {
+    if (!str.hasPrefix(s1, "pre") || !str.hasPrefix(s1, "PRE", true) || !str.hasSuffix(s1, "post") || !str.hasSuffix(s1, "POST", true)) {
         return(false);
     }
-    str.cut_prefix(s1, "pre");
-    str.cut_suffix(s1, "post");
+    str.cutPrefix(s1, "pre");
+    str.cutSuffix(s1, "post");
     if (s1 != " str ") {
         return(false);
     }
 
     // cleanup
-    str.cut_leading_spaces(s1);
+    str.cutLeadingSpaces(s1);
     if (s1 != "str ") {
         return(false);
     }
-    str.cut_trailing_spaces(s1);
+    str.cutTrailingSpaces(s1);
     if (s1 != "str") {
         return(false);
     }
     s1 = "     \t    ";
-    str.cut_leading_spaces(s1);
+    str.cutLeadingSpaces(s1);
     if (s1 != "") {
         return(false);
     }
     s1 = "     \t    ";
-    str.cut_trailing_spaces(s1);
+    str.cutTrailingSpaces(s1);
     if (s1 != "") {
         return(false);
     }
     s1 = "jhgfjgd123aaaa123kjhssfhg";
     var selector NumberSelector;
-    str.cut_leading(s1, selector);
-    str.cut_trailing(s1, selector);
+    str.cutLeading(s1, selector);
+    str.cutTrailing(s1, selector);
     if (s1 != "123aaaa123") {
         return(false);
     }
-    str.cut_fun(s1, selector);
+    str.cutFun(s1, selector);
     if (s1 != "123123") {
         return(false);
     }
@@ -147,7 +147,7 @@ public fn str_test() bool
     if (s1 == "ϏϏϏϏ" || str.compare(s1, "ϏϏϏϏ", true) != 0) {
         return(false);
     }
-    str.make_utf8_compliant(s1);
+    str.makeUtf8Compliant(s1);
     if (s1 != "ϏϏϏϏ") {
         return(false);
     }
@@ -156,19 +156,19 @@ public fn str_test() bool
     // We dont test most find routines - we keep for good split already used them 
     s1 = "aaaaa1aaaaa2aaaaa345";
     var r0 str.Range;
-    str.find_fnc(s1, selector, r0);
+    str.findFnc(s1, selector, r0);
     if (r0.begin != 5 || r0.end != 6) {
         return(false);
     }
-    str.find_fnc(s1, selector, r0, r0.end);
+    str.findFnc(s1, selector, r0, r0.end);
     if (r0.begin != 11) {
         return(false);
     }
-    str.rfind_fnc(s1, selector, r0);
+    str.rfindFnc(s1, selector, r0);
     if (r0.begin != 19 || r0.end != 20) {
         return(false);
     }
-    str.rfind_fnc(s1, selector, r0, r0.begin);
+    str.rfindFnc(s1, selector, r0, r0.begin);
     if (r0.begin != 18) {
         return(false);
     }
@@ -176,7 +176,7 @@ public fn str_test() bool
     if (r0.begin != 4) {
         return(false);
     }
-    str.find_any(s1, "A", r0, true : insensitive, 5);
+    str.findAny(s1, "A", r0, true : insensitive, 5);
     if (r0.begin != 6) {
         return(false);
     }
@@ -184,9 +184,9 @@ public fn str_test() bool
 
     // must fail
     let s3 = "xxxxxxxxxxxxxxxxxxx";
-    if (str.find(s1, "notpresent", r0) || str.find_any(s1, "notpresent", r0) ||
-        str.rfind(s1, "notpresent", r0) || str.rfind_any(s1, "notpresent", r0) ||
-        str.find_fnc(s3, selector, r0) || str.rfind_fnc(s3, selector, r0)) {
+    if (str.find(s1, "notpresent", r0) || str.findAny(s1, "notpresent", r0) ||
+        str.rfind(s1, "notpresent", r0) || str.rfindAny(s1, "notpresent", r0) ||
+        str.findFnc(s3, selector, r0) || str.rfindFnc(s3, selector, r0)) {
         return(false);
     }
 
@@ -219,10 +219,10 @@ public fn str_test() bool
         return(false);
     }
     s1 = "12345ϏϏϏϏϏ67890";
-    if (str.skip_fwd(s1, 5, 5) != 15 || str.skip_fwd(s1, 5, 100) != 20) {
+    if (str.skipFwd(s1, 5, 5) != 15 || str.skipFwd(s1, 5, 100) != 20) {
         return(false);
     }
-    if (str.skip_bkw(s1, 15, 6) != 4 || str.skip_bkw(s1, str.npos, 100) != 0) {
+    if (str.skipBkw(s1, 15, 6) != 4 || str.skipBkw(s1, str.npos, 100) != 0) {
         return(false);
     }
 
@@ -233,7 +233,7 @@ public fn str_test() bool
         return(false);
     }
     var at = 5;
-    if (str.decode_one(s1, at) != 0x3CF || str.encode_one(0x3CF) != "Ϗ" || at != 7) {
+    if (str.decodeOne(s1, at) != 0x3CF || str.encodeOne(0x3CF) != "Ϗ" || at != 7) {
         return(false);
     }
     cps.push_back(0x800);
@@ -245,27 +245,27 @@ public fn str_test() bool
     }
 
     // char classify
-    if (str.is_digit(0x2f) || str.is_digit(0x3a) || !str.is_digit(0x30) || !str.is_digit(0x39)) {
+    if (str.isDigit(0x2f) || str.isDigit(0x3a) || !str.isDigit(0x30) || !str.isDigit(0x39)) {
         return(false);
     }
-    if (str.is_xdigit(0x2f) || str.is_xdigit(0x3a) || !str.is_xdigit(0x30) || !str.is_xdigit(0x39) ||
-        str.is_xdigit(0x40) || str.is_xdigit(0x47) || !str.is_xdigit(0x41) || !str.is_xdigit(0x46) ||
-        str.is_xdigit(0x60) || str.is_xdigit(0x67) || !str.is_xdigit(0x61) || !str.is_xdigit(0x66)) {
+    if (str.isXdigit(0x2f) || str.isXdigit(0x3a) || !str.isXdigit(0x30) || !str.isXdigit(0x39) ||
+        str.isXdigit(0x40) || str.isXdigit(0x47) || !str.isXdigit(0x41) || !str.isXdigit(0x46) ||
+        str.isXdigit(0x60) || str.isXdigit(0x67) || !str.isXdigit(0x61) || !str.isXdigit(0x66)) {
         return(false);
     }
-    if (str.is_letter(0x20) || !str.is_letter(0x41) || !str.is_letter(0x61) || 
-        !str.is_letter(0x3CF) || !str.is_letter(str.cc_tolower(0x3CF))) {
+    if (str.isLetter(0x20) || !str.isLetter(0x41) || !str.isLetter(0x61) || 
+        !str.isLetter(0x3CF) || !str.isLetter(str.ccTolower(0x3CF))) {
         return(false);
     }
-    if (str.is_upper(0x20) || !str.is_upper(0x41) || str.is_upper(0x61) || 
-        !str.is_upper(0x3CF) || str.is_upper(str.cc_tolower(0x3CF))) {
+    if (str.isUpper(0x20) || !str.isUpper(0x41) || str.isUpper(0x61) || 
+        !str.isUpper(0x3CF) || str.isUpper(str.ccTolower(0x3CF))) {
         return(false);
     }
-    if (str.is_lower(0x20) || str.is_lower(0x41) || !str.is_lower(0x61) || 
-        str.is_lower(0x3CF) || !str.is_lower(str.cc_tolower(0x3CF))) {
+    if (str.isLower(0x20) || str.isLower(0x41) || !str.isLower(0x61) || 
+        str.isLower(0x3CF) || !str.isLower(str.ccTolower(0x3CF))) {
         return(false);
     }
-    if (str.cc_tolower(0x41) != 0x61) {
+    if (str.ccTolower(0x41) != 0x61) {
         return(false);
     }
 

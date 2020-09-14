@@ -59,7 +59,7 @@ public:
 };
 
 // filtering option for dirRead
-enum class DirFilter {regularOnly, dirOnly, listAll};
+enum class DirFilter {regular, directory, all};
 
 // string formatting flags/options 
 static const int32_t f_dont_omit_plus = 1;
