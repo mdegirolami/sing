@@ -4,8 +4,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <direct.h>
-#include <windows.h>
 #include <conio.h>
+
+#ifdef _WIN32    
+#include <windows.h>
+#else
+#include <termios.h>
+#include <dirent.h>
+#endif
 
 // NOTE:
 // to be added to the automatically generated File class declaration: 
@@ -27,9 +33,6 @@ static const int MAX_SING_PATH = 1024;     // some bigger than standard
 void pathCleanParts(std::vector<std::string> &parts, bool absolute);
 void addBlanks(std::string *dst, int32_t count);
 void addChars(std::string *dst, char cc, int32_t count);
-Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const wchar_t *namespec, const DirFilter &filter, 
-                    std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive);
-Error dirRemove_r(WIN32_FIND_DATAW *desc, wchar_t *buffer);
 void synthFormat(char *dst, int32_t flags, const char *base_conversion, int size, int fract = -1);
 std::string formatFloatExp(const double val, int32_t exp_mult, const int32_t field_len, const int32_t fract_digits, const int32_t flags);
 
@@ -37,6 +40,13 @@ std::string formatFloatExp(const double val, int32_t exp_mult, const int32_t fie
 #ifdef _WIN32
 std::string utf16_to_8(const wchar_t *src);
 void utf8_to_16(const char *src, std::vector<wchar_t> *dst);
+Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const DirFilter &filter, 
+                    std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive);
+Error dirRemove_r(WIN32_FIND_DATAW *desc, wchar_t *buffer);
+#else
+Error dirReadCore_r(char *buffer, const DirFilter &filter, 
+                    std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive);
+Error dirRemove_r(char *buffer);
 #endif
 
 inline void dirswitch(FILE *fd, int *olddir, int dir) 
@@ -618,6 +628,8 @@ void pathCleanParts(std::vector<std::string> &parts, bool absolute)
     parts.resize(dst);
 }
 
+#ifdef _WIN32
+
 // returns 100 nS units since Jan 1st 1601
 uint64_t packFILETIME(FILETIME *time)
 {
@@ -628,53 +640,48 @@ uint64_t packFILETIME(FILETIME *time)
     return(wintime/10000000 - 11644473600);
 }
 
-Error dirRead(const char *directory, const char *namespec, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
+Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
     WIN32_FIND_DATAW     desc;   // pretty big structure and there is no reason to have an item per recursion.
     std::vector<wchar_t> buffer;
-    std::vector<wchar_t> spec;
 
     info->clear();
     names->clear();
     buffer.reserve(MAX_SING_PATH + 1);
     utf8_to_16(directory, &buffer);
-    utf8_to_16(namespec, &spec);        
-    return(dirReadCore_r(&desc, buffer.data(), spec.data(), filter, names, info, recursive));
+    return(dirReadCore_r(&desc, buffer.data(), filter, names, info, recursive));
 }
 
-Error dirReadNames(const char *directory, const char *namespec, const DirFilter &filter, std::vector<std::string> *names, bool recursive)
+Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, bool recursive)
 {
     WIN32_FIND_DATAW     desc;   // pretty big structure and there is no reason to have an item per recursion.
     std::vector<wchar_t> buffer;
-    std::vector<wchar_t> spec;
 
     names->clear();
     buffer.reserve(MAX_SING_PATH + 1);
     utf8_to_16(directory, &buffer);
-    utf8_to_16(namespec, &spec);        
-    return(dirReadCore_r(&desc, buffer.data(), spec.data(), filter, names, nullptr, recursive));
+    return(dirReadCore_r(&desc, buffer.data(), filter, names, nullptr, recursive));
 }
 
 // buffer on entry has the directory path but is also used as a temp storage
-Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const wchar_t *namespec, const DirFilter &filter, 
+Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const DirFilter &filter, 
                     std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
 	HANDLE          search_handle;
     Error           err = 0;
 
-    if (wcslen(buffer) + wcslen(namespec) + 1 > MAX_SING_PATH) {
+    if (wcslen(buffer) + 4 > MAX_SING_PATH) {
         return(-1);
     }
-    wcscat(buffer, L"/");
     size_t clip = wcslen(buffer);
-    wcscpy(buffer + clip, namespec);
+    wcscpy(buffer + clip, L"/*.*");
 	search_handle = FindFirstFileW(buffer, desc);
 	if (search_handle == INVALID_HANDLE_VALUE) return(-1);
     do {
         if ((desc->dwFileAttributes & FILE_ATTRIBUTE_OFFLINE) == 0 && 
-            wcscmp(desc->cFileName, L".") != 0 && wcscmp(desc->cFileName, L"..") != 0 && clip + wcslen(desc->cFileName) <= MAX_SING_PATH) {
+            wcscmp(desc->cFileName, L".") != 0 && wcscmp(desc->cFileName, L"..") != 0 && clip + 1 + wcslen(desc->cFileName) <= MAX_SING_PATH) {
 
-            wcscpy(buffer + clip, desc->cFileName);
+            wcscpy(buffer + clip + 1, desc->cFileName);
 
             bool isdir = (desc->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
             if (!(filter == DirFilter::regular && isdir || filter == DirFilter::directory && !isdir)) {
@@ -688,7 +695,7 @@ Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const wchar_t *name
                 }
             }
             if (isdir && recursive) {
-                if (dirReadCore_r(desc, buffer, namespec, filter, names, info, recursive) != 0) {
+                if (dirReadCore_r(desc, buffer, filter, names, info, recursive) != 0) {
                     err = -1;
                 }
             }
@@ -698,7 +705,7 @@ Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const wchar_t *name
     FindClose(search_handle);
 
     // restore buffer 
-    buffer[clip - 1] = 0;
+    buffer[clip] = 0;
     return(err);
 }
 
@@ -745,15 +752,17 @@ Error dirRemove_r(WIN32_FIND_DATAW *desc, wchar_t *buffer)
                 }
             }
         }
-    } while(FindNextFileW(search_handle, desc) != 0);
+    } while(err == 0 && FindNextFileW(search_handle, desc) != 0);
     // err = GetLastError(); // note: 18 is "ERROR_NO_MORE_FILES"
     FindClose(search_handle);
 
     // restore buffer 
     buffer[clip - 1] = 0;
 
-    if (_wrmdir(buffer) != 0) {
-        err = -1;
+    if (err == 0) {
+        if (_wrmdir(buffer) != 0) {
+            err = -1;
+        }
     }
     return(err);
 }
@@ -799,6 +808,194 @@ Error dirCreate(const char *directory)
     return(0);
 }
 
+#else
+
+Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
+{
+    char buffer[MAX_SING_PATH + 1];
+
+    if (strlen(directory) > MAX_SING_PATH) {
+        return(-1);
+    }
+    info->clear();
+    names->clear();
+    strcpy(buffer, directory);
+    return(dirReadCore_r(&desc, buffer, filter, names, info, recursive));
+}
+
+Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, bool recursive)
+{
+    char buffer[MAX_SING_PATH + 1];
+
+    if (strlen(directory) > MAX_SING_PATH) {
+        return(-1);
+    }
+    names->clear();
+    strcpy(buffer, directory);
+    return(dirReadCore_r(&desc, buffer, filter, names, nullptr, recursive));
+}
+
+// buffer on entry has the directory path but is also used as a temp storage
+Error dirReadCore_r(char *buffer, const DirFilter &filter, 
+                    std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
+{
+    Error           err = 0;
+    struct dirent   *direntp;
+    struct stat     stat_buf;
+
+    // checks - must have at least space for \ and a single char named file
+    size_t clip = strlen(buffer);
+    if (strlen(buffer) + 2 > MAX_SING_PATH) {
+        return(-1);
+    }
+
+    DIR *dir = opendir(buffer);
+    if (dir == nullptr) return(-1);
+
+    strcpy(buffer + clip, "/");
+    while ((direntp = readdir( dirp)) != nullptr) {
+        if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0 && clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
+            strcpy(buffer + clip, direntp->d_name);
+            if (stat(buffer, &stat_buf) == -1) {
+                err = -1;
+                break;
+            }
+            bool regular = S_ISREG(stat_buf.st_mode);
+            bool isdir = S_ISDIR(stat_buf.st_mode);
+            if (!(filter == DirFilter::regular && !regular || filter == DirFilter::directory && !isdir)) {
+                names->push_back(buffer);
+                if (info != nullptr) {
+                    FileInfo nfo;
+                    nfo->length_ = buf.st_size; 
+                    nfo->last_modification_time_ = buf.st_mtime;
+                    nfo.is_dir_ = isdir;
+                    info->push_back(nfo);
+                }
+            }
+            if (isdir && recursive) {
+                if (dirReadCore_r(desc, buffer, filter, names, info, recursive) != 0) {
+                    err = -1;
+                }
+            }
+        }
+    }
+    closedir(dirp);
+
+    // restore buffer 
+    buffer[clip] = 0;
+    return(err);
+}
+
+Error dirRemove(const char *directory, const bool if_not_empty)
+{
+    char buffer[MAX_SING_PATH + 1];
+
+    if (rmdir(directory) == 0) return(0);
+    if (!if_not_empty) return(-1);
+    if (strlen(directory) > MAX_SING_PATH) {
+        return(-1);
+    }
+    strcpy(buffer, directory);
+    return(dirRemove_r(buffer.data()));
+}
+
+Error dirRemove_r(char *buffer)
+{
+    Error           err = 0;
+    struct dirent   *direntp;
+    struct stat     stat_buf;
+
+    // checks - must have at least space for \ and a single char named file
+    size_t clip = strlen(buffer);
+    if (strlen(buffer) + 2 > MAX_SING_PATH) {
+        return(-1);
+    }
+
+    DIR *dir = opendir(buffer);
+    if (dir == nullptr) return(-1);
+
+    strcpy(buffer + clip, "/");
+    while (err == 0 && (direntp = readdir( dirp)) != nullptr) {
+        if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0) {
+            if (clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
+                err = -1;
+            } else {
+                strcpy(buffer + clip, direntp->d_name);
+                if (stat(buffer, &stat_buf) == -1) {
+                    err = -1;
+                    break;
+                }
+                bool isdir = S_ISDIR(stat_buf.st_mode);
+                if (!isdir) {            
+                    if (remove(buffer) != 0) {
+                        err = -1;
+                    }
+                } else {
+                    if (dirRemove_r(buffer) != 0) {
+                        err = -1;
+                    }
+                }
+            }
+        }
+    }
+    closedir(dirp);
+
+    // restore buffer 
+    buffer[clip] = 0;
+
+    // delete the (now) empty directory
+    if (err == 0) {
+        if (rmdir(buffer) != 0) {
+            err = -1;
+        }
+    }
+    return(err);
+}
+
+Error dirCreate(const char *directory)
+{
+    int  top, scan;
+    char pathcopy[MAX_SING_PATH + 1];
+
+    if (strlen(directory) > MAX_SING_PATH) {
+        return(-1);
+    }
+    strcpy(pathcopy, directory);
+
+    // strip trailing separator
+    top = (int)strlen(pathcopy);
+    if (top < 1) return(-1);
+    if (pathcopy[top-1] == '/' || pathcopy[top - 1] == '\\') {
+        --top;
+        pathcopy[top] = 0;
+    }
+    scan = top;
+
+    // shorten the path 'till you find the first directory to be created 
+    while (true) {
+        if (mkdir(pathcopy) == 0) break;
+        if (errno == EEXIST) break;
+
+        // we have more than one component non existing, skip the last one
+        for (--scan; scan > 0 && !(pathcopy[scan] == '/' || pathcopy[scan] == '\\'); --scan);
+        if (scan == 0) {
+            return(-1);
+        }
+        pathcopy[scan] = 0;
+    } 
+
+    // now create the other directories
+    while (scan < top) {
+        pathcopy[scan] = '/';
+        scan = (int)strlen(pathcopy);
+        if (mkdir(pathcopy) != 0) {
+            return(-1);
+        }
+    }
+    return(0);
+}
+
+#endif
 
 // STRING FORMATTING 
 std::string formatInt(const int64_t val, const int32_t field_len, const int32_t flags)
@@ -1080,6 +1277,22 @@ void scrClear()
     ::system("clear");
 #endif
 }
+
+#ifndef _WIN32
+char _getch()
+{
+    struct termios old, new;
+    char ch;
+
+    tcgetattr(0, &old);                 // grab old terminal i/o settings
+    new = old;                          // make new settings same as old settings
+    new.c_lflag &= ~(ICANON | ECHO);    // disable buffered i/o and echo
+    tcsetattr(0, TCSANOW, &new); 
+    ch = getchar();
+    tcsetattr(0, TCSANOW, &old); 
+    return ch;    
+}
+#endif
 
 std::string kbdGet()
 {

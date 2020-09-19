@@ -31,21 +31,21 @@ int main() {
     //speed_test();
     //test_map();
     //test_std_vectors(10);
-    if (str_test()) {
-        printf("string lib: passed\r\n");
-    } else {
-        printf("string lib: failed !!\r\n");
-    }
+    // if (str_test()) {
+    //     printf("string lib: passed\r\n");
+    // } else {
+    //     printf("string lib: failed !!\r\n");
+    // }
     // if (SortTest(100)) {
     //     printf("\nsort lib: passed\r\n");
     // } else {
     //     printf("\nsort lib: failed !!\r\n");
     // }
-    // if (sio_test()) {
-    //     printf("\nsio lib: passed\r\n");
-    // } else {
-    //     printf("\nsio lib: failed !!\r\n");
-    // }
+    if (sio_test()) {
+        printf("\nsio lib: passed\r\n");
+    } else {
+        printf("\nsio lib: failed !!\r\n");
+    }
     // if (sys_test()) {
     //     printf("\nsys lib: passed\r\n");
     // } else {

@@ -65,8 +65,8 @@ public fn pathGetDriveIdx(path string) i32;
 public enum DirFilter { regular, directory, all }
 
 // dirs
-public fn dirRead(directory string, namespec string, filter DirFilter, out names [*]string, out info [*]FileInfo, recursive bool = false) Error;
-public fn dirReadNames(directory string, namespec string, filter DirFilter, out names [*]string, recursive bool = false) Error; 
+public fn dirRead(directory string, filter DirFilter, out names [*]string, out info [*]FileInfo, recursive bool = false) Error;
+public fn dirReadNames(directory string, filter DirFilter, out names [*]string, recursive bool = false) Error; 
 public fn dirRemove(directory string, if_not_empty bool = false) Error;   
 public fn dirCreate(directory string) Error;
 

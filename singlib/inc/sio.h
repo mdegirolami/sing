@@ -91,9 +91,9 @@ bool pathIsAbsolute(const char *path);
 int32_t pathGetDriveIdx(const char *path);
 
 // dirs
-Error dirRead(const char *directory, const char *namespec, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info,
+Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info,
     const bool recursive = false);
-Error dirReadNames(const char *directory, const char *namespec, const DirFilter &filter, std::vector<std::string> *names, const bool recursive = false);
+Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, const bool recursive = false);
 Error dirRemove(const char *directory, const bool if_not_empty = false);
 Error dirCreate(const char *directory);
 

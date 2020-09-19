@@ -236,27 +236,27 @@ static bool test_dirfileop()
     // dir listings
     std::vector<std::string> names;
     std::vector<sing::FileInfo> nfos;
-    if (sing::dirRead("dir1", "*.*", sing::DirFilter::regular, &names, &nfos) != 0) {
+    if (sing::dirRead("dir1", sing::DirFilter::regular, &names, &nfos) != 0) {
         return (false);
     }
     if (names.size() < 1 || names[0] != "dir1/in_dir1.txt") {
         return (false);
     }
     names.clear();
-    if (sing::dirReadNames("dir1", "*.*", sing::DirFilter::directory, &names) != 0) {
+    if (sing::dirReadNames("dir1", sing::DirFilter::directory, &names) != 0) {
         return (false);
     }
     if (names.size() < 1 || names[0] != "dir1/dir2") {
         return (false);
     }
     names.clear();
-    if (sing::dirReadNames("dir1", "*.*", sing::DirFilter::all, &names) != 0) {
+    if (sing::dirReadNames("dir1", sing::DirFilter::all, &names) != 0) {
         return (false);
     }
     if (names.size() != 2) {
         return (false);
     }
-    if (sing::dirReadNames("dir1", "*.*", sing::DirFilter::all, &names, true) != 0) {
+    if (sing::dirReadNames("dir1", sing::DirFilter::all, &names, true) != 0) {
         return (false);
     }
     if (names.size() != 3) {
@@ -546,7 +546,7 @@ static bool test_unicode()
     // dir list
     std::vector<std::string> names;
     std::vector<sing::FileInfo> nfos;
-    if (sing::dirRead("その上", "*.*", sing::DirFilter::all, &names, &nfos, true) != 0) {
+    if (sing::dirRead("その上", sing::DirFilter::all, &names, &nfos, true) != 0) {
         return (false);
     }
     if (names.size() != 2) {
