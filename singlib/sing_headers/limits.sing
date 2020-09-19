@@ -1,0 +1,23 @@
+namespace sing;
+
+public let i8_min  = -0x80;
+public let i8_max  = +0x7f;
+public let i16_min = -0x8000;
+public let i16_max = +0x7fff;
+public let i32_min = i32(i64(-0x8000_0000));
+public let i32_max = +0x7fff_ffff;
+public let i64_min = i64(-0x8000_0000_0000_0000);
+public let i64_max = i64(0x7fff_ffff_ffff_ffff);
+
+public let u8_max  = +0xff;
+public let u16_max = +0xffff;
+public let u32_max = u32(+0xffff_ffff);
+public let u64_max = u64(0xffff_ffff_ffff_ffff);
+
+public let f32_min  f32;
+public let f32_eps  f32;
+public let f32_max  f32;
+
+public let f64_min  f64;
+public let f64_eps  f64;
+public let f64_max  f64;

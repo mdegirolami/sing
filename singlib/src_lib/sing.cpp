@@ -1,8 +1,17 @@
 #include <cstdarg>
 #include <string.h>
+#include <float.h>
 #include "sing.h"
 
 namespace sing {
+
+const float f32_min = FLT_MIN;
+const float f32_eps = FLT_EPSILON;
+const float f32_max = FLT_MAX;
+
+const double f64_min = DBL_MIN;
+const double f64_eps = DBL_EPSILON;
+const double f64_max = DBL_MAX;
 
 int64_t string2int(const char *instring)
 {

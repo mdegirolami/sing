@@ -1,5 +1,8 @@
 #include "sing.h"
-//#include <limits.h>
+#include <float.h>
+#include "limits.h"
+
+float xx = FLT_MAX;
 
 // void print_primes_to(int32_t top);
 // uint32_t uint32_sqrt(uint32_t x);
@@ -41,15 +44,19 @@ int main() {
     // } else {
     //     printf("\nsort lib: failed !!\r\n");
     // }
-    if (sio_test()) {
-        printf("\nsio lib: passed\r\n");
-    } else {
-        printf("\nsio lib: failed !!\r\n");
-    }
+    // if (sio_test()) {
+    //     printf("\nsio lib: passed\r\n");
+    // } else {
+    //     printf("\nsio lib: failed !!\r\n");
+    // }
     // if (sys_test()) {
     //     printf("\nsys lib: passed\r\n");
     // } else {
     //     printf("\nssys lib: failed !!\r\n");
     // }
+
+    // print limits
+    //printf("\nmax float is %g and max double is %g", sing::f32_max, sing::f64_max);    
+
     return(0);
 }
