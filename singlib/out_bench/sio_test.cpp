@@ -90,7 +90,7 @@ static bool test_File()
     }
 
     // seek/tell/eof
-    if (ff.eof()) { // flag is set when an attempt to read PAST eof has done
+    if (ff.eof()) {                     // flag is set when an attempt to read PAST eof has done
         return (false);
     }
     if (ff.get(&buf[0]) == 0) {         // the attempt must fail !
@@ -282,7 +282,7 @@ static bool test_dirfileop()
         return (false);
     }
 
-    if (sing::dirRemove("dir1") == 0) { // must fail !!
+    if (sing::dirRemove("dir1") == 0) {                     // must fail !!
         return (false);
     }
     if (sing::dirRemove("dir1", true) != 0) {
@@ -511,7 +511,7 @@ static bool test_unicode()
     if (sing::fileRemove("ネコ.txt") != 0) {
         return (false);
     }
-    if (ff.open("ネコ.txt", "r") == 0) {  // should fail !!
+    if (ff.open("ネコ.txt", "r") == 0) {                      // should fail !!
         return (false);
     }
 

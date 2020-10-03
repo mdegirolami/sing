@@ -461,6 +461,7 @@ bool Lexer::Advance(Token *token)
     while (m_curr_token == TOKENS_COUNT) {    // i.e. while not found/assigned
         if (m_curcol >= (int)m_line_buffer.size()) {
             int retvalue = GetNewLine();
+            m_tokens_on_line = 0;
             if (retvalue == EOF) {
                 m_curr_token = TOKEN_EOF;
                 m_status = LS_EOF;
@@ -506,6 +507,7 @@ bool Lexer::Advance(Token *token)
     m_curr_token_last_row = m_curline;
     m_curr_token_last_col = m_curcol;
     *token = m_curr_token;
+    ++m_tokens_on_line;
     return(true);
 }
 

@@ -14,8 +14,8 @@ fn main() void
 {
     var c i32;
     c = primo + secondo + sizeof(c);
-    //let a = 3;
-    //let b = 10;
+    /* let a = 3;
+    let b = 10; */
 }
 
 fn myclass.chebello pure(in uno i32, out due i8, io tre string, ...) bool
@@ -100,8 +100,10 @@ public fn defs_func (in xxx i32 = 3) void {
         case far.derived2 : --v;
         default : return;
     }
+    
+    // default is explicitly empty
     switch (v) {
-        default :      // default is explicitly empty
+        default :      
     }
     this.member = 0;
 }

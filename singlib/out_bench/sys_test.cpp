@@ -81,7 +81,7 @@ bool testTimeFunctions()
     sing::BrokenTime btime;
     btime.fillLocal(sing::time());
     btime.fillUtc(sing::time());        // breakpoint here to check btime
-    return (true);  // breakpoint here to check btime
+    return (true);                      // breakpoint here to check btime
 }
 
 bool testRndGen()

@@ -9,6 +9,7 @@ class stat final {
 public:
     stat();
     ~stat();
+
     void add(const float value);
     bool getall(float *avg, float *variance) const;
 
@@ -21,7 +22,6 @@ private:
     float sum_;
     float sum2_;
 };
-
 
 // some interfaces
 enum class result {ok = 1, ko};

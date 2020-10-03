@@ -19,7 +19,7 @@ public fn print_primes_to(in top i32) void
 		if (isprime) {
 			primes[primes_count] = totry;
 			primes_count++;
-			// print(totry);
+			/* print(totry); */
 		}
 	}
 }

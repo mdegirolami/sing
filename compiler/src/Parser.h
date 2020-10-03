@@ -18,6 +18,7 @@ class Parser {
     bool        for_reference_;
     AstFile     *root_;
     int         curly_indent_;  // need it for error recovery
+    vector<int> remarkable_lines;   // you can associate a remark to these
 
     void    CheckSemicolon(void);
     bool    Advance(void);
@@ -28,11 +29,12 @@ class Parser {
     bool    OnDeclarationToken(void);
     bool    OutOfFunctionToken(void);
     Token   SkipToken(void);
-    void    RecordPosition(IAstNode *node);
+    void    RecordPosition(IAstNode *node, bool save_as_remarkable = true);
+    void    SaveRemarkableRow(int row);
     void    FillPositionInfo(PositionInfo *pnfo);
     void    UpdateEndPosition(IAstNode *node);
-    void    AttachCommentsToNodes(void);
-    void    AssignCommentsToNode(IAstNode *node, int first, int count);
+    void    CheckCommentsAssignments(void);
+    bool    CommentLineIsAllowed(int line, int *scan);
 
     // these functions gets called with the first token of the parsed term already in m_token,
     // all of them return with the first not-parsed token in m_token

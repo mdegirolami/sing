@@ -7,19 +7,25 @@ fn manyargs(veryveryveryveryveryverylongarg1 c64, veryveryveryveryveryverylongar
 {
 }
 
+// next
+
+// next
+
+/* must ignore this line and merge the previous and following blank line */
+
 fn fn1(a i32,   // rem1
-b i32,
-out c i32) void
+b i32,          // rem2
+out c i32) void // rem3
 {
-        // of statement
+    // of statement
     c = a + b;      // post
     
     c = 100 + 123 * 12**2 + 12345 / (veryveryveryveryveryverylong1 / veryveryveryveryveryverylong2) - (veryveryveryveryveryverylong3 & veryveryveryveryveryverylong4); // rem
     manyargs(12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i, 12.6526546 + 12.925985478i); // xyz
-    manyargs(12.6526546 + 12.925985478i, //xyz
-        12.6526546 + 12.925985478i,
-        12.6526546 + 12.925985478i,
-        12.6526546 + 12.925985478i);
+    manyargs(12.6526546 + 12.925985478i,    // abc 
+        12.6526546 + 12.925985478i, // abc
+        12.6526546 + 12.925985478i, // abc
+        12.6526546 + 12.925985478i); // xyz
         
     // note: the next line has blanks but must be handled as empty
         
@@ -30,30 +36,32 @@ out c i32) void
 }
 
 fn fn2(                                 // rem0
-        a i32, b i32, out c i32) void
+        a i32, b i32, out c i32) void   // rem1
+                                        // rem2
+                                        // rem3
 {
 }
 
 // attached to next
 let table [][] i32 = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},  // hand formatted !!
-                      {1, 2, 3}, {1, 2, 3}, {1, 2, 3}
+                      {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   // following
 };
-// attached to table4
+// attached to prev
 
 let table4 [][] i32 = {
-    {1, 2, 3}, {1, 2, 3}, {1, 2, 3},  
-    {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   
+    {1, 2, 3}, {1, 2, 3}, {1, 2, 3},  // hand formatted !!
+    {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   // following
 };
 
 let table2[][][]string = {{{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}}, {{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}},{{"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}, {"akjhdfk","askjfhsad","hgfksahgjh"}}};
 
 let table3 [][] i32 = {
     {1, 2, 3}, {1, 2, 3}, {1, 2, 3},  
-    {1, 2, 3}, {1, 2, 3}, {1, 2, 3} 
+    {1, 2, 3}, {1, 2, 3}, {1, 2, 3}   // just one remark
 };
 
 let stest string = "kjdhfkhfdkhskdfhkshghkhl"           // rem1
-                   "hfdslkjflkjasdlkfjlksdjflkj";
+                   "hfdslkjflkjasdlkfjlksdjflkj";       // rem2
 
 // before class
 class tc {          // on class
@@ -62,11 +70,13 @@ class tc {          // on class
     // on ff0
     fn mut ff0() void;
     
-public:             
+public:             // on class
     var pub i32;    // on pub
 
     // on ff1
     fn mut ff1() void; 
+
+    // on class
 }     
 
 fn tc.ff0() void
@@ -79,10 +89,11 @@ fn tc.ff1() void
     switch(this.priv2) {    // on switch
 
         case 0: ++this.pub; // on statement 0
+        // before case1
         case 1:         
         case 2: {       // on case2
             this.ff0(); 
-        } 
+        }               // after ff0 call
     }    
 }
 
@@ -91,4 +102,4 @@ interface xxx {  // on if
     fn dootherstuff() void;
 }
 
-/* NOTE: typeswitch: see cmments placement in synth_test_oop.check_typeswitch */
+// NOTE: typeswitch: see cmments placement in synth_test_oop.check_typeswitch

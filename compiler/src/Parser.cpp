@@ -28,12 +28,12 @@ AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
     if (on_error_) {
         has_errors_ = true;
     }
+    if (!has_errors_ && !for_reference_) {
+        CheckCommentsAssignments();
+    }
     if (root_ != NULL && has_errors_) {
         delete root_;
         return(NULL);
-    }
-    if (!has_errors_) {
-        AttachCommentsToNodes();
     }
     return(root_);
 }
@@ -938,7 +938,7 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
     if (direction == TOKEN_OUT) {
         node->SetFlags(VF_WRITEONLY);
     }
-    RecordPosition(node);
+    RecordPosition(node, false);
     {
         if (!Advance()) goto recovery;
         node->SetType(ParseTypeSpecification());
@@ -1039,7 +1039,9 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             Error("The only declarations allowed in a function are Let and Var");
             break;
         case TOKEN_CURLY_OPEN:
+            SaveRemarkableRow(m_lexer->CurrTokenLine());          
             node = ParseBlock();
+            ((AstBlock*)node)->SetRemarkable();
             break;
         case TOKEN_WHILE:
             node = ParseWhile();
@@ -1098,10 +1100,11 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             CheckSemicolon();
         }
         break;
-    case TOKEN_SWAP:
+        case TOKEN_SWAP:
         {
             PositionInfo pos;
             FillPositionInfo(&pos);
+            SaveRemarkableRow(pos.start_row);
 
             if (!Advance()) goto recovery;
             if (m_token != TOKEN_ROUND_OPEN) {
@@ -1164,9 +1167,10 @@ IAstNode *Parser::ParseLeftTermStatement(void)
     PositionInfo            pinfo;
 
     {
+        FillPositionInfo(&pinfo);           // starting token
+        SaveRemarkableRow(pinfo.start_row);
         assignee = ParsePrefixExpression("Expecting a statement");
         if (on_error_) goto recovery;
-        FillPositionInfo(&pinfo);   // start with token
         token = m_token;
         switch (m_token) {
         case TOKEN_ASSIGN:
@@ -1198,6 +1202,8 @@ IAstNode *Parser::ParseLeftTermStatement(void)
             if (assignee->GetType() != ANT_FUNCALL) {
                 Error("Expression or part of it has no effects");
                 goto recovery;
+            } else {
+                ((AstFunCall*)assignee)->FlagAsStatement();
             }
             node = assignee;
             assignee = nullptr;
@@ -1796,7 +1802,7 @@ AstFor *Parser::ParseFor(void)
             goto recovery;
         }
         var = new VarDeclaration(m_lexer->CurrTokenString());
-        RecordPosition(var);
+        RecordPosition(var, false);
         if (!Advance()) goto recovery;
         if (m_token == TOKEN_COMMA) {
             if (!Advance()) goto recovery;
@@ -1808,7 +1814,7 @@ AstFor *Parser::ParseFor(void)
             node->SetIndexVar(var);
             var = NULL;                 // in case we have an exception in the next line
             var = new VarDeclaration(m_lexer->CurrTokenString());
-            RecordPosition(var);
+            RecordPosition(var, false);
             var->SetFlags(VF_ISFORITERATOR);
             node->SetIteratorVar(var);
             var = NULL;                 // in case we have an exception in the next lines
@@ -1961,7 +1967,7 @@ AstTypeSwitch *Parser::ParseTypeSwitch(void)
             goto recovery2;
         }
         var = new VarDeclaration(m_lexer->CurrTokenString());
-        RecordPosition(var);
+        RecordPosition(var, false);
         var->SetFlags(VF_IS_REFERENCE);
         if (!Advance()) goto recovery2;
         if (m_token != TOKEN_ASSIGN) {
@@ -2065,10 +2071,10 @@ bool Parser::Advance(void)
             rd->row = m_lexer->CurrTokenLine();
             rd->col = m_lexer->CurrTokenColumn();
             if (m_token == TOKEN_INLINE_COMMENT) {
-                rd->emptyline = false;
+                rd->rd_type = m_lexer->TokensOnThisLine() < 2 ? RdType::COMMENT_ONLY : RdType::COMMENT_AFTER_CODE;
                 rd->remark = m_lexer->CurrTokenVerbatim();
             } else {
-                rd->emptyline = true;
+                rd->rd_type = RdType::EMPTY_LINE;
             }
             root_->remarks_.push_back(rd);
         }
@@ -2202,10 +2208,21 @@ Token Parser::SkipToken(void)
     return(m_token);
 }
 
-void Parser::RecordPosition(IAstNode *node)
+void Parser::RecordPosition(IAstNode *node, bool save_as_remarkable)
 {
-    if (node == NULL) return;
-    FillPositionInfo(node->GetPositionRecord());
+    if (node == nullptr) return;
+    PositionInfo *pnfo = node->GetPositionRecord();
+    FillPositionInfo(pnfo);
+    if (save_as_remarkable && node->IsARemarkableNode()) {
+        SaveRemarkableRow(pnfo->start_row);
+    }
+}
+
+void Parser::SaveRemarkableRow(int row)
+{
+    if (remarkable_lines.empty() || remarkable_lines[remarkable_lines.size() -1] <  row) {
+        remarkable_lines.push_back(row);
+    }
 }
 
 void Parser::FillPositionInfo(PositionInfo *pnfo)
@@ -2226,81 +2243,49 @@ void Parser::UpdateEndPosition(IAstNode *node)
     pnfo->last_col = m_lexer->CurrTokenLastColumn();
 }
 
-void Parser::AttachCommentsToNodes(void)
+void Parser::CheckCommentsAssignments(void)
 {
     int remcount = root_->remarks_.size();
-    if (remcount == 0) return;
+    int receiver = 0;
+    for (int rem = 0; rem < remcount; ++rem) {
+        RemarkDescriptor *rd = root_->remarks_[rem];
+        if (rd->rd_type == RdType::EMPTY_LINE) continue;
+        if (rd->rd_type == RdType::COMMENT_AFTER_CODE) {
+            if (!CommentLineIsAllowed(rd->row, &receiver)) {
+                errors_->AddError("Comments at the right of the code are only allowed on the first line of a declaration or statement)", rd->row, rd->col);
+                has_errors_ = true;
+            }
+        } else {
+            // COMMENT_ONLY
+            int first_row = rd->row;
+            int first_col = rd->col;
+            while(rem + 1 < remcount) {
+                RemarkDescriptor *next = root_->remarks_[rem + 1];
 
-    // collect eligible nodes
-    vector<IAstNode*>   nodes;
-    for (int ii = 0; ii < (int)root_->dependencies_.size(); ++ii) {
-        nodes.push_back(root_->dependencies_[ii]);
-    }
-    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
-        nodes.push_back(root_->declarations_[ii]);
-    }
-    if (nodes.size() == 0) return;
+                // if the next line is not code only (woud be absent from the vector) or mixed code/comment
+                if (next->row == rd->row + 1 && next->rd_type != RdType::COMMENT_AFTER_CODE) {
+                    rd = next;
+                    rem++;
+                } else {
+                    break;
+                }
+            }
 
-    // assign !!
-    int currem = 0;
-    int lastnode = nodes.size() - 1;
-    for (int ii = 0; ii < lastnode && currem < remcount; ++ii) {
-        IAstNode *node = nodes[ii];
-        IAstNode *nextnode = nodes[ii + 1];
-        int lastpos = node->GetPositionRecord()->last_row;
-        int nextpos = nextnode->GetPositionRecord()->start_row;
-
-        if (node->GetType() == ANT_FUNC) {
-            FuncDeclaration *fun = (FuncDeclaration*)node;
-            if (fun->block_ != nullptr) {
-                lastpos = fun->block_->GetPositionRecord()->last_row;
+            // the next line must be some code supporting the comment
+            if (!CommentLineIsAllowed(rd->row + 1, &receiver)) {
+                errors_->AddError("Comment [block] should preceed a declaration or statement)", first_row, first_col);
+                has_errors_ = true;
             }
         }
-
-        // first remark owned by the node
-        int first = currem;             
-
-        // advance to first remark past the node
-        while (currem < remcount && root_->remarks_[currem]->row <= lastpos) {
-            ++currem;
-        }
-
-        // the following remarks can be owned if: all the rows have a remark, there is a blank line separating this node from the next
-        int temp = currem;
-        while (temp < remcount) {
-            RemarkDescriptor *rem = root_->remarks_[temp];
-            if (rem->row >= nextpos) {
-
-                // give up, there is no empty line before the next node.
-                // remarks in between belong to the next node !
-                break;
-            }
-            if (rem->emptyline) {
-
-                // take the remark but not the empty line
-                currem = temp;
-                break;
-            }
-            ++temp;
-        }
-
-        // if has at least a remark, write it in the node !
-        if (currem > first) {
-            AssignCommentsToNode(node, first, currem - first);
-        }
-    }
-
-    // the last node collects all the residual remarks
-    if (currem < remcount) {
-        AssignCommentsToNode(nodes[lastnode], currem, remcount - currem);
     }
 }
 
-void Parser::AssignCommentsToNode(IAstNode *node, int first, int count)
+bool Parser::CommentLineIsAllowed(int line, int *scan)
 {
-    PositionInfo *pos = node->GetPositionRecord();
-    pos->first_remark = first;
-    pos->num_remarks = count;
+    while (*scan < remarkable_lines.size() && remarkable_lines[*scan] < line) {
+        ++*scan;
+    }
+    return(remarkable_lines[*scan] == line);
 }
 
 }

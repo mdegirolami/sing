@@ -180,11 +180,13 @@ void test_oop()
 
 static int32_t check_typeswitch(const tester &object)
 {
-    if (object.get__id() == &c0_test::id__) {               // must select this
-        return (0);
+    if (object.get__id() == &c0_test::id__) {
+        return (0);                     // must select this
     } else if (object.get__id() == &delegating::id__) {
         delegating &ref = *(delegating *)&object;
         if (ref.isgood() == result::ok) {
+
+            // before return1
             return (1);
         }
     } else {
@@ -196,13 +198,13 @@ static int32_t check_typeswitch(const tester &object)
 static int32_t check_typeswitch2(const sing::iptr<tester> object)
 {
     sing::ptr<delegating> tmp;
-    if ((*object).get__id() == &c0_test::id__) {            // must select this
+    if ((*object).get__id() == &c0_test::id__) {
         sing::ptr<c0_test> ref = (sing::wrapper<c0_test>*)object.get_wrapper();
         (*ref).tough_test(true);
         return (0);
     } else if ((*object).get__id() == &delegating::id__) {
         sing::ptr<delegating> ref = (sing::wrapper<delegating>*)object.get_wrapper();
-        tmp = ref;
+        tmp = ref;                      // must select this
     } else {
         return (2);
     }

@@ -8,7 +8,7 @@ fn test(in arg0 myenum = myenum.uno ) void  // anum eligible for initializations
     let e0 = myenum.uno;
     if (e0 < myenum.due) {
     } else if (e0 == myenum.tre) {
-    } else if (e0 == 0) {           // error - type mismatch
+    } else if (e0 == 0) {
     }
     let e1 = myenum2.due;
     if (e0 == e1) {                 // error - type mismatch

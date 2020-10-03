@@ -16,14 +16,16 @@ public:
     virtual Error get(uint8_t *value) = 0;
     virtual Error gets(const int64_t maxbytes, std::string *value) = 0;
     virtual Error read(const int64_t count, std::vector<uint8_t> *dst, const bool append = true) = 0;
+
     virtual Error put(const uint8_t value) = 0;
     virtual Error puts(const char *value) = 0;
     virtual Error write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from = 0) = 0;
+
     virtual Error seek(const int64_t pos, const SeekMode &mode = SeekMode::seek_set) = 0;
     virtual Error tell(int64_t *pos) = 0;
+
     virtual bool eof() const = 0;
 };
-
 
 class FileInfo final {
 public:
@@ -48,11 +50,14 @@ public:
     virtual Error get(uint8_t *value) override;
     virtual Error gets(const int64_t maxbytes, std::string *value) override;
     virtual Error read(const int64_t count, std::vector<uint8_t> *dst, const bool append = true) override;
+
     virtual Error put(const uint8_t value) override;
     virtual Error puts(const char *value) override;
     virtual Error write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from = 0) override;
+
     virtual Error seek(const int64_t pos, const SeekMode &mode = SeekMode::seek_set) override;
     virtual Error tell(int64_t *pos) override;
+
     virtual bool eof() const override;
 
     static char id__;
@@ -91,8 +96,7 @@ bool pathIsAbsolute(const char *path);
 int32_t pathGetDriveIdx(const char *path);
 
 // dirs
-Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info,
-    const bool recursive = false);
+Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, const bool recursive = false);
 Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, const bool recursive = false);
 Error dirRemove(const char *directory, const bool if_not_empty = false);
 Error dirCreate(const char *directory);

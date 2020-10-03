@@ -29,6 +29,7 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Op
     // HPP file
     /////////////////
     formatter_.Reset();
+    formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
     file_ = hfd;
     text = "#pragma once";
     Write(&text, false);
@@ -59,6 +60,7 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Op
     // CPP file
     /////////////////
     formatter_.Reset();
+    formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
     file_ = cppfd;
     FileName::SplitFullName(nullptr, &text, nullptr, &(*packages)[pkg_index]->fullpath_);
     text.insert(0, "#include \"");
@@ -537,6 +539,7 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
         if (num_functions > 0) {
             EmptyLine();
         }
+
         SynthClassMemberVariables(&type_spec->member_vars_, false);
         --indent_;
     }
@@ -582,9 +585,16 @@ int CppSynth::SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, 
         top = first_hinerited;  
     }
     for (int ii = 0; ii < top; ++ii) {
+
+        // filter out
         FuncDeclaration *func = (*declarations)[ii];
         if (func->IsPublic() != public_members) continue;
         if (func->name_ == "finalize") continue;    // declared elsewhere
+
+        // setup for comments
+        formatter_.SetNodePos(func);
+
+        // synth !
         AstFuncType *ftype = func->function_type_;
         assert(ftype != nullptr);
         text = func->name_;
@@ -642,6 +652,9 @@ void CppSynth::SynthClassMemberVariables(vector<VarDeclaration*> *d_vector, bool
     for (int ii = 0; ii < top; ++ii) {
         VarDeclaration *declaration = (*d_vector)[ii];
         if (declaration->IsPublic() != public_members) continue;
+
+        formatter_.SetNodePos(declaration);
+
         text = "";
         AppendMemberName(&text, declaration);
         SynthTypeSpecification(&text, declaration->weak_type_spec_);
@@ -822,7 +835,7 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
     AstNodeType type;
 
     type = node->GetType();
-    formatter_.SetNodePos(node->GetPositionRecord(), type != ANT_VAR && type != ANT_BLOCK);
+    formatter_.SetNodePos(node, type != ANT_VAR && type != ANT_BLOCK);
 
     // place an empty line before the first non-var statement following one or more var declarations 
     // if (oldtype != nullptr) {
@@ -2313,7 +2326,9 @@ void CppSynth::Write(string *text, bool add_semicolon)
     // if appropriate splits the line at the split markers,
     // adds comments
     formatter_.Format(text, indent_);
-    fwrite(formatter_.GetString(), formatter_.GetLength(), 1, file_);
+    const char *bufout = formatter_.GetString();
+    int length = formatter_.GetLength();
+    fwrite(bufout, length, 1, file_);
 }
 
 void CppSynth::AddSplitMarker(string *dst)
@@ -2328,22 +2343,6 @@ int CppSynth::AddForcedSplit(string *dst, IAstNode *node1, int row)
         *dst += 0xff;
     }
     return(newrow);
-}
-
-
-void  CppSynth::SetFormatterRemarks(IAstNode *node)
-{
-    formatter_.FormatResidualRemarks();
-    int remlen = formatter_.GetLength();
-    if (remlen > 0) {
-        fwrite(formatter_.GetString(), remlen, 1, file_);
-    }
-    if (node == nullptr) {
-        formatter_.SetRemarks(nullptr, 0);
-    } else {
-        PositionInfo *pos = node->GetPositionRecord();
-        formatter_.SetRemarks(&root_->remarks_[pos->first_remark], pos->num_remarks);
-    }
 }
 
 void CppSynth::EmptyLine(void)
@@ -2715,13 +2714,11 @@ int CppSynth::WriteHeaders(DependencyUsage usage)
             FileName::ExtensionSet(&text, "h");
             text.insert(0, "#include \"");
             text += "\"";
-            SetFormatterRemarks(dependency);
-            formatter_.SetNodePos(dependency->GetPositionRecord());
+            formatter_.SetNodePos(dependency);
             Write(&text, false);
             ++num_items;
         }
     }
-    SetFormatterRemarks(nullptr);
     return(num_items);
 }
 
@@ -2796,16 +2793,14 @@ int CppSynth::WriteTypeDefinitions(bool public_defs)
             {
                 VarDeclaration *var = (VarDeclaration*)declaration;
                 if (var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
-                    SetFormatterRemarks(var);
-                    formatter_.SetNodePos(var->GetPositionRecord());
+                    formatter_.SetNodePos(var);
                     SynthVar(var);
                     ++num_items;
                 }
             }
             break;
         case ANT_TYPE:
-            SetFormatterRemarks(declaration);
-            formatter_.SetNodePos(declaration->GetPositionRecord());
+            formatter_.SetNodePos(declaration);
             SynthType((TypeDeclaration*)declaration);
             ++num_items;
             break;
@@ -2816,7 +2811,6 @@ int CppSynth::WriteTypeDefinitions(bool public_defs)
     if (num_items > 0) {
         EmptyLine();
     }
-    SetFormatterRemarks(nullptr);
     return(num_items);
 }
 
@@ -2832,10 +2826,7 @@ void CppSynth::WritePrototypes(bool public_defs)
             FuncDeclaration *func = (FuncDeclaration*)declaration;
             if (!func->is_class_member_) {
                 if (func->block_ == nullptr) {
-                    SetFormatterRemarks(declaration);
-                    formatter_.SetNodePos(declaration->GetPositionRecord());
-                } else {
-                    SetFormatterRemarks(nullptr);
+                    formatter_.SetNodePos(declaration);
                 }
                 text = func->name_;
                 SynthFuncTypeSpecification(&text, func->function_type_, true);
@@ -2848,7 +2839,6 @@ void CppSynth::WritePrototypes(bool public_defs)
         }
     }
     if (!empty_section) {
-        SetFormatterRemarks(nullptr);
         EmptyLine();
     }
 }
@@ -2887,8 +2877,7 @@ int CppSynth::WriteVariablesDefinitions(void)
         if (declaration->GetType() == ANT_VAR) {
             VarDeclaration *var = (VarDeclaration*)declaration;
             if (!var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
-                SetFormatterRemarks(declaration);
-                formatter_.SetNodePos(declaration->GetPositionRecord());
+                formatter_.SetNodePos(declaration);
                 SynthVar((VarDeclaration*)declaration);
                 ++num_items;
             }
@@ -2897,7 +2886,6 @@ int CppSynth::WriteVariablesDefinitions(void)
     if (num_items > 0) {
         EmptyLine();
     }
-    SetFormatterRemarks(nullptr);
     return(num_items);
 }
 
@@ -2929,7 +2917,6 @@ int CppSynth::WriteClassIdsDefinitions(void)
     if (num_items > 0) {
         EmptyLine();
     }
-    SetFormatterRemarks(nullptr);
     return(num_items);     
 }
 
@@ -2956,7 +2943,6 @@ int CppSynth::WriteConstructors(void)
     if (num_items > 0) {
         EmptyLine();
     }
-    SetFormatterRemarks(nullptr);
     return(num_items); 
 }
 
@@ -2968,13 +2954,11 @@ int CppSynth::WriteFunctions(void)
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_FUNC) {
-            SetFormatterRemarks(declaration);
-            formatter_.SetNodePos(declaration->GetPositionRecord());
+            formatter_.SetNodePos(declaration);
             SynthFunc((FuncDeclaration*)declaration);
             ++num_items;
         }
     }
-    SetFormatterRemarks(nullptr);
     return(num_items);
 }
 

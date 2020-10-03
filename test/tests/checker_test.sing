@@ -654,8 +654,8 @@ fn size_and_dimof() void
     var a i32 = sizeof(i32);
     a = sizeof(mm);
     a = sizeof(mm[3]);
-    //a = dimof(mm);
-    //a = dimof(a);
+    /* a = dimof(mm);
+    a = dimof(a); */
 }
 
 var f0 f32 = - -5.3;

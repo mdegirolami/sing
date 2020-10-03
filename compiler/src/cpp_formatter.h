@@ -16,8 +16,7 @@ class CppFormatter {
     // settings
     RemarkDescriptor    **remarks_;
     int                 remarks_count_;
-    int                 processed_remarks_;
-    PositionInfo        node_pos_;
+    PositionInfo        *node_pos_;
     int                 max_line_len_;
     int                 remarks_tabs_;   // tab stops for remarks
 
@@ -37,10 +36,12 @@ class CppFormatter {
     int  Maxlen(string *formatted);
     void AddIndent(string *out_str, int indent);
     void FilterSplitMarkers(string *out_str, string *in_str);
-    int  AddComments(string *formatted, string *source);
+    int  AddComments(string *formatted, string *source, int indent);
     void AppendLf(string *formatted);           // adds '\r\n' for the purpose of closing a not empty line
     void AppendEmptyLine(string *formatted);    // adds '\r\n' for the purpose of adding an empty line
     void UpdateLineNum(void);
+    void LookForComments(int baseline, int *side, int *firstidx, int *lastidx, bool *prepend_blank);
+
 public:
     CppFormatter();
 
@@ -48,11 +49,10 @@ public:
     void Reset(void);
     void SetMaxLineLen(int len) { max_line_len_ = len; }
     void SetRemarks(RemarkDescriptor **remarks, int count);
-    void SetNodePos(PositionInfo *pos, bool statement = false) { node_pos_ = *pos; formatting_a_statement_ = statement; }
+    void SetNodePos(IAstNode *node, bool statement = false);
 
     // operations
     void Format(string *source, int indent);
-    void FormatResidualRemarks(void);
     const char *GetString(void) { return(pool_[out_str_].c_str()); }
     int  GetLength(void) { return(pool_[out_str_].length()); }
     void AddLineBreak(void) { place_line_break_ = true; }

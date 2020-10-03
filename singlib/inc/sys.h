@@ -8,21 +8,22 @@ namespace sing {
 // processes
 typedef uint64_t Phandle;
 
-class BrokenTime final {                // seconds after the minute — [0, 60]
-public:             // minutes after the hour — [0, 59]
-    BrokenTime();   // hours since midnight — [0, 23]
-    void fillLocal(const int64_t time); // day of the month — [1, 31]
-    void fillUtc(const int64_t time);   // months since January — [0, 11]
+class BrokenTime final {
+public:
+    BrokenTime();
 
-    int8_t second_; // days since Sunday — [0, 6]
-    int8_t minute_; // days since January 1 — [0, 365]
-    int8_t hour_;   // Daylight Saving Time flag
-    int8_t mday_;   // years since 1900
-    int8_t mon_;
-    int8_t wday_;
-    int16_t yday_;
-    bool savings_;
-    int32_t year_;
+    void fillLocal(const int64_t time);
+    void fillUtc(const int64_t time);
+
+    int8_t second_;                     // seconds after the minute — [0, 60]
+    int8_t minute_;                     // minutes after the hour — [0, 59]
+    int8_t hour_;                       // hours since midnight — [0, 23]
+    int8_t mday_;                       // day of the month — [1, 31]
+    int8_t mon_;    // months since January — [0, 11]
+    int8_t wday_;                       // days since Sunday — [0, 6]
+    int16_t yday_;                      // days since January 1 — [0, 365]
+    bool savings_;                      // Daylight Saving Time flag
+    int32_t year_;                      // years since 1900
 };
 
 // random numbers

@@ -22,7 +22,7 @@ enum Token {
     TOKEN_NULL,
     TOKEN_TRUE,
     TOKEN_FALSE,
-    TOKEN_VOID,         // currently unused
+    TOKEN_VOID,
 
     TOKEN_MUT,
     TOKEN_REQUIRES,
@@ -171,6 +171,7 @@ class Lexer {
     int             m_curline;      // 1 based
 
     LexerStatus     m_status;
+    int             m_tokens_on_line;
 
     // last error
     LexerError      m_error;
@@ -215,6 +216,7 @@ public:
     int  CurrTokenLastLine(void) { return(m_curr_token_last_row); }
     int  CurrTokenLastColumn(void) { return(m_curr_token_last_col); }
     const char *CurrTokenVerbatim(void) { return(m_curr_token_verbatim.c_str()); }
+    int TokensOnThisLine(void) { return(m_tokens_on_line); }
 
     // step forward and return the current
     bool Advance(Token *token);

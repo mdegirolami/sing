@@ -65,8 +65,6 @@ struct PositionInfo {
     int32_t end_col;
     int32_t last_row;       // end of the node and its children - used to attribute remarks
     int32_t last_col;
-    int     first_remark;
-    int     num_remarks;
 
     PositionInfo()
     {
@@ -76,16 +74,16 @@ struct PositionInfo {
         end_col = 0;
         last_row = 0;  
         last_col = 0;
-        first_remark = 0;
-        num_remarks = 0;
     }
 };
+
+enum class RdType { EMPTY_LINE, COMMENT_ONLY, COMMENT_AFTER_CODE };
 
 struct RemarkDescriptor {
     string          remark;
     int             row;
     int             col;
-    bool            emptyline;
+    RdType          rd_type;
 };
 
 class IAstNode {
@@ -93,6 +91,7 @@ public:
     virtual ~IAstNode() {}
     virtual AstNodeType GetType(void) = 0;
     virtual PositionInfo *GetPositionRecord(void) = 0;
+    virtual bool IsARemarkableNode(void) = 0;   // i.e: can accept attached comments
 };
 
 enum TypeComparisonMode {FOR_ASSIGNMENT,            // returns true if you can copy type src_tree to 'this'
@@ -146,6 +145,7 @@ public:
     bool                        is_owning_;     // i.e. pointer to return_type is owning.
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstFuncType();
     AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL), is_member_(false), is_owning_(true) { arguments_.reserve(8); }
@@ -171,6 +171,7 @@ public:
     bool            owning_;         // annotation: own pointed_type_ ? (need non-owning pointers to declare auto vars from the address-of initializers).
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstPointerType() { if (pointed_type_ != NULL && owning_) delete pointed_type_; }
     AstPointerType() : isconst_(false), isweak_(false), pointed_type_(nullptr), owning_(true) {}
@@ -191,6 +192,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstMapType() { if (key_type_ != NULL) delete key_type_; if (returned_type_ != NULL) delete returned_type_; }
     AstMapType() : key_type_(NULL), returned_type_(NULL) {}
@@ -222,6 +224,7 @@ public:
     bool            dimension_was_computed_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstArrayType();
     AstArrayType() : is_dynamic_(false), element_type_(NULL), expression_(NULL), 
@@ -248,6 +251,7 @@ public:
     TypeDeclaration     *wp_decl_;   // annotation: the declaration the name refers to. Prevents the need to build a dictionary in the synth phase
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     AstNamedType(const char *name) : name_(name), wp_decl_(NULL), pkg_index_(-1), next_component(NULL) {}
     ~AstNamedType() { if (next_component != NULL) delete next_component; }
@@ -266,6 +270,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     AstBaseType(Token token) { base_type_ = token; }
     virtual AstNodeType GetType(void) { return(ANT_BASE_TYPE); }
@@ -288,6 +293,9 @@ public:
 
     vector<int32_t>         indices_;           // annotations
 
+    virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
+
     virtual ~AstEnumType();
     //AstEnumType() {}
     virtual AstNodeType GetType(void) { return(ANT_ENUM_TYPE); }
@@ -295,7 +303,6 @@ public:
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(true); }
     virtual bool SupportsEqualOperator(void) { return(true); }
-    virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     void AddItem(const char *name, IAstExpNode *initer) { items_.push_back(name); initers_.push_back(initer); }
 };
 
@@ -309,6 +316,7 @@ public:
     int                         first_hinherited_member_;   // annotations
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstInterfaceType();
     AstInterfaceType() : first_hinherited_member_(-1) {}
@@ -340,6 +348,7 @@ public:
     bool                    constructor_written;        // annotation from synthesizer
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstClassType();
     AstClassType();
@@ -375,6 +384,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstArgument();
     AstArgument() : expression_(nullptr) {}
@@ -401,6 +411,7 @@ public:
     ExpressionAttributes attr_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     AstExpressionLeaf(Token type, const char *value);
@@ -423,6 +434,7 @@ public:
     ExpressionAttributes attr_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstUnop() { if (operand_ != NULL) delete operand_;  if (type_ != NULL) delete type_;  }
@@ -447,6 +459,7 @@ public:
     const char      *builtin_signature_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     AstBinop(Token type, IAstExpNode *left, IAstExpNode*right);
@@ -461,18 +474,21 @@ public:
     IAstExpNode             *left_term_;
     vector<AstArgument*>    arguments_;
     PositionInfo            pos_;
+    bool                    is_statement_;
 
     AstFuncType          *func_type_;     // annotations
     ExpressionAttributes attr_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(is_statement_); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstFunCall();
-    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr) {}
+    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr), is_statement_(false) {}
     virtual AstNodeType GetType(void) { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
     virtual bool HasFunction(void) { return(true); }
+    virtual bool FlagAsStatement(void) { is_statement_ = true; } 
 };
 
 class AstIndexing : public IAstExpNode {
@@ -487,6 +503,7 @@ public:
     ExpressionAttributes attr_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstIndexing();
@@ -516,12 +533,16 @@ class AstBlock : public IAstNode {
 public:
     vector<IAstNode*>   block_items_;
     PositionInfo        pos_;
+    bool                can_remark_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(can_remark_); }
 
+    AstBlock() { can_remark_ = false; }
     virtual ~AstBlock();
     virtual AstNodeType GetType(void) { return(ANT_BLOCK); }
     void AddItem(IAstNode *node) { block_items_.push_back(node); }
+    void SetRemarkable(void) { can_remark_ = true; }
 };
 
 class AstIncDec : public IAstNode {
@@ -531,6 +552,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstIncDec() { if (left_term_ != NULL) delete left_term_; }
     AstIncDec(Token op) : operation_(op), left_term_(NULL) {}
@@ -546,6 +568,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstSwap() { if (left_term_ != NULL) delete left_term_; }
     AstSwap(IAstExpNode *left, IAstExpNode *right) : left_term_(left), right_term_(right) {}
@@ -560,6 +583,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstUpdate() { if (left_term_ != NULL) delete left_term_; if (right_term_ != NULL) delete right_term_; }
     AstUpdate(Token op, IAstExpNode *left, IAstExpNode *right) : operation_(op), left_term_(left), right_term_(right) {}
@@ -573,6 +597,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstWhile() { if (expression_ != NULL) delete expression_;  if (block_ != NULL) delete block_; }
     AstWhile() : expression_(NULL), block_(NULL) {}
@@ -591,6 +616,7 @@ public:
     PositionInfo            pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstIf();
     AstIf() : default_block_(NULL) { expressions_.reserve(4); blocks_.reserve(4); }
@@ -616,6 +642,7 @@ public:
     int64_t         step_value_;            // 0 if not possible to compute at compile time 
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstFor();
     AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL), index_(NULL), iterator_(NULL), 
@@ -637,6 +664,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     AstSimpleStatement(Token type) : subtype_(type) {}
     virtual AstNodeType GetType(void) { return(ANT_SIMPLE); }
@@ -648,6 +676,7 @@ public:
     PositionInfo    pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstReturn() { if (retvalue_ != NULL) delete retvalue_; }
     AstReturn() : retvalue_(NULL) {}
@@ -666,6 +695,7 @@ public:
 
     // attributes
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstSwitch();
     AstSwitch() : switch_value_(nullptr), has_default(false) {}
@@ -695,6 +725,7 @@ public:
     vector<bool>            uses_reference_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstTypeSwitch();
     AstTypeSwitch() : expression_(NULL), reference_(nullptr), on_interface_ptr_(false) {}
@@ -719,6 +750,7 @@ public:
     PositionInfo        pos_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstIniter();
     AstIniter() { elements_.reserve(4); }
@@ -743,6 +775,7 @@ public:
     virtual void SetPublic(bool value) { is_public_ = value; }
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~VarDeclaration() { if (type_spec_ != nullptr) delete type_spec_; if (initer_ != nullptr) delete initer_; }
     VarDeclaration(const char *name) : 
@@ -775,6 +808,7 @@ public:
     virtual void SetPublic(bool value) { is_public_ = value; }
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~TypeDeclaration() { if (type_spec_ != NULL) delete type_spec_; }
     TypeDeclaration(const char *name) : name_(name), type_spec_(NULL), is_public_(false), is_used_(false), forward_referral_(FRT_NONE) {}
@@ -804,6 +838,7 @@ public:
     virtual void SetPublic(bool value) { is_public_ = value; }
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~FuncDeclaration() { if (function_type_ != NULL) delete function_type_; if (block_ != NULL) delete block_; }
     FuncDeclaration() : function_type_(NULL), block_(NULL), is_public_(false), is_used_(false), type_is_ok_(false), is_muting_(false), is_virtual_(false) {}
@@ -834,6 +869,7 @@ private:
 public:
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
 
     //virtual ~AstDependency();
     AstDependency(const char *path, const char *name);
@@ -854,6 +890,7 @@ public:
     NamesList                       private_symbols_;   // gets filled if parsing for reference (privates are not in the tree !!)
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstFile();
     AstFile() {
