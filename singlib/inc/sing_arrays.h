@@ -1,5 +1,4 @@
-#ifndef SING_ARRAYS_H_
-#define SING_ARRAYS_H_
+#pragma once
 
 namespace sing {
 
@@ -137,5 +136,3 @@ private:
 };
 
 } // namespace
-
-#endif

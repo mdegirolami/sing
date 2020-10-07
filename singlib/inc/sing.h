@@ -1,5 +1,4 @@
-#ifndef SING_H_
-#define SING_H_
+#pragma once
 
 #include <stdint.h>
 #include <string.h>
@@ -9,8 +8,6 @@
 #include "sing_pointers.h"
 #include "sing_map.h"
 #include "sing_arrays.h"
-
-#define SING_STORAGE(name) name, 0, sizeof(name)/sizeof(name[0])
 
 namespace sing {
 
@@ -214,5 +211,30 @@ namespace sing {
     }
     
 }   // namespace
+/*
+// from _mingw.h
+#undef MINGW_HAS_SECURE_API
+#undef USE___UUIDOF
+#undef UNALIGNED
+#undef NONAMELESSUNION
+#undef DUMMYUNIONNAME 
+#undef DUMMYUNIONNAME1
+#undef DUMMYUNIONNAME2
+#undef DUMMYUNIONNAME3
+#undef DUMMYUNIONNAME4
+#undef DUMMYUNIONNAME5
+#undef DUMMYUNIONNAME6
+#undef DUMMYUNIONNAME7
+#undef DUMMYUNIONNAME8
+#undef DUMMYUNIONNAME9
+#undef MINGW_SDK_INIT
+#undef NULL
 
-#endif
+// string.h
+#undef strncasecmp
+#undef strcasecmp
+#undef wcswcs
+
+// os_defines.h
+#undef NOMINMAX
+*/

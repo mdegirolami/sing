@@ -1,5 +1,4 @@
-#ifndef SING_POINTERS_H_
-#define SING_POINTERS_H_
+#pragma once
 
 #include "sing_base_pointers.h"
 
@@ -339,5 +338,3 @@ public:
 };
 
 }   // namespace
-
-#endif

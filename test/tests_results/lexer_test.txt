@@ -127,6 +127,14 @@ ERROR !! Symbols with multiple neighboring _ characters are reserved at 34, 3
 
 ERROR !! A symbol must have at least a character different from '_' at 36, 1
 
+
+ERROR !! Symbols with multiple neighboring _ characters are reserved at 37, 2
+
+
+ERROR !! Symbol starting with '_' plus an uppercase character are reserved/illegal at 38, 2
+
+2	_right
+2	is_Right
 8	
 9	null
 10	true
@@ -342,4 +350,4 @@ ERROR !! A symbol must have at least a character different from '_' at 36, 1
 111	uint64_t
 8	
 
-ERROR !! Unexpected end of file at 147, 1
+ERROR !! Unexpected end of file at 151, 1

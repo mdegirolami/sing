@@ -34,6 +34,10 @@
 id__double
 id_single_
 _
+__wrong
+_Wrong
+_right
+is_Right
 
 null true false void
 mut requires namespace var const type map weak i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 c64 c128 let string bool

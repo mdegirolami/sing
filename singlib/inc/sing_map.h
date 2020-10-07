@@ -1,5 +1,4 @@
-#ifndef SING_MAPS_H_
-#define SING_MAPS_H_
+#pragma once
 
 #include <vector>
 #include <stdint.h>
@@ -302,5 +301,3 @@ private:
 };
 
 } // namespace
-
-#endif

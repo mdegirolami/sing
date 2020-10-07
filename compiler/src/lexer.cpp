@@ -252,7 +252,8 @@ static const char *error_desc[] = {
     "Expected a digit",
     "Symbols with multiple neighboring _ characters are reserved",
     "A symbol must have at least a character different from '_'",
-    "In numerics, underscores are allowed only between decimal/exadecimal digits"
+    "In numerics, underscores are allowed only between decimal/exadecimal digits",
+    "Symbol starting with '_' plus an uppercase character are reserved/illegal"
 };
 
 static const int num_tokens = sizeof(keywords) / sizeof(keywords[0]);
@@ -913,7 +914,7 @@ bool Lexer::ReadName(void)
     int     numchars = ResidualCharacters();
     int     digit, ash;
     int32_t ch;
-    bool    allow_underscore = true;
+    bool    allow_underscore = m_line_buffer[m_curcol] != '_';
 
     m_curr_token_string = "";
     m_curr_token_string += m_line_buffer[m_curcol++];
@@ -929,6 +930,10 @@ bool Lexer::ReadName(void)
                 }
                 allow_underscore = false;
             } else {
+                if (!allow_underscore && ch >= 'A' && ch <= 'Z' && m_curr_token_string.length() == 2) {
+                    Error(LE_RESERVED_SYMBOL, (m_curcol + m_curr_token_col) >> 1);
+                    return(false);
+                }
                 allow_underscore = true;
             }
         } else {

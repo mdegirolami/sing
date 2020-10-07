@@ -1,5 +1,4 @@
-#ifndef SING_BASE_POINTERS_H_
-#define SING_BASE_POINTERS_H_
+#pragma once
 
 namespace sing {
 
@@ -202,5 +201,3 @@ private:
 };
 
 } // namespace
-
-#endif
