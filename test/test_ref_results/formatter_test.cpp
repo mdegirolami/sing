@@ -31,10 +31,10 @@ public:
     virtual void dootherstuff() const = 0;
 };
 
-static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
-    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4);
-static void fn1(const int32_t a, const int32_t b, int32_t *c);
-static void fn2(const int32_t a, const int32_t b, int32_t *c);
+static void manyargs(std::complex<float> veryveryveryveryveryverylongarg1, std::complex<float> veryveryveryveryveryverylongarg2,
+    std::complex<float> veryveryveryveryveryverylongarg3, std::complex<float> veryveryveryveryveryverylongarg4);
+static void fn1(int32_t a, int32_t b, int32_t *c);
+static void fn2(int32_t a, int32_t b, int32_t *c);
 
 // attached to next
 static const sing::array<sing::array<int32_t, 3>, 6> table = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3},      // hand formatted !!
@@ -57,12 +57,12 @@ static const sing::array<sing::array<int32_t, 3>, 6> table3 = {
 static const std::string stest = "kjdhfkhfdkhskdfhkshghkhl"                     // rem1
     "hfdslkjflkjasdlkfjlksdjflkj";
 
-static void manyargs(const std::complex<float> veryveryveryveryveryverylongarg1, const std::complex<float> veryveryveryveryveryverylongarg2,
-    const std::complex<float> veryveryveryveryveryverylongarg3, const std::complex<float> veryveryveryveryveryverylongarg4)
+static void manyargs(std::complex<float> veryveryveryveryveryverylongarg1, std::complex<float> veryveryveryveryveryverylongarg2,
+    std::complex<float> veryveryveryveryveryverylongarg3, std::complex<float> veryveryveryveryveryverylongarg4)
 {
 }
 
-static void fn1(const int32_t a, const int32_t b, int32_t *c)                   // rem1
+static void fn1(int32_t a, int32_t b, int32_t *c)           // rem1
 {
     // of statement
     *c = a + b;     // post
@@ -82,7 +82,7 @@ static void fn1(const int32_t a, const int32_t b, int32_t *c)                   
     }
 }
 
-static void fn2(const int32_t a, const int32_t b, int32_t *c)                   // rem0
+static void fn2(int32_t a, int32_t b, int32_t *c)           // rem0
 {
 }
 

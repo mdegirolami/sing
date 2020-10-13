@@ -9,7 +9,7 @@ public:
     virtual ~c0_test();
     virtual void *get__id() const override { return(&id__); };
     void init();
-    virtual void tough_test(const bool enable) override;
+    virtual void tough_test(bool enable) override;
     virtual result isgood() const override;
 
     static char id__;
@@ -27,7 +27,7 @@ public:
     {
         implementor_.init();
     };
-    virtual void tough_test(const bool enable) override
+    virtual void tough_test(bool enable) override
     {
         implementor_.tough_test(enable);
     };
@@ -45,7 +45,7 @@ private:
 typedef sing::map<std::string, int32_t> maptype;
 
 static int32_t check_typeswitch(const tester &object);
-static int32_t check_typeswitch2(const sing::iptr<tester> object);
+static int32_t check_typeswitch2(sing::iptr<tester> object);
 static void check_builtin();
 
 char c0_test::id__;
@@ -66,7 +66,7 @@ stat::~stat()
     count_ = 0;
 }
 
-void stat::add(const float value)
+void stat::add(float value)
 {
     ++count_;
     sum_ += value;
@@ -117,7 +117,7 @@ void c0_test::init()
     message_ = "inited";
 }
 
-void c0_test::tough_test(const bool enable)
+void c0_test::tough_test(bool enable)
 {
     istough_ = enable;
 }
@@ -195,7 +195,7 @@ static int32_t check_typeswitch(const tester &object)
     return (-1);
 }
 
-static int32_t check_typeswitch2(const sing::iptr<tester> object)
+static int32_t check_typeswitch2(sing::iptr<tester> object)
 {
     sing::ptr<delegating> tmp;
     if ((*object).get__id() == &c0_test::id__) {

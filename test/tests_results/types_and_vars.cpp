@@ -1,14 +1,14 @@
 #include "types_and_vars.h"
 
-typedef int32_t (*fref)(const int32_t arg0, const int32_t arg1, int32_t *arg2);
+typedef int32_t (*fref)(int32_t arg0, int32_t arg1, int32_t *arg2);
 
-static int32_t intsum(const int32_t arg0, const int32_t arg1, int32_t *arg2);
-static bool boolsum(const bool arg0, const bool arg1, bool *arg2);
+static int32_t intsum(int32_t arg0, int32_t arg1, int32_t *arg2);
+static bool boolsum(bool arg0, bool arg1, bool *arg2);
 static std::string stringsum(const char *arg0, const char *arg1, std::string *arg2);
-static fref frefshift(const fref arg0, fref *arg1, fref *arg2);
+static fref frefshift(fref arg0, fref *arg1, fref *arg2);
 static void arrayswap(const sing::array<int32_t, 5> &arg0, sing::array<int32_t, 5> *arg1);
-static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, const int32_t count);
-static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, const int32_t count);
+static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, int32_t count);
+static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, int32_t count);
 
 // gloabl declarations, no initer
 static int32_t gv_int32;
@@ -30,14 +30,14 @@ static sing::array<int32_t, 5> gvi_array = {1, 2, 3, 4, 5};
 static std::vector<int32_t> gvi_dyna = {6, 7, 8, 9, 10};
 static std::vector<std::string> gvi_stringarr = {"minni", "clara", "ciccio"};
 
-static int32_t intsum(const int32_t arg0, const int32_t arg1, int32_t *arg2)
+static int32_t intsum(int32_t arg0, int32_t arg1, int32_t *arg2)
 {
     *arg2 = arg0 + arg1;
     return (*arg2);
 }
 
 // as parameters
-static bool boolsum(const bool arg0, const bool arg1, bool *arg2)
+static bool boolsum(bool arg0, bool arg1, bool *arg2)
 {
     *arg2 = arg0 || arg1;
     return (*arg2);
@@ -49,7 +49,7 @@ static std::string stringsum(const char *arg0, const char *arg1, std::string *ar
     return (*arg2);
 }
 
-static fref frefshift(const fref arg0, fref *arg1, fref *arg2)
+static fref frefshift(fref arg0, fref *arg1, fref *arg2)
 {
     fref tmp = *arg2;
     *arg2 = *arg1;
@@ -66,7 +66,7 @@ static void arrayswap(const sing::array<int32_t, 5> &arg0, sing::array<int32_t, 
     (*arg1)[4] = arg0[0];
 }
 
-static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, const int32_t count)
+static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, int32_t count)
 {
     const int32_t top = count - 1;
     int64_t idx = -1;
@@ -76,7 +76,7 @@ static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg
     }
 }
 
-static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, const int32_t count)
+static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, int32_t count)
 {
     const int32_t top = count - 1;
     int64_t idx = -1;
@@ -92,7 +92,7 @@ void test_types_and_vars()
     int32_t lv_int32 = 0;
     bool lv_bool = false;
     std::string lv_string;
-    int32_t (*lv_fref)(const int32_t arg0, const int32_t arg1, int32_t *arg2) = nullptr;
+    int32_t (*lv_fref)(int32_t arg0, int32_t arg1, int32_t *arg2) = nullptr;
     sing::ptr<int32_t> lv_ptr;
     sing::array<int32_t, 5> lv_array = {0};
     std::vector<int32_t> lv_dyna;
@@ -102,7 +102,7 @@ void test_types_and_vars()
     int32_t lvi_int32 = 100;
     bool lvi_bool = true;
     std::string lvi_string = "pippi";
-    int32_t (*lvi_fref)(const int32_t arg0, const int32_t arg1, int32_t *arg2) = intsum;
+    int32_t (*lvi_fref)(int32_t arg0, int32_t arg1, int32_t *arg2) = intsum;
     //var lvi_ptr *i32;            // allowed ?
     sing::array<int32_t, 5> lvi_array = {1, 2, 3, 4, 5};
     std::vector<int32_t> lvi_dyna = {6, 7, 8, 9, 10};
@@ -112,8 +112,8 @@ void test_types_and_vars()
     sing::ptr<int32_t> hv_int32(new sing::wrapper<int32_t>(0));
     sing::ptr<bool> hv_bool(new sing::wrapper<bool>(false));
     sing::ptr<std::string> hv_string(new sing::wrapper<std::string>);
-    sing::ptr<int32_t (*)(const int32_t arg0, const int32_t arg1, int32_t *arg2)> hv_fref(new sing::wrapper<int32_t (*)(const int32_t arg0,
-        const int32_t arg1, int32_t *arg2)>(nullptr));
+    sing::ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> hv_fref(new sing::wrapper<int32_t (*)(int32_t arg0, int32_t arg1,
+        int32_t *arg2)>(nullptr));
     sing::ptr<sing::ptr<int32_t>> hv_ptr(new sing::wrapper<sing::ptr<int32_t>>);
     sing::ptr<sing::array<int32_t, 5>> hv_array(new sing::wrapper<sing::array<int32_t, 5>>);
     *hv_array = {0};
@@ -137,7 +137,7 @@ void test_types_and_vars()
     sing::ptr<int32_t> pv_int32 = hv_int32;
     sing::ptr<bool> pv_bool = hv_bool;
     sing::ptr<std::string> pv_string = hv_string;
-    sing::ptr<int32_t (*)(const int32_t arg0, const int32_t arg1, int32_t *arg2)> pv_fref = hv_fref;
+    sing::ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> pv_fref = hv_fref;
     sing::ptr<sing::ptr<int32_t>> pv_ptr = hv_ptr;
     sing::ptr<sing::array<int32_t, 5>> pv_array = hv_array;
     sing::ptr<std::vector<int32_t>> pv_dyna = hv_dyna;

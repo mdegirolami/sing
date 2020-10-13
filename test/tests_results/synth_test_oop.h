@@ -10,7 +10,7 @@ public:
     stat();
     ~stat();
 
-    void add(const float value);
+    void add(float value);
     bool getall(float *avg, float *variance) const;
 
     int32_t count_;
@@ -35,7 +35,7 @@ public:
 
 class tough_tester : public tester {
 public:
-    virtual void tough_test(const bool enable) = 0;
+    virtual void tough_test(bool enable) = 0;
 };
 
 // very simple: NO costructor/destructor/private stuff/inheritance

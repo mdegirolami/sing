@@ -365,7 +365,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
                 *dst += ", ";
                 AddSplitMarker(dst);
             }
-            if (arg->HasOneOfFlags(VF_READONLY)/* && mode == PPM_POINTER*/) {
+            if (arg->HasOneOfFlags(VF_READONLY) && mode != PPM_VALUE) {
                 *dst += "const ";
             }
             if (ii > last_uninited && prototype) {
@@ -440,11 +440,14 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
     // collect some info
     bool supports_typeswitch = type_spec->member_interfaces_.size() > 0;
     bool has_private = false;
+    bool has_public_var = false;
     bool needs_constructor = false;
     for (int ii = 0; ii < type_spec->member_vars_.size(); ++ii) {
         VarDeclaration *vdecl = type_spec->member_vars_[ii];
         if (!vdecl->IsPublic()) {
             has_private = true;
+        } else {
+            has_public_var = true;
         }
         if (vdecl->initer_ != nullptr || vdecl->weak_type_spec_->NeedsZeroIniter()) {
             needs_constructor = true;
@@ -515,7 +518,7 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
     // user defined
     int num_functions = SynthClassMemberFunctions(&type_spec->member_functions_, &type_spec->fn_implementors_, 
                                                     type_spec->first_hinherited_member_, true, false);
-    if (num_functions > 0) {
+    if (num_functions > 0 && (supports_typeswitch || has_public_var)) {
         EmptyLine();
     }
 
@@ -1273,6 +1276,7 @@ void CppSynth::SynthExpressionAndCastToInt(string *dst, IAstExpNode *node, bool 
 {
     int             priority;
 
+    *dst = "";
     priority = SynthExpression(dst, node);
     Token   target = use_int64 ? TOKEN_INT64 : TOKEN_INT32;
     CastIfNeededTo(target, node->GetAttr()->GetAutoBaseType(), dst, priority, false);

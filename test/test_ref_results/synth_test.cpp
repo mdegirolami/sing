@@ -6,11 +6,11 @@ static const int32_t vvv = 5;
 
 static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sing::array<sing::array<std::string, 4>, 4> *vout);
 static sing::ptr<std::string> get_a_string();
-static int32_t add_int(const int32_t val0, const int32_t val1 = 5);
-static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout);
-static void forward(const myint val);
+static int32_t add_int(int32_t val0, int32_t val1 = 5);
+static void add_int3(int32_t val0, int32_t val1, int32_t *valout);
+static void forward(myint val);
 static void expressions();
-static void funwithdefs(const int32_t a0 = 100, const char *a1 = "ciccio" "franco", const bool a3 = vvv > 2, const sing::ptr<int32_t> a4 = nullptr);
+static void funwithdefs(int32_t a0 = 100, const char *a1 = "ciccio" "franco", bool a3 = vvv > 2, sing::ptr<int32_t> a4 = nullptr);
 static void minmaxswap();
 static void string_tests(const char *arg);
 static void string_copy(const char *arg, std::string *aout);
@@ -29,12 +29,12 @@ static sing::ptr<std::string> get_a_string()
     return (to_return);
 }
 
-static int32_t add_int(const int32_t val0, const int32_t val1)
+static int32_t add_int(int32_t val0, int32_t val1)
 {
     return (val0 + val1);
 }
 
-static void add_int3(const int32_t val0, const int32_t val1, int32_t *valout)
+static void add_int3(int32_t val0, int32_t val1, int32_t *valout)
 {
     *valout = val0 + val1;
 }
@@ -135,7 +135,7 @@ int32_t synth_test()
 
     // sizeof and dimof
     int32_t v_int32 = 0;
-    v_int32 = sizeof(int8_t (*)(const int32_t a1));
+    v_int32 = sizeof(int8_t (*)(int32_t a1));
     v_int32 = sizeof((*onheap)[2]);
 
     // simplifying &*
@@ -163,7 +163,7 @@ int32_t synth_test()
     return ((int32_t)10.0f);
 }
 
-static void forward(const myint val)
+static void forward(myint val)
 {
 }
 
@@ -358,7 +358,7 @@ static void expressions()
 }
 
 // functions with defaults
-static void funwithdefs(const int32_t a0, const char *a1, const bool a3, const sing::ptr<int32_t> a4)
+static void funwithdefs(int32_t a0, const char *a1, bool a3, sing::ptr<int32_t> a4)
 {
     const std::string aaa = sing::s_format("%s%s", "ciccio", a1);
     const std::string bbb = sing::s_format("%s%s", a1, "ciccio");
