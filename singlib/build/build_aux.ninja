@@ -6,14 +6,14 @@ temp = ../../out_bench
 # programs
 singcc = ../../../compiler/bin/sing
 
-cflags = -fsigned-char -I $src_b -I../../inc
+cflags = -fsigned-char -I $src_b -I../../inc -fmax-errors=20
 obj = .
 
 #rules
 rule sc
   deps = gcc
   depfile = $out.d
-  command = $singcc $debug_flags $skip_usage -I $singsrc -I $singlibs -MF -o $out $in
+  command = $singcc $skip_usage -I $singsrc -I $singlibs -MF -o $out $in
 
 rule cc
   deps = gcc
@@ -34,8 +34,9 @@ build str_tables.o  : cc $src_l/str_tables.cpp
 build sort.o        : cc $src_l/sort.cpp
 build sio.o         : cc $src_l/sio.cpp
 build sys.o         : cc $src_l/sys.cpp
+build thread.o      : cc $src_l/thread.cpp
 
-build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o sys.o
+build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o sys.o thread.o
 
 # the bench
 
@@ -43,11 +44,13 @@ build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o sys.o
 build $temp/str_test.h | $temp/str_test.cpp : sc $singsrc/str_test.sing
 build $temp/sio_test.h | $temp/sio_test.cpp : sc $singsrc/sio_test.sing
 build $temp/sys_test.h | $temp/sys_test.cpp : sc $singsrc/sys_test.sing
+build $temp/thread_test.h | $temp/thread_test.cpp : sc $singsrc/thread_test.sing
 
 # temp -> obj
 build str_test.o  : cc $temp/str_test.cpp
 build sio_test.o  : cc $temp/sio_test.cpp
 build sys_test.o  : cc $temp/sys_test.cpp
+build thread_test.o : cc $temp/thread_test.cpp
 
 # cpp -> obj
 build main.o             : cc $src_b/main.cpp
@@ -60,6 +63,6 @@ build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp
 build SortTest.o         : cc $src_b/SortTest.cpp 
 
 #link
-build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o $lib_target
+build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o $lib_target
 
 default $bin_target

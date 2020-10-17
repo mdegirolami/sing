@@ -2,7 +2,7 @@
 
 char NumberSelector::id__;
 
-bool NumberSelector::isGood(const int32_t cp) const
+bool NumberSelector::isGood(int32_t cp) const
 {
     return (sing::isDigit(cp));
 }

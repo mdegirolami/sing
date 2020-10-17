@@ -21,6 +21,7 @@ bool str_test();
 bool SortTest(int veclen);
 bool sio_test();
 bool sys_test();
+bool thread_test();
 
 int main() {
     //test_types_and_vars();
@@ -28,7 +29,7 @@ int main() {
     //using_strings();
     //test_intrinsics();
     //CheckLiterals();
-    //ptrtest();
+    ptrtest();
     //print_primes_to(100);
     //test_ptr_speed();
     //speed_test();
@@ -57,6 +58,12 @@ int main() {
 
     // print limits
     //printf("\nmax float is %g and max double is %g", sing::f32_max, sing::f64_max);    
+
+    // if (thread_test()) {
+    //     printf("\nthread lib: passed\r\n");
+    // } else {
+    //     printf("\nthread lib: failed !!\r\n");
+    // }
 
     return(0);
 }

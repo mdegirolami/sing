@@ -1,0 +1,70 @@
+namespace sing;
+
+public interface Runnable {
+    fn mut work() void;
+}
+
+public fn runFn(torun () void, stack_size i32 = 0) void;
+public fn run(torun *Runnable, stack_size i32 = 0) void;
+public fn numCores() i32;
+
+public class Lock {
+public: 
+    fn mut init(spincount i32 = 100) bool;
+    fn mut lock() void;
+    fn mut unlock() void;    
+    fn mut trylock() bool;  // returns true if acquires the lock
+    
+    fn finalize() void;
+} 
+
+public class Event {
+public:     
+    fn mut init() bool;
+    fn mut wait() void;
+    fn mut signal() void;    
+    
+    fn finalize() void;
+} 
+
+public class Atomic {
+public:     
+    fn mut set(value i32) void;
+    fn     get() i32;
+    fn mut inc() i32;
+    fn mut dec() i32;    
+}
+
+public enum ExecuterStatus { stopped, running, flushing, stopping }
+
+public class Executer {
+public:
+    fn mut start(queue_len i32 = 16, stack_size i32 = 0) bool; 
+    fn mut stop() void;                                 // stop processing and clears all the queues.
+    fn mut flush() void;                                // just clears all the queues.
+    fn mut startFlushing() void;                        // must be followed by a blocking flush to complete the task
+    fn mut setEvent(ev *Event) void;                    // gets signaled each time a runnable finishes
+
+    fn mut enqueue(torun *Runnable) bool;                   // returns false if the queue is full
+    fn mut getRunnable(blocking bool = false) *Runnable;    // from output queue, returns null if no processed Runnable is present
+
+    fn isFlushing() bool;
+    fn numQueued() i32;                                 // number of queued jobs (includes the executing one)
+    fn numDone() i32;                                   // number of jobs in te output queue
+    
+    fn finalize() void;
+
+private:
+    var insertion Event;
+    var stopped Event;
+    var def_ready *Event;
+    var ready *Event;
+    var status ExecuterStatus;
+    var queue [*]*Runnable;
+    var in_idx = 0;
+    var out_idx = 0;
+    var todo_idx = 0;
+    var done_count Atomic;
+    var todo_count Atomic;
+}
+
