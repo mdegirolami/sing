@@ -15,7 +15,7 @@ class CppSynth {
     int                 indent_;
     int                 split_level_;   // note it is an int so that it can be decremented a lot !! (never overflows)
     int                 exp_level;      // to see if synth_expression is recursing
-    Token               return_type_;
+    const IAstTypeNode *return_type_;
     CppFormatter        formatter_;
 
     // options
@@ -66,7 +66,8 @@ class CppSynth {
     void SynthReturn(AstReturn *node);
 
     // includes a final conversion if needed/possible (you may need it because of constant expressions)
-    int SynthFullExpression(Token target_type, string *dst, IAstExpNode *node);
+    int SynthFullExpression(const IAstTypeNode *type_spec, string *dst, IAstExpNode *node);
+    int SynthFullExpression(const ExpressionAttributes *attr, string *dst, IAstExpNode *node);
 
     int SynthExpression(string *dst, IAstExpNode *node);
     int SynthIndices(string *dst, AstIndexing *node);
@@ -116,7 +117,7 @@ class CppSynth {
     int PromoteToInt32(Token target, string *dst, int priority);
     void Protect(string *dst, int priority, int next_priority, bool is_right_term = false);
     bool IsPOD(IAstTypeNode *node);
-    Token GetBaseType(IAstTypeNode *node);
+    Token GetBaseType(const IAstTypeNode *node);
     int GetRealPartOfIntegerLiteral(string *dst, AstExpressionLeaf *node, int nbits);
     void GetRealPartOfUnsignedLiteral(string *dst, AstExpressionLeaf *node);
     int GetRealPartOfFloatLiteral(string *dst, AstExpressionLeaf *node);

@@ -182,7 +182,7 @@ bool ExpressionAttributes::ApplyTheIndirectionOperator(ITypedefSolver *solver)
     }
 
     // or a pointer
-    if (exp_type_ != BT_TREE || type_tree_ == nullptr || type_tree_->GetType() != ANT_POINTER_TYPE) {
+    if (!IsStrongPointer()) {
         return(false);
     }
     AstPointerType *pointer_decl = (AstPointerType*)type_tree_;
@@ -538,6 +538,12 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ITypedefSolver *solver,
         exp_type_ = BT_BOOL;
         return(true);
     }
+    if (is_equality_comparison && (IsStrongPointer() || attr_right->IsStrongPointer())) {
+        if (IsLiteralNull() || attr_right->IsLiteralNull()) {
+            exp_type_ = BT_BOOL;
+            return(true);
+        }
+    }
     if (is_equality_comparison && type_tree_ != nullptr && type_tree_->SupportsEqualOperator() && 
         solver->AreTypeTreesCompatible(type_tree_, attr_right->type_tree_, FOR_EQUALITY) == ITypedefSolver::OK) {
         exp_type_ = BT_BOOL;
@@ -603,7 +609,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
     }
     if (operation == TOKEN_MPY) {
         if (!ApplyTheIndirectionOperator(solver)) {
-            *error = "You can use unary * only on pointers and addresses";
+            *error = "You can use unary * only on strong pointers";
             exp_type_ = BT_ERROR;
         }
     } else if (exp_type_ == BT_ADDRESS_OF) {
@@ -1303,6 +1309,16 @@ bool ExpressionAttributes::IsFunc(void) const
 bool ExpressionAttributes::IsPointer(void) const
 {
     return(exp_type_ == BT_TREE && type_tree_ != nullptr && type_tree_->GetType() == ANT_POINTER_TYPE);
+}
+
+bool ExpressionAttributes::IsWeakPointer(void) const
+{
+    return(IsPointer() && ((AstPointerType*)type_tree_)->isweak_);
+}
+
+bool ExpressionAttributes::IsStrongPointer(void) const
+{
+    return(IsPointer() && !((AstPointerType*)type_tree_)->isweak_);
 }
 
 bool ExpressionAttributes::IsCaseValueCompatibleWithSwitchExpression(ExpressionAttributes *switch_expression)

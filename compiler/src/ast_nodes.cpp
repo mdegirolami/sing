@@ -9,7 +9,7 @@ namespace SingNames {
 // TYPES
 //
 /////////////////////////
-IAstTypeNode *SolveTypedefs(IAstTypeNode *begin)
+const IAstTypeNode *SolveTypedefs(const IAstTypeNode *begin)
 {
     while (begin != nullptr) {
         if (begin->GetType() != ANT_NAMED_TYPE) {
@@ -25,6 +25,11 @@ IAstTypeNode *SolveTypedefs(IAstTypeNode *begin)
         }
     }
     return(begin);
+}
+
+IAstTypeNode *SolveTypedefs(IAstTypeNode *begin)
+{
+    return((IAstTypeNode*)SolveTypedefs((const IAstTypeNode *)begin));
 }
 
 ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_parm)

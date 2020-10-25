@@ -27,7 +27,6 @@ enum VarFlags {
     VF_WASWRITTEN = 8,
 
     VF_ISPOINTED = 0x10,    // do we need to allocate on the heap ?
-    VF_ISVOLATILE = 0x40,
 
     VF_ISARG = 0x100,
     VF_ISBUSY = 0x200,      // applies to iterators/indices inside the for block
@@ -89,7 +88,7 @@ struct RemarkDescriptor {
 class IAstNode {
 public:
     virtual ~IAstNode() {}
-    virtual AstNodeType GetType(void) = 0;
+    virtual AstNodeType GetType(void) const = 0;
     virtual PositionInfo *GetPositionRecord(void) = 0;
     virtual bool IsARemarkableNode(void) = 0;   // i.e: can accept attached comments
 };
@@ -110,6 +109,7 @@ public:
     virtual bool SupportsEqualOperator(void) = 0;
 };
 
+const IAstTypeNode *SolveTypedefs(const IAstTypeNode *begin);
 IAstTypeNode *SolveTypedefs(IAstTypeNode *begin);
 ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_parm);
 
@@ -149,7 +149,7 @@ public:
 
     virtual ~AstFuncType();
     AstFuncType(bool ispure) : ispure_(ispure), varargs_(false), return_type_(NULL), is_member_(false), is_owning_(true) { arguments_.reserve(8); }
-    virtual AstNodeType GetType(void) { return(ANT_FUNC_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_FUNC_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(true); }
@@ -175,11 +175,11 @@ public:
 
     virtual ~AstPointerType() { if (pointed_type_ != NULL && owning_) delete pointed_type_; }
     AstPointerType() : isconst_(false), isweak_(false), pointed_type_(nullptr), owning_(true) {}
-    virtual AstNodeType GetType(void) { return(ANT_POINTER_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_POINTER_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(false); }
-    virtual bool SupportsEqualOperator(void) { return(true); }
+    virtual bool SupportsEqualOperator(void) { return(!isweak_); }
     bool CheckConstness(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void Set(bool isconst, bool isweak, IAstTypeNode *pointed) { isconst_ = isconst; isweak_ = isweak; pointed_type_ = pointed; }
     void SetWithRef(bool isconst, IAstTypeNode *pointed) { isconst_ = isconst; owning_ = false; pointed_type_ = pointed; }
@@ -196,7 +196,7 @@ public:
 
     virtual ~AstMapType() { if (key_type_ != NULL) delete key_type_; if (returned_type_ != NULL) delete returned_type_; }
     AstMapType() : key_type_(NULL), returned_type_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_MAP_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_MAP_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
@@ -230,7 +230,7 @@ public:
     AstArrayType() : is_dynamic_(false), element_type_(NULL), expression_(NULL), 
                      dimension_(0), is_regular(false), dimension_was_computed_(false)
                      {}
-    virtual AstNodeType GetType(void) { return(ANT_ARRAY_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_ARRAY_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
@@ -255,7 +255,7 @@ public:
 
     AstNamedType(const char *name) : name_(name), wp_decl_(NULL), pkg_index_(-1), next_component(NULL) {}
     ~AstNamedType() { if (next_component != NULL) delete next_component; }
-    virtual AstNodeType GetType(void) { return(ANT_NAMED_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_NAMED_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void);
@@ -273,7 +273,7 @@ public:
     virtual bool IsARemarkableNode(void) { return(false); }
 
     AstBaseType(Token token) { base_type_ = token; }
-    virtual AstNodeType GetType(void) { return(ANT_BASE_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_BASE_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { 
@@ -298,7 +298,7 @@ public:
 
     virtual ~AstEnumType();
     //AstEnumType() {}
-    virtual AstNodeType GetType(void) { return(ANT_ENUM_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_ENUM_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(true); }
@@ -320,7 +320,7 @@ public:
 
     virtual ~AstInterfaceType();
     AstInterfaceType() : first_hinherited_member_(-1) {}
-    virtual AstNodeType GetType(void) { return(ANT_INTERFACE_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_INTERFACE_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
@@ -352,7 +352,7 @@ public:
 
     virtual ~AstClassType();
     AstClassType();
-    virtual AstNodeType GetType(void) { return(ANT_CLASS_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_CLASS_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
@@ -388,7 +388,7 @@ public:
 
     virtual ~AstArgument();
     AstArgument() : expression_(nullptr) {}
-    virtual AstNodeType GetType(void) { return(ANT_ARGUMENT); }
+    virtual AstNodeType GetType(void) const { return(ANT_ARGUMENT); }
     void AddName(const char *value) { name_ = value; }
     void SetExpression(IAstExpNode *exp) { expression_ = exp; }
 };
@@ -417,7 +417,7 @@ public:
     AstExpressionLeaf(Token type, const char *value);
     void SetImgValue(const char *value, bool is_negated) { img_value_ = value; img_is_negated_ = is_negated; }
     void SetRealPartNfo(bool isint, bool isnegated) { real_is_int_ = isint; real_is_negated_ = isnegated; }
-    virtual AstNodeType GetType(void) { return(ANT_EXP_LEAF); }
+    virtual AstNodeType GetType(void) const { return(ANT_EXP_LEAF); }
     void AppendToValue(const char *to_append) { value_ += to_append; }
     void SetUMA(bool value) { unambiguous_member_access = value; }
     virtual bool HasFunction(void) { return(false); }
@@ -439,7 +439,7 @@ public:
 
     virtual ~AstUnop() { if (operand_ != NULL) delete operand_;  if (type_ != NULL) delete type_;  }
     AstUnop(Token type) : operand_(NULL), subtype_(type), type_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_UNOP); }
+    virtual AstNodeType GetType(void) const { return(ANT_UNOP); }
     void SetOperand(IAstExpNode *op) { operand_ = op; }
     void SetTypeOperand(IAstTypeNode *op) { type_ = op; }
     virtual bool HasFunction(void) { return(operand_ != nullptr && operand_->HasFunction()); }
@@ -464,7 +464,7 @@ public:
 
     AstBinop(Token type, IAstExpNode *left, IAstExpNode*right);
     virtual ~AstBinop();
-    virtual AstNodeType GetType(void) { return(ANT_BINOP); }
+    virtual AstNodeType GetType(void) const { return(ANT_BINOP); }
     void SetSignature(const char *signature) { builtin_signature_ = signature; }
     virtual bool HasFunction(void);
 };
@@ -485,7 +485,7 @@ public:
 
     virtual ~AstFunCall();
     AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr), is_statement_(false) {}
-    virtual AstNodeType GetType(void) { return(ANT_FUNCALL); }
+    virtual AstNodeType GetType(void) const { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
     virtual bool HasFunction(void) { return(true); }
     virtual bool FlagAsStatement(void) { is_statement_ = true; } 
@@ -508,7 +508,7 @@ public:
 
     virtual ~AstIndexing();
     AstIndexing(IAstExpNode *left) : indexed_term_(left), lower_value_(nullptr), upper_value_(nullptr), map_type_(nullptr) {}
-    virtual AstNodeType GetType(void) { return(ANT_INDEXING); }
+    virtual AstNodeType GetType(void) const { return(ANT_INDEXING); }
     void SetAnIndex(IAstExpNode *value) { 
         lower_value_ = value; 
         upper_value_ = nullptr; 
@@ -540,7 +540,7 @@ public:
 
     AstBlock() { can_remark_ = false; }
     virtual ~AstBlock();
-    virtual AstNodeType GetType(void) { return(ANT_BLOCK); }
+    virtual AstNodeType GetType(void) const { return(ANT_BLOCK); }
     void AddItem(IAstNode *node) { block_items_.push_back(node); }
     void SetRemarkable(void) { can_remark_ = true; }
 };
@@ -556,7 +556,7 @@ public:
 
     virtual ~AstIncDec() { if (left_term_ != NULL) delete left_term_; }
     AstIncDec(Token op) : operation_(op), left_term_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_INCDEC); }
+    virtual AstNodeType GetType(void) const { return(ANT_INCDEC); }
     void SetLeftTerm(IAstExpNode *exp) { left_term_ = exp; }
 };
 
@@ -572,7 +572,7 @@ public:
 
     virtual ~AstSwap() { if (left_term_ != NULL) delete left_term_; }
     AstSwap(IAstExpNode *left, IAstExpNode *right) : left_term_(left), right_term_(right) {}
-    virtual AstNodeType GetType(void) { return(ANT_SWAP); }
+    virtual AstNodeType GetType(void) const { return(ANT_SWAP); }
 };
 
 class AstUpdate : public IAstNode {
@@ -587,7 +587,7 @@ public:
 
     virtual ~AstUpdate() { if (left_term_ != NULL) delete left_term_; if (right_term_ != NULL) delete right_term_; }
     AstUpdate(Token op, IAstExpNode *left, IAstExpNode *right) : operation_(op), left_term_(left), right_term_(right) {}
-    virtual AstNodeType GetType(void) { return(ANT_UPDATE); }
+    virtual AstNodeType GetType(void) const { return(ANT_UPDATE); }
 };
 
 class AstWhile : public IAstNode {
@@ -601,7 +601,7 @@ public:
 
     virtual ~AstWhile() { if (expression_ != NULL) delete expression_;  if (block_ != NULL) delete block_; }
     AstWhile() : expression_(NULL), block_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_WHILE); }
+    virtual AstNodeType GetType(void) const { return(ANT_WHILE); }
     IAstNode *GetTheExpression(void) { return(expression_); }
     IAstNode *GetTheBlock(void) { return(block_); }
     void SetExpression(IAstExpNode *exp) { expression_ = exp; }
@@ -620,7 +620,7 @@ public:
 
     virtual ~AstIf();
     AstIf() : default_block_(NULL) { expressions_.reserve(4); blocks_.reserve(4); }
-    virtual AstNodeType GetType(void) { return(ANT_IF); }
+    virtual AstNodeType GetType(void) const { return(ANT_IF); }
     void AddExpression(IAstExpNode *exp) { expressions_.push_back(exp); }
     void AddBlock(AstBlock *blk) { blocks_.push_back(blk); }
     void SetDefaultBlock(AstBlock *blk) { default_block_ = blk;}
@@ -647,7 +647,7 @@ public:
     virtual ~AstFor();
     AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL), index_(NULL), iterator_(NULL), 
                 index_referenced_(false), step_value_(1) {}
-    virtual AstNodeType GetType(void) { return(ANT_FOR); }
+    virtual AstNodeType GetType(void) const { return(ANT_FOR); }
     void SetIndexVar(VarDeclaration *var) { index_ = var; }
     void SetIteratorVar(VarDeclaration *var) { iterator_ = var; }
     void SetTheSet(IAstExpNode *exp) { set_ = exp; }
@@ -667,7 +667,7 @@ public:
     virtual bool IsARemarkableNode(void) { return(true); }
 
     AstSimpleStatement(Token type) : subtype_(type) {}
-    virtual AstNodeType GetType(void) { return(ANT_SIMPLE); }
+    virtual AstNodeType GetType(void) const { return(ANT_SIMPLE); }
 };
 
 class AstReturn : public IAstNode {
@@ -680,7 +680,7 @@ public:
 
     virtual ~AstReturn() { if (retvalue_ != NULL) delete retvalue_; }
     AstReturn() : retvalue_(NULL) {}
-    virtual AstNodeType GetType(void) { return(ANT_RETURN); }
+    virtual AstNodeType GetType(void) const { return(ANT_RETURN); }
     void AddRetExp(IAstExpNode *exp) { retvalue_ = exp; }
 };
 
@@ -699,7 +699,7 @@ public:
 
     virtual ~AstSwitch();
     AstSwitch() : switch_value_(nullptr), has_default(false) {}
-    virtual AstNodeType GetType(void) { return(ANT_SWITCH); }
+    virtual AstNodeType GetType(void) const { return(ANT_SWITCH); }
     void AddSwitchValue(IAstExpNode *exp) { switch_value_ = exp; }
     void AddCase(IAstExpNode *exp) { case_values_.push_back(exp); }
     void AddStatement(IAstNode *statement) { 
@@ -729,7 +729,7 @@ public:
 
     virtual ~AstTypeSwitch();
     AstTypeSwitch() : expression_(NULL), reference_(nullptr), on_interface_ptr_(false) {}
-    virtual AstNodeType GetType(void) { return(ANT_TYPESWITCH); }
+    virtual AstNodeType GetType(void) const { return(ANT_TYPESWITCH); }
     void Init(VarDeclaration *ref, IAstExpNode *exp) { reference_ = ref; expression_ = exp; }
     void AddCase(IAstTypeNode *the_type, IAstNode *statement) {
         case_types_.push_back(the_type); 
@@ -754,7 +754,7 @@ public:
 
     virtual ~AstIniter();
     AstIniter() { elements_.reserve(4); }
-    virtual AstNodeType GetType(void) { return(ANT_INITER); }
+    virtual AstNodeType GetType(void) const { return(ANT_INITER); }
     void AddElement(IAstNode *element) { elements_.push_back(element); }
 };
 
@@ -781,7 +781,7 @@ public:
     VarDeclaration(const char *name) : 
         name_(name), flags_(0), type_spec_(nullptr), initer_(nullptr), 
         weak_type_spec_(nullptr), is_public_(false), weak_iterated_var_(nullptr) {}
-    virtual AstNodeType GetType(void) { return(ANT_VAR); }
+    virtual AstNodeType GetType(void) const { return(ANT_VAR); }
     void SetType(IAstTypeNode *node) { type_spec_ = node; weak_type_spec_ = node; }
     void SetIniter(IAstNode *node) { initer_ = node; }
     void ForceFlags(int32_t flags) { flags_ = flags; }
@@ -812,7 +812,7 @@ public:
 
     virtual ~TypeDeclaration() { if (type_spec_ != NULL) delete type_spec_; }
     TypeDeclaration(const char *name) : name_(name), type_spec_(NULL), is_public_(false), is_used_(false), forward_referral_(FRT_NONE) {}
-    virtual AstNodeType GetType(void) { return(ANT_TYPE); }
+    virtual AstNodeType GetType(void) const { return(ANT_TYPE); }
     void SetType(IAstTypeNode *node) { type_spec_ = node; }
     void SetUsed(void) { is_used_ = true; }
     void SetForwardReferred(ForwardReferenceType mode) { forward_referral_ = mode; }
@@ -842,7 +842,7 @@ public:
 
     virtual ~FuncDeclaration() { if (function_type_ != NULL) delete function_type_; if (block_ != NULL) delete block_; }
     FuncDeclaration() : function_type_(NULL), block_(NULL), is_public_(false), is_used_(false), type_is_ok_(false), is_muting_(false), is_virtual_(false) {}
-    virtual AstNodeType GetType(void) { return(ANT_FUNC); }
+    virtual AstNodeType GetType(void) const { return(ANT_FUNC); }
     void SetNames(const char *name1, const char *name2);
     void AddType(AstFuncType *type) { function_type_ = type; }
     void AddBlock(AstBlock *block) { block_ = block; }
@@ -873,7 +873,7 @@ public:
 
     //virtual ~AstDependency();
     AstDependency(const char *path, const char *name);
-    virtual AstNodeType GetType(void) { return(ANT_DEPENDENCY); }
+    virtual AstNodeType GetType(void) const { return(ANT_DEPENDENCY); }
     void SetLocalPackageName(const char *name) { package_name_ = name; }
     void SetUsage(DependencyUsage usage);
     DependencyUsage GetUsage(void) { return(usage_); }
@@ -897,7 +897,7 @@ public:
         dependencies_.reserve(8); 
         declarations_.reserve(16);
     }
-    virtual AstNodeType GetType(void) { return(ANT_FILE); }
+    virtual AstNodeType GetType(void) const { return(ANT_FILE); }
     void AddDependency(AstDependency *dep) { dependencies_.push_back(dep); }
     void AddNode(IAstDeclarationNode *node) { declarations_.push_back(node); }
     void SetNamespace(const char *value) { namespace_ = value; }

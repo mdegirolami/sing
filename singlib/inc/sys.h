@@ -12,8 +12,8 @@ class BrokenTime final {
 public:
     BrokenTime();
 
-    void fillLocal(const int64_t time);
-    void fillUtc(const int64_t time);
+    void fillLocal(int64_t time);
+    void fillUtc(int64_t time);
 
     int8_t second_;                     // seconds after the minute — [0, 60]
     int8_t minute_;                     // minutes after the hour — [0, 59]
@@ -30,7 +30,7 @@ public:
 class RndGen final {
 public:
     RndGen();
-    void rndSeed(const int64_t seed);
+    void rndSeed(int64_t seed);
     uint64_t rndU64();
     double rnd();
     double rndNorm();
@@ -41,21 +41,21 @@ private:
 
 void system(const char *command);
 Phandle execute(const char *command);
-Phandle automate(const char *command, sing::iptr<Stream> *sstdin, sing::iptr<Stream> *sstdout, sing::iptr<Stream> *sstderr);
-int32_t waitCommandExit(const Phandle handle);
-void exit(const int32_t retcode);
+Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr);
+int32_t waitCommandExit(Phandle handle);
+void exit(int32_t retcode);
 
 // time management
-void wait(const int32_t microseconds);
+void wait(int32_t microseconds);
 int64_t time();     // seconds resolution
 int64_t clock();
-int64_t clocksDiff(const int64_t before, const int64_t after);                  // microseconds
+int64_t clocksDiff(int64_t before, int64_t after);          // microseconds
 
 // environment
 std::string getenv(const char *name);
-void setenv(const char *name, const char *value, const bool override = true);
+void setenv(const char *name, const char *value, bool override = true);
 
 // mix
-void validate(const bool condition);
+void validate(bool condition);
 
 }   // namespace

@@ -2,50 +2,11 @@
 
 namespace sinth_test_oop {
 
-// has virtual destructor, interface (support for typeswitch)
-class c0_test final : public tough_tester {
-public:
-    c0_test();
-    virtual ~c0_test();
-    virtual void *get__id() const override { return(&id__); };
-    void init();
-    virtual void tough_test(bool enable) override;
-    virtual result isgood() const override;
-
-    static char id__;
-
-private:
-    std::string message_;
-    bool istough_;
-};
-
-// testing 'by'
-class delegating final : public tough_tester {
-public:
-    virtual void *get__id() const override { return(&id__); };
-    void init()
-    {
-        implementor_.init();
-    };
-    virtual void tough_test(bool enable) override
-    {
-        implementor_.tough_test(enable);
-    };
-    virtual result isgood() const override
-    {
-        return(implementor_.isgood());
-    };
-
-    static char id__;
-
-private:
-    c0_test implementor_;
-};
-
 typedef sing::map<std::string, int32_t> maptype;
 
+static void receives_ptr(std::shared_ptr<delegating> v0);
 static int32_t check_typeswitch(const tester &object);
-static int32_t check_typeswitch2(sing::iptr<tester> object);
+static int32_t check_typeswitch2(std::shared_ptr<tester> object);
 static void check_builtin();
 
 char c0_test::id__;
@@ -130,7 +91,7 @@ result c0_test::isgood() const
     return (result::ko);
 }
 
-void test_oop()
+std::shared_ptr<delegating> test_oop()
 {
     stat v_stat;
     float avg = 0;
@@ -141,8 +102,8 @@ void test_oop()
     v_stat.add((float)10);
     v_stat.getall(&avg, &variance);
 
-    sing::ptr<delegating> t_instance(new sing::wrapper<delegating>);
-    const sing::iptr<tester> t_p = t_instance;
+    std::shared_ptr<delegating> t_instance = std::make_shared<delegating>();
+    const std::shared_ptr<tester> t_p = t_instance;
 
     // access through interface, switch integer constant
     switch ((*t_p).isgood()) {
@@ -162,20 +123,39 @@ void test_oop()
         }
         break;
     default:
-        return;
+        return (nullptr);
         break;
     }
 
     // access through pointer
-    const sing::ptr<delegating> t_p2 = t_instance;
+    const std::shared_ptr<delegating> t_p2 = t_instance;
     (*t_p2).tough_test(true);
 
     const c0_test alternate;
+
+    // weak pointers assignments
+    delegating dd;
+    dd.p1_ = t_instance;
+    dd.p2_ = t_p2;
+    dd.p1_.reset();
+    dd.p1_ = dd.p2_;
 
     check_typeswitch(alternate);
     check_typeswitch2(t_p);
 
     check_builtin();
+
+    // legal uses of a weak pointer
+    std::shared_ptr<delegating> t_p3 = dd.p1_.lock();
+    t_p3 = dd.p2_.lock();
+    receives_ptr(dd.p2_.lock());
+    sing::map<std::shared_ptr<delegating>, int32_t> test;
+    test.insert(dd.p2_.lock(), 89);
+    return (dd.p1_.lock());
+}
+
+static void receives_ptr(std::shared_ptr<delegating> v0)
+{
 }
 
 static int32_t check_typeswitch(const tester &object)
@@ -195,15 +175,16 @@ static int32_t check_typeswitch(const tester &object)
     return (-1);
 }
 
-static int32_t check_typeswitch2(sing::iptr<tester> object)
+static int32_t check_typeswitch2(std::shared_ptr<tester> object)
 {
-    sing::ptr<delegating> tmp;
-    if ((*object).get__id() == &c0_test::id__) {
-        sing::ptr<c0_test> ref = (sing::wrapper<c0_test>*)object.get_wrapper();
+    std::shared_ptr<delegating> tmp;
+    if (!object) {
+    } else if ((*object).get__id() == &c0_test::id__) {
+        std::shared_ptr<c0_test> ref(object, (c0_test*)object.get());
         (*ref).tough_test(true);
         return (0);
     } else if ((*object).get__id() == &delegating::id__) {
-        sing::ptr<delegating> ref = (sing::wrapper<delegating>*)object.get_wrapper();
+        std::shared_ptr<delegating> ref(object, (delegating*)object.get());
         tmp = ref;                      // must select this
     } else {
         return (2);
@@ -314,9 +295,9 @@ static void check_builtin()
     sing::insert_v(aa, 1, tt);
     sing::append(aa, tt);
 
-    sing::ptr<std::vector<float>> bb(new sing::wrapper<std::vector<float>>);
+    std::shared_ptr<std::vector<float>> bb = std::make_shared<std::vector<float>>();
     *bb = {(float)1, (float)2, (float)3};
-    const sing::ptr<std::vector<float>> bbp = bb;
+    const std::shared_ptr<std::vector<float>> bbp = bb;
     (*bbp).push_back((float)1);
     ss = (*bb).size();
 
@@ -328,9 +309,9 @@ static void check_builtin()
     maptype map1;
     maptype map2 = {{"one", 1}, {"two", 2}, {"three", 3}};
     maptype map3 = map1;
-    sing::ptr<maptype> map4(new sing::wrapper<maptype>);    // on heap with initializzation !
+    std::shared_ptr<maptype> map4 = std::make_shared<maptype>();                // on heap with initializzation !
     *map4 = {{"one", 1}, {"two", 2}, {"three", 3}};
-    const sing::ptr<maptype> mapp = map4;
+    const std::shared_ptr<maptype> mapp = map4;
 
     map1.reserve(100);
     int32 = map1.capacity();

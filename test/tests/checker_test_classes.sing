@@ -72,6 +72,9 @@ public:
     var xxl i32 = ctc;          // ok
     var implementor delegated;
     fn mv0 () void;                     // conflicts with variable member
+    var wptr1 weak*if0;           // ok
+    var wptr2 weak*delegated;     // ok
+    var wptr3 weak*if0 = null;    // unallowed
 }
 
 fn first.nonexistent() void         // class has not this function
@@ -147,6 +150,14 @@ fn switchtest(in arg0 if1) void
     case if1implementor: tref.f3();  // error: arg0 is const but f3 is muting
     case delegated: int0++;          // not derived from if1
     }
+
+    var vt1 first;
+    typeswitch(tref = vt1.wptr1) {
+    case if1implementor: int0++;  // error: arg0 is const but f3 is muting
+    }
+    var vt2 delegated = *vt1.wptr2;
+    var vt3 delegated;
+    delegated = *vt1.wptr2;
 }
 
 // dot operator

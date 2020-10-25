@@ -338,7 +338,6 @@ void AstNodesPrint::PrintVarDeclaration(VarDeclaration *node)
     if (node->HasOneOfFlags(VF_ISFORINDEX)) fprintf(fd_, "is for index ");
     if (node->HasOneOfFlags(VF_ISFORITERATOR)) fprintf(fd_, "is for iterator ");
     if (node->HasOneOfFlags(VF_ISPOINTED)) fprintf(fd_, "is pointed ");
-    if (node->HasOneOfFlags(VF_ISVOLATILE)) fprintf(fd_, "volatile ");
     if (node->initer_ != NULL) fprintf(fd_, "with initer ");
     fprintf(fd_, "{");
     ++indent_;

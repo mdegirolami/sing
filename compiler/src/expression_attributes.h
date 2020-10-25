@@ -97,6 +97,7 @@ public:
     bool IsScalar(void) const { return((exp_type_ & (BT_ALL_INTEGERS + BT_ALL_FLOATS)) != 0); }
     bool IsUnsignedInteger(void) const { return((exp_type_ & BT_ALL_UINTS) != 0); }
     bool IsNumber(void) const { return((exp_type_ & BT_ALL_THE_NUMBERS) != 0); }
+    bool IsLiteralNull(void) const { return(exp_type_ == BT_LITERAL_NULL); }
     bool HasIntegerType(void) const;
     bool HasComplexType(void) const;
     bool CanIncrement(void)  const { return((exp_type_ & BT_ALL_INTEGERS) != 0 && is_a_variable_ && is_writable_); }
@@ -124,6 +125,8 @@ public:
     bool IsMap(void) const;
     bool IsFunc(void) const;
     bool IsPointer(void) const;
+    bool IsWeakPointer(void) const;
+    bool IsStrongPointer(void) const;
     bool IsWritable(void) { return(is_writable_); }
     bool IsCaseValueCompatibleWithSwitchExpression(ExpressionAttributes *switch_expression);
 

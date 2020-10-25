@@ -38,12 +38,54 @@ public:
     virtual void tough_test(bool enable) = 0;
 };
 
+// has virtual destructor, interface (support for typeswitch)
+class c0_test final : public tough_tester {
+public:
+    c0_test();
+    virtual ~c0_test();
+    virtual void *get__id() const override { return(&id__); };
+    void init();
+    virtual void tough_test(bool enable) override;
+    virtual result isgood() const override;
+
+    static char id__;
+
+private:
+    std::string message_;
+    bool istough_;
+};
+
+// testing 'by'
+class delegating final : public tough_tester {
+public:
+    virtual void *get__id() const override { return(&id__); };
+    void init()
+    {
+        implementor_.init();
+    };
+    virtual void tough_test(bool enable) override
+    {
+        implementor_.tough_test(enable);
+    };
+    virtual result isgood() const override
+    {
+        return(implementor_.isgood());
+    };
+
+    static char id__;
+    std::weak_ptr<delegating> p1_;
+    std::weak_ptr<delegating> p2_;
+
+private:
+    c0_test implementor_;
+};
+
 // very simple: NO costructor/destructor/private stuff/inheritance
 class simple final {
 public:
     std::string xxx_;
 };
 
-void test_oop();
+std::shared_ptr<delegating> test_oop();
 
 }   // namespace

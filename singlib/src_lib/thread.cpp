@@ -120,16 +120,15 @@ void runFn(void (*torun)(), const int32_t stack_size)
 
 static DWORD WINAPI runnableStub(_In_ LPVOID lpParameter)
 {
-    sing::iptr<Runnable> *extra_ptr = (sing::iptr<Runnable>*)lpParameter;
-    Runnable *torun = *extra_ptr; 
-    torun->work();
+    std::shared_ptr<Runnable> *extra_ptr = (std::shared_ptr<Runnable>*)lpParameter;
+    (*extra_ptr)->work(); 
     delete extra_ptr;
 }
 
-void run(const sing::iptr<Runnable> torun, const int32_t stack_size)
+void run(const std::shared_ptr<Runnable> torun, const int32_t stack_size)
 {
     // triky: we create a new pointer to increment runnable refcount and keep it alive.
-    auto extra_ptr = new sing::iptr<Runnable>(torun);
+    auto extra_ptr = new std::shared_ptr<Runnable>(torun);
     CreateThread(nullptr, std::max(stack_size, 4096), runnableStub, extra_ptr, 0, NULL);
 }
 
@@ -271,12 +270,12 @@ void Executer::startFlushing()
     }
 }
 
-void Executer::setEvent(const sing::ptr<Event> ev)
+void Executer::setEvent(std::shared_ptr<Event> ev)
 {
     ready_ = ev;
 }
 
-bool Executer::enqueue(const sing::iptr<Runnable> torun)
+bool Executer::enqueue(const std::shared_ptr<Runnable> torun)
 {
     if (torun == nullptr || status_ != ExecuterStatus::running) return(false);
     if (done_count_.get() + todo_count_.get() >= queue_.size()) {
@@ -289,7 +288,7 @@ bool Executer::enqueue(const sing::iptr<Runnable> torun)
     return(true);
 }
 
-sing::iptr<Runnable> Executer::getRunnable(bool blocking)
+std::shared_ptr<Runnable> Executer::getRunnable(bool blocking)
 {
     if (status_ != ExecuterStatus::running) return(nullptr);
     if (done_count_.get() <= 0) {
@@ -300,7 +299,7 @@ sing::iptr<Runnable> Executer::getRunnable(bool blocking)
             }
         } else {
             if (def_ready_ == nullptr) {
-                def_ready_ = new wrapper<Event>;    
+                def_ready_ = std::make_shared<Event>();    
                 if (def_ready_ == nullptr) return(nullptr);            
             }
             ready_ = def_ready_;
@@ -310,7 +309,7 @@ sing::iptr<Runnable> Executer::getRunnable(bool blocking)
             ready_ = nullptr;
         }
     }
-    sing::iptr<Runnable> retvalue = queue_[out_idx_];
+    std::shared_ptr<Runnable> retvalue = queue_[out_idx_];
     queue_[out_idx_] = nullptr;     // dont' extend the life of the object through the smart pointers.
     if (++out_idx_ >= queue_.size()) out_idx_ = 0;
     done_count_.dec();
@@ -341,10 +340,9 @@ void Executer::Run()
 
         // process or flush all the waiting jobs
         while (todo_count_.get() > 0) {
-            Runnable *todo = queue_[todo_idx_];
             if (++todo_idx_ >= queue_.size()) todo_idx_ = 0;
             if (status_ == ExecuterStatus::running) {
-                todo->work();
+                queue_[todo_idx_]->work();
             }
             done_count_.inc();
             todo_count_.dec();

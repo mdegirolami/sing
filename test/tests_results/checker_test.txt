@@ -257,6 +257,7 @@ ERROR !! file checker_test.sing:483:5: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:486:5: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:489:5: Type mismatch/No known conversion
 ERROR !! file checker_test.sing:494:5: Type mismatch/No known conversion
+ERROR !! file checker_test.sing:499:26: Weak pointers are allowed only as non aggregated class members.
 ERROR !! file checker_test.sing:500:5: Pointer constness mismatch
 ERROR !! file checker_test.sing:513:2: Function must return a value !!
 ERROR !! file checker_test.sing:535:2: Function must return a value !!
@@ -290,60 +291,62 @@ ERROR !! file checker_test.sing:615:29: Type mismatch in assignment. Please cast
 ERROR !! file checker_test.sing:616:40: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
 ERROR !! file checker_test.sing:617:23: On an address the only allowed operator is '*'
 ERROR !! file checker_test.sing:618:19: Unary '+' only applies to numeric types
-ERROR !! file checker_test.sing:619:21: You can use unary * only on pointers and addresses
+ERROR !! file checker_test.sing:619:21: You can use unary * only on strong pointers
 ERROR !! file checker_test.sing:620:13: Argument 1 is an output argument and needs to be a writable variable
+ERROR !! file checker_test.sing:623:34: Weak pointers are allowed only as non aggregated class members.
 ERROR !! file checker_test.sing:624:13: Argument 1 type mismatch
+ERROR !! file checker_test.sing:625:18: Weak pointers are allowed only as non aggregated class members.
 ERROR !! file checker_test.sing:628:12: Argument 1 type mismatch
 ERROR !! file checker_test.sing:629:12: Too many arguments
 ERROR !! file checker_test.sing:630:12: Argument 1 is not specified and has no default value
 ERROR !! file checker_test.sing:631:14: You can apply the & unary operator only to a local variable.
 ERROR !! file checker_test.sing:632:5: Type mismatch/No known conversion
-ERROR !! file checker_test.sing:643:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
-ERROR !! file checker_test.sing:646:37: Duplicated argument name
-ERROR !! file checker_test.sing:655:9: Sizeof doesn't apply to this type (it has variable size)
-ERROR !! file checker_test.sing:666:14: Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing:667:5: Symbol 'fvecdimf' is duplicated
-ERROR !! file checker_test.sing:667:14: Array size must be '*' (for dynamic) or a positive integer value
-ERROR !! file checker_test.sing:671:20: Indices must be positive integers
-ERROR !! file checker_test.sing:673:32: Value too big for the type or can't be represented in full precision.
-ERROR !! file checker_test.sing:674:15: Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal
-ERROR !! file checker_test.sing:675:15: The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing:677:15: Overflow in float to int conversion
-ERROR !! file checker_test.sing:678:41: Value too big to be represented in an integer variable.
-ERROR !! file checker_test.sing:681:19: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing:684:25: Divide by 0
-ERROR !! file checker_test.sing:685:26: Divide by 0
-ERROR !! file checker_test.sing:687:16: Overflow in float to int conversion
-ERROR !! file checker_test.sing:688:36: Value too big for the type or can't be represented in full precision.
-ERROR !! file checker_test.sing:689:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing:691:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-ERROR !! file checker_test.sing:698:44: Value too big to be represented in an integer variable.
-ERROR !! file checker_test.sing:699:14: The arithmetic not '~' operator requires an integer value
-ERROR !! file checker_test.sing:716:10: A pure function can only call pure functions !!
-ERROR !! file checker_test.sing:717:5: A pure function can only access local variables !!
-ERROR !! file checker_test.sing:719:5: Increment and Decrement operations can be applied only to writable integer variables
-ERROR !! file checker_test.sing:722:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-ERROR !! file checker_test.sing:724:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-ERROR !! file checker_test.sing:726:18: The argument's initer must be a compile time constant !
-ERROR !! file checker_test.sing:726:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
-ERROR !! file checker_test.sing:736:11: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
-ERROR !! file checker_test.sing:742:28: A public declaration cannot refer a private symbol
-ERROR !! file checker_test.sing:745:2: Function must return a value !!
-ERROR !! file checker_test.sing:747:24: You can only return values of type: numeric, enum, string, bool, pointer
-ERROR !! file checker_test.sing:749:2: Function must return a value !!
-ERROR !! file checker_test.sing:751:12: Public global variables are forbidden !
-ERROR !! file checker_test.sing:756:19: Need a const pointer here
+ERROR !! file checker_test.sing:639:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+ERROR !! file checker_test.sing:642:27: Weak pointers are allowed only as non aggregated class members.
+ERROR !! file checker_test.sing:650:9: Sizeof doesn't apply to this type (it has variable size)
+ERROR !! file checker_test.sing:661:14: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:662:5: Symbol 'fvecdimf' is duplicated
+ERROR !! file checker_test.sing:662:14: Array size must be '*' (for dynamic) or a positive integer value
+ERROR !! file checker_test.sing:666:20: Indices must be positive integers
+ERROR !! file checker_test.sing:668:32: Value too big for the type or can't be represented in full precision.
+ERROR !! file checker_test.sing:669:15: Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal
+ERROR !! file checker_test.sing:670:15: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:672:15: Overflow in float to int conversion
+ERROR !! file checker_test.sing:673:41: Value too big to be represented in an integer variable.
+ERROR !! file checker_test.sing:676:19: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:679:25: Divide by 0
+ERROR !! file checker_test.sing:680:26: Divide by 0
+ERROR !! file checker_test.sing:682:16: Overflow in float to int conversion
+ERROR !! file checker_test.sing:683:36: Value too big for the type or can't be represented in full precision.
+ERROR !! file checker_test.sing:684:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:686:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+ERROR !! file checker_test.sing:693:44: Value too big to be represented in an integer variable.
+ERROR !! file checker_test.sing:694:14: The arithmetic not '~' operator requires an integer value
+ERROR !! file checker_test.sing:711:10: A pure function can only call pure functions !!
+ERROR !! file checker_test.sing:712:5: A pure function can only access local variables !!
+ERROR !! file checker_test.sing:714:5: Increment and Decrement operations can be applied only to writable integer variables
+ERROR !! file checker_test.sing:717:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+ERROR !! file checker_test.sing:719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+ERROR !! file checker_test.sing:721:18: The argument's initer must be a compile time constant !
+ERROR !! file checker_test.sing:721:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
+ERROR !! file checker_test.sing:731:11: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
+ERROR !! file checker_test.sing:737:28: A public declaration cannot refer a private symbol
+ERROR !! file checker_test.sing:740:2: Function must return a value !!
+ERROR !! file checker_test.sing:742:24: You can only return values of type: numeric, enum, string, bool, pointer
+ERROR !! file checker_test.sing:744:2: Function must return a value !!
+ERROR !! file checker_test.sing:746:12: Public global variables are forbidden !
+ERROR !! file checker_test.sing:751:19: Need a const pointer here
+ERROR !! file checker_test.sing:763:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:764:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:767:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 ERROR !! file checker_test.sing:768:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing:769:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+ERROR !! file checker_test.sing:771:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 ERROR !! file checker_test.sing:772:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing:773:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing:776:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing:777:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-ERROR !! file checker_test.sing:779:13: Operation doesn't suppot complex operands
-ERROR !! file checker_test.sing:780:13: Operation doesn't suppot complex operands
-ERROR !! file checker_test.sing:782:5: You can only swap two writable variables of IDENTICAL type
-ERROR !! file checker_test.sing:783:5: You can only swap two writable variables of IDENTICAL type
-ERROR !! file checker_test.sing:784:5: You can only swap two writable variables of IDENTICAL type
-ERROR !! file checker_test.sing:785:5: You can only swap two writable variables of IDENTICAL type
-ERROR !! file checker_test.sing:786:5: You can only swap two writable variables of IDENTICAL type
-ERROR !! file checker_test.sing:792:17: Key type must support the == operator (not be a class/interface/map)
+ERROR !! file checker_test.sing:774:13: Operation doesn't suppot complex operands
+ERROR !! file checker_test.sing:775:13: Operation doesn't suppot complex operands
+ERROR !! file checker_test.sing:777:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:778:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:779:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:780:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:781:5: You can only swap two writable variables of IDENTICAL type
+ERROR !! file checker_test.sing:787:17: Key type must support the == operator (not be a class/interface/map)

@@ -10,12 +10,6 @@ fn receiver(in vin [4][4]string, out vout [4][4]string) void
 {
 }
 
-fn get_a_string() * string
-{
-    var to_return = "the_test";
-    return(&to_return);
-}
-
 fn add_int(in val0 i32, in val1 i32 = 5) i32
 {
     return(val0 + val1);
@@ -39,12 +33,7 @@ public fn synth_test() i32
     // array of array passing (the first index is wildcharted)
     var arr [4][4] string;
     receiver(arr, arr);
-    
-    // weak pointers
-    gp = get_a_string();
-    var wp const weak * string = gp;
-    gp = null;
-    
+
     // default parms
     let res1 = add_int(1, 2);
     let res2 = add_int(4);

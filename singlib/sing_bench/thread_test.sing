@@ -4,6 +4,13 @@ requires "sio";
 
 public fn thread_test() bool
 {
+    let ttt *i32;
+
+    if (ttt == null) {
+        if (null != ttt) {
+            
+        }
+    }
     let cores = thread.numCores();
     if (cores < 2) {
         return(false);

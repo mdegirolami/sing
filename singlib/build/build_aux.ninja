@@ -54,7 +54,6 @@ build thread_test.o : cc $temp/thread_test.cpp
 
 # cpp -> obj
 build main.o             : cc $src_b/main.cpp
-build ptr_speed.o        : cc $src_b/ptr_speed.cpp
 build ptr_test.o         : cc $src_b/ptr_test.cpp  
 build intrinsics.o       : cc $src_b/intrinsics.cpp
 build speed_test.o       : cc $src_b/speed_test.cpp
@@ -63,6 +62,6 @@ build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp
 build SortTest.o         : cc $src_b/SortTest.cpp 
 
 #link
-build $bin_target: ln main.o ptr_speed.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o $lib_target
+build $bin_target: ln main.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o $lib_target
 
 default $bin_target

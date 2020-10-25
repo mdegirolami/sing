@@ -7,19 +7,19 @@ class Add final : public sing::Runnable {
 public:
     Add();
     virtual void *get__id() const override { return(&id__); };
-    void init(sing::ptr<std::vector<float>> v1, sing::ptr<std::vector<float>> v2, int32_t start, int32_t stop);
+    void init(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t start, int32_t stop);
     virtual void work() override;
 
     static char id__;
 
 private:
-    sing::ptr<std::vector<float>> v1_;
-    sing::ptr<std::vector<float>> v2_;
+    std::shared_ptr<std::vector<float>> v1_;
+    std::shared_ptr<std::vector<float>> v2_;
     int32_t start_;
     int32_t stop_;
 };
 
-static void DoAll(sing::ptr<std::vector<float>> v1, sing::ptr<std::vector<float>> v2, int32_t count);
+static void DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count);
 static void increments();
 
 static sing::Event done;
@@ -31,6 +31,12 @@ char Add::id__;
 
 bool thread_test()
 {
+    const std::shared_ptr<int32_t> ttt;
+
+    if (ttt == nullptr) {
+        if (nullptr != ttt) {
+        }
+    }
     const int32_t cores = sing::numCores();
     if (cores < 2) {
         return (false);
@@ -59,8 +65,8 @@ bool thread_test()
         return (false);
     }
 
-    sing::ptr<std::vector<float>> v1(new sing::wrapper<std::vector<float>>);
-    sing::ptr<std::vector<float>> v2(new sing::wrapper<std::vector<float>>);
+    std::shared_ptr<std::vector<float>> v1 = std::make_shared<std::vector<float>>();
+    std::shared_ptr<std::vector<float>> v2 = std::make_shared<std::vector<float>>();
     for(int32_t ii = 0; ii < 1000000; ++ii) {
         (*v1).push_back(5.0f);
         (*v2).push_back(3.0f);
@@ -80,7 +86,7 @@ bool thread_test()
     sing::print(sing::s_format("%s%d%s", "\ncores = ", cores, "\npress any key.").c_str());
     sing::kbdGet();
 
-    sing::ptr<Add> adder(new sing::wrapper<Add>);
+    std::shared_ptr<Add> adder = std::make_shared<Add>();
     (*adder).init(v1, v2, 0, 10);
     done.wait();    // to reset
     sing::run(adder);
@@ -97,7 +103,7 @@ Add::Add()
     stop_ = 0;
 }
 
-void Add::init(sing::ptr<std::vector<float>> v1, sing::ptr<std::vector<float>> v2, int32_t start, int32_t stop)
+void Add::init(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t start, int32_t stop)
 {
     this->v1_ = v1;
     this->v2_ = v2;
@@ -113,7 +119,7 @@ void Add::work()
     done.signal();
 }
 
-static void DoAll(sing::ptr<std::vector<float>> v1, sing::ptr<std::vector<float>> v2, int32_t count)
+static void DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count)
 {
     std::vector<sing::Executer> executers;
     executers.resize(count);
@@ -121,9 +127,9 @@ static void DoAll(sing::ptr<std::vector<float>> v1, sing::ptr<std::vector<float>
     int64_t idx = -1;
     for(auto &ex : executers) {
         ++idx;
-        sing::ptr<Add> adder(new sing::wrapper<Add>);
+        std::shared_ptr<Add> adder = std::make_shared<Add>();
         const int32_t start = (int32_t)idx * len;
-        if ((int32_t)idx != count - 1) {
+        if ((int32_t)idx == count - 1) {
             (*adder).init(v1, v2, start, start + len);
         } else {
             (*adder).init(v1, v2, start, (*v2).size());

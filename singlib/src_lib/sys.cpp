@@ -148,13 +148,13 @@ bool Pipe::eof() const
     return(false);
 }
 
-Phandle automate(const char *command, sing::iptr<Stream> *sstdin, sing::iptr<Stream> *sstdout, sing::iptr<Stream> *sstderr)
+Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr)
 {
     std::vector<wchar_t> wcommand;
     utf8_to_16(command, &wcommand);
-    sing::ptr<Pipe> pin = new wrapper<Pipe>;
-    sing::ptr<Pipe> pout = new wrapper<Pipe>;
-    sing::ptr<Pipe> perr = new wrapper<Pipe>;
+    std::shared_ptr<Pipe> pin = std::make_shared<Pipe>();
+    std::shared_ptr<Pipe> pout = std::make_shared<Pipe>();
+    std::shared_ptr<Pipe> perr = std::make_shared<Pipe>();
 
     // craete the pipes
     SECURITY_ATTRIBUTES saAttr;

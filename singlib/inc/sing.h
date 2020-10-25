@@ -5,7 +5,7 @@
 #include <vector>
 #include <complex>
 #include <string>
-#include "sing_pointers.h"
+#include <memory>
 #include "sing_map.h"
 #include "sing_arrays.h"
 

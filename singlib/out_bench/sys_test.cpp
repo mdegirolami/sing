@@ -42,9 +42,9 @@ bool testProcessFunctions()
     sing::print("\nnotepad exited");
 
     // automation test
-    sing::iptr<sing::Stream> child_stdin;
-    sing::iptr<sing::Stream> child_stdout;
-    sing::iptr<sing::Stream> child_stderr;
+    std::shared_ptr<sing::Stream> child_stdin;
+    std::shared_ptr<sing::Stream> child_stdout;
+    std::shared_ptr<sing::Stream> child_stderr;
     hh = sing::automate("C:/Windows/System32/choice.exe", &child_stdin, &child_stdout, &child_stderr);
     if (sing::iseq(hh, 0)) {
         return (false);

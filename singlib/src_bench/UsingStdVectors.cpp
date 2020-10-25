@@ -20,7 +20,7 @@ void test_std_vectors(int size)
     sing::array<int, 100>    v3 = {0};
     std::vector<int>        rtv(size);
 
-    sing::ptr<std::vector<int>> vdynalloc(new sing::wrapper<std::vector<int>>);
+    std::shared_ptr<std::vector<int>> vdynalloc = std::make_shared<std::vector<int>>();
     *vdynalloc = { 100, 50, 25 };
     v2 = v3;
 
@@ -82,7 +82,7 @@ void test_std_vectors(int size)
     vs_plain[0] = vsts_list[0];
 
     // parameter passing
-    vstddreceiver(vv, vdynalloc);
+    vstddreceiver(vv, &*vdynalloc);
     vstdreceiver(v2, &same3);
 
     bool isequal = vv_local == rtv;
@@ -114,5 +114,4 @@ void test_std_vectors(int size)
     for (auto pippo = v_plain.begin(); pippo < v_plain.end(); ++pippo) {
         kk = *pippo;
     }
-
 }

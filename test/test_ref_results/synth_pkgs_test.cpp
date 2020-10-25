@@ -2,7 +2,7 @@
 #include "assert.h"
 #include "synth_test_pkg.h"
 
-typedef sing::ptr<aa::bb::pkg_type> gg;                     // good !!
+typedef std::shared_ptr<aa::bb::pkg_type> gg;               // good !!
 
 static void test();
 

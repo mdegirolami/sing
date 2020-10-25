@@ -634,18 +634,13 @@ fn literals() void
 	}
 }
 
-fn crazyout(out theout [5]map(string)*(in a i32, in b i32)bool) void
+fn crazyout(out theout [5]map(string)*(in a i32, in b i32)bool) i32
 {
+    return(12**-1);
 }
 
 fn weakout(out theout weak*i8) i32
 {
-	return(12**-1);
-}
-
-fn weakout2(out theout weak*i8, out theout weak*i8) void
-{
-	var a = 2 * t6;
 }
 
 fn size_and_dimof() void

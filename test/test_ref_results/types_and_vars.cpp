@@ -15,7 +15,7 @@ static int32_t gv_int32;
 static bool gv_bool;
 static std::string gv_string;
 static fref gv_fref;
-static sing::ptr<int32_t> gv_ptr;
+static std::shared_ptr<int32_t> gv_ptr;
 static sing::array<int32_t, 5> gv_array;
 static std::vector<int32_t> gv_dyna;
 static std::vector<std::string> gv_stringarr;
@@ -93,7 +93,7 @@ void test_types_and_vars()
     bool lv_bool = false;
     std::string lv_string;
     int32_t (*lv_fref)(int32_t arg0, int32_t arg1, int32_t *arg2) = nullptr;
-    sing::ptr<int32_t> lv_ptr;
+    std::shared_ptr<int32_t> lv_ptr;
     sing::array<int32_t, 5> lv_array = {0};
     std::vector<int32_t> lv_dyna;
     std::vector<std::string> lv_stringarr;
@@ -109,39 +109,39 @@ void test_types_and_vars()
     std::vector<std::string> lvi_stringarr = {"minni", "clara", "ciccio"};
 
     // heap declarations, no initer
-    sing::ptr<int32_t> hv_int32(new sing::wrapper<int32_t>(0));
-    sing::ptr<bool> hv_bool(new sing::wrapper<bool>(false));
-    sing::ptr<std::string> hv_string(new sing::wrapper<std::string>);
-    sing::ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> hv_fref(new sing::wrapper<int32_t (*)(int32_t arg0, int32_t arg1,
-        int32_t *arg2)>(nullptr));
-    sing::ptr<sing::ptr<int32_t>> hv_ptr(new sing::wrapper<sing::ptr<int32_t>>);
-    sing::ptr<sing::array<int32_t, 5>> hv_array(new sing::wrapper<sing::array<int32_t, 5>>);
+    std::shared_ptr<int32_t> hv_int32 = std::make_shared<int32_t>(0);
+    std::shared_ptr<bool> hv_bool = std::make_shared<bool>(false);
+    std::shared_ptr<std::string> hv_string = std::make_shared<std::string>();
+    std::shared_ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> hv_fref = std::make_shared<int32_t (*)(int32_t arg0, int32_t arg1,
+        int32_t *arg2)>(nullptr);
+    std::shared_ptr<std::shared_ptr<int32_t>> hv_ptr = std::make_shared<std::shared_ptr<int32_t>>();
+    std::shared_ptr<sing::array<int32_t, 5>> hv_array = std::make_shared<sing::array<int32_t, 5>>();
     *hv_array = {0};
-    sing::ptr<std::vector<int32_t>> hv_dyna(new sing::wrapper<std::vector<int32_t>>);
-    sing::ptr<std::vector<std::string>> hv_stringarr(new sing::wrapper<std::vector<std::string>>);
+    std::shared_ptr<std::vector<int32_t>> hv_dyna = std::make_shared<std::vector<int32_t>>();
+    std::shared_ptr<std::vector<std::string>> hv_stringarr = std::make_shared<std::vector<std::string>>();
 
     // heap declarations, inited
-    sing::ptr<int32_t> hvi_int32(new sing::wrapper<int32_t>(100));
-    sing::ptr<bool> hvi_bool(new sing::wrapper<bool>(true));
-    sing::ptr<std::string> hvi_string(new sing::wrapper<std::string>("pippi"));
-    sing::ptr<fref> hvi_fref(new sing::wrapper<fref>(intsum));
+    std::shared_ptr<int32_t> hvi_int32 = std::make_shared<int32_t>(100);
+    std::shared_ptr<bool> hvi_bool = std::make_shared<bool>(true);
+    std::shared_ptr<std::string> hvi_string = std::make_shared<std::string>("pippi");
+    std::shared_ptr<fref> hvi_fref = std::make_shared<fref>(intsum);
     //var lvi_ptr *i32;            // allowed ?
-    sing::ptr<sing::array<int32_t, 5>> hvi_array(new sing::wrapper<sing::array<int32_t, 5>>);
+    std::shared_ptr<sing::array<int32_t, 5>> hvi_array = std::make_shared<sing::array<int32_t, 5>>();
     *hvi_array = {1, 2, 3, 4, 5};
-    sing::ptr<std::vector<int32_t>> hvi_dyna(new sing::wrapper<std::vector<int32_t>>);
+    std::shared_ptr<std::vector<int32_t>> hvi_dyna = std::make_shared<std::vector<int32_t>>();
     *hvi_dyna = {6, 7, 8, 9, 10};
-    sing::ptr<std::vector<std::string>> hvi_stringarr(new sing::wrapper<std::vector<std::string>>);
+    std::shared_ptr<std::vector<std::string>> hvi_stringarr = std::make_shared<std::vector<std::string>>();
     *hvi_stringarr = {"minni", "clara", "ciccio"};
 
     // pointers to heap-allocated vars
-    sing::ptr<int32_t> pv_int32 = hv_int32;
-    sing::ptr<bool> pv_bool = hv_bool;
-    sing::ptr<std::string> pv_string = hv_string;
-    sing::ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> pv_fref = hv_fref;
-    sing::ptr<sing::ptr<int32_t>> pv_ptr = hv_ptr;
-    sing::ptr<sing::array<int32_t, 5>> pv_array = hv_array;
-    sing::ptr<std::vector<int32_t>> pv_dyna = hv_dyna;
-    sing::ptr<std::vector<std::string>> pv_stringarr = hv_stringarr;
+    std::shared_ptr<int32_t> pv_int32 = hv_int32;
+    std::shared_ptr<bool> pv_bool = hv_bool;
+    std::shared_ptr<std::string> pv_string = hv_string;
+    std::shared_ptr<int32_t (*)(int32_t arg0, int32_t arg1, int32_t *arg2)> pv_fref = hv_fref;
+    std::shared_ptr<std::shared_ptr<int32_t>> pv_ptr = hv_ptr;
+    std::shared_ptr<sing::array<int32_t, 5>> pv_array = hv_array;
+    std::shared_ptr<std::vector<int32_t>> pv_dyna = hv_dyna;
+    std::shared_ptr<std::vector<std::string>> pv_stringarr = hv_stringarr;
 
     pv_int32 = hvi_int32;
     pv_bool = hvi_bool;
@@ -173,7 +173,7 @@ void test_types_and_vars()
         stringiterator += "!";
     }
 
-    sing::array<sing::ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
+    sing::array<std::shared_ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
     for(auto &ptriterator : ptrvec) {
         *ptriterator += "-";
     }

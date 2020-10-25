@@ -247,7 +247,7 @@ void AstChecker::CheckMemberVar(VarDeclaration *declaration)
         }   
     }
     if (declaration->type_spec_ != nullptr) {
-        if (CheckTypeSpecification(declaration->type_spec_, declaration->initer_ != nullptr ? TSCM_INITEDVAR : TSCM_STD)) {
+        if (CheckTypeSpecification(declaration->type_spec_, TSCM_MEMBER)) {
             if (!attr.IsOnError()) {
                 ExpressionAttributes dst_attr;
 
@@ -466,6 +466,10 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
     case ANT_POINTER_TYPE:
         {
             AstPointerType *node = (AstPointerType*)type_spec;
+            if (mode != TSCM_MEMBER && node->isweak_) {
+                Error("Weak pointers are allowed only as non aggregated class members.", node);
+                success = false;                
+            }
             if (!CheckTypeSpecification(node->pointed_type_, TSCM_REFERENCED)) {
                 success = false;
             }
@@ -1356,7 +1360,10 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
         Error("The expression must evaluate to an interface or interface pointer type", node->expression_);
         referenced_type = nullptr;
     }
-    if (is_interface_ptr) {
+    if (is_interface_ptr && referenced_type != nullptr) {
+        if (attr.IsWeakPointer()) {
+            Error("Can't use a weak pointer in a typeswitch", node->expression_);
+        }
         node->reference_->ClearFlags(VF_IS_REFERENCE);  // is the actual pointer, not a reference to pointer !
         node->SetSwitchOnInterfacePointer();
     }
@@ -1980,7 +1987,12 @@ void AstChecker::InsertName(const char *name, IAstDeclarationNode *declaration)
 IAstDeclarationNode *AstChecker::SearchDeclaration(const char *name, IAstNode *location)
 {
     IAstDeclarationNode *node = symbols_->FindDeclaration(name);
-    if (node == nullptr) return(nullptr);
+    if (node == nullptr) {
+        if (current_is_public_ && !in_function_block_ && root_->private_symbols_.LinearSearch(name) >= 0) {
+            Error("A public declaration cannot refer a private symbol", location);            
+        }
+        return(nullptr);
+    }
     if (!node->IsPublic() && current_is_public_ && !in_function_block_) {
         Error("A public declaration cannot refer a private symbol", location);
     }
@@ -2154,7 +2166,10 @@ bool AstChecker::CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode
                 }
             }
             array->dimension_ = value;
-        } else if (!array->is_dynamic_ && mode != TSCM_INITEDVAR) {
+
+            // note: in case the variable is a member and has [], a different message will be anyway emitted !!
+            // (aggregate initialization unallowed for memebers !!)
+        } else if (!array->is_dynamic_ && mode != TSCM_INITEDVAR && mode != TSCM_MEMBER) {
             Error("You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.", array);
             success = false;
         }

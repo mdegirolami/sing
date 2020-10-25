@@ -14,7 +14,8 @@ enum TypeSpecCheckMode {
     TSCM_STD,
     TSCM_INITEDVAR,     // allow []
     TSCM_RETVALUE,      // allow void
-    TSCM_REFERENCED     // allow class forward ref (if in a class) and interfaces
+    TSCM_REFERENCED,    // allow class forward ref (if in a class) and interfaces
+    TSCM_MEMBER         // allow weak pointers
 };
 
 class AstChecker : public ITypedefSolver {

@@ -5,28 +5,21 @@ typedef int32_t myint;
 static const int32_t vvv = 5;
 
 static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sing::array<sing::array<std::string, 4>, 4> *vout);
-static sing::ptr<std::string> get_a_string();
 static int32_t add_int(int32_t val0, int32_t val1 = 5);
 static void add_int3(int32_t val0, int32_t val1, int32_t *valout);
 static void forward(myint val);
 static void expressions();
-static void funwithdefs(int32_t a0 = 100, const char *a1 = "ciccio" "franco", bool a3 = vvv > 2, sing::ptr<int32_t> a4 = nullptr);
+static void funwithdefs(int32_t a0 = 100, const char *a1 = "ciccio" "franco", bool a3 = vvv > 2, std::shared_ptr<int32_t> a4 = nullptr);
 static void minmaxswap();
 static void string_tests(const char *arg);
 static void string_copy(const char *arg, std::string *aout);
 
-static sing::cptr<std::string> gp;
+static std::shared_ptr<const std::string> gp;
 
 static const std::vector<myint> mivv;
 
 static void receiver(const sing::array<sing::array<std::string, 4>, 4> &vin, sing::array<sing::array<std::string, 4>, 4> *vout)
 {
-}
-
-static sing::ptr<std::string> get_a_string()
-{
-    sing::ptr<std::string> to_return(new sing::wrapper<std::string>("the_test"));
-    return (to_return);
 }
 
 static int32_t add_int(int32_t val0, int32_t val1)
@@ -42,7 +35,7 @@ static void add_int3(int32_t val0, int32_t val1, int32_t *valout)
 int32_t synth_test()
 {
     // consts declarations (heap and not-heap)
-    sing::cptr<std::string> cs(new sing::wrapper<std::string>("test"));
+    std::shared_ptr<const std::string> cs = std::make_shared<std::string>("test");
     const int32_t ci = 123;
     gp = cs;
 
@@ -52,11 +45,6 @@ int32_t synth_test()
     // array of array passing (the first index is wildcharted)
     sing::array<sing::array<std::string, 4>, 4> arr;
     receiver(arr, &arr);
-
-    // weak pointers
-    gp = get_a_string();
-    sing::cwptr<std::string> wp = gp;
-    gp = nullptr;
 
     // default parms
     const int32_t res1 = add_int(1, 2);
@@ -127,9 +115,9 @@ int32_t synth_test()
     expressions();
 
     // pointer
-    sing::ptr<sing::array<int32_t, 10>> onheap(new sing::wrapper<sing::array<int32_t, 10>>);
+    std::shared_ptr<sing::array<int32_t, 10>> onheap = std::make_shared<sing::array<int32_t, 10>>();
     *onheap = {0};
-    sing::ptr<sing::array<int32_t, 10>> ohp = onheap;
+    std::shared_ptr<sing::array<int32_t, 10>> ohp = onheap;
     (*ohp)[3] = 100;
     (*onheap)[3] += 1;
 
@@ -139,9 +127,9 @@ int32_t synth_test()
     v_int32 = sizeof((*onheap)[2]);
 
     // simplifying &*
-    sing::ptr<int32_t> intonheap(new sing::wrapper<int32_t>(10));
-    sing::ptr<int32_t> iohp = intonheap;
-    add_int3(3, 2, intonheap);
+    std::shared_ptr<int32_t> intonheap = std::make_shared<int32_t>(10);
+    std::shared_ptr<int32_t> iohp = intonheap;
+    add_int3(3, 2, &*intonheap);
 
     forward(5);
 
@@ -358,7 +346,7 @@ static void expressions()
 }
 
 // functions with defaults
-static void funwithdefs(int32_t a0, const char *a1, bool a3, sing::ptr<int32_t> a4)
+static void funwithdefs(int32_t a0, const char *a1, bool a3, std::shared_ptr<int32_t> a4)
 {
     const std::string aaa = sing::s_format("%s%s", "ciccio", a1);
     const std::string bbb = sing::s_format("%s%s", a1, "ciccio");

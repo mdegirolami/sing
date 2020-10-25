@@ -104,26 +104,22 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
         bool init_on_second_row = declaration->initer_ != nullptr && declaration->initer_->GetType() == ANT_INITER;
         init_on_second_row = init_on_second_row || initer[0] == '{';
 
-        text += "sing::";
+        text += "std::shared_ptr<";
         if (declaration->HasOneOfFlags(VF_READONLY)) {
-            text += "c";
+            text += "const ";
         }
-        text += "ptr<";
         SynthTypeSpecification(&typedecl, declaration->weak_type_spec_);
-        if (declaration->HasOneOfFlags(VF_ISVOLATILE)) {
-            typedecl.insert(0, "volatile");
-        }
         text += typedecl;
         text += "> ";
         text += declaration->name_;
-        text += "(new sing::wrapper<";
+        text += " = std::make_shared<";
         text += typedecl;
         if (initer.length() > 0 && !init_on_second_row) {
             text += ">(";
             text += initer;
-            text += "))";
+            text += ")";
         } else {
-            text += ">)";
+            text += ">()";
         }
         Write(&text);
         if (initer.length() > 0 && init_on_second_row) {
@@ -134,9 +130,7 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
             Write(&text);
         }
     } else {
-        if (declaration->HasOneOfFlags(VF_ISVOLATILE)) {
-            text += "volatile ";
-        } else if (declaration->HasOneOfFlags(VF_READONLY)) {
+        if (declaration->HasOneOfFlags(VF_READONLY)) {
             text += "const ";
         }
         typedecl = declaration->name_;
@@ -203,7 +197,7 @@ void CppSynth::SynthFunc(FuncDeclaration *declaration)
         }
     }
     SynthFunOpenBrace(text);
-    return_type_ = GetBaseType(declaration->function_type_->return_type_);
+    return_type_ = declaration->function_type_->return_type_;
     SynthBlock(declaration->block_);
 }
 
@@ -295,19 +289,13 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec)
             AstPointerType *node = (AstPointerType*)type_spec;
             string fulldecl, the_type;
 
-            fulldecl = "sing::";
-            if (node->pointed_type_->GetType() == ANT_NAMED_TYPE) {
-                AstNamedType *namenode = (AstNamedType*)node->pointed_type_;
-                if (namenode->wp_decl_->GetType() == ANT_TYPE) {
-                    TypeDeclaration *tdecl = (TypeDeclaration*)namenode->wp_decl_;
-                    if (tdecl->type_spec_->GetType() == ANT_INTERFACE_TYPE) {
-                        fulldecl += 'i';
-                    }
-                }
+            fulldecl = "std::";
+            if (node->isweak_) {
+                fulldecl += "weak_ptr<";
+            } else {
+                fulldecl += "shared_ptr<";
             }
-            if (node->isconst_) fulldecl += 'c';
-            if (node->isweak_) fulldecl += 'w';
-            fulldecl += "ptr<";
+            if (node->isconst_) fulldecl += "const ";
             SynthTypeSpecification(&the_type, node->pointed_type_);
             fulldecl += the_type;
             fulldecl += ">";
@@ -769,7 +757,7 @@ void CppSynth::SynthIniterCore(string *dst, IAstTypeNode *type_spec, IAstNode *i
     } else {
         string exp;
 
-        SynthFullExpression(GetBaseType(type_spec), &exp, (IAstExpNode*)initer);
+        SynthFullExpression(type_spec, &exp, (IAstExpNode*)initer);
         *dst += exp;
     }
 }
@@ -918,12 +906,16 @@ void CppSynth::SynthUpdateStatement(AstUpdate *node)
         full += expression;
         full += ")";
         ++split_level_;
+    } else if (left_attr->IsWeakPointer() && right_attr->IsLiteralNull()) {
+        int priority = SynthExpression(&full, node->left_term_);
+        Protect(&full, priority, GetBinopCppPriority(TOKEN_DOT));
+        full += ".reset()";
     } else {
         SynthExpression(&full, node->left_term_);
         full += ' ';
         full += Lexer::GetTokenString(node->operation_);
         full += ' ';       
-        SynthFullExpression(left_attr->GetAutoBaseType(), &expression, node->right_term_);
+        SynthFullExpression(left_attr, &expression, node->right_term_);
         full += expression;
     }
     Write(&full);
@@ -1041,7 +1033,7 @@ void CppSynth::SynthSwitch(AstSwitch *node)
 
 void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
 {
-    string text, switch_exp, tocompare;
+    string text, switch_exp, tocompare, tempbuf;
 
     int exppri = SynthExpression(&switch_exp, node->expression_);
     tocompare = switch_exp;
@@ -1052,6 +1044,12 @@ void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
     } else {
         Protect(&tocompare, exppri, GetBinopCppPriority(TOKEN_DOT));
         tocompare += ".get__id() == &";
+    }
+    if (node->on_interface_ptr_) {
+        text = "if (!";
+        text += switch_exp;     // no need to protect: a leftvalue doesn't include binops.
+        text += ") {";
+        Write(&text, false);
     }
     for (int ii = 0; ii < node->case_types_.size(); ++ii) {
         IAstTypeNode *clause = node->case_types_[ii];
@@ -1066,7 +1064,7 @@ void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
                 Write(&text, false);
             }
         } else {
-            if (ii == 0) {
+            if (ii == 0 && !node->on_interface_ptr_) {
                 text = "if (";
             } else {
                 text = "} else if (";
@@ -1091,14 +1089,20 @@ void CppSynth::SynthTypeSwitch(AstTypeSwitch *node)
             // init the reference
             if (needs_reference) {
                 if (node->on_interface_ptr_) {
-                    // es: sing::ptr<Derived> localname = (sing::wrapper<Derived>*)p04.get_wrapper();
-                    text = node->reference_->name_;
-                    SynthTypeSpecification(&text, clause);
-                    text += " = (sing::wrapper<";
+                    // es: std::shared_ptr<Derived> localname(p04, (Derived*)p04.get());
+                    text = "std::shared_ptr<";
                     text += clause_typename;
-                    text += ">*)";
+                    text += "> ";
+                    text += node->reference_->name_;
+                    text += "(";
                     text += switch_exp;
-                    text += ".get_wrapper()";
+                    text += ", (";                    
+                    text += clause_typename;
+                    text += "*)";
+                    tempbuf = switch_exp;
+                    Protect(&tempbuf, exppri, GetBinopCppPriority(TOKEN_DOT));
+                    text += tempbuf;
+                    text += ".get())";
                 } else {
                     // es: Derived &localname = *(Derived *)&inparm;
                     text = clause_typename;
@@ -1318,13 +1322,45 @@ void CppSynth::SynthReturn(AstReturn *node)
 // - values that are required to be integers (not automatically downcasted, even if constant: indices) 
 // - consider SynthExpressionAndCastToInt() for values that are known to be signed ints;
 //
-int CppSynth::SynthFullExpression(Token target_type, string *dst, IAstExpNode *node)
+int CppSynth::SynthFullExpression(const IAstTypeNode *type_spec, string *dst, IAstExpNode *node)
 {
     int             priority;
 
     priority = SynthExpression(dst, node);
-    if (target_type != TOKENS_COUNT) {
-        priority = CastIfNeededTo(target_type, node->GetAttr()->GetAutoBaseType(), dst, priority, false);
+    if (type_spec != nullptr) {
+        type_spec = SolveTypedefs(type_spec);
+        if (type_spec->GetType() == ANT_POINTER_TYPE && !((AstPointerType*)type_spec)->isweak_ &&  node->GetAttr()->IsWeakPointer()) {
+            int newpriority = GetBinopCppPriority(TOKEN_DOT);
+            Protect(dst, priority, newpriority);
+            priority = newpriority;
+            *dst += ".lock()";
+        } else {
+            Token base = GetBaseType(type_spec);
+            if (base != TOKENS_COUNT) {
+                priority = CastIfNeededTo(base, node->GetAttr()->GetAutoBaseType(), dst, priority, false);
+            }
+        }
+    }
+    return(priority);
+}
+
+int CppSynth::SynthFullExpression(const ExpressionAttributes *attr, string *dst, IAstExpNode *node)
+{
+    int             priority;
+
+    priority = SynthExpression(dst, node);
+    if (attr != nullptr) {
+        if (attr->IsStrongPointer() && node->GetAttr()->IsWeakPointer()) {
+            int newpriority = GetBinopCppPriority(TOKEN_DOT);
+            Protect(dst, priority, newpriority);
+            priority = newpriority;
+            *dst += ".lock()";
+        } else {
+            Token target_type = attr->GetAutoBaseType();
+            if (target_type != TOKENS_COUNT) {
+                priority = CastIfNeededTo(target_type, node->GetAttr()->GetAutoBaseType(), dst, priority, false);
+            }
+        }
     }
     return(priority);
 }
@@ -1369,7 +1405,7 @@ int CppSynth::SynthIndices(string *dst, AstIndexing *node)
     } else {
 
         // a map
-        SynthFullExpression(GetBaseType(node->map_type_->key_type_), &expression, node->lower_value_);
+        SynthFullExpression(node->map_type_->key_type_, &expression, node->lower_value_);
     }
     *dst += '[';
     *dst += expression;
@@ -1412,18 +1448,17 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
     }
     for (ii = 0; ii < numargs; ++ii) {
         VarDeclaration *var = node->func_type_->arguments_[ii];
-        Token var_type = GetBaseType(var->weak_type_spec_);
         IAstExpNode *expression_node = node->arguments_[ii]->expression_;
         expression = "";
-        int priority = SynthFullExpression(var_type, &expression, expression_node);
+        int priority = SynthFullExpression(var->weak_type_spec_, &expression, expression_node);
         ParmPassingMethod ppm = GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY));
         if (ppm == PPM_POINTER) {
             // passed by pointer: get the address (or simplify *)
-            if (expression[0] == '*') {
-                expression.erase(0, 1);
-            } else {
+            //if (expression[0] == '*') {
+            //    expression.erase(0, 1);
+            //} else {
                 expression.insert(0, "&");
-            }
+            //}
         } else if (ppm == PPM_INPUT_STRING && !IsInputArg(expression_node) && !IsLiteralString(expression_node)) {
             Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
             expression += ".c_str()";
@@ -2640,7 +2675,7 @@ bool CppSynth::IsPOD(IAstTypeNode *node)
     return(ispod);
 }
 
-Token CppSynth::GetBaseType(IAstTypeNode *node)
+Token CppSynth::GetBaseType(const IAstTypeNode *node)
 {
     switch (node->GetType()) {
     case ANT_BASE_TYPE:

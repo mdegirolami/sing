@@ -29,7 +29,7 @@ public interface tough_tester : tester {
 }
 
 // has virtual destructor, interface (support for typeswitch)
-class c0_test : tough_tester {
+public class c0_test : tough_tester {
 public:
     fn mut finalize() void;
     fn mut init() void;
@@ -39,9 +39,11 @@ private:
 }
 
 // testing 'by'
-class delegating : tough_tester by implementor {
+public class delegating : tough_tester by implementor {
 public:
     fn init by implementor;
+    var p1 weak*delegating;
+    var p2 weak*delegating;
 private:
     var implementor c0_test;    
 }
@@ -119,7 +121,7 @@ fn c0_test.isgood() result
     return(result.ko);
 }
 
-public fn test_oop() void
+public fn test_oop() *delegating
 {
     var v_stat stat;
     var avg f32;
@@ -144,7 +146,7 @@ public fn test_oop() void
             v_stat.add(3.0);
             v_stat.add(6.0);
         }
-        default: return;
+        default: return(null);
     }
 
     // access through pointer
@@ -153,10 +155,29 @@ public fn test_oop() void
 
     let alternate c0_test;
 
+    // weak pointers assignments
+    var dd delegating;
+    dd.p1 = &t_instance;
+    dd.p2 = t_p2;
+    dd.p1 = null;
+    dd.p1 = dd.p2;
+
     check_typeswitch(alternate);
     check_typeswitch2(t_p);
 
     check_builtin();
+
+    // legal uses of a weak pointer
+    var t_p3 *delegating = dd.p1;
+    t_p3 = dd.p2;
+    receives_ptr(dd.p2);
+    var test map(*delegating)i32;
+    test.insert(dd.p2, 89);
+    return(dd.p1);
+}
+
+fn receives_ptr(v0 *delegating) void
+{
 }
 
 fn check_typeswitch(in object tester) i32
