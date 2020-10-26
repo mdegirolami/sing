@@ -19,7 +19,7 @@ private:
     int32_t stop_;
 };
 
-static void DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count);
+static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count);
 static void increments();
 
 static sing::Event done;
@@ -31,12 +31,6 @@ char Add::id__;
 
 bool thread_test()
 {
-    const std::shared_ptr<int32_t> ttt;
-
-    if (ttt == nullptr) {
-        if (nullptr != ttt) {
-        }
-    }
     const int32_t cores = sing::numCores();
     if (cores < 2) {
         return (false);
@@ -55,7 +49,8 @@ bool thread_test()
             tryko = true;
         }
         ++counter;
-        for(int32_t jj = 0; jj < 1000; ++jj) {              // to ease lock conflicts
+        if (ii % 100 == 0) {
+            sing::wait(1);              // to ease conflicts
         }
         lock.unlock();
         atomic.inc();
@@ -67,20 +62,17 @@ bool thread_test()
 
     std::shared_ptr<std::vector<float>> v1 = std::make_shared<std::vector<float>>();
     std::shared_ptr<std::vector<float>> v2 = std::make_shared<std::vector<float>>();
-    for(int32_t ii = 0; ii < 1000000; ++ii) {
+    for(int32_t ii = 0; ii < 10000000; ++ii) {
         (*v1).push_back(5.0f);
         (*v2).push_back(3.0f);
     }
 
-    int64_t start = sing::clock();
-    for(int32_t ii = 0; ii < 1000000; ++ii) {
+    const int64_t start = sing::clock();
+    for(int32_t ii = 0, ii__top = (*v1).size(); ii < ii__top; ++ii) {
         (*v1)[ii] += (*v2)[ii];
     }
     const int64_t single_thread = sing::clocksDiff(start, sing::clock());
-
-    start = sing::clock();
-    DoAll(v1, v2, cores);
-    const int64_t multiple_threads = sing::clocksDiff(start, sing::clock());
+    const int64_t multiple_threads = DoAll(v1, v2, 2);
 
     sing::print(sing::s_format("%s%lld%s%lld", "\nsingle = ", single_thread, "\ndouble = ", multiple_threads).c_str());
     sing::print(sing::s_format("%s%d%s", "\ncores = ", cores, "\npress any key.").c_str());
@@ -119,34 +111,42 @@ void Add::work()
     done.signal();
 }
 
-static void DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count)
+static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count)
 {
     std::vector<sing::Executer> executers;
     executers.resize(count);
     const int32_t len = (*v2).size() / count;
+    for(auto &ex : executers) {
+        ex.start();
+    }
+    sing::wait(1);                      // be sure the threads are running !!
+
+    const int64_t start = sing::clock();
+
     int64_t idx = -1;
     for(auto &ex : executers) {
         ++idx;
         std::shared_ptr<Add> adder = std::make_shared<Add>();
-        const int32_t start = (int32_t)idx * len;
-        if ((int32_t)idx == count - 1) {
-            (*adder).init(v1, v2, start, start + len);
+        const int32_t start_idx = (int32_t)idx * len;
+        if ((int32_t)idx != count - 1) {
+            (*adder).init(v1, v2, start_idx, start_idx + len);
         } else {
-            (*adder).init(v1, v2, start, (*v2).size());
+            (*adder).init(v1, v2, start_idx, (*v2).size());
         }
         ex.enqueue(adder);
-        ex.start();
     }
     for(auto &ex : executers) {
         ex.getRunnable(true);
     }
+    return (sing::clocksDiff(start, sing::clock()));
 }
 
 static void increments()
 {
     for(int32_t ii = 0; ii < 10000; ++ii) {
         lock.lock();
-        for(int32_t jj = 0; jj < 1000; ++jj) {              // to ease lock conflicts
+        if (ii % 100 == 0) {
+            sing::wait(1);              // to ease conflicts
         }
         ++counter;
         lock.unlock();

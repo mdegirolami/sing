@@ -141,7 +141,7 @@ static DWORD executerStub(void *pParam)
 
 static void executerStart(int32_t stack_size, Executer *ex)
 {
-    CreateThread(nullptr, std::max(stack_size, 4096), runnableStub, ex, 0, NULL);
+    CreateThread(nullptr, std::max(stack_size, 4096), executerStub, ex, 0, NULL);
 }
 
 static DWORD CountSetBits(ULONG_PTR bitMask)
@@ -209,9 +209,14 @@ int32_t numCores()
 
 #endif
 
+static const int es_stopped = 0;
+static const int es_running = 1;
+static const int es_flushing = 2;
+static const int es_stopping = 3;
+
 Executer::Executer()
 {
-    status_ = ExecuterStatus::stopped;
+    status_.set(es_stopped);
 }
 
 Executer::~Executer()
@@ -221,7 +226,7 @@ Executer::~Executer()
 
 bool Executer::start(const int32_t queue_len, const int32_t stack_size)
 {
-    if (status_ != ExecuterStatus::stopped) return(false);
+    if (status_.get() != es_stopped) return(false);
     queue_.clear();
     queue_.resize(std::max(queue_len, 16));
     in_idx_ = 0;
@@ -230,20 +235,20 @@ bool Executer::start(const int32_t queue_len, const int32_t stack_size)
     done_count_.set(0);
     todo_count_.set(0);
     executerStart(stack_size, this);
-    status_ = ExecuterStatus::running;
+    status_.set(es_running);
     return(true);
 }
 
 void Executer::stop()
 {
-    while (status_ == ExecuterStatus::flushing) {
+    while (status_.get() == es_flushing) {
         insertion_.signal();
         stopped_.wait();
     }
-    if (status_ == ExecuterStatus::running) {
-        status_ = ExecuterStatus::stopping;
+    if (status_.get() == es_running) {
+        status_.set(es_stopping);
     }
-    while (status_ == ExecuterStatus::stopping) {
+    while (status_.get() == es_stopping) {
         insertion_.signal();
         stopped_.wait();
     }
@@ -252,9 +257,9 @@ void Executer::stop()
 
 void Executer::flush()
 {
-    if (status_ == ExecuterStatus::running) {
-        status_ = ExecuterStatus::flushing;
-        while (status_ == ExecuterStatus::flushing) {
+    if (status_.get() == es_running) {
+        status_.set(es_flushing);
+        while (status_.get() == es_flushing) {
             insertion_.signal();
             stopped_.wait();
         }
@@ -264,8 +269,8 @@ void Executer::flush()
 
 void Executer::startFlushing()
 {
-    if (status_ == ExecuterStatus::running) {
-        status_ = ExecuterStatus::flushing;
+    if (status_.get() == es_running) {
+        status_.set(es_flushing);
         insertion_.signal();
     }
 }
@@ -277,7 +282,7 @@ void Executer::setEvent(std::shared_ptr<Event> ev)
 
 bool Executer::enqueue(const std::shared_ptr<Runnable> torun)
 {
-    if (torun == nullptr || status_ != ExecuterStatus::running) return(false);
+    if (torun == nullptr || status_.get() != es_running) return(false);
     if (done_count_.get() + todo_count_.get() >= queue_.size()) {
         return(false); // no room
     }
@@ -290,7 +295,7 @@ bool Executer::enqueue(const std::shared_ptr<Runnable> torun)
 
 std::shared_ptr<Runnable> Executer::getRunnable(bool blocking)
 {
-    if (status_ != ExecuterStatus::running) return(nullptr);
+    if (status_.get() != es_running) return(nullptr);
     if (done_count_.get() <= 0) {
         if (!blocking) return(nullptr);
         if (ready_ != nullptr) {
@@ -318,7 +323,7 @@ std::shared_ptr<Runnable> Executer::getRunnable(bool blocking)
 
 bool Executer::isFlushing() const
 {
-    return(status_ == ExecuterStatus::flushing);
+    return(status_.get() == es_flushing);
 }
 
 int32_t Executer::numQueued() const
@@ -333,31 +338,31 @@ int32_t Executer::numDone() const
 
 void Executer::Run()
 {
-    while (status_ != ExecuterStatus::stopping) {
+    while (status_.get() != es_stopping) {
 
         // wait for new jobs
         insertion_.wait();
 
         // process or flush all the waiting jobs
         while (todo_count_.get() > 0) {
-            if (++todo_idx_ >= queue_.size()) todo_idx_ = 0;
-            if (status_ == ExecuterStatus::running) {
+            if (status_.get() == es_running) {
                 queue_[todo_idx_]->work();
             }
+            if (++todo_idx_ >= queue_.size()) todo_idx_ = 0;
             done_count_.inc();
             todo_count_.dec();
-            if (ready_ != nullptr && status_ == ExecuterStatus::running) {
+            if (ready_ != nullptr && status_.get() == es_running) {
                 (*ready_).signal();
             }
         }
 
         // signal that flushing is done (if we are here, all the jobs are done)
-        if (status_ == ExecuterStatus::flushing) {
-            status_ = ExecuterStatus::running;
+        if (status_.get() == es_flushing) {
+            status_.set(es_running);
             stopped_.signal();
         }
     }
-    status_ = ExecuterStatus::stopped;
+    status_.set(es_stopped);
     stopped_.signal();
 }
 

@@ -39,8 +39,6 @@ public:
     int32_t dec();
 };
 
-enum class ExecuterStatus {stopped, running, flushing, stopping};
-
 class Executer final {
 public:
     Executer();
@@ -64,7 +62,9 @@ private:
     Event stopped_;
     std::shared_ptr<Event> def_ready_;
     std::shared_ptr<Event> ready_;
-    ExecuterStatus status_;
+    Atomic status_;
+
+    // queue
     std::vector<std::shared_ptr<Runnable>> queue_;
     int32_t in_idx_;
     int32_t out_idx_;

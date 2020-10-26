@@ -35,8 +35,6 @@ public:
     fn mut dec() i32;    
 }
 
-public enum ExecuterStatus { stopped, running, flushing, stopping }
-
 public class Executer {
 public:
     fn mut start(queue_len i32 = 16, stack_size i32 = 0) bool; 
@@ -59,7 +57,9 @@ private:
     var stopped Event;
     var def_ready *Event;
     var ready *Event;
-    var status ExecuterStatus;
+    var status Atomic;
+
+    // queue
     var queue [*]*Runnable;
     var in_idx = 0;
     var out_idx = 0;

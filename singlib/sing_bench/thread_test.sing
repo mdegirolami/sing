@@ -4,13 +4,6 @@ requires "sio";
 
 public fn thread_test() bool
 {
-    let ttt *i32;
-
-    if (ttt == null) {
-        if (null != ttt) {
-            
-        }
-    }
     let cores = thread.numCores();
     if (cores < 2) {
         return(false);
@@ -29,7 +22,9 @@ public fn thread_test() bool
             tryko = true;
         }
         ++counter;
-        for (jj in 0:1000) {} // to ease lock conflicts
+        if (ii % 100 == 0) {
+            sys.wait(1);        // to ease conflicts
+        }
         lock.unlock();
         atomic.inc();
     }
@@ -40,20 +35,17 @@ public fn thread_test() bool
 
     var v1[*]f32;
     var v2[*]f32;
-    for (ii in 0:1_000_000) {
+    for (ii in 0:10_000_000) {
         v1.push_back(5.0);
         v2.push_back(3.0);
     }
 
-    var start = sys.clock();
-    for (ii in 0:1_000_000) {
+    let start = sys.clock();
+    for (ii in 0:v1.size()) {
         v1[ii] += v2[ii];
     }
     let single_thread = sys.clocksDiff(start, sys.clock());
-
-    start = sys.clock();
-    DoAll(&v1, &v2, cores);
-    let multiple_threads = sys.clocksDiff(start, sys.clock());
+    let multiple_threads = DoAll(&v1, &v2, 2);
 
     sio.print("\nsingle = " + string(single_thread) + "\ndouble = " + string(multiple_threads));
     sio.print("\ncores = " + string(cores) + "\npress any key.");
@@ -100,32 +92,41 @@ fn Add.work() void
     done.signal();
 }
 
-fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) void
+fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
 {
     var executers [*]thread.Executer; 
     executers.resize(count);
     let len = v2.size() / count;
+    for (ex in executers) {
+        ex.start();
+    }
+    sys.wait(1);    // be sure the threads are running !!
+
+    let start = sys.clock();
+
     for (idx, ex in executers) {
         var adder Add;
-        let start = i32(idx) * len;
-        if (i32(idx) == count - 1) {
-            adder.init(v1, v2, start, start + len);
+        let start_idx = i32(idx) * len;
+        if (i32(idx) != count - 1) {
+            adder.init(v1, v2, start_idx, start_idx + len);
         } else {
-            adder.init(v1, v2, start, v2.size());
+            adder.init(v1, v2, start_idx, v2.size());
         }
         ex.enqueue(&adder);
-        ex.start();
     }
     for (ex in executers) {
         ex.getRunnable(true:blocking);
     }
+    return(sys.clocksDiff(start, sys.clock()));
 }
 
 fn increments() void
 {
     for (ii in 0:10000) {
         lock.lock();
-        for (jj in 0:1000) {} // to ease lock conflicts
+        if (ii % 100 == 0) {
+            sys.wait(1);        // to ease conflicts
+        }
         ++counter;
         lock.unlock();
         atomic.inc();
