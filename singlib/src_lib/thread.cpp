@@ -207,6 +207,196 @@ int32_t numCores()
 
 #else
 
+struct LockImpl {
+    pthread_mutex_t mutex;
+    int             spincount;
+};
+
+Lock::~Lock()
+{
+    if (impl != nullptr) {
+        pthread_mutex_destroy(((LockImpl*)impl)->mutex);
+        delete (LockImpl*)impl;
+	}
+}
+
+bool Lock::init(const int32_t spincount)
+{
+    if (impl == nullptr) {
+        LockImpl *c_mutex = new LockImpl;
+        if (c_mutex == nullptr) return(false);
+        if (pthread_mutex_init(c_mutex->mutex, nullptr) != 0) {
+            delete c_mutex;
+            return(false);
+        }
+        c_mutex->spincount = spincount;
+        impl = c_mutex;
+    }
+    return(impl != nullptr);
+}
+
+void Lock::lock()
+{
+	if (impl != nullptr) {
+        LockImpl *c_mutex = (LockImpl*)impl;
+        for (int tries = impl->spincount; tries > 0; --tries) {
+            if (pthread_mutex_trylock(&impl->mutex) == 0) {
+                return;
+            }
+        }        
+        pthread_mutex_lock(&impl->mutex);
+	}
+}
+
+void Lock::unlock()
+{
+	if (impl != nullptr) {
+		pthread_mutex_unlock(&((LockImpl*)impl)->mutex);
+	}
+}
+
+bool Lock::trylock()
+{
+    if (impl != nullptr) {
+		return(pthread_mutex_trylock(&((LockImpl*)impl)->mutex)) == 0);
+	}
+    return(false);
+}
+
+struct EventImpl {
+    pthread_mutex_t mutex;
+    pthread_cond_t  cond;
+    bool            locked;
+};
+
+Event::~Event()
+{
+    if (impl != nullptr) {
+        EventImpl *event = (EventImpl*)impl;
+        pthread_mutex_destroy(&event->mutex);
+        pthread_cond_destroy(&event->cond);
+        delete event;
+    }
+}
+
+bool Event::init()
+{
+    if (impl == nullptr) {
+        LockImpl *c_mutex = new LockImpl;
+        if (c_mutex == nullptr) return(false);
+        if (pthread_mutex_init(c_mutex->mutex, nullptr) != 0 ||
+            pthread_cond_init(c_mutex->cond, nullptr) != 0) {
+            delete c_mutex;
+            return(false);
+        }
+        c_mutex->locked = true;
+        impl = c_mutex;
+    }
+    return(impl != nullptr);
+}
+
+void Event::wait()
+{
+    if (impl != nullptr) {
+        EventImpl *event = (EventImpl*)impl;
+        if (pthread_mutex_lock(&event->mutex) == 0) {
+            while (event->locked)
+            {
+                pthread_cond_wait(&event->cond, &event->mutex);
+            }
+            event->locked = true;
+            pthread_mutex_unlock(&event->mutex);
+        }
+    }
+}
+
+void Event::signal()
+{
+    if (impl != nullptr) {
+        EventImpl *event = (EventImpl*)impl;
+    	pthread_mutex_lock(&event->mutex);
+	    event->locked = false;
+	    pthread_cond_signal(&event->cond);
+	    pthread_mutex_unlock(&event->mutex);
+    }
+}
+
+void Atomic::set(const int32_t value)
+{
+    atomic = (unsigned)value;
+}
+
+int32_t Atomic::get() const
+{
+    return((int32_t)atomic);
+}
+
+int32_t Atomic::inc()
+{
+    return (int32_t)__sync_add_and_fetch ((volatile int *)&value,1);
+}
+
+int32_t Atomic::dec()
+{
+    return (int32_t)__sync_sub_and_fetch ((volatile int *)&value,1);
+}
+
+static void startThread(void *(*torun)(void*), void *arg, const int32_t stack_size)
+{
+    pthread_t temp;
+    pthread_attr_t attr;
+
+	if (pthread_attr_init(&attr) == 0) {
+        pthread_attr_setstacksize (&attr, std::max(stack_size, 4096));
+        pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
+        pthread_create(&temp, &attr, torun, arg);
+        pthread_attr_destroy(&attr);
+    }
+}
+
+static void *fnStub(void *lpParameter)
+{
+    ((void (*)())lpParameter)();
+    return(nullptr);
+}
+
+void runFn(void (*torun)(), const int32_t stack_size)
+{
+    startThread(fnStub, torun, stack_size);
+}
+
+static void *runnableStub(void *lpParameter)
+{
+    std::shared_ptr<Runnable> *extra_ptr = (std::shared_ptr<Runnable>*)lpParameter;
+    (*extra_ptr)->work(); 
+    delete extra_ptr;
+    return(nullptr);
+}
+
+void run(const std::shared_ptr<Runnable> torun, const int32_t stack_size)
+{
+    // triky: we create a new pointer to increment runnable refcount and keep it alive.
+    auto extra_ptr = new std::shared_ptr<Runnable>(torun);
+    startThread(runnableStub, extra_ptr, stack_size);
+}
+
+static void *executerStub(void *pParam)
+{
+    Executer *ex = (Executer*)pParam;
+    ex->Run();
+    return(nullptr);
+}
+
+static void executerStart(int32_t stack_size, Executer *ex)
+{
+    startThread(executerStub, ex, stack_size);
+}
+
+int32_t numCores()
+{
+	return((int32_t)sysconf( _SC_NPROCESSORS_ONLN));
+}
+
 #endif
 
 static const int es_stopped = 0;
