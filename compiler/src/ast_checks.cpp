@@ -2009,7 +2009,7 @@ IAstDeclarationNode *AstChecker::ForwardSearchDeclaration(const char *name, IAst
 
     // forward referencing a class
     for (int ii = current_; ii < (int)root_->declarations_.size(); ++ii) {
-        IAstDeclarationNode *declaration = root_->declarations_[current_];
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_TYPE) {
             TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
             AstNodeType spec_type = tdecl->type_spec_->GetType();
