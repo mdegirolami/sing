@@ -276,6 +276,7 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
     if (operation == TOKEN_POWER || operation == TOKEN_SHL || operation == TOKEN_SHR) {
         if (IsInteger() && attr_right->IsInteger()) {
             exp_type_ = left_type;
+            type_tree_ = original_tree_ = nullptr;
             return(true);
         }
     }
@@ -283,12 +284,15 @@ bool ExpressionAttributes::UpdateTypeWithBinopOperation(ExpressionAttributes *at
     // types match ?
     if (left_type == right_type) {
         exp_type_ = left_type;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     } else if ((left_type & (BT_COMPLEX64 | BT_FLOAT32)) != 0 && (right_type & (BT_COMPLEX64 | BT_FLOAT32)) != 0) {
         exp_type_ = BT_COMPLEX64;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     } else if ((left_type & (BT_COMPLEX128 | BT_FLOAT64)) != 0 && (right_type & (BT_COMPLEX128 | BT_FLOAT64)) != 0) {
         exp_type_ = BT_COMPLEX128;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     } else {
         *error = "Operand types mismatch.";
@@ -520,10 +524,12 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ITypedefSolver *solver,
     }
     if ((exp_type_ & BT_ALL_THE_NUMBERS) != 0 && (attr_right->exp_type_ & BT_ALL_THE_NUMBERS) != 0) {
         exp_type_ = BT_BOOL;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     }
     if (exp_type_ == BT_STRING && attr_right->exp_type_ == BT_STRING) {
         exp_type_ = BT_BOOL;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     }
     if (exp_type_ == BT_BOOL && attr_right->exp_type_ == BT_BOOL && is_equality_comparison) {
@@ -536,17 +542,20 @@ bool ExpressionAttributes::UpdateWithRelationalOperation(ITypedefSolver *solver,
             return(false);
         }
         exp_type_ = BT_BOOL;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     }
     if (is_equality_comparison && (IsStrongPointer() || attr_right->IsStrongPointer())) {
         if (IsLiteralNull() || attr_right->IsLiteralNull()) {
             exp_type_ = BT_BOOL;
+            type_tree_ = original_tree_ = nullptr;
             return(true);
         }
     }
     if (is_equality_comparison && type_tree_ != nullptr && type_tree_->SupportsEqualOperator() && 
         solver->AreTypeTreesCompatible(type_tree_, attr_right->type_tree_, FOR_EQUALITY) == ITypedefSolver::OK) {
         exp_type_ = BT_BOOL;
+        type_tree_ = original_tree_ = nullptr;
         return(true);
     }
     if (is_equality_comparison) {
@@ -627,6 +636,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
             *error = "Unary '-' only applies to numeric signed basic types";
             exp_type_ = BT_ERROR;
         }
+        type_tree_ = original_tree_ = nullptr;
         break;
     case TOKEN_PLUS:
         exp_type_ = IntegerPromote(exp_type_);
@@ -634,6 +644,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
             *error = "Unary '+' only applies to numeric types";
             exp_type_ = BT_ERROR;
         }
+        type_tree_ = original_tree_ = nullptr;
         break;
     case TOKEN_NOT:
         exp_type_ = IntegerPromote(exp_type_);
@@ -641,6 +652,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
             *error = "The arithmetic not '~' operator requires an integer value";
             exp_type_ = BT_ERROR;
         }
+        type_tree_ = original_tree_ = nullptr;
         break;
     case TOKEN_LOGICAL_NOT:
         if ((exp_type_ & BT_BOOL) == 0) {
@@ -668,6 +680,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
             *error = "Unallowed conversion.";
             exp_type_ = BT_ERROR;
         }
+        type_tree_ = original_tree_ = nullptr;
         break;
     case TOKEN_STRING:
         if ((exp_type_ & (BT_ALL_THE_NUMBERS | BT_BOOL)) != 0) {
@@ -676,6 +689,7 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
             *error = "Unallowed conversion.";
             exp_type_ = BT_ERROR;
         }
+        type_tree_ = original_tree_ = nullptr;
         break;
     case TOKEN_BOOL:
         *error = "Please use relational operators to convert numbers and strings to bools.";
