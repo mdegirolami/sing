@@ -10,6 +10,7 @@ namespace SingNames {
 bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_index, bool fully_parsed)
 {
     packages_ = packages;
+    pkg_index_ = pkg_index;
     Package *pkg = (*packages)[pkg_index];
     root_ = pkg->root_;
     errors_ = &pkg->errors_;
@@ -418,6 +419,9 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                 decl = SearchDeclaration(name, node);
                 if (decl == nullptr && mode == TSCM_REFERENCED && in_class_declaration_) {
                     decl = ForwardSearchDeclaration(name, node);
+                }
+                if (decl != nullptr) {
+                    node->pkg_index_ = pkg_index_;
                 }
             }
             if (success) {

@@ -260,6 +260,11 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec)
 
                 GetFullExternName(&full, node->pkg_index_, node->next_component->name_.c_str());
                 PrependWithSeparator(dst, full.c_str());
+            } else if (node->pkg_index_ > 0) {
+                string full;
+
+                GetFullExternName(&full, node->pkg_index_, node->name_.c_str());
+                PrependWithSeparator(dst, full.c_str());
             } else {
                 PrependWithSeparator(dst, node->name_.c_str());
             }

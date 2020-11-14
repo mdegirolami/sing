@@ -20,6 +20,7 @@ enum TypeSpecCheckMode {
 
 class AstChecker : public ITypedefSolver {
     vector<Package*>        *packages_;
+    int                     pkg_index_;
     AstFile                 *root_;         // not owned !!!
     ErrorList               *errors_;       // not owned !!!
     SymbolsStorage          *symbols_;      // not owned !!!
