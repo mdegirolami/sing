@@ -1,0 +1,83 @@
+namespace sing;
+
+public type Sock i64;
+public enum IpVersion { v4, v6 }
+
+public fn netInit() bool;
+public fn netShutdown() void;
+
+public let ip4_loopback = "127.0.0.1";
+public let ip6_loopback = "::1";
+
+public class Address {
+public:
+    fn mut set(ip_address string, port string) bool;
+    fn getIpAddress() string;
+    fn getPort() i32;
+
+    // for internal use
+    var add [5]i64;
+    var len i32;
+}
+
+public class ListenerSocket {
+public:
+    fn mut open(localport i32, queue_length i32, ipv IpVersion = IpVersion.v4) bool;
+    fn mut close() void;
+    fn mut accept(out socket ConnectedSocket, ms_timeout i32 = -1) bool;
+    fn getLocalPort() i32;
+    fn timedout() bool;
+
+    fn finalize() void;
+
+private:
+    var sock Sock;
+    var tout bool;
+}
+
+public class ConnectedSocket {
+public:
+    fn mut open(addr Address, localport i32 = -1) bool;
+    fn mut close() void;
+
+    fn getLocalPort() i32;
+    fn getRemoteAddress(out addr Address) void;
+    fn timedout() bool;
+
+    fn mut rcvString(out value string, maxbytes i64, ms_timeout i32 = -1) bool;
+    fn mut rcv(out dst [*]u8, count i64, ms_timeout i32 = -1, append bool = true) bool;
+    
+    fn mut sendString(value string) bool;
+    fn mut send(src [*]u8, count i64, from i64 = 0) bool;
+
+    // internal use
+    fn mut setSock(v i64) void;
+    fn mut setRemote(remote Address) void;
+    fn finalize() void;
+
+private:    
+    var remote Address;
+    var sock Sock;
+    var tout bool;
+}
+
+public class Socket {
+public:
+    fn mut open(localport i32 = -1, ipv IpVersion = IpVersion.v4) bool;
+    fn mut close() void;
+
+    fn getLocalPort() i32;
+    fn timedout() bool;
+
+    fn mut rcvString(out add Address, out value string, maxbytes i64, ms_timeout i32 = -1) bool;
+    fn mut rcv(out add Address, out dst [*]u8, count i64, ms_timeout i32 = -1, append bool = true) bool;
+    
+    fn mut sendString(add Address, value string) bool;
+    fn mut send(add Address, src [*]u8, count i64, from i64 = 0) bool;
+
+    fn finalize() void;
+
+private:    
+    var sock Sock;
+    var tout bool;
+}

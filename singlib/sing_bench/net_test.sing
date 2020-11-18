@@ -1,0 +1,227 @@
+requires "net";
+requires "thread";
+requires "sio";
+requires "str";
+
+//
+// Single server connection
+// NOTE: work shouldn't assume a single receive gets the full packet.
+// if the remote is using stream sockets, the string could need more than one receive 
+//
+class ServerConnection : thread.Runnable {
+    var sock net.ConnectedSocket;
+public:
+    fn mut accept(io listener net.ListenerSocket) bool;   
+}
+
+fn ServerConnection.accept(io listener net.ListenerSocket) bool
+{
+    return(listener.accept(this.sock));
+}
+
+fn ServerConnection.work() void
+{
+    var input string;
+    while (this.sock.rcvString(input, 100) && str.len(input) > 0) {
+        var output = sio.formatUnsignedHex(u64(i64(input).abs()), 20);
+        str.cutLeadingSpaces(output);
+        this.sock.sendString(output); 
+    }
+}
+
+//
+// Server
+// NOTE: a real server should recycle closed ServerConnection or allocate them dynamically
+// 
+class Server : thread.Runnable {
+    var listener net.ListenerSocket;
+public:
+    fn mut init(port i32, ver net.IpVersion) bool;
+    fn getLocalPort by listener;
+    fn close by listener; 
+}
+
+fn Server.init(port i32, ver net.IpVersion) bool
+{
+    return(this.listener.open(port, 5, ver));
+}
+
+fn Server.work() void
+{
+    for (count in 1:3) {
+        var connection ServerConnection;
+        if (!connection.accept(this.listener)) {
+            return;
+        }
+        thread.run(&connection);
+    }
+}
+
+//
+// Connectionless server
+//
+class ClessServer : thread.Runnable {
+    var sock net.Socket;
+public:
+    fn mut init() bool;    
+    fn getLocalPort by sock;
+}
+
+fn ClessServer.init() bool
+{
+    return(this.sock.open());
+}
+
+fn ClessServer.work() void
+{
+    var input string;
+    var src net.Address;
+    while (this.sock.rcvString(src, input, 100) && str.len(input) > 0) {
+        var output = sio.formatUnsignedHex(u64(i64(input).abs()), 20);
+        str.cutLeadingSpaces(output);
+        this.sock.sendString(src, output); 
+    }
+}
+
+//
+// The tester: runs the servers and acts as client
+//
+public fn net_test() bool
+{
+    if (!net.netInit()) {
+        return(false);
+    }
+    if (!testServer(-1, -1, net.IpVersion.v4)) {
+        return(false);
+    }
+    if (!testServer(7623, 8726, net.IpVersion.v6)) {
+        return(false);
+    }
+    if (!testClessServer()) {
+        return(false);
+    }
+
+    // address resolution
+    var google net.Address;
+
+    if (!google.set("www.google.com", "https")) { // https == 443, http = 80
+        return(false);
+    }
+
+    let gip = google.getIpAddress();
+    let gport = google.getPort();
+
+    if (gip == "" || gport == 0) {
+        return(false);
+    }
+ 
+    net.netShutdown();
+
+    return(true);
+}
+
+fn testServer(s_port i32, c_port i32, ver net.IpVersion) bool
+{
+    var srv Server;
+
+    // start the server
+    if (!srv.init(s_port, ver)) {
+        return(false);
+    }
+    thread.run(&srv);
+
+    // get server address
+    var srvadd net.Address;
+    let srvport = srv.getLocalPort();
+    if (ver == net.IpVersion.v4) {
+        srvadd.set(net.ip4_loopback, string(srvport));
+    } else {
+        srvadd.set(net.ip6_loopback, string(srvport));
+    }
+
+    // connect
+    var cs net.ConnectedSocket;
+
+    if (!cs.open(srvadd, c_port)) {
+        return(false);
+    }
+
+    // make one request
+    var response string;
+
+    cs.sendString("100");
+    if (!cs.rcvString(response, 100)) {
+        return(false);
+    }
+    if (response != "64") {
+        return(false);
+    }
+
+    // try again with binaries
+    var message [*]u8;
+    message.push_back(49);
+    message.push_back(48);
+    message.push_back(48);
+    cs.send(message, 3);
+    if (!cs.rcv(message, 100, 100:ms_timeout, false:append)) {
+        return(false);
+    }
+    if (message[0] != 54 || cs.timedout()) {
+        return(false);
+    }
+
+    return(true);
+}
+
+fn testClessServer() bool
+{
+    var csrv ClessServer;
+
+    // run the server
+    if (!csrv.init()) {
+        return(false);
+    }
+    thread.run(&csrv);
+
+    // get server address
+    var csrvadd net.Address;
+    let csrvport = csrv.getLocalPort();
+    csrvadd.set(net.ip4_loopback, string(csrvport));
+
+    // use connectionless datagrams
+    var cls net.Socket;
+    var remote net.Address;
+    var response string;
+
+    if (!cls.open()) {
+        return(false);
+    }
+    cls.sendString(csrvadd, "100");
+    if (!cls.rcvString(remote, response, 100)) {
+        return(false);
+    }
+    if (response != "64" || cls.timedout()) {
+        return(false);
+    }
+    
+    // responder should be the server !!
+    let remote_ip = remote.getIpAddress();
+    let remote_port = remote.getPort();
+
+    let srv_ip = csrvadd.getIpAddress();
+    let srv_port = csrvadd.getPort();
+
+    if (remote_ip != srv_ip || remote_port != srv_port) {
+        return(false);
+    }
+
+    // test time out 
+    if (cls.rcvString(remote, response, 100, 100:ms_timeout)) {
+        return(false);
+    }
+    if (!cls.timedout()) {
+        return(false);
+    }
+
+    return(true);
+}

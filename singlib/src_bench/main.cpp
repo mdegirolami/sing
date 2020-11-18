@@ -14,6 +14,7 @@ bool SortTest(int veclen);
 bool sio_test();
 bool sys_test();
 bool thread_test();
+bool net_test();
 
 int main() {
     // test_intrinsics();
@@ -45,11 +46,18 @@ int main() {
     // // print limits
     // printf("\nmax float is %g and max double is %g", sing::f32_max, sing::f64_max);    
 
-    if (thread_test()) {
-        printf("\nthread lib: passed\r\n");
+    // if (thread_test()) {
+    //     printf("\nthread lib: passed\r\n");
+    // } else {
+    //     printf("\nthread lib: failed !!\r\n");
+    // }
+
+    if (net_test()) {
+        printf("\nnet lib: passed\r\n");
     } else {
-        printf("\nthread lib: failed !!\r\n");
+        printf("\nnet lib: failed !!\r\n");
     }
+
     getchar();
 
     return(0);
