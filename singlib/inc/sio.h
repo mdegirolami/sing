@@ -21,7 +21,7 @@ public:
     virtual Error puts(const char *value) = 0;
     virtual Error write(int64_t count, const std::vector<uint8_t> &src, int64_t from = 0) = 0;
 
-    virtual Error seek(int64_t pos, const SeekMode &mode = SeekMode::seek_set) = 0;
+    virtual Error seek(int64_t pos, SeekMode mode = SeekMode::seek_set) = 0;
     virtual Error tell(int64_t *pos) = 0;
 
     virtual bool eof() const = 0;
@@ -55,7 +55,7 @@ public:
     virtual Error puts(const char *value) override;
     virtual Error write(int64_t count, const std::vector<uint8_t> &src, int64_t from = 0) override;
 
-    virtual Error seek(int64_t pos, const SeekMode &mode = SeekMode::seek_set) override;
+    virtual Error seek(int64_t pos, SeekMode mode = SeekMode::seek_set) override;
     virtual Error tell(int64_t *pos) override;
 
     virtual bool eof() const override;
@@ -96,8 +96,8 @@ bool pathIsAbsolute(const char *path);
 int32_t pathGetDriveIdx(const char *path);
 
 // dirs
-Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive = false);
-Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, bool recursive = false);
+Error dirRead(const char *directory, DirFilter filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive = false);
+Error dirReadNames(const char *directory, DirFilter filter, std::vector<std::string> *names, bool recursive = false);
 Error dirRemove(const char *directory, bool if_not_empty = false);
 Error dirCreate(const char *directory);
 

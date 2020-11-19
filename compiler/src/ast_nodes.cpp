@@ -40,6 +40,7 @@ ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_
         // fallthrough
     case ANT_POINTER_TYPE:
     case ANT_FUNC_TYPE:
+    case ANT_ENUM_TYPE:
         return(input_parm ? PPM_VALUE : PPM_POINTER);
     case ANT_NAMED_TYPE:
         return(GetParameterPassingMethod(((AstNamedType*)type_spec)->wp_decl_->type_spec_, input_parm));

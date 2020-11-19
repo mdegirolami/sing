@@ -55,7 +55,7 @@ public:
     bool isFlushing() const;
     int32_t numQueued() const;          // number of queued jobs (includes the executing one)
     int32_t numDone() const;            // number of jobs in te output queue
-
+    
     void Run();
 private:
     Event insertion_;

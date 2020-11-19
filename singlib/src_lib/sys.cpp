@@ -71,7 +71,7 @@ public:
     virtual Error put(const uint8_t value) override;
     virtual Error puts(const char *value) override;
     virtual Error write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from = 0) override;
-    virtual Error seek(const int64_t pos, const SeekMode &mode = SeekMode::seek_set) override { return(-1); }
+    virtual Error seek(const int64_t pos, SeekMode mode = SeekMode::seek_set) override { return(-1); }
     virtual Error tell(int64_t *pos) override { return(-1); }
     virtual bool eof() const override;
 };
@@ -405,7 +405,7 @@ public:
     virtual Error put(const uint8_t value) override;
     virtual Error puts(const char *value) override;
     virtual Error write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from = 0) override;
-    virtual Error seek(const int64_t pos, const SeekMode &mode = SeekMode::seek_set) override { return(-1); }
+    virtual Error seek(const int64_t pos, SeekMode mode = SeekMode::seek_set) override { return(-1); }
     virtual Error tell(int64_t *pos) override { return(-1); }
     virtual bool eof() const override;
 };

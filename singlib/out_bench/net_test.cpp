@@ -28,7 +28,7 @@ private:
 class Server final : public sing::Runnable {
 public:
     virtual void *get__id() const override { return(&id__); };
-    bool init(int32_t port, const sing::IpVersion &ver);
+    bool init(int32_t port, sing::IpVersion ver);
     int32_t getLocalPort() const
     {
         return(listener_.getLocalPort());
@@ -64,7 +64,7 @@ private:
     sing::Socket sock_;
 };
 
-static bool testServer(int32_t s_port, int32_t c_port, const sing::IpVersion &ver);
+static bool testServer(int32_t s_port, int32_t c_port, sing::IpVersion ver);
 static bool testClessServer();
 
 char ServerConnection::id__;
@@ -86,7 +86,7 @@ void ServerConnection::work()
     }
 }
 
-bool Server::init(int32_t port, const sing::IpVersion &ver)
+bool Server::init(int32_t port, sing::IpVersion ver)
 {
     return (listener_.open(port, 5, ver));
 }
@@ -155,7 +155,7 @@ bool net_test()
     return (true);
 }
 
-static bool testServer(int32_t s_port, int32_t c_port, const sing::IpVersion &ver)
+static bool testServer(int32_t s_port, int32_t c_port, sing::IpVersion ver)
 {
     std::shared_ptr<Server> srv = std::make_shared<Server>();
 

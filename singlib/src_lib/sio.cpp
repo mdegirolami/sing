@@ -40,11 +40,11 @@ std::string formatFloatExp(const double val, int32_t exp_mult, const int32_t fie
 #ifdef _WIN32
 std::string utf16_to_8(const wchar_t *src);
 void utf8_to_16(const char *src, std::vector<wchar_t> *dst);
-Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const DirFilter &filter, 
+Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, DirFilter filter, 
                     std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive);
 Error dirRemove_r(WIN32_FIND_DATAW *desc, wchar_t *buffer);
 #else
-Error dirReadCore_r(char *buffer, const DirFilter &filter, 
+Error dirReadCore_r(char *buffer, DirFilter filter, 
                     std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive);
 Error dirRemove_r(char *buffer);
 #endif
@@ -224,7 +224,7 @@ Error File::write(const int64_t count, const std::vector<uint8_t> &src, const in
     return(0);
 }
 
-Error File::seek(const int64_t pos, const SeekMode &mode)
+Error File::seek(const int64_t pos, SeekMode mode)
 {
     // must match the sequence in which SeekMode members are declared
     int whence[] = {SEEK_SET, SEEK_CUR, SEEK_END}; 
@@ -640,7 +640,7 @@ uint64_t packFILETIME(FILETIME *time)
     return(wintime/10000000 - 11644473600);
 }
 
-Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
+Error dirRead(const char *directory, DirFilter filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
     WIN32_FIND_DATAW     desc;   // pretty big structure and there is no reason to have an item per recursion.
     std::vector<wchar_t> buffer;
@@ -652,7 +652,7 @@ Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::s
     return(dirReadCore_r(&desc, buffer.data(), filter, names, info, recursive));
 }
 
-Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, bool recursive)
+Error dirReadNames(const char *directory, DirFilter filter, std::vector<std::string> *names, bool recursive)
 {
     WIN32_FIND_DATAW     desc;   // pretty big structure and there is no reason to have an item per recursion.
     std::vector<wchar_t> buffer;
@@ -664,7 +664,7 @@ Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<s
 }
 
 // buffer on entry has the directory path but is also used as a temp storage
-Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, const DirFilter &filter, 
+Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, DirFilter filter, 
                     std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
 	HANDLE          search_handle;
@@ -810,7 +810,7 @@ Error dirCreate(const char *directory)
 
 #else
 
-Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
+Error dirRead(const char *directory, DirFilter filter, std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
     char buffer[MAX_SING_PATH + 1];
 
@@ -823,7 +823,7 @@ Error dirRead(const char *directory, const DirFilter &filter, std::vector<std::s
     return(dirReadCore_r(&desc, buffer, filter, names, info, recursive));
 }
 
-Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<std::string> *names, bool recursive)
+Error dirReadNames(const char *directory, DirFilter filter, std::vector<std::string> *names, bool recursive)
 {
     char buffer[MAX_SING_PATH + 1];
 
@@ -836,7 +836,7 @@ Error dirReadNames(const char *directory, const DirFilter &filter, std::vector<s
 }
 
 // buffer on entry has the directory path but is also used as a temp storage
-Error dirReadCore_r(char *buffer, const DirFilter &filter, 
+Error dirReadCore_r(char *buffer, DirFilter filter, 
                     std::vector<std::string> *names, std::vector<FileInfo> *info, bool recursive)
 {
     Error           err = 0;

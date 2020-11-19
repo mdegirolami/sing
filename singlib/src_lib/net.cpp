@@ -218,7 +218,7 @@ ListenerSocket::~ListenerSocket()
     close();
 }
 
-bool ListenerSocket::open(int32_t localport, int32_t queue_length, const IpVersion &ipv)
+bool ListenerSocket::open(int32_t localport, int32_t queue_length, IpVersion ipv)
 {
     if (!createBoundSocket(localport, &sock_, SOCK_STREAM, ipv)) {
         return(false);
@@ -430,7 +430,7 @@ Socket::~Socket()
     close();
 }
 
-bool Socket::open(int32_t localport, const IpVersion &ipv)
+bool Socket::open(int32_t localport, IpVersion ipv)
 {
     return(createBoundSocket(localport, &sock_, SOCK_DGRAM, ipv));
 }

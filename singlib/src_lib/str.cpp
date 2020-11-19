@@ -14,7 +14,7 @@ Range::Range()
 static void cp_encode(std::string *dst, int32_t cp);
 static int32_t cp_decode_impl(const char **src);
 static int32_t decode_or_skip(const char **src);
-static bool split_impl(const char *src, const Range &range, std::string *left, std::string *right, const SplitMode &mode);
+static bool split_impl(const char *src, const Range &range, std::string *left, std::string *right,  SplitMode mode);
 static const char *skip_chars_forward(const char *start, int32_t num_chars);
 static const char *skip_chars_reverse(const char *start, int32_t num_chars, const char *base);
 static bool is_good_cp(const char *src);
@@ -165,7 +165,7 @@ int32_t compareAt(const char *first, const int32_t at_pos, const char *contained
 }
 
 bool split(const char *src, const char *splitter, 
-           std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
+           std::string *left, std::string *right, SplitMode mode, const bool insensitive)
 {
     Range range;
     find(src, splitter, &range, insensitive);
@@ -173,7 +173,7 @@ bool split(const char *src, const char *splitter,
 }
 
 bool split_any(const char *src, const char *splitter, 
-           std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
+           std::string *left, std::string *right, SplitMode mode, const bool insensitive)
 {
     Range range;
     findAny(src, splitter, &range, insensitive);
@@ -181,7 +181,7 @@ bool split_any(const char *src, const char *splitter,
 }
 
 bool rsplit(const char *src, const char *splitter, 
-           std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
+           std::string *left, std::string *right, SplitMode mode, const bool insensitive)
 {
     Range range;
     rfind(src, splitter, &range, insensitive);
@@ -189,14 +189,14 @@ bool rsplit(const char *src, const char *splitter,
 }
 
 bool rsplitAny(const char *src, const char *splitter, 
-           std::string *left, std::string *right, const SplitMode &mode, const bool insensitive)
+           std::string *left, std::string *right, SplitMode mode, const bool insensitive)
 {
     Range range;
     rfindAny(src, splitter, &range, insensitive);
     return(split_impl(src, range, left, right, mode));    
 }
 
-static bool split_impl(const char *src, const Range &range, std::string *left, std::string *right, const SplitMode &mode)
+static bool split_impl(const char *src, const Range &range, std::string *left, std::string *right, SplitMode mode)
 {
     if (range.begin_ == npos) return(false);
     int first_end = mode == SplitMode::sm_separator_left ? range.end_ : range.begin_;

@@ -25,7 +25,7 @@ class ListenerSocket final {
 public:
     ListenerSocket();
     ~ListenerSocket();
-    bool open(int32_t localport, int32_t queue_length, const IpVersion &ipv = IpVersion::v4);
+    bool open(int32_t localport, int32_t queue_length, IpVersion ipv = IpVersion::v4);
     void close();
     bool accept(ConnectedSocket *socket, int32_t ms_timeout = -1);
     int32_t getLocalPort() const;
@@ -67,7 +67,7 @@ class Socket final {
 public:
     Socket();
     ~Socket();
-    bool open(int32_t localport = -1, const IpVersion &ipv = IpVersion::v4);
+    bool open(int32_t localport = -1, IpVersion ipv = IpVersion::v4);
     void close();
 
     int32_t getLocalPort() const;

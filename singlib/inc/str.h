@@ -35,12 +35,10 @@ int32_t compare(const char *first, const char *second, bool insensitive = false)
 int32_t compareAt(const char *first, int32_t at_pos, const char *contained, int32_t *end_pos, bool insensitive = false);
 
 // splitting
-bool split(const char *src, const char *splitter, std::string *left, std::string *right, const SplitMode &mode = SplitMode::sm_drop, bool insensitive = false);
-bool split_any(const char *src, const char *splitter, std::string *left, std::string *right, const SplitMode &mode = SplitMode::sm_drop,
-    bool insensitive = false);
-bool rsplit(const char *src, const char *splitter, std::string *left, std::string *right, const SplitMode &mode = SplitMode::sm_drop, bool insensitive = false);
-bool rsplitAny(const char *src, const char *splitter, std::string *left, std::string *right, const SplitMode &mode = SplitMode::sm_drop,
-    bool insensitive = false);
+bool split(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
+bool split_any(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
+bool rsplit(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
+bool rsplitAny(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
 
 // replacing
 int32_t replace(std::string *src, const char *old_sub, const char *new_sub, bool insensitive = false, int32_t from = 0);
