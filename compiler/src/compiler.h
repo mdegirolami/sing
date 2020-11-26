@@ -4,7 +4,7 @@
 #include "lexer.h"
 #include "Parser.h"
 #include "ast_checks.h"
-#include "Options.h"
+#include "options.h"
 #include "cpp_synth.h"
 #include "package_manager.h"
 

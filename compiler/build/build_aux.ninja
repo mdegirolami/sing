@@ -4,10 +4,10 @@ obj = .
 rule cc
   deps = gcc
   depfile = $out.d
-  command = g++ -MD -MF $out.d $cflags $debug_flags $profile_flags -c $in -o $out
+  command = c++ -std=c++11 -MD -MF $out.d $cflags $debug_flags $profile_flags -c $in -o $out
 
 rule ln
-  command = g++ $profile_flags -o $out @$out.rsp
+  command = c++ -std=c++11 $profile_flags -o $out @$out.rsp
   rspfile = $out.rsp
   rspfile_content = $in
 

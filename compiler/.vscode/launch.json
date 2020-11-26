@@ -15,14 +15,14 @@
             //"args": ["-^", "3", "-I", "../tests", "-I", "../", "-u", "checker_pkgs_test.sing"],
             //"args": ["-s", "-I", "sing_headers", "-I", "sing_bench"],
             "stopAtEntry": false,
-            //"cwd": "${workspaceFolder}\\..\\singlib",
+            //"cwd": "${workspaceFolder}/../singlib/sing_headers",
             //"cwd": "${workspaceFolder}\\..\\singlib\\build\\obj_d",
             "cwd": "${workspaceFolder}\\..\\test\\build\\obj_r",
             //"cwd": "${workspaceFolder}\\..\\test\\tests",
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
-            "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
+            "miDebuggerPath": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

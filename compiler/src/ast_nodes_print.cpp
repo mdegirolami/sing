@@ -9,7 +9,7 @@ void AstNodesPrint::PrintIndent(void)
     static const char *indent = "    ";
     fprintf(fd_, "\n");
     for (int ii = 0; ii < indent_; ++ii) {
-        fprintf(fd_, indent);
+        fprintf(fd_, "%s", indent);
     }
 }
 
