@@ -10,7 +10,7 @@ void ErrorList::AddError(const char *message, int nRow, int nCol)
     cols_.push_back(nCol);
 }
 
-const char *ErrorList::GetError(int index, int *nRow, int *nCol)
+const char *ErrorList::GetError(int index, int *nRow, int *nCol) const
 {
     if (index < 0 || index >= (int)rows_.size()) {
         return(nullptr);

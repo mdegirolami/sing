@@ -7,15 +7,18 @@
 
 namespace SingNames {
 
-bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_index, bool fully_parsed)
+void AstChecker::init(PackageManager *packages, Options *options, int pkg_index)
 {
-    packages_ = packages;
+    pmgr_ = packages;
     pkg_index_ = pkg_index;
-    Package *pkg = (*packages)[pkg_index];
-    root_ = pkg->root_;
-    errors_ = &pkg->errors_;
-    symbols_ = &pkg->symbols_;
     options_ = options;
+}
+
+bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symbols, bool fully_parsed)
+{
+    root_ = root;
+    errors_ = errors;
+    symbols_ = symbols;
     in_function_block_ = false;
     in_class_declaration_ = false;
     current_function_ = nullptr;
@@ -28,7 +31,7 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
         bool on_error = true;
 
         // solve the name
-        switch (options->SolveFileName(nullptr, &dependency->full_package_path_, dependency->package_dir_.c_str())) {
+        switch (options_->SolveFileName(nullptr, &dependency->full_package_path_, dependency->package_dir_.c_str())) {
         case FileSolveError::AMBIGUOUS:
             Error("Ambiguous path/filename: can be found in multiple search directories", dependency);
             break;
@@ -65,32 +68,18 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
             }
         }
 
-        // note: we check for inclusion cycles including the compiled file. When we compile other files we check for other loops.
-        if (!on_error && is_same_file((*packages)[0]->fullpath_.c_str(), dependency->full_package_path_.c_str())) {
-            Error("Cyclic inclusions are disallowed", dependency);
-            dependency->package_index_ = 0;
-            on_error = true;
-        }
-
-        // if already loaded set the index, even if on error.  
+        // set the index, even if on error.  
         if (dependency->package_index_ == -1) {
-            for (int ii = 1; ii < (int)packages_->size(); ++ii) {
-                if (is_same_filename((*packages)[ii]->fullpath_.c_str(), dependency->full_package_path_.c_str())) {
-                    dependency->package_index_ = ii;
-                    break;
-                }
-            }
-        }
-
-        // if not found
-        if (dependency->package_index_ == -1) {
-            dependency->package_index_ = (int)packages_->size();
-            Package *pkg = new Package;
-            pkg->Init(dependency->full_package_path_.c_str());
+            dependency->package_index_ = pmgr_->init_pkg(dependency->full_package_path_.c_str());
             if (on_error) {
-                pkg->SetError();
+                pmgr_->setError(dependency->package_index_);
             }
-            packages_->push_back(pkg);
+        }
+
+        // note: we check for inclusion cycles including the compiled file. When we compile other files we check for other loops.
+        if (!on_error && pmgr_->isMainIndex(dependency->package_index_)) {
+            Error("Cyclic inclusions are disallowed", dependency);
+            pmgr_->setError(dependency->package_index_);
         }
     }
 
@@ -131,12 +120,8 @@ bool AstChecker::CheckAll(vector<Package*> *packages, Options *options, int pkg_
             errormess += " has been required but not used.";
             Error(errormess.c_str(), dependency);
         } else {
-            int index = dependency->package_index_;
-            if (index < (int)packages_->size() && index >= 0) {
-                Package *pkg = (*packages_)[index];
-                if (pkg->status_ < PkgStatus::FOR_REFERENCIES) {
-                    Error("Failed to load package", dependency);
-                }
+            if (pmgr_->getStatus(dependency->package_index_) < PkgStatus::FOR_REFERENCIES) {
+                Error("Failed to load package", dependency);
             }
         }
     }
@@ -2052,26 +2037,9 @@ int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const
                 return(-1);
             }
 
-            // find the related package descriptor
+            // load and check the dependency
             int index = root_->dependencies_[ii]->package_index_;
-            if (index >= (int)packages_->size() || index < 0) {
-                break;  // should never happen, treat it like a not found package
-            }
-            Package *pkg = (*packages_)[index];
-            bool    loaded = pkg->status_ >= PkgStatus::FOR_REFERENCIES;
-
-            // if not already loaded and never tryed, try loading now !
-            if (!loaded && pkg->status_ != PkgStatus::ERROR) {
-                if (pkg->Load(PkgStatus::FOR_REFERENCIES)) {
-                    AstChecker  checker;
-
-                    if (checker.CheckAll(packages_, options_, index, false)) {
-                        loaded = true;
-                    } else {
-                        pkg->SetError();
-                    }
-                }
-            }
+            bool loaded = pmgr_->load(index, PkgStatus::FOR_REFERENCIES) && pmgr_->check(index, false);
 
             // ops !!
             if (!loaded) {
@@ -2089,18 +2057,7 @@ int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const
 // if is_private is false and the return is nullptr the symbol wasn't found
 IAstDeclarationNode *AstChecker::SearchExternDeclaration(int package_index, const char *name, bool *is_private)
 {
-    *is_private = false;
-    if (package_index >= (int)packages_->size() || package_index < 0) {
-        return(nullptr);
-    }
-    Package *pkg = (*packages_)[package_index];
-    IAstDeclarationNode *node = pkg->symbols_.FindDeclaration(name);
-    if (node != nullptr) {
-        *is_private = !node->IsPublic();
-    } else if (pkg->root_->private_symbols_.LinearSearch(name) >= 0) {
-        *is_private = true;
-    }
-    return(node);
+    return(pmgr_->findSymbol(package_index, name, is_private));
 }
 
 bool AstChecker::FlagLocalVariableAsPointed(IAstExpNode *node)

@@ -7,6 +7,7 @@
 #include "symbols_storage.h"
 #include "expression_attributes.h"
 #include "package.h"
+#include "package_manager.h"
 
 namespace SingNames {
 
@@ -19,12 +20,18 @@ enum TypeSpecCheckMode {
 };
 
 class AstChecker : public ITypedefSolver {
-    vector<Package*>        *packages_;
+
+    // parameters from the manager (not owned stuff)
+    PackageManager          *pmgr_;
     int                     pkg_index_;
+    Options                 *options_; 
+    bool                    fully_parsed_;
+
+    // arguments of ParseAll() - not owned
     AstFile                 *root_;         // not owned !!!
     ErrorList               *errors_;       // not owned !!!
     SymbolsStorage          *symbols_;      // not owned !!!
-    Options                 *options_;      // not owned !!!
+
     ErrorList               usage_errors_;
     bool                    check_usage_errors_;
 
@@ -135,7 +142,8 @@ class AstChecker : public ITypedefSolver {
     void UsageError(const char *message, IAstNode *location, bool use_last_location = false);
 public:
     //AstChecker() {}
-    bool CheckAll(vector<Package*> *packages, Options *options, int pkg_index, bool fully_parsed);    // returns false on error
+    void init(PackageManager *packages, Options *options, int pkg_index);
+    bool CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symbols, bool fully_parsed);    // returns false on error
 
     // ITypedefSolver interface
     virtual bool            CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode mode);

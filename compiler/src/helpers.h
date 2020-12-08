@@ -24,8 +24,8 @@ public:
 class ErrorList {
 public:
     void AddError(const char *message, int nRow, int nCol);
-    const char *GetError(int index, int *nRow, int *nCol);
-    int NumErrors(void) { return((int)rows_.size()); }
+    const char *GetError(int index, int *nRow, int *nCol) const;
+    int NumErrors(void) const { return((int)rows_.size()); }
     void Reset(void);
     void Append(const ErrorList *source);
     void Sort(void);

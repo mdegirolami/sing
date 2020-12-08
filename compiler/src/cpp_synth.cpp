@@ -15,13 +15,14 @@ static const int KCastPriority = 3;
 
 bool IsFloatFormat(const char *num);
 
-void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Options *options, int pkg_index, bool *empty_cpp)
+void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp)
 {
     string      text;
     int         num_levels, num_items;
 
-    packages_ = packages;
-    root_ = (*packages)[pkg_index]->root_;
+    const Package *pkg = packages->getPkg(pkg_index);
+    pkmgr_ = packages;
+    root_ = (AstFile*)pkg->GetRoot();
     indent_ = 0;
     split_level_ = 0xff;
     exp_level = 0;
@@ -62,7 +63,8 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, vector<Package*> *packages, Op
     formatter_.Reset();
     formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
     file_ = cppfd;
-    FileName::SplitFullName(nullptr, &text, nullptr, &(*packages)[pkg_index]->fullpath_);
+    string fullname = pkg->getFullPath();
+    FileName::SplitFullName(nullptr, &text, nullptr, &fullname);
     text.insert(0, "#include \"");
     text += ".h\"";
     Write(&text, false);
@@ -2695,10 +2697,11 @@ Token CppSynth::GetBaseType(const IAstTypeNode *node)
 
 void CppSynth::GetFullExternName(string *full, int pkg_index, const char *local_name)
 {
-    assert(pkg_index >= 0 && pkg_index < (int)packages_->size());
-    if (pkg_index >= 0 && pkg_index < (int)packages_->size()) {
-        string *nspace = &(*packages_)[pkg_index]->root_->namespace_;
-        if (root_->namespace_ != nspace) {
+    const Package *pkg = pkmgr_->getPkg(pkg_index);
+    assert(pkg != nullptr);
+    if (pkg != nullptr) {
+        const string *nspace = &pkg->GetRoot()->namespace_;
+        if (root_->namespace_ != *nspace) {
             const char *src = nspace->c_str();
 
             (*full) = "";
@@ -3041,10 +3044,10 @@ void CppSynth::AppendMemberName(string *dst, IAstDeclarationNode *src)
     }
 }
 
-void CppSynth::SynthDFile(FILE *dfd, Package *package, const char *target_name)
+void CppSynth::SynthDFile(FILE *dfd, const Package *package, const char *target_name)
 {
     fprintf(dfd, "%s:", target_name);
-    vector<AstDependency*> *vdep = &package->root_->dependencies_;
+    const vector<AstDependency*> *vdep = &package->GetRoot()->dependencies_;
     for (int ii = 0; ii < vdep->size(); ++ii) {
         AstDependency *dep = (*vdep)[ii];
         if (ii == vdep->size() - 1) {

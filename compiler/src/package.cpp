@@ -1,6 +1,7 @@
 #include "package.h"
 #include "Parser.h"
 #include "FileName.h"
+#include "ast_checks.h"
 
 namespace SingNames {
 
@@ -8,6 +9,7 @@ Package::Package()
 {
     root_ = nullptr;
     status_ = PkgStatus::UNLOADED;
+    checked_ = false;
 }
 
 Package::~Package()
@@ -46,6 +48,7 @@ bool Package::Load(PkgStatus wanted_status)
     root_ = nullptr;
     errors_.Reset();
     status_ = PkgStatus::ERROR;     // in case we early-exit
+    checked_ = false;
 
     fd = fopen(fullpath_.c_str(), "rb");
 
@@ -68,7 +71,33 @@ bool Package::Load(PkgStatus wanted_status)
     return(true);
 }
 
-const char *Package::GetError(int index)
+bool Package::check(AstChecker *checker)
+{
+    if (status_ == PkgStatus::ERROR) return(false);
+    if (checked_) return(true);
+    checked_ = true;
+    if (!checker->CheckAll(root_, &errors_, &symbols_, status_ == PkgStatus::FULL)) {
+        status_ = PkgStatus::ERROR;
+        SortErrors();
+        return(false);
+    }
+    return(true);
+}
+
+IAstDeclarationNode *Package::findSymbol(const char *name, bool *is_private)
+{
+    IAstDeclarationNode *node = symbols_.FindDeclaration(name);
+    if (node != nullptr) {
+        *is_private = !node->IsPublic();
+    } else if (root_->private_symbols_.LinearSearch(name) >= 0) {
+        *is_private = true;
+    } else {
+        *is_private = false;
+    }
+    return(node);
+}
+
+const char *Package::GetError(int index) const
 {
     const char *message;
     int         row, col;

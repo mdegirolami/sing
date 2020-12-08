@@ -47,7 +47,7 @@ class AstNodesPrint {
 
 public:
     void Init(FILE *fd) { fd_ = fd; indent_ = 0; }
-    void PrintFile(AstFile *node);
+    void PrintFile(const AstFile *node);
 };
 
 } // namespace

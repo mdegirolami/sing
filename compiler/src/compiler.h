@@ -6,11 +6,12 @@
 #include "ast_checks.h"
 #include "Options.h"
 #include "cpp_synth.h"
+#include "package_manager.h"
 
 namespace SingNames {
 
 class Compiler {
-    vector<Package*> packages_;
+    PackageManager   pmgr_;
     AstChecker       checker_;
     Options          options_;
     CppSynth         cpp_synthesizer_;
@@ -21,7 +22,7 @@ class Compiler {
     int  CompileSinglePackage(void);
 
     void PrintAllPkgErrors();
-    void PrintPkgErrors(Package *pkg);
+    void PrintPkgErrors(const Package *pkg);
 public:
     int Run(int argc, char *argv[]);
 };

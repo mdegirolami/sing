@@ -426,7 +426,7 @@ void AstNodesPrint::PrintDependency(AstDependency *node)
     fprintf(fd_, "\nRequired %s, %s", node->package_dir_.c_str(), node->package_name_.c_str());
 }
 
-void AstNodesPrint::PrintFile(AstFile *node)
+void AstNodesPrint::PrintFile(const AstFile *node)
 {
     int ii;
 

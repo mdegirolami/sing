@@ -19,6 +19,7 @@ int Compiler::Run(int argc, char *argv[])
     if (!options_.ParseArgs(argc, argv)) {
         return(0);
     }
+    pmgr_.init(&options_);
     switch (options_.GetTestMode()) {
     case 1:
         TestLexer();
@@ -35,31 +36,25 @@ int Compiler::Run(int argc, char *argv[])
 
 void Compiler::TestChecker(void)
 {
-    Package     *pkg = new Package;
-
-    packages_.push_back(pkg);
-    pkg->Init(options_.GetSourceName());    // -p improperly used !!
-    if (!pkg->Load(PkgStatus::FULL)) {
-        PrintPkgErrors(pkg);
-    } else if (!checker_.CheckAll(&packages_, &options_, 0, true)) {
+    int idx = pmgr_.init_pkg(options_.GetSourceName());
+    if (!pmgr_.load(idx, PkgStatus::FULL)) {
+        PrintPkgErrors(pmgr_.getPkg(idx));
+    } else if (!pmgr_.check(idx, true)) {
         PrintAllPkgErrors();
     }
 }
 
 void Compiler::TestParser(void)
 {
-    Package     *pkg = new Package;
-
-    packages_.push_back(pkg);
-    pkg->Init(options_.GetSourceName());    // -p improperly used !!
-    if (!pkg->Load(PkgStatus::FULL)) {
-        PrintPkgErrors(pkg);
+    int idx = pmgr_.init_pkg(options_.GetSourceName());
+    if (!pmgr_.load(idx, PkgStatus::FULL)) {
+        PrintPkgErrors(pmgr_.getPkg(idx));
     } else {
         AstNodesPrint   printer;
 
         FILE *print_dst = fopen(options_.GetOutputFile(), "wt");
         printer.Init(print_dst);
-        printer.PrintFile(pkg->root_);
+        printer.PrintFile(pmgr_.getPkg(idx)->GetRoot());
         fclose(print_dst);
     }
 }
@@ -90,14 +85,12 @@ void Compiler::TestLexer(void)
 
 int Compiler::CompileSinglePackage(void)
 {
-    Package *pkg = new Package;
     bool h_only = options_.GenerateHOnly();
 
-    packages_.push_back(pkg);
-    pkg->Init(options_.GetSourceName());    // -p improperly used !!
-    if (!pkg->Load(h_only ? PkgStatus::FOR_REFERENCIES : PkgStatus::FULL)) {
-        PrintPkgErrors(pkg);
-    } else if (!checker_.CheckAll(&packages_, &options_, 0, true)) {
+    int idx = pmgr_.init_pkg(options_.GetSourceName());
+    if (!pmgr_.load(idx, h_only ? PkgStatus::FOR_REFERENCIES : PkgStatus::FULL)) {
+        PrintPkgErrors(pmgr_.getPkg(idx));
+    } else if (!pmgr_.check(idx, true)) {
         PrintAllPkgErrors();
     } else {
         string output_name;
@@ -125,7 +118,7 @@ int Compiler::CompileSinglePackage(void)
             return(1);
         }
 
-        cpp_synthesizer_.Synthetize(cppfd, hfd, &packages_, &options_, 0, &empty_cpp);
+        cpp_synthesizer_.Synthetize(cppfd, hfd, &pmgr_, &options_, 0, &empty_cpp);
         if (cppfd != nullptr) fclose(cppfd);
         fclose(hfd);
 
@@ -155,7 +148,7 @@ int Compiler::CompileSinglePackage(void)
                 printf("\ncan't open output file: %s", output_name.c_str());
                 return(1);
             }
-            cpp_synthesizer_.SynthDFile(dfd, packages_[0], output_name.c_str());
+            cpp_synthesizer_.SynthDFile(dfd, pmgr_.getPkg(idx), output_name.c_str());
             fclose(dfd);
         }
         return(0);
@@ -165,23 +158,23 @@ int Compiler::CompileSinglePackage(void)
 
 void Compiler::PrintAllPkgErrors()
 {
-    int len = packages_.size();
+    int len = pmgr_.getPkgsNum();
     for (int ii = len-1; ii >= 0; --ii) {
-        PrintPkgErrors(packages_[ii]);
+        PrintPkgErrors(pmgr_.getPkg(ii));
     }
 }
 
-void Compiler::PrintPkgErrors(Package *pkg)
+void Compiler::PrintPkgErrors(const Package *pkg)
 {
     int         error_idx = 0;
     const char  *error;
     bool        has_errors = false;
 
-    pkg->SortErrors();
+    if (pkg == nullptr) return;
     do {
         error = pkg->GetError(error_idx++);
         if (error != NULL) {
-            printf("\nERROR !! file %s:%s", pkg->fullpath_.c_str() ,error);
+            printf("\nERROR !! file %s:%s", pkg->getFullPath() ,error);
             has_errors = true;
         }
     } while (error != NULL);
