@@ -6,32 +6,50 @@
 #include "symbols_storage.h"
 #include "options.h"
 #include "helpers.h"
+#include "vector.h"
 
 namespace SingNames {
 
-// after ERROR, keep these in order of increasing completion
-enum class PkgStatus {  UNLOADED, 
+// DONT CHANGE THE ORDER: They are from less to more complete !
+enum class PkgStatus {  UNLOADED,           // just inited
                         ERROR,              // failed to load 
-                        FOR_REFERENCIES,    // loaded because referenced - fun. bodies and private functions are not parsed
-                        FULL };             // loaded to be compiled.
+                        LOADED,             // loaded, not parsed or checked
+                        FOR_REFERENCIES,    // parsed and checked because referenced - fun. bodies and private functions are not parsed
+                        FULL };             // fully parsed and checked.
 
 class AstChecker;
 
 class Package {
+
+    // from init
+    string          fullpath_;      // inclusive of search path
+
+    // from load
+    vector<char>    source_[2];     // before and after the insertion point...
+    int             gap_;           // empty space at the beginning of source_[2]      
+
+    // from parse and check
     ErrorList       errors_;
     AstFile         *root_;
     SymbolsStorage  symbols_;
-    string          fullpath_;      // inclusive of search path
+
+    // status
     PkgStatus       status_;
     bool            checked_;
+
+    bool Load(void);
+    void SortErrors(void) { errors_.Sort(); }
 
 public:
     Package();
     ~Package();
 
-    void Init(const char *filename);
-    bool Load(PkgStatus wanted_status);
+    void Init(const char *filename);    // reverts to UNLOADED
+    void clearParsedData(void);         // reverts to LOADED
+    bool advanceTo(PkgStatus wanted_status);
     bool check(AstChecker *checker);
+    void applyPatch(int start, int stop, const char *new_text);
+    bool depends_from(int index);
 
     IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
     PkgStatus getStatus(void) { return status_; }
@@ -40,8 +58,6 @@ public:
 
     const char *GetError(int index) const;
     bool HasErrors(void) { return(errors_.NumErrors() > 0); }
-    void SetError(void) { status_ = PkgStatus::ERROR; }
-    void SortErrors(void) { errors_.Sort(); }
 };
 
 } // namespace

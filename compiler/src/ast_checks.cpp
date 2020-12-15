@@ -71,15 +71,11 @@ bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symb
         // set the index, even if on error.  
         if (dependency->package_index_ == -1) {
             dependency->package_index_ = pmgr_->init_pkg(dependency->full_package_path_.c_str());
-            if (on_error) {
-                pmgr_->setError(dependency->package_index_);
-            }
         }
 
         // note: we check for inclusion cycles including the compiled file. When we compile other files we check for other loops.
         if (!on_error && pmgr_->isMainIndex(dependency->package_index_)) {
             Error("Cyclic inclusions are disallowed", dependency);
-            pmgr_->setError(dependency->package_index_);
         }
     }
 
@@ -120,7 +116,7 @@ bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symb
             errormess += " has been required but not used.";
             Error(errormess.c_str(), dependency);
         } else {
-            if (pmgr_->getStatus(dependency->package_index_) < PkgStatus::FOR_REFERENCIES) {
+            if (pmgr_->getStatus(dependency->package_index_) == PkgStatus::ERROR) {
                 Error("Failed to load package", dependency);
             }
         }

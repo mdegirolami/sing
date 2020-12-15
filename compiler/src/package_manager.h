@@ -20,15 +20,12 @@ public:
     int         init_pkg(const char *name);
     bool        load(int index, PkgStatus wanted_status);
     bool        check(int index, bool is_main);
-    void        setError(int index);
 
     bool        isMainIndex(int index) { return(index != -1 && index == main_package_); }
     int         getPkgsNum(void) const { return(packages_.size()); }
     IAstDeclarationNode *findSymbol(int index, const char *name, bool *is_private);
     PkgStatus   getStatus(int index) const;
     const Package *getPkg(int index) const;
-
-    // todo
     void        applyPatch(int index, int start, int stop, const char *new_text);
 };
 

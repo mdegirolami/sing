@@ -33,7 +33,7 @@ bool PackageManager::load(int index, PkgStatus wanted_status)
 {
     Package *pkg = pkgFromIdx(index);
     if (pkg != nullptr) {
-        return(pkg->Load(wanted_status));
+        return(pkg->advanceTo(wanted_status));
     }
     return(false);
 }
@@ -65,12 +65,6 @@ const Package *PackageManager::getPkg(int index) const
     return(pkgFromIdx(index));
 }
 
-void PackageManager::setError(int index)
-{
-    Package *pkg = pkgFromIdx(index);
-    if (pkg != nullptr) pkg->SetError();
-}
-
 PkgStatus PackageManager::getStatus(int index) const
 {
     Package *pkg = pkgFromIdx(index);
@@ -80,11 +74,32 @@ PkgStatus PackageManager::getStatus(int index) const
 
 void PackageManager::applyPatch(int index, int start, int stop, const char *new_text)
 {
+    vector<int> stack;
 
+    // apply patch - this reverts to LOADED state
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return;
+    PkgStatus prev_status = pkg->getStatus();
+    if (prev_status == PkgStatus::FULL || prev_status == PkgStatus::FOR_REFERENCIES) {
+        stack.push_back(index);
+    }
+    pkg->applyPatch(start, stop, new_text);
+
+    // files who depend on the reset packages must be reset too
+    while (stack.size() > 0) {
+        int to_check = stack[stack.size() - 1];
+        stack.pop_back();
+        for (int ii = 0; ii < packages_.size(); ++ii) {
+            pkg = packages_[ii];
+            if (pkg != nullptr && pkg->depends_from(to_check)) {
+                prev_status = pkg->getStatus();
+                if (prev_status == PkgStatus::FULL || prev_status == PkgStatus::FOR_REFERENCIES) {
+                    stack.push_back(ii);
+                    pkg->clearParsedData();
+                }
+            }
+        }
+    }
 }
-
-
-
-
 
 } // namespace

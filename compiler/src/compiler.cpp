@@ -80,7 +80,6 @@ void Compiler::TestLexer(void)
             printf("\n%d\t%s", token, lexer.CurrTokenVerbatim());
         }
     } while (token != TOKEN_EOF);
-    lexer.CloseFile();
 }
 
 int Compiler::CompileSinglePackage(void)

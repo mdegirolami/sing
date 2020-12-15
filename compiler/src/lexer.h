@@ -152,7 +152,8 @@ class Lexer {
     static const char      *token_to_string[];
     static bool            ash_table_inited;
 
-    FILE            *m_fd;
+    char  *source_;
+    const char  *scan_;
 
     // info on available token
     Token           m_curr_token;
@@ -205,8 +206,7 @@ public:
 
     // init
     int OpenFile(const char *filename);
-    void Init(FILE *fd);
-    void CloseFile(void);
+    void Init(const char *source);
 
     // examining the next to come element
     Token CurrToken(void) { return(m_curr_token); }

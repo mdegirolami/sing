@@ -265,7 +265,8 @@ bool        Lexer::ash_table_inited = false;
 
 Lexer::Lexer()
 {
-    m_fd = NULL;
+    source_ = nullptr;
+    scan_ = nullptr;
     if (!ash_table_inited) {
         int         ii, ash;
         
@@ -321,8 +322,8 @@ Lexer::Lexer()
 
 Lexer::~Lexer()
 {
-    if (m_fd != NULL) {
-        fclose(m_fd);
+    if (source_ != nullptr) {
+        delete[] source_;
     }
 }
 
@@ -349,24 +350,41 @@ int Lexer::ComputeAsh(const char *symbol)
 // init
 int Lexer::OpenFile(const char *filename)
 {
-    m_fd = fopen(filename, "rb");
-    if (m_fd == NULL) return(FAIL);
-    Init(m_fd);
+    FILE *fd = fopen(filename, "rb");
+    if (fd == nullptr) return(FAIL);
+    fseek(fd, 0, SEEK_END);
+    int len = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+    if (len > 10*1024*1024 && len > 0) {
+        fclose(fd);
+        return(FAIL);
+    }
+    if (source_ != nullptr) {
+        delete[] source_;
+    }
+    source_ = new char[len + 1];
+    int read_result = fread(source_, len, 1, fd);
+    fclose(fd);
+    if (read_result != 1) {
+        return(FAIL);
+    }
+    source_[len] = 0;
+    Init(source_);
     return(0);
 }
 
-void Lexer::Init(FILE *fd)
+void Lexer::Init(const char *source)
 {
-    m_fd = fd;
+    scan_ = source;
+
+    // skip the BOM character that sometimes is at the beginning of UTF-8 files.
+    if (scan_[0] == 0xef && scan_[1] == 0xbb && scan_[2] == 0xbf) {
+        scan_ += 3;
+    }
+    
     m_status = LS_REGULAR;
     m_curline = 0;          // as it reads the first line, advances to 1 (usually lines are numbered from 1)
     m_curcol = 0;
-}
-
-void Lexer::CloseFile(void)
-{
-    fclose(m_fd);
-    m_fd = NULL;
 }
 
 // all this decoding fuss to return a correct column position.
@@ -386,10 +404,11 @@ int Lexer::GetNewLine(void)
 
             // collect a line
             while (true) {
-                ch = getc(m_fd);
+                ch = *scan_;
+                if (ch != 0) ++scan_;
 
                 // detect eof
-                if (ch == EOF) {
+                if (ch == 0) {
                     if (m_tmp_line_buffer.length() == 0) {
                         return(EOF);
                     }
@@ -398,9 +417,8 @@ int Lexer::GetNewLine(void)
 
                 // detect eol
                 if (ch == '\r') {
-                    ch = getc(m_fd);
-                    if (ch != '\n') {
-                        ungetc(ch, m_fd);
+                    if (*scan_ == '\n') {
+                        ++scan_;
                     }
                     break;
                 } else if (ch == '\n') {

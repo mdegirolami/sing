@@ -113,6 +113,16 @@ public:
 		}
 	}
 
+    void resize(URGH_SIZE_T size)
+	{
+        if (size > _count) {
+            reserve(size);
+            _count = size;
+        } else if (size < _count) {
+            erase(size, _count);
+        }
+	}
+
 	URGH_SIZE_T size(void) const
 	{
 		return((URGH_SIZE_T)_count);

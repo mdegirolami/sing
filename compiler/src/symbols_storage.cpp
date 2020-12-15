@@ -4,6 +4,15 @@
 
 namespace SingNames {
 
+void SymbolsStorage::ClearAll(void)
+{
+    globals_names_.Reset();
+    globals_nodes_.clear();
+    locals_names_.Reset();
+    locals_nodes_.clear();
+    scopes_top_.clear();
+}
+
 IAstDeclarationNode *SymbolsStorage::FindDeclaration(const char *name)
 {
     IAstDeclarationNode *node = FindGlobalDeclaration(name);

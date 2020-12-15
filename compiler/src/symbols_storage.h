@@ -18,7 +18,6 @@ namespace std {
 namespace SingNames {
 
 class SymbolsStorage {
-    //std::unordered_map<string, IAstDeclarationNode*>    globals_;
     NamesList                                           globals_names_;
     vector<IAstDeclarationNode*>                        globals_nodes_;
 
@@ -26,6 +25,7 @@ class SymbolsStorage {
     vector<IAstDeclarationNode*>                        locals_nodes_;
     vector<int>                                         scopes_top_;
 public:
+    void ClearAll(void);
     bool InsertName(const char *name, IAstDeclarationNode *declaration);    // returns false if the name is duplicated
     void OpenScope(void);
     void CloseScope(void);
