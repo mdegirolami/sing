@@ -23,6 +23,20 @@ class Compiler {
 
     void PrintAllPkgErrors();
     void PrintPkgErrors(const Package *pkg);
+
+    // server stuff
+    void ServerLoop(void);
+    void AppendQuotedParameter(string *response, const char *parm);
+    void srv_src_read(int num_parms, char *parameters[]);
+    void srv_src_change (int num_parms, char *parameters[]);
+    void srv_src_created(int num_parms, char *parameters[]);
+    void srv_src_deleted(int num_parms, char *parameters[]);
+    void srv_src_renamed(int num_parms, char *parameters[]);
+    void srv_get_errors (int num_parms, char *parameters[]);
+    void srv_completion_items(int num_parms, char *parameters[]);
+    void srv_signature(int num_parms, char *parameters[]);
+    void srv_def_position(int num_parms, char *parameters[]);
+
 public:
     int Run(int argc, char *argv[]);
 };

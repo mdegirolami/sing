@@ -120,6 +120,20 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
         if (!Advance()) return;
         is_public = true;
     } else if (for_reference) {
+        switch (m_token) {
+        case TOKEN_TYPE:
+        case TOKEN_VAR:
+        case TOKEN_LET:
+        case TOKEN_FUNC:
+        case TOKEN_ENUM:
+        case TOKEN_INTERFACE:
+        case TOKEN_CLASS:
+            break;
+        default:
+            Error("Expecting a declaration: type, var, let, fn, class, interface, enum");
+            Advance();  // skip the wrong token (else loops forever)
+            return;
+        }
         if (!Advance()) return;
         if (m_token == TOKEN_NAME) {
             file->AddPrivateSymbol(m_lexer->CurrTokenString());
@@ -154,6 +168,7 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
         break;
     default:
         Error("Expecting a declaration: type, var, let, fn, class, interface, enum");
+        Advance();  // skip the wrong token (else loops forever)
         return;
     }
     if (!on_error_) {
@@ -2062,7 +2077,7 @@ bool Parser::Advance(void)
             int row, col;
             string mess;
             m_lexer->GetError(&mess, &row, &col);
-            SetError(mess.c_str(), row, col);
+            SetError(mess.c_str(), row, col, row, col + 1);
             m_lexer->ClearError();
             return(false);
         }
@@ -2095,16 +2110,16 @@ void Parser::Error(const char *message)
 
     line = m_lexer->CurrTokenLine();
     col = m_lexer->CurrTokenColumn() + 1;
-    SetError(message, line, col);
+    SetError(message, line, col, m_lexer->CurrTokenLastLine(), m_lexer->CurrTokenLastColumn() + 1);
 }
 
-void Parser::SetError(const char *message, int row, int column)
+void Parser::SetError(const char *message, int row, int column, int endrow, int endcol)
 {
     // errors happening while trying to recover are ignored.
     if (on_error_) {
         return;
     }
-    errors_->AddError(message, row, column);
+    errors_->AddError(message, row, column, endrow, endcol);
     has_errors_ = true;
     on_error_ = true;
 }
@@ -2252,7 +2267,7 @@ void Parser::CheckCommentsAssignments(void)
         if (rd->rd_type == RdType::EMPTY_LINE) continue;
         if (rd->rd_type == RdType::COMMENT_AFTER_CODE) {
             if (!CommentLineIsAllowed(rd->row, &receiver)) {
-                errors_->AddError("Comments at the right of the code are only allowed on the first line of a declaration or statement)", rd->row, rd->col);
+                errors_->AddError("Comments at the right of the code are only allowed on the first line of a declaration or statement)", rd->row, rd->col, rd->row, rd->col + 1);
                 has_errors_ = true;
             }
         } else {
@@ -2273,7 +2288,7 @@ void Parser::CheckCommentsAssignments(void)
 
             // the next line must be some code supporting the comment
             if (!CommentLineIsAllowed(rd->row + 1, &receiver)) {
-                errors_->AddError("Comment [block] should preceed a declaration or statement)", first_row, first_col);
+                errors_->AddError("Comment [block] should preceed a declaration or statement)", first_row, first_col, first_row, first_col + 1);
                 has_errors_ = true;
             }
         }

@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <float.h>
 #include <assert.h>
+#include <stdio.h>
 #include "compiler.h"
 #include "helpers.h"
 #include "ast_nodes_print.h"
@@ -20,6 +21,10 @@ int Compiler::Run(int argc, char *argv[])
         return(0);
     }
     pmgr_.init(&options_);
+    if (options_.ServerMode()) {
+        ServerLoop();
+        return(0);     
+    }
     switch (options_.GetTestMode()) {
     case 1:
         TestLexer();
@@ -171,7 +176,7 @@ void Compiler::PrintPkgErrors(const Package *pkg)
 
     if (pkg == nullptr) return;
     do {
-        error = pkg->GetError(error_idx++);
+        error = pkg->GetErrorString(error_idx++);
         if (error != NULL) {
             printf("\nERROR !! file %s:%s", pkg->getFullPath() ,error);
             has_errors = true;
@@ -182,4 +187,244 @@ void Compiler::PrintPkgErrors(const Package *pkg)
     }
 }
 
+void Compiler::AppendQuotedParameter(string *response, const char *parm)
+{
+    *response += '"';
+    do {
+        if (*parm == '\\' || *parm == '"') {
+            *response += '\\';
+        }
+        *response += *parm++;
+    } while (*parm != 0);
+    *response += '"';
 }
+
+void Compiler::ServerLoop(void)
+{
+    char buffer[1000];
+    char *parameters[10];
+    bool do_exit = false;
+
+    do {
+
+        // get the command
+        if (fgets(buffer, sizeof(buffer), stdin) == nullptr) {
+            if (errno) break;
+            continue;
+        }
+
+        // split the command portions
+        char *scan = buffer;
+        int num_parms = 0;
+        while (*scan != 0 && num_parms < 10) {
+
+            // skip leading blanks
+            while (*scan == ' ') ++scan;
+            if (*scan == 0 || *scan == '\r' || *scan == '\n') break;
+            
+            if (*scan == '"') {
+
+                // is a string 
+                ++scan;
+                parameters[num_parms++] = scan;
+                
+                // take out of the way the escape sequencies
+                char *dst = scan;
+
+                // go to end
+                while (*scan != 0 && *scan != '"') {
+                    if (*scan == '\\') {
+                        ++scan;
+                    }
+                    *dst++ = *scan++;
+                }
+
+                // terminate
+                if (*scan != 0) scan++;
+                *dst = 0;
+            } else {
+                parameters[num_parms++] = scan;
+
+                // go to end
+                while (*scan != 0 && *scan != ' ' && *scan != '\r' && *scan != '\n') ++scan;
+
+                // terminate
+                if (*scan != 0) *scan++ = 0;
+            }
+        }
+
+        if (num_parms < 1) continue;
+
+        // run the command
+        if (strcmp(parameters[0], "src_read") == 0) {
+            srv_src_read(num_parms, parameters);
+        } else if (strcmp(parameters[0], "src_change") == 0) {
+            srv_src_change(num_parms, parameters);
+        } else if (strcmp(parameters[0], "src_created") == 0) {
+            srv_src_created(num_parms, parameters);
+        } else if (strcmp(parameters[0], "src_deleted") == 0) {
+            srv_src_deleted(num_parms, parameters);
+        } else if (strcmp(parameters[0], "src_renamed") == 0) {
+            srv_src_renamed(num_parms, parameters);
+        } else if (strcmp(parameters[0], "get_errors") == 0) {
+            srv_get_errors(num_parms, parameters);
+        } else if (strcmp(parameters[0], "completion_items") == 0) {
+            srv_completion_items(num_parms, parameters);
+        } else if (strcmp(parameters[0], "signature") == 0) {
+            srv_signature(num_parms, parameters);
+        } else if (strcmp(parameters[0], "def_position") == 0) {
+            srv_def_position(num_parms, parameters);
+        } else if (strcmp(parameters[0], "exit") == 0) {
+            do_exit = true;
+        }
+    } while (!do_exit);
+}
+
+void Compiler::srv_src_read(int num_parms, char *parameters[])
+{
+    if (num_parms < 2) return;
+    int idx = pmgr_.init_pkg(parameters[1], true);
+    pmgr_.load(idx, PkgStatus::LOADED);
+}
+
+inline int hex2char(int charpoint)
+{
+    if (charpoint >= '0' && charpoint <= '9') {
+        return(charpoint - '0');
+    } else if (charpoint >= 'a' && charpoint <= 'f') {
+        return(charpoint - 'a' + 10);
+    } else if (charpoint >= 'A' && charpoint <= 'F') {
+        return(charpoint - 'A' + 10);
+    }
+    return(0);
+}
+
+void Compiler::srv_src_change (int num_parms, char *parameters[])
+{
+    char newchars[512];
+
+    // some checks
+    if (num_parms < 5) return;
+    if ((strlen(parameters[4]) & 1) != 0) return;
+
+    // convert hex digits to bytes
+    char *dst = newchars;
+    for (const char *scan = parameters[4]; *scan; scan += 2) {
+        *dst++ = (hex2char(scan[0]) << 4) + hex2char(scan[1]);
+    }
+    *dst++ = 0;
+
+    // get the index and make sure the file is loaded
+    int idx = pmgr_.init_pkg(parameters[1]);
+    pmgr_.load(idx, PkgStatus::LOADED);
+
+    // patch it !!
+    int offset = atoi(parameters[2]);
+    int length = atoi(parameters[3]);
+    pmgr_.applyPatch(idx, offset, offset + length, newchars);
+}
+
+void Compiler::srv_src_created(int num_parms, char *parameters[])
+{
+    srv_src_read(num_parms, parameters);
+}
+
+void Compiler::srv_src_deleted(int num_parms, char *parameters[])
+{
+    if (num_parms < 2) return;
+    pmgr_.on_deletion(parameters[1]);
+}
+
+void Compiler::srv_src_renamed(int num_parms, char *parameters[])
+{
+    // must reload with another id: old links don't apply
+    if (num_parms < 3) return;
+    srv_src_deleted(num_parms, parameters);
+    parameters[1] = parameters[2];
+    srv_src_read(num_parms, parameters);
+}
+
+void Compiler::srv_get_errors (int num_parms, char *parameters[])
+{
+    if (num_parms < 2) return;
+    int idx = pmgr_.init_pkg(parameters[1]);
+    pmgr_.load(idx, PkgStatus::FULL);
+    pmgr_.check(idx, true);
+    const Package *pkg = pmgr_.getPkg(idx);
+    if (pkg == nullptr) return;
+
+    int         error_idx = 0;
+    const char  *error;
+    int         row, col, endrow, endcol;
+
+    do {
+        error = pkg->GetError(error_idx++, &row, &col, &endrow, &endcol);
+        if (error != nullptr) {
+            string response = "set_error ";
+            AppendQuotedParameter(&response, parameters[1]);
+            AppendQuotedParameter(&response, error);
+            printf("%s %d %d %d %d\r\n", response.c_str(), row, col, endrow, endcol);
+        }
+    } while (error != nullptr);
+    printf("set_errors_done \"%s\"\r\n", parameters[1]);
+}
+
+// >> completion_items <file>,<line>,<col>
+// << set_completion_item <file>,<name>
+// << set_completions_done <file>
+
+void Compiler::srv_completion_items(int num_parms, char *parameters[])
+{
+    if (num_parms < 4) return;
+    string response = "set_completion_item ";
+    AppendQuotedParameter(&response, parameters[1]);
+    printf("%s one\r\n", response.c_str());
+    printf("%s two\r\n", response.c_str());
+    printf("%s three\r\n", response.c_str());
+    response = "set_completions_done ";
+    AppendQuotedParameter(&response, parameters[1]);
+    printf("%s\r\n", response.c_str());
+}
+
+// >> signature <file>,<line>,<col>
+// << set_signature <file>,<signature>,<parameter>
+
+void Compiler::srv_signature(int num_parms, char *parameters[])
+{
+    if (num_parms < 4) return;
+    string response = "set_signature ";
+    AppendQuotedParameter(&response, parameters[1]);
+    printf("%s \"filter(kk i32, k2 i32) void\" 1\r\n", response.c_str());
+}
+
+// >> def_position <file>,<row>,<col>
+// << definition_of <file>,<line>,<col>
+
+void Compiler::srv_def_position(int num_parms, char *parameters[])
+{
+    if (num_parms < 4) return;
+    string response = "definition_of ";
+    AppendQuotedParameter(&response, parameters[1]);
+    printf("%s %d, %d\r\n", response.c_str(), atoi(parameters[2])/2, atoi(parameters[3])/2);
+}
+
+}
+
+/*
+
+function string_as_unicode_escape(input) {
+    function pad_four(input) {
+        var l = input.length;
+        if (l == 0) return '0000';
+        if (l == 1) return '000' + input;
+        if (l == 2) return '00' + input;
+        if (l == 3) return '0' + input;
+        return input;
+    }
+    var output = '';
+    for (var i = 0, l = input.length; i < l; i++)
+        output += '\\u' + pad_four(input.charCodeAt(i).toString(16));
+    return output;
+}
+
+*/

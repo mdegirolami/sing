@@ -14,10 +14,11 @@ class PackageManager {
     int             main_package_; // the package we are trying to check now (fully loaded, under check)  
 
     Package *pkgFromIdx(int index) const;
+    void    onInvalidation(int index);
 public:
     void        init(Options *options) { options_ = options; main_package_ = -1; }
 
-    int         init_pkg(const char *name);
+    int         init_pkg(const char *name, bool force_init = false);
     bool        load(int index, PkgStatus wanted_status);
     bool        check(int index, bool is_main);
 
@@ -27,6 +28,7 @@ public:
     PkgStatus   getStatus(int index) const;
     const Package *getPkg(int index) const;
     void        applyPatch(int index, int start, int stop, const char *new_text);
+    void        on_deletion(const char *name);
 };
 
 } // namespace

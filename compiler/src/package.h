@@ -6,7 +6,7 @@
 #include "symbols_storage.h"
 #include "options.h"
 #include "helpers.h"
-#include "vector.h"
+#include "split_vector.h"
 
 namespace SingNames {
 
@@ -19,14 +19,15 @@ enum class PkgStatus {  UNLOADED,           // just inited
 
 class AstChecker;
 
+static const int max_filesize = 10*1024*1024;
+
 class Package {
 
     // from init
     string          fullpath_;      // inclusive of search path
 
     // from load
-    vector<char>    source_[2];     // before and after the insertion point...
-    int             gap_;           // empty space at the beginning of source_[2]      
+    SplitVector     source_;    
 
     // from parse and check
     ErrorList       errors_;
@@ -56,7 +57,8 @@ public:
     const char *getFullPath(void) const { return fullpath_.c_str(); }
     const AstFile *GetRoot(void) const { return(root_); }
 
-    const char *GetError(int index) const;
+    const char *GetErrorString(int index) const;
+    const char *GetError(int index, int *row, int *col, int *endrow, int *endcol) const;
     bool HasErrors(void) { return(errors_.NumErrors() > 0); }
 };
 

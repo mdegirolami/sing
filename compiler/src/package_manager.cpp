@@ -12,11 +12,15 @@ Package *PackageManager::pkgFromIdx(int index) const
     return(nullptr);
 }
 
-int PackageManager::init_pkg(const char *name)
+int PackageManager::init_pkg(const char *name, bool force_init)
 {
     // existing ?
     for (int ii = 0; ii < (int)packages_.size(); ++ii) {
         if (is_same_filename(packages_[ii]->getFullPath(), name)) {
+            if (force_init) {
+                onInvalidation(ii);
+                packages_[ii]->Init(name);
+            }
             return(ii);
         }
     }
@@ -74,30 +78,51 @@ PkgStatus PackageManager::getStatus(int index) const
 
 void PackageManager::applyPatch(int index, int start, int stop, const char *new_text)
 {
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return;
+    onInvalidation(index);
+    pkg->applyPatch(start, stop, new_text);
+}
+
+void PackageManager::onInvalidation(int index)
+{
     vector<int> stack;
 
     // apply patch - this reverts to LOADED state
-    Package *pkg = pkgFromIdx(index);
+    Package *pkg = packages_[index];
     if (pkg == nullptr) return;
-    PkgStatus prev_status = pkg->getStatus();
-    if (prev_status == PkgStatus::FULL || prev_status == PkgStatus::FOR_REFERENCIES) {
+    PkgStatus status = pkg->getStatus();
+    if (status == PkgStatus::FULL || status == PkgStatus::FOR_REFERENCIES) {
         stack.push_back(index);
     }
-    pkg->applyPatch(start, stop, new_text);
 
     // files who depend on the reset packages must be reset too
     while (stack.size() > 0) {
         int to_check = stack[stack.size() - 1];
         stack.pop_back();
         for (int ii = 0; ii < packages_.size(); ++ii) {
+            if (ii == to_check) continue;
             pkg = packages_[ii];
             if (pkg != nullptr && pkg->depends_from(to_check)) {
-                prev_status = pkg->getStatus();
-                if (prev_status == PkgStatus::FULL || prev_status == PkgStatus::FOR_REFERENCIES) {
+                status = pkg->getStatus();
+                if (status == PkgStatus::FULL || status == PkgStatus::FOR_REFERENCIES) {
                     stack.push_back(ii);
                     pkg->clearParsedData();
                 }
             }
+        }
+    }
+}
+
+void PackageManager::on_deletion(const char *name)
+{
+    // existing ?
+    for (int ii = 0; ii < (int)packages_.size(); ++ii) {
+        if (is_same_filename(packages_[ii]->getFullPath(), name)) {
+
+            // revert to unloaded
+            onInvalidation(ii);
+            packages_[ii]->Init(name);
         }
     }
 }

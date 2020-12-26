@@ -2736,45 +2736,32 @@ FuncDeclaration *AstChecker::SearchFunctionInClass(AstClassType *the_class, cons
 
 void AstChecker::Error(const char *message, IAstNode *location, bool use_last_location)
 {
-    //char    fullmessage[600];
-    int     row, col;
+    PositionInfo *pos = location->GetPositionRecord();
+    int     row, col, endrow, endcol;
 
     if (use_last_location) {
-        row = location->GetPositionRecord()->last_row;
-        col = location->GetPositionRecord()->last_col;
+        row = endrow = pos->last_row;
+        col = pos->last_col;
+        endcol = col + 1;
     } else {
-        row = location->GetPositionRecord()->start_row;
-        col = location->GetPositionRecord()->start_col;
+        row= pos->start_row;
+        col= pos->start_col;
+        endrow = pos->end_row;
+        endcol = pos->end_col; 
     }
-    errors_->AddError(message, row, col + 1);
-    //if (strlen(message) > 512) {
-    //    errors_->AddName(message);
-    //} else {
-    //    sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, col + 1, message);
-    //    errors_->AddName(fullmessage);
-    //}
+    errors_->AddError(message, row, col + 1, endrow, endcol + 1);
 }
 
-void AstChecker::UsageError(const char *message, IAstNode *location, bool use_last_location)
+void AstChecker::UsageError(const char *message, IAstNode *location)
 {
-    //char    fullmessage[600];
-    int     row, col;
+    PositionInfo *pos = location->GetPositionRecord();
+    int     row, col, endrow, endcol;
 
-    if (use_last_location) {
-        row = location->GetPositionRecord()->end_row;
-        col = location->GetPositionRecord()->end_col;
-    } else {
-        row = location->GetPositionRecord()->start_row;
-        col = location->GetPositionRecord()->start_col;
-    }
-    usage_errors_.AddError(message, row, col + 1);
-
-    //if (strlen(message) > 512) {
-    //    usage_errors_.AddName(message);
-    //} else {
-    //    sprintf(fullmessage, "line: %d \tcolumn: %d \t%s", row, col + 1, message);
-    //    usage_errors_.AddName(fullmessage);
-    //}
+    row= pos->start_row;
+    col= pos->start_col;
+    endrow = pos->end_row;
+    endcol = pos->end_col; 
+    usage_errors_.AddError(message, row, col + 1, endrow, endcol + 1);
 }
 
 } // namespace

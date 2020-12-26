@@ -6,7 +6,6 @@
 
 namespace SingNames {
 
-enum CompilerMode {CM_SINGLE_PACKAGE, CM_TEST};
 enum class FileSolveError {OK, AMBIGUOUS, NOT_FOUND};
 
 class Options {
@@ -18,12 +17,12 @@ class Options {
     const char  *c_format_source_;
 
     int             test_to_perform_;
-    CompilerMode    mode_;
     bool            skip_usage_errors_;
     bool            debug_build_;
     bool            verbose_;
     bool            create_d_file_;
     bool            generate_h_only_;
+    bool            server_mode_;
 
     // for the parser
     bool        waiting_a_value_;
@@ -43,11 +42,11 @@ public:
     const char *GetSourceName(void) { return(source_); }
     const char *GetMakeFileDir(void) { return(make_file_); }
     const char *GetOutputFile(void) { return(out_file_); }
-    CompilerMode GetMode(void) { return(mode_); }
     const char *GetSrcDir(int index) const { return(packages_src_dirs_.GetName(index)); }
     bool AreUsageErrorsEnabled(void) { return(!skip_usage_errors_); }
     bool MustCreateDFile(void) { return(create_d_file_); }
     bool GenerateHOnly(void) { return(generate_h_only_); }
+    bool ServerMode(void) { return(server_mode_); }
 
     // helper
     FileSolveError SolveFileName(FILE **fh, string *full, const char *partial);

@@ -23,7 +23,7 @@ class Parser {
     void    CheckSemicolon(void);
     bool    Advance(void);
     void    Error(const char *message);                         // throws and need to recover
-    void    SetError(const char *message, int row, int column); // just adds to the errors list
+    void    SetError(const char *message, int row, int column, int endrow, int endcol); // just adds to the errors list
     bool    SkipToNextStatement(int level);                     // returns false if exits from the function/block
     void    SkipToNextDeclaration(void);
     bool    OnDeclarationToken(void);

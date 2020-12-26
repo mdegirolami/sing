@@ -80,6 +80,9 @@ void Options::ParseSingleArg(const char *arg)
             case 'p':
                 generate_h_only_ = true;
                 break;
+            case 's':
+                server_mode_ = true;
+                break;
             case 'h':
             case '?':
                 must_print_help_ = true;
@@ -100,10 +103,7 @@ void Options::ParseSingleArg(const char *arg)
 
 void Options::CheckArgumentsCombintion(void)
 {
-    if (test_to_perform_ != 0) {
-        mode_ = CM_TEST;
-    } else {
-        mode_ = CM_SINGLE_PACKAGE;
+    if (test_to_perform_ == 0 && !server_mode_) {
         if (source_ == nullptr || out_file_ == nullptr) {
             printf("\nYou at least need to specify a source and an output file.\n");
             error_ = true;
@@ -191,6 +191,7 @@ bool Options::ParseArgs(int argc, char *argv[])
     debug_build_ = false;
     create_d_file_ = false;
     generate_h_only_ = false;
+    server_mode_ = false;
 
     waiting_a_value_ = false;
     error_ = false;

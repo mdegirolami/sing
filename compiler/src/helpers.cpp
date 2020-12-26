@@ -3,20 +3,24 @@
 
 namespace SingNames {
 
-void ErrorList::AddError(const char *message, int nRow, int nCol)
+void ErrorList::AddError(const char *message, int nRow, int nCol, int nEndRow, int nEndCol)
 {
     errors_strings_.AddName(message);
     rows_.push_back(nRow);
     cols_.push_back(nCol);
+    end_rows_.push_back(nEndRow);
+    end_cols_.push_back(nEndCol);    
 }
 
-const char *ErrorList::GetError(int index, int *nRow, int *nCol) const
+const char *ErrorList::GetError(int index, int *nRow, int *nCol, int *nEndRow, int *nEndCol) const
 {
     if (index < 0 || index >= (int)rows_.size()) {
         return(nullptr);
     }
     *nRow = rows_[index];
     *nCol = cols_[index];
+    if (nEndRow != nullptr) *nEndRow = end_rows_[index];
+    if (nEndCol != nullptr) *nEndCol = end_cols_[index];
     return(errors_strings_.GetName(index));
 }
 
@@ -24,6 +28,8 @@ void ErrorList::Reset(void)
 {
     rows_.clear();
     cols_.clear();
+    end_rows_.clear();
+    end_cols_.clear();
     errors_strings_.Reset();
 }
 
@@ -32,6 +38,8 @@ void ErrorList::Append(const ErrorList *source)
     errors_strings_.CopyFrom(&source->errors_strings_);
     rows_.append(source->rows_);
     cols_.append(source->cols_);
+    end_rows_.append(source->end_rows_);
+    end_cols_.append(source->end_cols_);
 }
 
 static int stub(int a, int b, void *context)
@@ -59,7 +67,7 @@ void ErrorList::Sort(void)
     {
         int actual = indices[ii];
         const char *message = errors_strings_.GetName(actual);
-        sorted.AddError(message, rows_[actual], cols_[actual]);
+        sorted.AddError(message, rows_[actual], cols_[actual], end_rows_[actual], end_cols_[actual]);
     }
     Reset();
     Append(&sorted);

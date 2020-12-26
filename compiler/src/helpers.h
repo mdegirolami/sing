@@ -23,8 +23,8 @@ public:
 
 class ErrorList {
 public:
-    void AddError(const char *message, int nRow, int nCol);
-    const char *GetError(int index, int *nRow, int *nCol) const;
+    void AddError(const char *message, int nRow, int nCol, int nEndRow, int nEndCol);
+    const char *GetError(int index, int *nRow, int *nCol, int *nEndRow = nullptr, int *nEndCol = nullptr) const;
     int NumErrors(void) const { return((int)rows_.size()); }
     void Reset(void);
     void Append(const ErrorList *source);
@@ -35,6 +35,8 @@ private:
     NamesList   errors_strings_;
     vector<int> rows_;
     vector<int> cols_;
+    vector<int> end_rows_;
+    vector<int> end_cols_;
 };
 
 void quick_sort_indices(int *vv, int count, int(*comp)(int, int, void *), void *context);

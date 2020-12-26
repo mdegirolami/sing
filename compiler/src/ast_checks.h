@@ -139,7 +139,7 @@ class AstChecker : public ITypedefSolver {
     FuncDeclaration *SearchFunctionInClass(AstClassType *the_class, const char *name);
 
     void Error(const char *message, IAstNode *location, bool use_last_location = false);
-    void UsageError(const char *message, IAstNode *location, bool use_last_location = false);
+    void UsageError(const char *message, IAstNode *location);
 public:
     //AstChecker() {}
     void init(PackageManager *packages, Options *options, int pkg_index);
