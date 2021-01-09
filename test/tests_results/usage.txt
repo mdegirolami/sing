@@ -1,8 +1,8 @@
 
-ERROR !! file usage.sing:1:6: Type is unused !!
-ERROR !! file usage.sing:4:5: Variable/Constant unused !!
-ERROR !! file usage.sing:6:5: Variable never written, please declare as a constant !!
-ERROR !! file usage.sing:11:9: Variable/Constant unused !!
-ERROR !! file usage.sing:12:9: Variable never written, please declare as a constant !!
-ERROR !! file usage.sing:21:4: Function is unused !!
-ERROR !! file usage.sing:25:35: Output parameter read before being written !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:1:6: Type is unused !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:4:5: Variable/Constant unused !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:6:5: Variable never written, please declare as a constant !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:11:9: Variable/Constant unused !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:12:9: Variable never written, please declare as a constant !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:21:4: Function is unused !!
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/usage.sing:25:35: Output parameter read before being written !!

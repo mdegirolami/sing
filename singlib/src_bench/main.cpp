@@ -1,6 +1,6 @@
 #include "sing.h"
 #include <float.h>
-#include "limits.h"
+#include "value_limits.h"
 
 float xx = FLT_MAX;
 

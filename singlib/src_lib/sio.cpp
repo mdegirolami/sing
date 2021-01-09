@@ -463,7 +463,9 @@ std::string pathJoinAll(const int32_t drive, const bool absolute, const std::vec
         result += parts[ii];
         result += '/';
     }
-    result += parts.back();
+    if (!parts.empty()) {
+        result += parts.back();
+    }
     return(result);
 }
 
