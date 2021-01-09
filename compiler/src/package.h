@@ -49,7 +49,8 @@ public:
     void clearParsedData(void);         // reverts to LOADED
     bool advanceTo(PkgStatus wanted_status);
     bool check(AstChecker *checker);
-    void applyPatch(int start, int stop, const char *new_text);
+    void applyPatch(int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext);
+    void insertInSrc(const char *newtext);
     bool depends_from(int index);
 
     IAstDeclarationNode *findSymbol(const char *name, bool *is_private);

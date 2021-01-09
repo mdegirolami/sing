@@ -5,6 +5,7 @@ profile_flags =
 
 src = ../../src
 bin_target = ../../bin/sing.exe
+sing_lib = ../../../singlib/bin/singlib.a
 
 include ../build_aux.ninja
 

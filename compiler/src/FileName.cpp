@@ -6,6 +6,7 @@
 #include <string.h>
 #include "FileName.h"
 #include "target.h"
+#include "sio.h"
 
 namespace SingNames {
 
@@ -155,6 +156,19 @@ void FileName::ExtensionSet(string *filename, const char *extension)
         (*filename) += extension;
     } else {
         (*filename) += cdot;
+    }
+}
+
+void FileName::Normalize(string *filename)
+{
+    if (filename->length() == 0) return;
+    std::string nn = sing::pathFix(filename->c_str());
+    if (!sing::pathIsAbsolute(nn.c_str())) {
+        std::string abs;
+        sing::pathToAbsolute(&abs, nn.c_str(), nullptr);
+        *filename = abs.c_str();
+    } else {
+        *filename = nn.c_str();
     }
 }
 

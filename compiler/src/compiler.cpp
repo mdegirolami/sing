@@ -2,27 +2,29 @@
 #include <float.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "compiler.h"
 #include "helpers.h"
 #include "ast_nodes_print.h"
 #include "FileName.h"
 
+
 int main(int argc, char *argv[])
 {
     SingNames::Compiler compiler;
-    return(compiler.Run(argc, argv));
+    return(compiler.Run(argc, argv, false));
 }
 
 namespace SingNames {
 
-int Compiler::Run(int argc, char *argv[])
+int Compiler::Run(int argc, char *argv[], bool log_server)
 {
     if (!options_.ParseArgs(argc, argv)) {
         return(0);
     }
     pmgr_.init(&options_);
     if (options_.ServerMode()) {
-        ServerLoop();
+        ServerLoop(log_server);
         return(0);     
     }
     switch (options_.GetTestMode()) {
@@ -199,11 +201,17 @@ void Compiler::AppendQuotedParameter(string *response, const char *parm)
     *response += '"';
 }
 
-void Compiler::ServerLoop(void)
+void Compiler::ServerLoop(bool log_server)
 {
-    char buffer[1000];
-    char *parameters[10];
-    bool do_exit = false;
+    char    buffer[1000];
+    char    *parameters[10];
+    bool    do_exit = false;
+
+    if (log_server) {
+        server_log_ = fopen("singsrvlog.txt", "wb");
+    } else {
+        server_log_ = nullptr;
+    }
 
     do {
 
@@ -211,6 +219,10 @@ void Compiler::ServerLoop(void)
         if (fgets(buffer, sizeof(buffer), stdin) == nullptr) {
             if (errno) break;
             continue;
+        }
+        
+        if (server_log_ != nullptr) {
+            fprintf(server_log_, ">> %s\r\n", buffer);
         }
 
         // split the command portions
@@ -260,6 +272,8 @@ void Compiler::ServerLoop(void)
             srv_src_read(num_parms, parameters);
         } else if (strcmp(parameters[0], "src_change") == 0) {
             srv_src_change(num_parms, parameters);
+        } else if (strcmp(parameters[0], "src_insert") == 0) {
+            srv_src_insert(num_parms, parameters);
         } else if (strcmp(parameters[0], "src_created") == 0) {
             srv_src_created(num_parms, parameters);
         } else if (strcmp(parameters[0], "src_deleted") == 0) {
@@ -278,6 +292,20 @@ void Compiler::ServerLoop(void)
             do_exit = true;
         }
     } while (!do_exit);
+    if (server_log_ != nullptr) fclose(server_log_);
+}
+
+void Compiler::ServerResponse(const char *format, ...)
+{
+    va_list marker;
+
+    va_start(marker, format);
+    vprintf(format, marker);
+    if (server_log_ != nullptr) {
+        va_start(marker, format);
+        vfprintf(server_log_, format, marker);
+    }
+    fflush(stdout);
 }
 
 void Compiler::srv_src_read(int num_parms, char *parameters[])
@@ -304,12 +332,12 @@ void Compiler::srv_src_change (int num_parms, char *parameters[])
     char newchars[512];
 
     // some checks
-    if (num_parms < 5) return;
-    if ((strlen(parameters[4]) & 1) != 0) return;
+    if (num_parms < 8) return;
+    if ((strlen(parameters[7]) & 1) != 0) return;
 
     // convert hex digits to bytes
     char *dst = newchars;
-    for (const char *scan = parameters[4]; *scan; scan += 2) {
+    for (const char *scan = parameters[7]; *scan; scan += 2) {
         *dst++ = (hex2char(scan[0]) << 4) + hex2char(scan[1]);
     }
     *dst++ = 0;
@@ -319,9 +347,35 @@ void Compiler::srv_src_change (int num_parms, char *parameters[])
     pmgr_.load(idx, PkgStatus::LOADED);
 
     // patch it !!
-    int offset = atoi(parameters[2]);
-    int length = atoi(parameters[3]);
-    pmgr_.applyPatch(idx, offset, offset + length, newchars);
+    int from_row = atoi(parameters[2]) - 1;
+    int from_col = atoi(parameters[3]) - 1;
+    int to_row = atoi(parameters[4]) - 1;
+    int to_col = atoi(parameters[5]) - 1;
+    int allocate = atoi(parameters[6]);
+    pmgr_.applyPatch(idx, from_row, from_col, to_row, to_col, allocate, newchars);
+}
+
+void Compiler::srv_src_insert (int num_parms, char *parameters[])
+{
+    char newchars[512];
+
+    // some checks
+    if (num_parms < 3) return;
+    if ((strlen(parameters[2]) & 1) != 0) return;
+
+    // convert hex digits to bytes
+    char *dst = newchars;
+    for (const char *scan = parameters[2]; *scan; scan += 2) {
+        *dst++ = (hex2char(scan[0]) << 4) + hex2char(scan[1]);
+    }
+    *dst++ = 0;
+
+    // get the index and make sure the file is loaded
+    int idx = pmgr_.init_pkg(parameters[1]);
+    pmgr_.load(idx, PkgStatus::LOADED);
+
+    // patch it !!
+    pmgr_.insertInSrc(idx, newchars);
 }
 
 void Compiler::srv_src_created(int num_parms, char *parameters[])
@@ -348,6 +402,9 @@ void Compiler::srv_get_errors (int num_parms, char *parameters[])
 {
     if (num_parms < 2) return;
     int idx = pmgr_.init_pkg(parameters[1]);
+    if (pmgr_.getStatus(idx) == PkgStatus::FULL) {
+        return; // already tested and communicated.
+    }
     pmgr_.load(idx, PkgStatus::FULL);
     pmgr_.check(idx, true);
     const Package *pkg = pmgr_.getPkg(idx);
@@ -361,12 +418,12 @@ void Compiler::srv_get_errors (int num_parms, char *parameters[])
         error = pkg->GetError(error_idx++, &row, &col, &endrow, &endcol);
         if (error != nullptr) {
             string response = "set_error ";
-            AppendQuotedParameter(&response, parameters[1]);
+            //AppendQuotedParameter(&response, parameters[1]);
             AppendQuotedParameter(&response, error);
-            printf("%s %d %d %d %d\r\n", response.c_str(), row, col, endrow, endcol);
+            ServerResponse("%s %d %d %d %d\r\n", response.c_str(), row, col, endrow, endcol);
         }
     } while (error != nullptr);
-    printf("set_errors_done \"%s\"\r\n", parameters[1]);
+    ServerResponse("set_errors_done \"%s\"\r\n", parameters[1]);
 }
 
 // >> completion_items <file>,<line>,<col>
@@ -378,12 +435,12 @@ void Compiler::srv_completion_items(int num_parms, char *parameters[])
     if (num_parms < 4) return;
     string response = "set_completion_item ";
     AppendQuotedParameter(&response, parameters[1]);
-    printf("%s one\r\n", response.c_str());
-    printf("%s two\r\n", response.c_str());
-    printf("%s three\r\n", response.c_str());
+    ServerResponse("%s one\r\n", response.c_str());
+    ServerResponse("%s two\r\n", response.c_str());
+    ServerResponse("%s three\r\n", response.c_str());
     response = "set_completions_done ";
     AppendQuotedParameter(&response, parameters[1]);
-    printf("%s\r\n", response.c_str());
+    ServerResponse("%s\r\n", response.c_str());
 }
 
 // >> signature <file>,<line>,<col>
@@ -394,7 +451,7 @@ void Compiler::srv_signature(int num_parms, char *parameters[])
     if (num_parms < 4) return;
     string response = "set_signature ";
     AppendQuotedParameter(&response, parameters[1]);
-    printf("%s \"filter(kk i32, k2 i32) void\" 1\r\n", response.c_str());
+    ServerResponse("%s \"filter(kk i32, k2 i32) void\" 1\r\n", response.c_str());
 }
 
 // >> def_position <file>,<row>,<col>
@@ -405,26 +462,7 @@ void Compiler::srv_def_position(int num_parms, char *parameters[])
     if (num_parms < 4) return;
     string response = "definition_of ";
     AppendQuotedParameter(&response, parameters[1]);
-    printf("%s %d, %d\r\n", response.c_str(), atoi(parameters[2])/2, atoi(parameters[3])/2);
+    ServerResponse("%s %d, %d\r\n", response.c_str(), atoi(parameters[2])/2, atoi(parameters[3])/2);
 }
 
 }
-
-/*
-
-function string_as_unicode_escape(input) {
-    function pad_four(input) {
-        var l = input.length;
-        if (l == 0) return '0000';
-        if (l == 1) return '000' + input;
-        if (l == 2) return '00' + input;
-        if (l == 3) return '0' + input;
-        return input;
-    }
-    var output = '';
-    for (var i = 0, l = input.length; i < l; i++)
-        output += '\\u' + pad_four(input.charCodeAt(i).toString(16));
-    return output;
-}
-
-*/

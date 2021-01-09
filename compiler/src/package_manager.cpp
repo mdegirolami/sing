@@ -1,5 +1,6 @@
 #include "package_manager.h"
 #include "ast_checks.h"
+#include "FileName.h"
 
 namespace SingNames {
 
@@ -14,12 +15,16 @@ Package *PackageManager::pkgFromIdx(int index) const
 
 int PackageManager::init_pkg(const char *name, bool force_init)
 {
+    // normalize to make comparable
+    string fullpath = name;
+    FileName::Normalize(&fullpath);
+
     // existing ?
     for (int ii = 0; ii < (int)packages_.size(); ++ii) {
-        if (is_same_filename(packages_[ii]->getFullPath(), name)) {
+        if (is_same_filename(packages_[ii]->getFullPath(), fullpath.c_str())) {
             if (force_init) {
                 onInvalidation(ii);
-                packages_[ii]->Init(name);
+                packages_[ii]->Init(fullpath.c_str());
             }
             return(ii);
         }
@@ -28,7 +33,7 @@ int PackageManager::init_pkg(const char *name, bool force_init)
     // if not found
     int index = (int)packages_.size();
     Package *pkg = new Package;
-    pkg->Init(name);
+    pkg->Init(fullpath.c_str());
     packages_.push_back(pkg);
     return(index);
 }
@@ -76,12 +81,20 @@ PkgStatus PackageManager::getStatus(int index) const
     return(PkgStatus::ERROR);
 }
 
-void PackageManager::applyPatch(int index, int start, int stop, const char *new_text)
+void PackageManager::applyPatch(int index, int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext)
 {
     Package *pkg = pkgFromIdx(index);
     if (pkg == nullptr) return;
     onInvalidation(index);
-    pkg->applyPatch(start, stop, new_text);
+    pkg->applyPatch(from_row, from_col, to_row, to_col, allocate, newtext);
+}
+
+void PackageManager::insertInSrc(int index, const char *newtext)
+{
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return;
+    onInvalidation(index);
+    pkg->insertInSrc(newtext);
 }
 
 void PackageManager::onInvalidation(int index)
@@ -116,13 +129,17 @@ void PackageManager::onInvalidation(int index)
 
 void PackageManager::on_deletion(const char *name)
 {
+    // normalize to make comparable
+    string fullpath = name;
+    FileName::Normalize(&fullpath);
+
     // existing ?
     for (int ii = 0; ii < (int)packages_.size(); ++ii) {
-        if (is_same_filename(packages_[ii]->getFullPath(), name)) {
+        if (is_same_filename(packages_[ii]->getFullPath(), fullpath.c_str())) {
 
             // revert to unloaded
             onInvalidation(ii);
-            packages_[ii]->Init(name);
+            packages_[ii]->Init(fullpath.c_str());
         }
     }
 }

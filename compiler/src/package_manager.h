@@ -27,7 +27,8 @@ public:
     IAstDeclarationNode *findSymbol(int index, const char *name, bool *is_private);
     PkgStatus   getStatus(int index) const;
     const Package *getPkg(int index) const;
-    void        applyPatch(int index, int start, int stop, const char *new_text);
+    void        applyPatch(int index, int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext);
+    void        insertInSrc(int index, const char *newtext);
     void        on_deletion(const char *name);
 };
 

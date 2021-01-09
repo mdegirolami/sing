@@ -15,6 +15,7 @@ class Compiler {
     AstChecker       checker_;
     Options          options_;
     CppSynth         cpp_synthesizer_;
+    FILE             *server_log_;
 
     void TestLexer(void);
     void TestParser(void);
@@ -25,10 +26,12 @@ class Compiler {
     void PrintPkgErrors(const Package *pkg);
 
     // server stuff
-    void ServerLoop(void);
+    void ServerLoop(bool log_server);
     void AppendQuotedParameter(string *response, const char *parm);
+    void ServerResponse(const char *format, ...);
     void srv_src_read(int num_parms, char *parameters[]);
     void srv_src_change (int num_parms, char *parameters[]);
+    void srv_src_insert (int num_parms, char *parameters[]);
     void srv_src_created(int num_parms, char *parameters[]);
     void srv_src_deleted(int num_parms, char *parameters[]);
     void srv_src_renamed(int num_parms, char *parameters[]);
@@ -38,7 +41,7 @@ class Compiler {
     void srv_def_position(int num_parms, char *parameters[]);
 
 public:
-    int Run(int argc, char *argv[]);
+    int Run(int argc, char *argv[], bool log_server);
 };
 
 } // namespace

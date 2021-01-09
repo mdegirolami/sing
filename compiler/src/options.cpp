@@ -182,7 +182,6 @@ bool Options::ParseArgs(int argc, char *argv[])
     // reset all
     source_ = nullptr;
     out_file_ = nullptr;
-    make_file_ = nullptr;
     c_format_source_ = nullptr;
 
     verbose_ = false;
@@ -248,6 +247,7 @@ FileSolveError Options::SolveFileName(FILE **fh, string *full, const char *parti
 
         if (full != nullptr) {
             *full = fullname;
+            FileName::Normalize(full);
         }
         while (true) {
             const char *search = GetSrcDir(index++);

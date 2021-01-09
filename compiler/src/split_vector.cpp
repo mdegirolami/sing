@@ -10,6 +10,9 @@ SplitVector::SplitVector()
 
 char *SplitVector::getBufferForLoad(int length)
 {
+    lines_.clear();
+    lines_.reserve(1000);
+    lines_.push_back(0);    // beginning of first line
     buffer_.clear();
     buffer_.reserve(length + 1);
     buffer_.resize(length);
@@ -27,8 +30,70 @@ const char *SplitVector::getAsString()
     return(&buffer_[0]);
 }
 
+void SplitVector::patch(int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext)
+{
+    if (allocate > gap_width_) {
+        widenGap(allocate - gap_width_);
+    }
+    patch(rowCol2Offset(from_row, from_col), rowCol2Offset(to_row, to_col), newtext);
+}
+
+void SplitVector::insert(const char *newtext)
+{
+    int togrow = strlen(newtext) - gap_width_;
+    if (togrow > 0) togrow += 1024;
+    widenGap(togrow);
+    insertInGap(newtext);
+}
+
+int  SplitVector::rowCol2Offset(int row, int col)
+{
+    // where to start ? how many to skip ?
+    if (row < 0) row = 0;
+    if (col < 0) col = 0;
+
+    int scan;
+    if (row < lines_.size()) {
+        scan = lines_[row];
+    } else {
+        scan = gap_pos_ + gap_width_;
+        for (int to_skip = row - lines_.size() + 1; to_skip > 0; --to_skip) {
+            while (buffer_[scan] != 10 && scan < buffer_.size()) {
+                ++scan;
+            }
+            if (scan == buffer_.size()) {
+                return(scan - gap_width_);
+            }
+            ++scan;
+        }
+    }
+
+    // skip cols
+    while (scan < buffer_.size() && col > 0) {
+        if (scan == gap_pos_) scan += gap_width_;
+        char cc = buffer_[scan];
+        if (cc == 10 || cc == 13) {
+            break;
+        }
+        if ((cc & 0xf8) == 0xf0) {
+            col -= 2;       // takes two utf16 cols !!
+        } else if ((cc & 0xc0) != 0x80) {
+            col -= 1;
+        }
+        ++scan;
+    }
+
+    // skip unicode trailing bytes
+    while (scan < buffer_.size() && (buffer_[scan] & 0xc0) == 0x80) {
+        ++scan;
+    }
+
+    return(scan > gap_pos_ ? scan - gap_width_ : scan);
+}
+
 void SplitVector::patch(int from, int to, const char *newtext)
 {
+    if (to < from) to = from;
     int togrow = strlen(newtext) - (to - from) - gap_width_;
     if (togrow > 0) togrow += 1024;
     if (from < gap_pos_) {
@@ -78,14 +143,21 @@ void SplitVector::moveGap(int new_position)
         int max_pos = actualLen();
         if (new_position > max_pos) new_position = max_pos;
         while (gap_pos_ < new_position) {
-            buffer_[gap_pos_] = buffer_[gap_pos_ + gap_width_];
-            ++gap_pos_;
+            char cc = buffer_[gap_pos_ + gap_width_];
+            buffer_[gap_pos_++] = cc;
+            if (cc == 10) {
+                lines_.push_back(gap_pos_);
+            }
         }
     } else {
         if (new_position < 0) new_position = 0;
         while (gap_pos_ > new_position) {
             --gap_pos_;
-            buffer_[gap_pos_ + gap_width_] = buffer_[gap_pos_];
+            char cc = buffer_[gap_pos_];
+            buffer_[gap_pos_ + gap_width_] = cc;
+            if (cc == 10) {
+                lines_.pop_back();
+            }
         }
     }
 }
@@ -101,9 +173,14 @@ void SplitVector::insertInGap(const char *text)
 {
     int len = strlen(text);
     if (len > gap_width_) len = gap_width_;
-    memcpy(&buffer_[gap_pos_], text, len);
+    for (int ii = 0; ii < len; ++ii) {
+        char cc = text[ii];
+        buffer_[gap_pos_++] = cc; 
+        if (cc == 10) {
+            lines_.push_back(gap_pos_);
+        }
+    }
     gap_width_ -= len;
-    gap_pos_ += len;
 }
 
 } // namespace

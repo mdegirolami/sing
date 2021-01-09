@@ -13,7 +13,6 @@ class Options {
 
     const char  *source_;
     const char  *out_file_;
-    const char  *make_file_;
     const char  *c_format_source_;
 
     int             test_to_perform_;
@@ -40,7 +39,6 @@ public:
     bool ParseArgs(int argc, char *argv[]);
     int  GetTestMode(void) { return(test_to_perform_); }
     const char *GetSourceName(void) { return(source_); }
-    const char *GetMakeFileDir(void) { return(make_file_); }
     const char *GetOutputFile(void) { return(out_file_); }
     const char *GetSrcDir(int index) const { return(packages_src_dirs_.GetName(index)); }
     bool AreUsageErrorsEnabled(void) { return(!skip_usage_errors_); }

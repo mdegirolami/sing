@@ -25,6 +25,7 @@ public:
     static void ExtensionSet(string *filename, const char *extension);
 
     static void FixBackSlashes(string *filename) { filename->replace('\\', '/'); }
+    static void Normalize(string *filename);
 };
 
 }   // namespace

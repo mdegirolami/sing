@@ -21,7 +21,6 @@ void Package::Init(const char *filename)
 {
     clearParsedData();
     fullpath_ = filename;
-    FileName::FixBackSlashes(&fullpath_);
     status_ = PkgStatus::UNLOADED;
 }
 
@@ -180,9 +179,15 @@ const char *Package::GetError(int index, int *row, int *col, int *endrow, int *e
     return(errors_.GetError(index, row, col, endrow, endcol));
 }
 
-void Package::applyPatch(int start, int stop, const char *new_text)
+void Package::applyPatch(int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext)
 {   
-    source_.patch(start, stop, new_text);
+    source_.patch(from_row, from_col, to_row, to_col, allocate, newtext);
+    clearParsedData();
+}
+
+void Package::insertInSrc(const char *newtext)
+{
+    source_.insert(newtext);
     clearParsedData();
 }
 
