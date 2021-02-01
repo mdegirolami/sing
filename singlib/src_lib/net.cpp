@@ -5,10 +5,11 @@
     #include <winsock2.h>
     #include <ws2tcpip.h>
 #else
-    //#include <netdb.h>
+    #include <unistd.h>
+    #include <sys/types.h>
     #include <sys/socket.h>
-
-    #define closesocket(a) close(a) 
+    #include <netdb.h>
+    #include <arpa/inet.h>
 #endif
 
 namespace sing {
@@ -31,9 +32,10 @@ static int getaddrinfoL(const char *nodename, const char *servname, const struct
 
 #else
 
-typedef int SOCKET
-static inline closesocket(int a) { ::close(a); }
+typedef int SOCKET;
+inline void closesocket(int a) { ::close(a); }
 static const int INVALID_SOCKET = -1;
+static const int SOCKET_ERROR = -1;
 static inline int getaddrinfoL(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res)
 {
     return(::getaddrinfo(nodename, servname, hints, res));

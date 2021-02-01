@@ -6,7 +6,7 @@ temp = ../../out_bench
 # programs
 singcc = ../../../compiler/bin/sing
 
-cflags = -fsigned-char -I $src_b -I../../inc -fmax-errors=20
+cflags = -fsigned-char -std=c++11 -I $src_b -I../../inc -fmax-errors=20
 obj = .
 
 #rules
@@ -21,7 +21,7 @@ rule cc
   command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
 
 rule ln
-  command = g++ -o $out $in -lws2_32
+  command = g++ -std=c++11 -o $out $in -lws2_32
 
 rule aa
   command = ar rvs $out $in

@@ -7,13 +7,13 @@
             "type": "shell",
             "label": "ninja build",
 
-            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "command": "ninja",
             "args": ["-v", "-f", "../build_debug.ninja"],
             "presentation": {
                 "clear": true 
             },
             "options": {
-                "cwd": "${workspaceFolder}\\build\\obj_d"
+                "cwd": "${workspaceFolder}/build/obj_d"
             },
             "problemMatcher": [
                 "$gcc"
@@ -27,13 +27,13 @@
             "type": "shell",
             "label": "ninja build release",
 
-            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "command": "ninja",
             "args": ["-v", "-f", "../build_release.ninja"],
             "presentation": {
                 "clear": true 
             },
             "options": {
-                "cwd": "${workspaceFolder}\\build\\obj_r"
+                "cwd": "${workspaceFolder}/build/obj_r"
             },
             "problemMatcher": [
                 "$gcc"

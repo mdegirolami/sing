@@ -3,14 +3,18 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <direct.h>
-#include <conio.h>
+#include <inttypes.h>
 
 #ifdef _WIN32    
 #include <windows.h>
+#include <direct.h>
+#include <conio.h>
 #else
 #include <termios.h>
 #include <dirent.h>
+//#include <iostream>
+//#include <string>
+#include <unistd.h>
 #endif
 
 // NOTE:
@@ -353,7 +357,7 @@ Error setCwd(const char *directory)
     utf8_to_16(directory, &wdirectory);
     return(_wchdir(wdirectory.data()));
 #else
-    return(_chdir(directory));
+    return(chdir(directory));
 #endif
 }
 
@@ -822,7 +826,7 @@ Error dirRead(const char *directory, DirFilter filter, std::vector<std::string> 
     info->clear();
     names->clear();
     strcpy(buffer, directory);
-    return(dirReadCore_r(&desc, buffer, filter, names, info, recursive));
+    return(dirReadCore_r(buffer, filter, names, info, recursive));
 }
 
 Error dirReadNames(const char *directory, DirFilter filter, std::vector<std::string> *names, bool recursive)
@@ -834,7 +838,7 @@ Error dirReadNames(const char *directory, DirFilter filter, std::vector<std::str
     }
     names->clear();
     strcpy(buffer, directory);
-    return(dirReadCore_r(&desc, buffer, filter, names, nullptr, recursive));
+    return(dirReadCore_r(buffer, filter, names, nullptr, recursive));
 }
 
 // buffer on entry has the directory path but is also used as a temp storage
@@ -855,7 +859,7 @@ Error dirReadCore_r(char *buffer, DirFilter filter,
     if (dir == nullptr) return(-1);
 
     strcpy(buffer + clip, "/");
-    while ((direntp = readdir( dirp)) != nullptr) {
+    while ((direntp = readdir(dir)) != nullptr) {
         if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0 && clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
             strcpy(buffer + clip, direntp->d_name);
             if (stat(buffer, &stat_buf) == -1) {
@@ -868,20 +872,20 @@ Error dirReadCore_r(char *buffer, DirFilter filter,
                 names->push_back(buffer);
                 if (info != nullptr) {
                     FileInfo nfo;
-                    nfo->length_ = buf.st_size; 
-                    nfo->last_modification_time_ = buf.st_mtime;
+                    nfo.length_ = stat_buf.st_size; 
+                    nfo.last_modification_time_ = stat_buf.st_mtime;
                     nfo.is_dir_ = isdir;
                     info->push_back(nfo);
                 }
             }
             if (isdir && recursive) {
-                if (dirReadCore_r(desc, buffer, filter, names, info, recursive) != 0) {
+                if (dirReadCore_r(buffer, filter, names, info, recursive) != 0) {
                     err = -1;
                 }
             }
         }
     }
-    closedir(dirp);
+    closedir(dir);
 
     // restore buffer 
     buffer[clip] = 0;
@@ -898,7 +902,7 @@ Error dirRemove(const char *directory, const bool if_not_empty)
         return(-1);
     }
     strcpy(buffer, directory);
-    return(dirRemove_r(buffer.data()));
+    return(dirRemove_r(buffer));
 }
 
 Error dirRemove_r(char *buffer)
@@ -917,7 +921,7 @@ Error dirRemove_r(char *buffer)
     if (dir == nullptr) return(-1);
 
     strcpy(buffer + clip, "/");
-    while (err == 0 && (direntp = readdir( dirp)) != nullptr) {
+    while (err == 0 && (direntp = readdir(dir)) != nullptr) {
         if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0) {
             if (clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
                 err = -1;
@@ -940,7 +944,7 @@ Error dirRemove_r(char *buffer)
             }
         }
     }
-    closedir(dirp);
+    closedir(dir);
 
     // restore buffer 
     buffer[clip] = 0;
@@ -975,7 +979,7 @@ Error dirCreate(const char *directory)
 
     // shorten the path 'till you find the first directory to be created 
     while (true) {
-        if (mkdir(pathcopy) == 0) break;
+        if (mkdir(pathcopy, 0x1f) == 0) break;
         if (errno == EEXIST) break;
 
         // we have more than one component non existing, skip the last one
@@ -990,7 +994,7 @@ Error dirCreate(const char *directory)
     while (scan < top) {
         pathcopy[scan] = '/';
         scan = (int)strlen(pathcopy);
-        if (mkdir(pathcopy) != 0) {
+        if (mkdir(pathcopy, 0x1f) != 0) {
             return(-1);
         }
     }
@@ -1216,7 +1220,7 @@ bool parseInt(int64_t *value, const char *from, const int32_t at, int32_t *last_
         }
         return(false);
     }
-    if (sscanf(from + at, "%lld%n", value, &pp) != 1) {
+    if (sscanf(from + at, "%" SCNd64 "%n", value, &pp) != 1) {
         return(false);
     }
     *last_pos = (int32_t)pp + at;
@@ -1233,7 +1237,7 @@ bool parseUnsignedInt(uint64_t *value, const char *from, const int32_t at, int32
         }
         return(false);
     }
-    if (sscanf(from + at, "%llu%n", value, &pp) != 1) {
+    if (sscanf(from + at, "%" SCNu64 "%n", value, &pp) != 1) {
         return(false);
     }
     *last_pos = (int32_t)pp + at;
@@ -1243,7 +1247,7 @@ bool parseUnsignedInt(uint64_t *value, const char *from, const int32_t at, int32
 bool parseUnsignedHex(uint64_t *value, const char *from, const int32_t at, int32_t *last_pos)
 {
     int pp;
-    if (sscanf(from + at, "%llx%n", value, &pp) != 1) {
+    if (sscanf(from + at, "%" SCNx64 "%n", value, &pp) != 1) {
         return(false);
     }
     *last_pos = (int32_t)pp + at;
@@ -1263,12 +1267,12 @@ bool parseFloat(double *value, const char *from, const int32_t at, int32_t *last
 // console
 void print(const char *value)
 {
-    printf(value);
+    printf("%s", value);
 }
 
 void printError(const char *value)
 {
-    fprintf(stderr, value);
+    fprintf(stderr, "%s", value);
 }
 
 void scrClear()
@@ -1283,15 +1287,15 @@ void scrClear()
 #ifndef _WIN32
 char _getch()
 {
-    struct termios old, new;
+    struct termios oldt, newt;
     char ch;
 
-    tcgetattr(0, &old);                 // grab old terminal i/o settings
-    new = old;                          // make new settings same as old settings
-    new.c_lflag &= ~(ICANON | ECHO);    // disable buffered i/o and echo
-    tcsetattr(0, TCSANOW, &new); 
+    tcgetattr(0, &oldt);                 // grab old terminal i/o settings
+    newt = oldt;                          // make new settings same as old settings
+    newt.c_lflag &= ~(ICANON | ECHO);    // disable buffered i/o and echo
+    tcsetattr(0, TCSANOW, &newt); 
     ch = getchar();
-    tcsetattr(0, TCSANOW, &old); 
+    tcsetattr(0, TCSANOW, &oldt); 
     return ch;    
 }
 #endif

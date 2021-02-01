@@ -4,6 +4,9 @@
 
 #ifdef _WIN32    
 #include <windows.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 namespace sing {
@@ -386,14 +389,11 @@ void exec(const char *command)
     execvp(argv[0], argv.data());
 
     // if we are here exec failed
-    ::exit();
+    ::exit(0);
 }
 
 class Pipe final : public Stream {    
-#ifdef _WIN32
     int hh_;
-#else
-#endif
 public:
     Pipe() { hh_ = -1; }
     void SetHandle(int hh) { hh_ = hh; }
@@ -412,7 +412,7 @@ public:
 
 Error Pipe::get(uint8_t *value)
 {
-    if (read(hh_, &value, 1) != 1) {
+    if (::read(hh_, &value, 1) != 1) {
         return(-1);
     }
     return(0);
@@ -447,7 +447,7 @@ Error Pipe::read(const int64_t count, std::vector<uint8_t> *dst, const bool appe
         dst->clear();
         dst->resize(count);
     }
-    if (read(hh_, &(*dst)[pos], count) != count) {
+    if (::read(hh_, &(*dst)[pos], count) != count) {
         return(-1);
     }
     return(0);
@@ -455,7 +455,7 @@ Error Pipe::read(const int64_t count, std::vector<uint8_t> *dst, const bool appe
 
 Error Pipe::put(const uint8_t value)
 {
-    if (write(hh_, &value, 1) != 1) {
+    if (::write(hh_, &value, 1) != 1) {
         return(-1);
     }
     return(0);
@@ -466,7 +466,7 @@ Error Pipe::puts(const char *value)
     size_t towrite = strlen(value);
 
     if (towrite < 1) return(0);
-    if (write(hh_, &value, towrite) != towrite) {
+    if (::write(hh_, &value, towrite) != towrite) {
         return(-1);
     }
     return(0);
@@ -474,11 +474,10 @@ Error Pipe::puts(const char *value)
 
 Error Pipe::write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from)
 {
-    DWORD dwWritten;
     if (from < 0) return(-1);
     int64_t towrite = std::min(count, (int64_t)src.size() - from);
     if (towrite > 0) {
-        if (write(hh_, src.data(), src.size()) != src.size()) {
+        if (::write(hh_, src.data(), src.size()) != src.size()) {
             return(-1);
         }
     }
@@ -490,10 +489,10 @@ bool Pipe::eof() const
     return(false);
 }
 
-Phandle automate(const char *command, sing::iptr<Stream> *sstdin, sing::iptr<Stream> *sstdout, sing::iptr<Stream> *sstderr)
+Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr)
 {
-    static const int pipe_read  = 0;
-    static const int pipe_write = 1;
+    static const int PIPE_READ  = 0;
+    static const int PIPE_WRITE = 1;
 
     int aStdinPipe[2] = {-1, -1};
     int aStdoutPipe[2] = {-1, -1};

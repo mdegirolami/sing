@@ -5,6 +5,7 @@
 #include <synchapi.h>
 #include <handleapi.h>
 #else
+#include <unistd.h>
 #endif
 
 namespace sing {
@@ -215,7 +216,7 @@ struct LockImpl {
 Lock::~Lock()
 {
     if (impl != nullptr) {
-        pthread_mutex_destroy(((LockImpl*)impl)->mutex);
+        pthread_mutex_destroy(&((LockImpl*)impl)->mutex);
         delete (LockImpl*)impl;
 	}
 }
@@ -225,7 +226,7 @@ bool Lock::init(const int32_t spincount)
     if (impl == nullptr) {
         LockImpl *c_mutex = new LockImpl;
         if (c_mutex == nullptr) return(false);
-        if (pthread_mutex_init(c_mutex->mutex, nullptr) != 0) {
+        if (pthread_mutex_init(&c_mutex->mutex, nullptr) != 0) {
             delete c_mutex;
             return(false);
         }
@@ -239,12 +240,12 @@ void Lock::lock()
 {
 	if (impl != nullptr) {
         LockImpl *c_mutex = (LockImpl*)impl;
-        for (int tries = impl->spincount; tries > 0; --tries) {
-            if (pthread_mutex_trylock(&impl->mutex) == 0) {
+        for (int tries = c_mutex->spincount; tries > 0; --tries) {
+            if (pthread_mutex_trylock(&c_mutex->mutex) == 0) {
                 return;
             }
         }        
-        pthread_mutex_lock(&impl->mutex);
+        pthread_mutex_lock(&c_mutex->mutex);
 	}
 }
 
@@ -258,7 +259,7 @@ void Lock::unlock()
 bool Lock::trylock()
 {
     if (impl != nullptr) {
-		return(pthread_mutex_trylock(&((LockImpl*)impl)->mutex)) == 0);
+		return(pthread_mutex_trylock(&((LockImpl*)impl)->mutex) == 0);
 	}
     return(false);
 }
@@ -282,10 +283,10 @@ Event::~Event()
 bool Event::init()
 {
     if (impl == nullptr) {
-        LockImpl *c_mutex = new LockImpl;
+        EventImpl *c_mutex = new EventImpl;
         if (c_mutex == nullptr) return(false);
-        if (pthread_mutex_init(c_mutex->mutex, nullptr) != 0 ||
-            pthread_cond_init(c_mutex->cond, nullptr) != 0) {
+        if (pthread_mutex_init(&c_mutex->mutex, nullptr) != 0 ||
+            pthread_cond_init(&c_mutex->cond, nullptr) != 0) {
             delete c_mutex;
             return(false);
         }
@@ -333,12 +334,12 @@ int32_t Atomic::get() const
 
 int32_t Atomic::inc()
 {
-    return (int32_t)__sync_add_and_fetch ((volatile int *)&value,1);
+    return (int32_t)__sync_add_and_fetch ((volatile int *)&atomic,1);
 }
 
 int32_t Atomic::dec()
 {
-    return (int32_t)__sync_sub_and_fetch ((volatile int *)&value,1);
+    return (int32_t)__sync_sub_and_fetch ((volatile int *)&atomic,1);
 }
 
 static void startThread(void *(*torun)(void*), void *arg, const int32_t stack_size)
@@ -348,7 +349,7 @@ static void startThread(void *(*torun)(void*), void *arg, const int32_t stack_si
 
 	if (pthread_attr_init(&attr) == 0) {
         pthread_attr_setstacksize (&attr, std::max(stack_size, 4096));
-        pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
+        pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
         pthread_create(&temp, &attr, torun, arg);
         pthread_attr_destroy(&attr);
     }
