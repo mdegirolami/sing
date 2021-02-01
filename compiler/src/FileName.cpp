@@ -28,7 +28,7 @@ void FileName::BuildFullName(const string *path, const string *name,
     if (dot == string::npos) dot = name->size();
 
     bkslash = SearchLastSlash(name->c_str());
-    (*fullname) += name->substr(bkslash, (DWORD)(dot - bkslash));
+    (*fullname) += name->substr(bkslash, (unsigned int)(dot - bkslash));
     ExtensionSet(fullname, exp);
 }
 

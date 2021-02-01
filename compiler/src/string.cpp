@@ -224,7 +224,7 @@ URGH_SIZE_T string::string_in_string_nocase(const string &tofind) const
         if (scan == npos) {
             return(npos);
         }
-    } while (stricmp(&_content[scan + 1], &tofind._content[1]) != 0);
+    } while (strcasecmp(&_content[scan + 1], &tofind._content[1]) != 0);
     return(scan);
 }
 

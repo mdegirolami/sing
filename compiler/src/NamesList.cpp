@@ -37,7 +37,7 @@ void NamesList::AddCrLfTerminatedName(const char *name)
 
 int NamesList::CompareStrings(uint32_t i1, uint32_t i2)
 {
-    return(stricmp(&_names[i1], &_names[i2]));
+    return(strcasecmp(&_names[i1], &_names[i2]));
 }
 
 void NamesList::Erase(int first, int past_last)
@@ -86,7 +86,7 @@ void NamesList::DeleteDuplicated(void)
     oldstring = &_names[_indices[0]];
     dst = 1;
     for (ii = 1; ii < count; ++ii) {
-        if (stricmp(oldstring, &_names[_indices[ii]])) {
+        if (strcasecmp(oldstring, &_names[_indices[ii]])) {
             _indices[dst++] = _indices[ii];
             oldstring = &_names[_indices[ii]];
         }
@@ -110,7 +110,7 @@ int NamesList::SortedInsert(const char *name)
     if (position == -1) {
         // all elements are lower.
         position = _indices.size();
-    } else if (stricmp(name, &_names[_indices[position]]) == 0) {
+    } else if (strcasecmp(name, &_names[_indices[position]]) == 0) {
         // avoid duplication
         return(position);
     }
@@ -134,12 +134,12 @@ int NamesList::BinarySearchNearestLower(const char *name)
 
     first = 0;
     last = _indices.size() - 1;
-    if (last < 0 || stricmp(name, &_names[_indices[0]]) < 0) {
+    if (last < 0 || strcasecmp(name, &_names[_indices[0]]) < 0) {
         return(-1);
     }
     while (first != last) {
         mid = (first + last + 1) >> 1;
-        cmp = stricmp(name, &_names[_indices[mid]]);
+        cmp = strcasecmp(name, &_names[_indices[mid]]);
         if (cmp == 0) return(mid);
         if (cmp > 0) {
             first = mid;
@@ -156,12 +156,12 @@ int NamesList::BinarySearchNearestHigher(const char *name)
 
     first = 0;
     last = _indices.size() - 1;
-    if (last < 0 || stricmp(name, &_names[_indices[last]]) > 0) {
+    if (last < 0 || strcasecmp(name, &_names[_indices[last]]) > 0) {
         return(-1);
     }
     while (first != last) {
         mid = (first + last) >> 1;
-        cmp = stricmp(name, &_names[_indices[mid]]);
+        cmp = strcasecmp(name, &_names[_indices[mid]]);
         if (cmp == 0) return(mid);
         if (cmp > 0) {
             first = mid + 1;
@@ -177,7 +177,7 @@ int NamesList::BinarySearch(const char *name)
     int index;
 
     index = BinarySearchNearestLower(name);
-    if (index != -1 && stricmp(name, &_names[_indices[index]]) == 0) {
+    if (index != -1 && strcasecmp(name, &_names[_indices[index]]) == 0) {
         return(index);
     }
     return(-1);

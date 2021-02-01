@@ -870,7 +870,7 @@ void AstChecker::CheckMemberFuncDeclaration(FuncDeclaration *declaration, bool f
     if (!CheckTypeSpecification(functype, TSCM_STD)) {
         isok = false;
     }
-    if (stricmp(declaration->name_.c_str(), "finalize") == 0) {
+    if (strcasecmp(declaration->name_.c_str(), "finalize") == 0) {
         if (strcmp(declaration->name_.c_str(), "finalize") != 0) {
             Error("Did you mean 'finalize' (please check the case) ?", declaration);
             isok = false;

@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <vector>
+#include <inttypes.h>
 #include "cpp_synth.h"
 #include "FileName.h"
 #include "helpers.h"
@@ -405,7 +406,7 @@ void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
         } else {
             // length determined based on the initializer
             char buffer[32];
-            sprintf(buffer, ", %llu", (uint64_t)type_spec->dimension_);
+            sprintf(buffer, ", %" PRIu64, (uint64_t)type_spec->dimension_);
             decl += buffer;
         }
     }
@@ -2273,7 +2274,7 @@ int CppSynth::GetRealPartOfIntegerLiteral(string *dst, AstExpressionLeaf *node, 
         char buffer[100];
 
         // must have an integer value. Use it and discard the original floating point representation.
-        sprintf(buffer, "%lld", value);
+        sprintf(buffer, "%" PRId64, value);
         *dst = buffer;
     }
     if (nbits == 32 && value == -(int64_t)0x80000000) {
@@ -2299,7 +2300,7 @@ void CppSynth::GetRealPartOfUnsignedLiteral(string *dst, AstExpressionLeaf *node
 
         // must have an integer value. Use it and discard the original floating point representation.
         value = node->GetAttr()->GetUnsignedValue();
-        sprintf(buffer, "%llu", value);
+        sprintf(buffer, "%" PRIu64, value);
         *dst = buffer;
     }
 }
@@ -2318,7 +2319,7 @@ int CppSynth::GetRealPartOfFloatLiteral(string *dst, AstExpressionLeaf *node)
 
         // must have an integer value. Use it and convert to a floating point representation.
         value = (int64_t)node->GetAttr()->GetDoubleValue();
-        sprintf(buffer, "%lld.0", value);
+        sprintf(buffer, "%" PRId64, value);
         *dst = buffer;
     }
     if ((*dst)[0] == '-') {

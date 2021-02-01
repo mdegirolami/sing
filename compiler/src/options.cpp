@@ -94,9 +94,7 @@ void Options::ParseSingleArg(const char *arg)
             }
         }
         if (unknown_option) {
-            printf("\nUnknown option ");
-            printf(arg);
-            printf("\n");
+            printf("\nUnknown option %s\n", arg);
             error_ = true;
         }
     }

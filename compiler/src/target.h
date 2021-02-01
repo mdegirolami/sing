@@ -5,8 +5,8 @@ namespace SingNames {
 
 static const int KPointerSize = sizeof(void*);  // x86
 
-const char *get_cwd(void);
-int get_drive(void);
+//const char *get_cwd(void);
+//int get_drive(void);
 bool is_same_file(const char *p0, const char *p1);
 
 // based on platform case sensstive or insensitive

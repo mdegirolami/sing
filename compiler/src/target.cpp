@@ -1,10 +1,15 @@
-#include <direct.h>
 #include <string.h>
-#include <Windows.h>
 #include "target.h"
 
-namespace SingNames {
+#ifdef _WIN32
+#include <direct.h>
+#include <Windows.h>
+#else
+#include <sys/stat.h>
+#endif
 
+namespace SingNames {
+/*
 const char *get_cwd(void)
 {
     static char cwd_buffer[1024];
@@ -28,11 +33,12 @@ int get_drive(void)
     }
     return(drive);
 }
+*/
+
+#ifdef _WIN32
 
 bool is_same_file(const char *p0, const char *p1)
 {
-#ifdef _WIN32
-
     //Get file handles
     HANDLE handle1 = ::CreateFileA(p0, 0, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     HANDLE handle2 = ::CreateFileA(p1, 0, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -66,20 +72,24 @@ bool is_same_file(const char *p0, const char *p1)
 
     //return the result
     return bResult;
-#else
-    bool IsSameFile(const char* sA, const char* sB)
-    {
-        stat A = stat(sA);
-        stat B = stat(sB);
-
-        return A.st_dev == B.st_dev && A.st_ino == B.st_ino;
-    }
-#endif
 }
+
+#else
+
+bool is_same_file(const char *p0, const char *p1)
+{
+    struct stat A,B;
+    if (stat(p0, &A) == -1 || stat(p1, &B) == -1) {
+        return(is_same_filename(p0, p1));
+    }
+    return A.st_dev == B.st_dev && A.st_ino == B.st_ino;
+}
+
+#endif
 
 bool is_same_filename(const char *name1, const char *name2)
 {
-    return(stricmp(name1, name2) == 0);
+    return(strcasecmp(name1, name2) == 0);
 }
 
 }   // namespace
