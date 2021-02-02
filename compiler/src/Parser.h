@@ -8,9 +8,35 @@
 
 namespace SingNames {
 
+// support for completion hints.
+// doesn't return hints but identifies the elements at the left of the . or ( operator.
+enum class CompletionType {
+    NOT_FOUND, 
+    FUNCTION,   // tag is the name of the class at the left of '.'
+    TAG,        // tag is the alias of an extern file at the left of '.'
+    OP          // node is the expression at the left of '.' or '('
+};
+
+struct CompletionHint {
+
+    // inputs
+    char    trigger;    // currently '.', '('
+    int     row;
+    int     col;
+
+    // output
+    CompletionType  type;
+    string          tag;
+    IAstExpNode     *node;
+
+    CompletionHint() { node = nullptr; type = CompletionType::NOT_FOUND; }
+};
+
 class Parser {
-    Lexer *m_lexer;
-    Token m_token;
+    Lexer           *m_lexer;
+    Token           m_token;
+    CompletionHint  *completion_;
+    bool            insert_completion_node_;
 
     bool        on_error_;      // needs to recover skipping some stuff
     bool        has_errors_;    // found in previous blocks/declarations.
@@ -75,11 +101,13 @@ class Parser {
     AstTypeSwitch           *ParseTypeSwitch(void);
     IAstExpNode             *CheckForCastedLiterals(AstUnop *node);
     AstExpressionLeaf       *GetLiteralRoot(IAstExpNode *node, bool *negative);
+    bool                    OnCompletionHint(void);
 public:
     Parser();
     ~Parser();
 
-    void Init(Lexer *lexer);
+    // note: completion may be null
+    void Init(Lexer *lexer, CompletionHint *completion);
     AstFile *ParseAll(ErrorList *errors, bool for_reference);  // for_reference: only public declarations, skipping function bodies, skipping comments
 };
 

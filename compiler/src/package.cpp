@@ -121,7 +121,7 @@ bool Package::advanceTo(PkgStatus wanted_status)
 
         // parse    
         lexer.Init(source_.getAsString());
-        parser.Init(&lexer);
+        parser.Init(&lexer, nullptr);
         root_ = parser.ParseAll(&errors_, wanted_status != PkgStatus::FULL);
 
         checked_ = false;
@@ -132,8 +132,7 @@ bool Package::advanceTo(PkgStatus wanted_status)
 
 bool Package::check(AstChecker *checker)
 {
-    if (status_ != PkgStatus::FOR_REFERENCIES && status_ != PkgStatus::FULL ||
-        errors_.NumErrors() > 0) {
+    if (status_ != PkgStatus::FOR_REFERENCIES && status_ != PkgStatus::FULL) {
         return(false);
     }
     if (checked_) return(true);

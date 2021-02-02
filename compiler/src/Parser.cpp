@@ -12,9 +12,11 @@ Parser::~Parser()
 {
 }
 
-void Parser::Init(Lexer *lexer)
+void Parser::Init(Lexer *lexer, CompletionHint *completion)
 {
     m_lexer = lexer;
+    completion_ = completion;
+    insert_completion_node_ = false;
 }
 
 AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
@@ -31,10 +33,10 @@ AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
     if (!has_errors_ && !for_reference_) {
         CheckCommentsAssignments();
     }
-    if (root_ != NULL && has_errors_) {
-        delete root_;
-        return(NULL);
-    }
+    // if (root_ != NULL && has_errors_) {
+    //     delete root_;
+    //     return(NULL);
+    // }
     return(root_);
 }
 
@@ -174,6 +176,8 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
     if (!on_error_) {
         node->SetPublic(is_public);
         file->AddNode(node);
+    } else if (node != nullptr) {
+        delete(node);
     }
 }
 
@@ -305,6 +309,10 @@ FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
         RecordPosition(node);
         if (!Advance()) goto recovery;
         if (m_token == TOKEN_DOT) {
+            if (OnCompletionHint()) {
+                completion_->type = CompletionType::FUNCTION;
+                completion_->tag = name1;
+            }
             if (!Advance()) goto recovery;
             is_member = true;
             if (m_token == TOKEN_NAME) {
@@ -769,6 +777,10 @@ AstNamedType *Parser::ParseNamedType(void)
         RecordPosition(node);
         if (!Advance()) goto recovery;
         while (m_token == TOKEN_DOT) {
+            if (OnCompletionHint()) {
+                completion_->type = CompletionType::TAG;
+                completion_->tag = node->name_;
+            }
             if (!Advance()) goto recovery;
             if (m_token != TOKEN_NAME) {
                 Error("Expecting the next portion of a qualifyed name");
@@ -1006,18 +1018,22 @@ AstBlock *Parser::ParseBlock(void)
     }
     AstBlock *node = new AstBlock();
     RecordPosition(node);
-    {
-        if (!Advance()) goto recovery;
-        while (m_token != TOKEN_CURLY_CLOSE) {
-            IAstNode *statement = ParseStatement(true);
-            if (on_error_) goto recovery;
-            if (statement != nullptr) {
-                node->AddItem(statement);
-            }
+    if (!Advance()) goto recovery;
+    while (m_token != TOKEN_CURLY_CLOSE) {
+        IAstNode *statement = ParseStatement(true);
+        //if (on_error_) goto recovery; // never happens, ParseStatement recovers all errors.
+        if (statement != nullptr) {
+            node->AddItem(statement);
+        } else if (insert_completion_node_) {
+
+            // it is an error for sure but must be here to be parsed by the checker.
+            // (we want to know its type !!)
+            node->AddItem(completion_->node);
+            insert_completion_node_ = false;
         }
-        UpdateEndPosition(node);
-        Advance();
-    } 
+    }
+    UpdateEndPosition(node);
+    Advance();
 recovery:    
     if (on_error_) {
         delete node;
@@ -1341,6 +1357,15 @@ IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
             break;
         case TOKEN_DOT:
             {
+                if (OnCompletionHint()) {
+                    completion_->type = CompletionType::OP;
+                    completion_->node = node;
+
+                    // force an error to prevent multiple ownership of node.
+                    // note: can't leave the ownership to the real owner because in case of subsequent errors it would be deleted.
+                    insert_completion_node_ = true;
+                    return(nullptr);
+                }
                 PositionInfo pnfo;
                 FillPositionInfo(&pnfo);
                 if (!Advance()) goto recovery;
@@ -1356,6 +1381,15 @@ IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
             }
             break;
         case TOKEN_ROUND_OPEN:
+            if (OnCompletionHint()) {
+                completion_->type = CompletionType::OP;
+                completion_->node = node;
+
+                // force an error to prevent multiple ownership of node.
+                // note: can't leave the ownership to the real owner because in case of subsequent errors it would be deleted.
+                insert_completion_node_ = true;
+                return(nullptr);
+            }
             node = new AstFunCall(node);
             RecordPosition(node);
             ParseArguments((AstFunCall*)node);
@@ -1369,7 +1403,7 @@ IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
     }
 recovery:    
     if (on_error_) {
-        if (node != NULL) delete node;
+        if (node != nullptr) delete node;
         node = nullptr;
     }
     return(node);
@@ -2302,5 +2336,18 @@ bool Parser::CommentLineIsAllowed(int line, int *scan)
     }
     return(remarkable_lines[*scan] == line);
 }
+
+bool Parser::OnCompletionHint(void)
+{
+    if (completion_ == nullptr) return(false);
+    if (m_token == TOKEN_DOT && completion_->trigger == '.' || 
+        m_token == TOKEN_ROUND_OPEN && completion_->trigger == '(') {
+        if (m_lexer->CurrTokenLine() == completion_->row && m_lexer->CurrTokenColumn() == completion_->col) {
+            return(true);
+        }
+    }
+    return(false);
+}
+
 
 }

@@ -2281,6 +2281,8 @@ bool AstChecker::IsBinopCompileTimeConstant(AstBinop *node)
     case TOKEN_EQUAL:
     case TOKEN_LOGICAL_AND:
     case TOKEN_LOGICAL_OR:
+    case TOKEN_MIN:
+    case TOKEN_MAX:
         return(true);
     default:
         break;
