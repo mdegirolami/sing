@@ -1,6 +1,6 @@
 #include "sing.h"
 #include <float.h>
-#include "value_limits.h"
+#include "values.h"
 
 float xx = FLT_MAX;
 
@@ -27,16 +27,16 @@ int main() {
     } else {
         printf("string lib: failed !!\r\n");
     }
-    // if (SortTest(100)) {
-    //     printf("\nsort lib: passed\r\n");
-    // } else {
-    //     printf("\nsort lib: failed !!\r\n");
-    // }
-    if (sio_test()) {
-        printf("\nsio lib: passed\r\n");
+    if (SortTest(20)) {
+        printf("\nsort lib: passed\r\n");
     } else {
-        printf("\nsio lib: failed !!\r\n");
+        printf("\nsort lib: failed !!\r\n");
     }
+    // if (sio_test()) {
+    //     printf("\nsio lib: passed\r\n");
+    // } else {
+    //     printf("\nsio lib: failed !!\r\n");
+    // }
     // if (sys_test()) {
     //     printf("\nsys lib: passed\r\n");
     // } else {
@@ -52,11 +52,11 @@ int main() {
     //     printf("\nthread lib: failed !!\r\n");
     // }
 
-    if (net_test()) {
-        printf("\nnet lib: passed\r\n");
-    } else {
-        printf("\nnet lib: failed !!\r\n");
-    }
+    // if (net_test()) {
+    //     printf("\nnet lib: passed\r\n");
+    // } else {
+    //     printf("\nnet lib: failed !!\r\n");
+    // }
 
     getchar();
 

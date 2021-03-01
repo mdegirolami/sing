@@ -38,17 +38,17 @@ public:
 public class Executer {
 public:
     fn mut start(queue_len i32 = 16, stack_size i32 = 0) bool; 
-    fn mut stop() void;                                 // stop processing and clears all the queues.
-    fn mut flush() void;                                // just clears all the queues.
+    fn mut stop() void;                                 // stop processing and clears the queue.
+    fn mut flush() void;                                // just clears the queue.
     fn mut startFlushing() void;                        // must be followed by a blocking flush to complete the task
-    fn mut setEvent(ev *Event) void;                    // gets signaled each time a runnable finishes
+    fn mut setEvent(ev *Event) void;                    // gets signaled each time a Runnable finishes
 
     fn mut enqueue(torun *Runnable) bool;                   // returns false if the queue is full
-    fn mut getRunnable(blocking bool = false) *Runnable;    // from output queue, returns null if no processed Runnable is present
+    fn mut getRunnable(blocking bool = false) *Runnable;    // returns null if no processed Runnable is present
 
     fn isFlushing() bool;
     fn numQueued() i32;                                 // number of queued jobs (includes the executing one)
-    fn numDone() i32;                                   // number of jobs in te output queue
+    fn numDone() i32;                                   // number of jobs executed and waiting in the queue
     
     fn finalize() void;
 

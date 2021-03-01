@@ -13,6 +13,9 @@ const double f64_min = DBL_MIN;
 const double f64_eps = DBL_EPSILON;
 const double f64_max = DBL_MAX;
 
+const double pi32 = 3.1415926535897932384626433832795f;
+const double pi64 = 3.1415926535897932384626433832795;
+
 int64_t string2int(const char *instring)
 {
     while (isblank(*instring)) ++instring;

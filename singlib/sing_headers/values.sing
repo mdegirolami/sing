@@ -21,3 +21,6 @@ public let f32_max  f32;
 public let f64_min  f64;
 public let f64_eps  f64;
 public let f64_max  f64;
+
+public let pi32 f32;
+public let pi64 f64;

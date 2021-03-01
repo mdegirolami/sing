@@ -24,5 +24,7 @@ extern const float f32_max;
 extern const double f64_min;
 extern const double f64_eps;
 extern const double f64_max;
+extern const float pi32;
+extern const double pi64;
 
 }   // namespace
