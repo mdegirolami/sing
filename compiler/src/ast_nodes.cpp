@@ -298,6 +298,16 @@ bool AstInterfaceType::HasInterface(AstInterfaceType *intf)
     return(false);
 }
 
+void AstInterfaceType::getFunctionsNames(NamesList *names)
+{
+    for (int ii = 0; ii < members_.size(); ++ii) {
+        FuncDeclaration *decl = members_[ii];
+        if (decl != nullptr) { 
+            names->AddName(decl->name_.c_str());
+        }
+    }
+}
+
 AstClassType::AstClassType()
 {
     first_hinherited_member_ = -1;
@@ -371,6 +381,30 @@ bool AstClassType::HasInterface(AstInterfaceType *intf)
         }
     }
     return(false);
+}
+
+void AstClassType::getFunctionsNames(NamesList *names, bool include_private, bool include_finalize)
+{
+    for (int ii = 0; ii < member_functions_.size(); ++ii) {
+        FuncDeclaration *decl = member_functions_[ii];
+        if (decl != nullptr) {
+            if ((decl->is_public_ || include_private) && (decl->name_ != "finalize" || include_finalize)) { 
+                names->AddName(decl->name_.c_str());
+            }
+        }
+    }
+}
+
+void AstClassType::getVariablesNames(NamesList *names, bool include_private)
+{
+    for (int ii = 0; ii < member_vars_.size(); ++ii) {
+        VarDeclaration *decl = member_vars_[ii];
+        if (decl != nullptr) { 
+            if (include_private || decl->IsPublic()) {
+                names->AddName(decl->name_.c_str());
+            }
+        }
+    }
 }
 
 /////////////////////////

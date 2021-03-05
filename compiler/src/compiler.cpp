@@ -432,15 +432,23 @@ void Compiler::srv_get_errors (int num_parms, char *parameters[])
 
 void Compiler::srv_completion_items(int num_parms, char *parameters[])
 {
-    if (num_parms < 4) return;
-    string response = "set_completion_item ";
-    AppendQuotedParameter(&response, parameters[1]);
-    ServerResponse("%s one\r\n", response.c_str());
-    ServerResponse("%s two\r\n", response.c_str());
-    ServerResponse("%s three\r\n", response.c_str());
-    response = "set_completions_done ";
-    AppendQuotedParameter(&response, parameters[1]);
-    ServerResponse("%s\r\n", response.c_str());
+    if (num_parms < 5) return;
+    NamesList names;
+
+    // get the index and make sure the file is loaded
+    int idx = pmgr_.init_pkg(parameters[1]);
+    int row = atoi(parameters[2]) - 1;
+    int col = atoi(parameters[3]) - 1;
+ 
+    pmgr_.getSuggestions(&names, idx, row, col, parameters[4][0]);
+
+    string response;
+    for (int ii = 0; ii < names.GetNamesCount(); ++ii) {
+        response = "set_completion_item ";
+        AppendQuotedParameter(&response, names.GetName(ii));    
+        ServerResponse("%s\r\n", response.c_str());
+    }
+    ServerResponse("set_completions_done\r\n");
 }
 
 // >> signature <file>,<line>,<col>

@@ -1,6 +1,8 @@
 #include "package_manager.h"
 #include "ast_checks.h"
 #include "FileName.h"
+#include "Parser.h"
+#include "builtin_functions.h"
 
 namespace SingNames {
 
@@ -42,7 +44,7 @@ bool PackageManager::load(int index, PkgStatus wanted_status)
 {
     Package *pkg = pkgFromIdx(index);
     if (pkg != nullptr) {
-        return(pkg->advanceTo(wanted_status));
+        return(pkg->advanceTo(wanted_status, options_->ServerMode()));
     }
     return(false);
 }
@@ -140,6 +142,112 @@ void PackageManager::on_deletion(const char *name)
             // revert to unloaded
             onInvalidation(ii);
             packages_[ii]->Init(fullpath.c_str());
+        }
+    }
+}
+
+void PackageManager::getSuggestions(NamesList *names, int index, int row, int col, char trigger)
+{
+    names->Reset();
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return;
+
+    // parse    
+    CompletionHint  hint;
+    hint.row = row + 1;
+    hint.col = col;
+    hint.trigger = trigger;
+    pkg->parseForSuggestions(&hint);
+    if (hint.type == CompletionType::NOT_FOUND) {
+        return;
+    }
+
+    // check
+    AstChecker checker;
+    checker.init(this, options_, index);
+    main_package_ = index;
+    pkg->check(&checker);
+    main_package_ = -1;
+
+    switch (hint.type) {
+    case CompletionType::TAG:
+        {
+            int ext_pkg = checker.SearchAndLoadPackage(hint.tag.c_str(), nullptr, nullptr);
+            if (ext_pkg != -1) {
+                Package *xpkg = pkgFromIdx(ext_pkg);
+                if (xpkg != nullptr) xpkg->getAllPublicTypeNames(names);
+            }
+        }
+        break;
+    case CompletionType::FUNCTION:
+        {
+            IAstDeclarationNode *decl = pkg->getDeclaration(hint.tag.c_str());
+            if (decl == nullptr) return;
+            if (decl->GetType() != AstNodeType::ANT_TYPE) return;
+            IAstTypeNode *ctype = ((TypeDeclaration*)decl)->type_spec_;
+            if (ctype == nullptr) return;
+            if (ctype->GetType() != AstNodeType::ANT_CLASS_TYPE) return;
+            ((AstClassType*)ctype)->getFunctionsNames(names, true, true);
+        }
+        break;
+    case CompletionType::OP:
+        if (hint.node != nullptr) {
+            if (trigger == '.' && hint.node->GetType() == ANT_BINOP) {
+                getSuggestionsForDotInExpression(names, (AstBinop*)hint.node, pkg);
+            }
+            pkg->clearParsedData();
+        }
+        break;
+    }
+}
+
+void PackageManager::getSuggestionsForDotInExpression(NamesList *names, AstBinop *dotexp, Package *pkg)
+{
+    IAstExpNode *left = dotexp->operand_left_;
+    if (left == nullptr) return;
+    const ExpressionAttributes *attr = left->GetAttr();
+    bool is_this = false;
+
+    int pkg_index = -1;
+    if (left->GetType() == ANT_EXP_LEAF) {
+        pkg_index = ((AstExpressionLeaf*)left)->pkg_index_;
+        is_this = ((AstExpressionLeaf*)left)->subtype_ == TOKEN_THIS;
+    }
+    if (pkg_index != -1) {
+        // case 1: <file tag>.<extern_symbol>
+        Package *extpkg = pkgFromIdx(pkg_index);
+        if (extpkg != nullptr) extpkg->getAllPublicDeclNames(names);
+    } else {
+        if (attr->IsOnError()) return;
+        bool try_buitins = true;
+
+        if (attr->IsEnum()) {
+            if (!attr->HasKnownValue() && !attr->IsAVariable()) {
+                AstEnumType *enumnode = (AstEnumType*)attr->GetTypeTree();
+                int entry;
+                for (entry = 0; entry < (int)enumnode->items_.size(); ++entry) {
+                    names->AddName(enumnode->items_[entry].c_str());
+                }
+            }
+            try_buitins = false;
+        } else {
+            IAstTypeNode *thetype = attr->GetPointedType();
+            if (thetype == nullptr) thetype = attr->GetTypeTree();
+            if (thetype != nullptr) {
+                if (thetype->GetType() == ANT_CLASS_TYPE) {
+                    AstClassType *classnode = (AstClassType*)thetype;
+                    classnode->getFunctionsNames(names, is_this, false);
+                    classnode->getVariablesNames(names, is_this);
+                    try_buitins = false;
+                } else if (thetype->GetType() == ANT_INTERFACE_TYPE) {
+                    AstInterfaceType *ifnode = (AstInterfaceType*)thetype;
+                    ifnode->getFunctionsNames(names);
+                    try_buitins = false;
+                }
+            }
+        }
+        if (try_buitins) {
+            GetBuiltinNames(names, attr);
         }
     }
 }

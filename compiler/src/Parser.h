@@ -32,6 +32,12 @@ struct CompletionHint {
     CompletionHint() { node = nullptr; type = CompletionType::NOT_FOUND; }
 };
 
+enum class ParseMode { 
+    FULL,
+    FOR_REFERENCE,      // skip local definitions, skip functions body, skip comments assignments
+    INTELLISENSE        // allows functions declarations without a body (prototypes)
+};
+
 class Parser {
     Lexer           *m_lexer;
     Token           m_token;
@@ -41,7 +47,6 @@ class Parser {
     bool        on_error_;      // needs to recover skipping some stuff
     bool        has_errors_;    // found in previous blocks/declarations.
     ErrorList   *errors_;       // not owning !!
-    bool        for_reference_;
     AstFile     *root_;
     int         curly_indent_;  // need it for error recovery
     vector<int> remarkable_lines;   // you can associate a remark to these
@@ -67,14 +72,14 @@ class Parser {
     // if they are called, the term they parse is present, either they throw an error or are succesfull.
     // NOTE: the functions must check m_token unless they are absolutely sure it has been checked by the caller.
     // es: ParseVar() gets called if the keyword 'var' is in m_token and a var declaration is present for sure.
-    void                    ParseFile(AstFile *file, bool for_reference);
+    void                    ParseFile(AstFile *file, ParseMode mode);
     void                    ParseNamespace(AstFile *file);
     void                    ParseDependency(AstFile *file);
-    void                    ParseDeclaration(AstFile *file, bool for_reference);
+    void                    ParseDeclaration(AstFile *file, ParseMode mode);
     VarDeclaration          *ParseVar(void);
     VarDeclaration          *ParseConst(void);
     TypeDeclaration         *ParseType(void);
-    FuncDeclaration         *ParseFunctionDeclaration(bool skip_body);
+    FuncDeclaration         *ParseFunctionDeclaration(ParseMode mode);
     TypeDeclaration         *ParseEnum(void);
     TypeDeclaration         *ParseInterface(void);
     TypeDeclaration         *ParseClass(void);
@@ -108,7 +113,7 @@ public:
 
     // note: completion may be null
     void Init(Lexer *lexer, CompletionHint *completion);
-    AstFile *ParseAll(ErrorList *errors, bool for_reference);  // for_reference: only public declarations, skipping function bodies, skipping comments
+    AstFile *ParseAll(ErrorList *errors, ParseMode mode);
 };
 
 }

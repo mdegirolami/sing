@@ -7,6 +7,7 @@
 #include "options.h"
 #include "helpers.h"
 #include "split_vector.h"
+#include "Parser.h"
 
 namespace SingNames {
 
@@ -47,11 +48,17 @@ public:
 
     void Init(const char *filename);    // reverts to UNLOADED
     void clearParsedData(void);         // reverts to LOADED
-    bool advanceTo(PkgStatus wanted_status);
+    bool advanceTo(PkgStatus wanted_status, bool for_intellisense);
     bool check(AstChecker *checker);
     void applyPatch(int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext);
     void insertInSrc(const char *newtext);
     bool depends_from(int index);
+
+    // suggestions support
+    void parseForSuggestions(CompletionHint *hint);
+    void getAllPublicTypeNames(NamesList *names);
+    void getAllPublicDeclNames(NamesList *names);
+    IAstDeclarationNode *getDeclaration(const char *name);
 
     IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
     PkgStatus getStatus(void) { return status_; }

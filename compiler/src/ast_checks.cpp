@@ -122,7 +122,7 @@ bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symb
         }
     }
 
-    if (fully_parsed && !options_->GenerateHOnly()) {
+    if (fully_parsed && !options_->GenerateHOnly() && !options_->ServerMode()) {
         CheckMemberFunctionsDeclarationsPresence();
     }
     
@@ -1023,6 +1023,17 @@ AstNodeType AstChecker::CheckStatement(IAstNode *node)
     case ANT_BLOCK:
         CheckBlock((AstBlock*)node, true);
         break;
+
+    // this can run only when we search competion items
+    case ANT_INDEXING:
+    case ANT_BINOP:
+    case ANT_UNOP:
+    case ANT_EXP_LEAF:
+        {
+            ExpressionAttributes attr;
+            CheckExpression((IAstExpNode*)node, &attr, ExpressionUsage::NONE);
+        }
+        break;
     }
     return(nodetype);
 }
@@ -1659,8 +1670,8 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
             Error("Cannot access private symbol", right_leaf);
             attr->SetError();
         } else if (decl == nullptr) {
-             Error("Undefined symbol", right_leaf);
-             attr->SetError();
+            Error("Undefined symbol", right_leaf);
+            attr->SetError();
         } else {
             CheckNamedLeaf(decl, right_leaf, attr, usage, dotop_left);
         }
@@ -2029,7 +2040,9 @@ int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const
             }
 
             if (dependency->ambiguous_) {
-                Error("Local package name is ambiguous (matches two 'requires' declarations)", location);
+                if (location != nullptr) {
+                    Error("Local package name is ambiguous (matches two 'requires' declarations)", location);
+                }
                 return(-1);
             }
 
@@ -2039,13 +2052,17 @@ int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const
 
             // ops !!
             if (!loaded) {
-                Error("Failed to load the package", location);
+                if (location != nullptr) {
+                    Error("Failed to load the package", location);
+                }
                 return(-1);
             }
             return(index);
         }
     }
-    Error(not_found_error_string, location);
+    if (location != nullptr && not_found_error_string != nullptr) {
+        Error(not_found_error_string, location);
+    }
     return(-1);
 }
 

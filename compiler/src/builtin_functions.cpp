@@ -158,6 +158,30 @@ char GetBuiltinArgType(const char *signature, int idx)
     return('s');    // default
 }
 
+void GetBuiltinNames(NamesList *names, const ExpressionAttributes *attr)
+{
+    IFDesc *table;
+    if (attr->IsInteger()) {
+        table = g_integer_functs;
+    } else if (attr->IsFloat()) {
+        table = g_float_functs;
+    } else if (attr->IsComplex()) {
+        table = g_complex_functs;
+    } else if (attr->IsArray()) {
+        if (((AstArrayType*)attr->GetTypeTree())->is_dynamic_) {
+            table = g_vector_functs;
+        } else {
+            table = g_array_functs;
+        }
+    } else if (attr->IsMap()) {
+        table = g_map_functs;
+    }
+    while (table->name[0] != 0) {
+        names->AddName(table->name);
+        ++table;
+    }
+}
+
 static IAstTypeNode *GetTypeFromSignature(const char type_id, const ExpressionAttributes *attr, bool *owning)
 {
     static AstBaseType int_type(TOKEN_INT32);

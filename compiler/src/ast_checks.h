@@ -116,7 +116,6 @@ class AstChecker : public ITypedefSolver {
     void InsertName(const char *name, IAstDeclarationNode *declaration);
     IAstDeclarationNode *SearchDeclaration(const char *name, IAstNode *location);
     IAstDeclarationNode *ForwardSearchDeclaration(const char *name, IAstNode *location);
-    int SearchAndLoadPackage(const char *name, IAstNode *location, const char *not_found_error_string);
     IAstDeclarationNode *SearchExternDeclaration(int package_index, const char *name, bool *is_private);
 
     bool FlagLocalVariableAsPointed(IAstExpNode *node);
@@ -148,6 +147,9 @@ public:
     // ITypedefSolver interface
     virtual bool            CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode mode);
     virtual TypeMatchResult AreTypeTreesCompatible(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
+
+    // aux
+    int SearchAndLoadPackage(const char *name, IAstNode *location, const char *not_found_error_string);
 };
 
 }

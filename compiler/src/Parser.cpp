@@ -19,18 +19,17 @@ void Parser::Init(Lexer *lexer, CompletionHint *completion)
     insert_completion_node_ = false;
 }
 
-AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
+AstFile *Parser::ParseAll(ErrorList *errors, ParseMode mode)
 {
     has_errors_ = on_error_ = false;
     errors_ = errors;
-    for_reference_ = for_reference;
     curly_indent_ = 0;
     root_ = new AstFile();
-    ParseFile(root_, for_reference);
+    ParseFile(root_, mode);
     if (on_error_) {
         has_errors_ = true;
     }
-    if (!has_errors_ && !for_reference_) {
+    if (!has_errors_ && mode != ParseMode::FOR_REFERENCE) {
         CheckCommentsAssignments();
     }
     // if (root_ != NULL && has_errors_) {
@@ -40,7 +39,7 @@ AstFile *Parser::ParseAll(ErrorList *errors, bool for_reference)
     return(root_);
 }
 
-void Parser::ParseFile(AstFile *file, bool for_reference)
+void Parser::ParseFile(AstFile *file, ParseMode mode)
 {
     bool    done = false;
 
@@ -58,7 +57,7 @@ void Parser::ParseFile(AstFile *file, bool for_reference)
         }
     }
     while (m_token != TOKEN_EOF) {
-        ParseDeclaration(file, for_reference);
+        ParseDeclaration(file, mode);
         if (on_error_) {
             SkipToNextDeclaration();
         }
@@ -113,7 +112,7 @@ void Parser::ParseDependency(AstFile *file)
     CheckSemicolon();
 }
 
-void Parser::ParseDeclaration(AstFile *file, bool for_reference)
+void Parser::ParseDeclaration(AstFile *file, ParseMode mode)
 {
     IAstDeclarationNode *node = NULL;
     bool    is_public = false;
@@ -121,7 +120,7 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
     if (m_token == TOKEN_PUBLIC) {
         if (!Advance()) return;
         is_public = true;
-    } else if (for_reference) {
+    } else if (mode == ParseMode::FOR_REFERENCE) {
         switch (m_token) {
         case TOKEN_TYPE:
         case TOKEN_VAR:
@@ -157,7 +156,7 @@ void Parser::ParseDeclaration(AstFile *file, bool for_reference)
         node = ParseConst();
         break;
     case TOKEN_FUNC:
-        node = ParseFunctionDeclaration(for_reference);
+        node = ParseFunctionDeclaration(mode);
         break;
     case TOKEN_ENUM:
         node = ParseEnum();
@@ -292,7 +291,7 @@ recovery:
 }
 
 //func_definition ::= func func_fullname function_type block
-FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
+FuncDeclaration *Parser::ParseFunctionDeclaration(ParseMode mode)
 {
     string          name1, name2;
     bool            is_member = false;
@@ -329,14 +328,24 @@ FuncDeclaration *Parser::ParseFunctionDeclaration(bool skip_body)
         if (on_error_) goto recovery;
         if (is_member) ftype->SetIsMember();
         UpdateEndPosition(node);
-        if (skip_body) {
+        switch (mode) {
+        case ParseMode::FULL:
+            node->AddBlock(ParseBlock());       // must have a body
+            break;
+        case ParseMode::FOR_REFERENCE:
             if (m_token == TOKEN_SEMICOLON) {
                 if (!Advance()) goto recovery;  // absorb semicolon, prototype declaration
             } else {
                 SkipToNextDeclaration();        // has a body but we dont mind.
             }
-        } else {
-            node->AddBlock(ParseBlock());
+            break;
+        case ParseMode::INTELLISENSE:
+            if (m_token == TOKEN_SEMICOLON) {
+                if (!Advance()) goto recovery;  // absorb semicolon, prototype declaration
+            } else {
+                node->AddBlock(ParseBlock());   // has a body, parse it.
+            }
+            break;
         }
     } 
 recovery:    
@@ -1359,10 +1368,13 @@ IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
             {
                 if (OnCompletionHint()) {
                     completion_->type = CompletionType::OP;
-                    completion_->node = node;
+
+                    // note: the checker must know the left expression is at left of a dot operator.
+                    completion_->node = new AstBinop(TOKEN_DOT, node, new AstExpressionLeaf(TOKEN_NAME, "dummy"));
 
                     // force an error to prevent multiple ownership of node.
                     // note: can't leave the ownership to the real owner because in case of subsequent errors it would be deleted.
+                    Error("dummy");
                     insert_completion_node_ = true;
                     return(nullptr);
                 }
@@ -1387,6 +1399,7 @@ IAstExpNode *Parser::ParsePostfixExpression(const char *errmess)
 
                 // force an error to prevent multiple ownership of node.
                 // note: can't leave the ownership to the real owner because in case of subsequent errors it would be deleted.
+                Error("dummy");
                 insert_completion_node_ = true;
                 return(nullptr);
             }

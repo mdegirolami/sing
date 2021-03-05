@@ -327,6 +327,7 @@ public:
     void AddAncestor(AstNamedType *anc) { ancestors_.push_back(anc); }
     void AddMember(FuncDeclaration *member) { members_.push_back(member); }
     bool HasInterface(AstInterfaceType *intf);
+    void getFunctionsNames(NamesList *names);
 };
 
 class AstClassType : public IAstTypeNode
@@ -368,6 +369,8 @@ public:
     void SetNeedsConstructor(void) { has_constructor = true; }
     void SetConstructorDone(void) { constructor_written = true; }
     void DisableCopy(void) { can_be_copied = false; }
+    void getFunctionsNames(NamesList *names, bool include_private, bool include_finalize);
+    void getVariablesNames(NamesList *names, bool include_private);
 };
 
 /////////////////////////

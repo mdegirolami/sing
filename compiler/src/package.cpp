@@ -1,5 +1,4 @@
 #include "package.h"
-#include "Parser.h"
 #include "FileName.h"
 #include "ast_checks.h"
 
@@ -86,7 +85,7 @@ bool Package::Load()
     return(true);
 }
 
-bool Package::advanceTo(PkgStatus wanted_status)
+bool Package::advanceTo(PkgStatus wanted_status, bool for_intellisense)
 {
     // nonsense
     if (wanted_status == PkgStatus::UNLOADED || wanted_status == PkgStatus::ERROR || status_ == PkgStatus::ERROR) {
@@ -122,7 +121,13 @@ bool Package::advanceTo(PkgStatus wanted_status)
         // parse    
         lexer.Init(source_.getAsString());
         parser.Init(&lexer, nullptr);
-        root_ = parser.ParseAll(&errors_, wanted_status != PkgStatus::FULL);
+        ParseMode mode = ParseMode::FULL;
+        if (wanted_status != PkgStatus::FULL) {
+            mode = ParseMode::FOR_REFERENCE;
+        } else if (for_intellisense) {
+            mode = ParseMode::INTELLISENSE;
+        }
+        root_ = parser.ParseAll(&errors_, mode);
 
         checked_ = false;
         status_ = wanted_status;
@@ -202,6 +207,57 @@ bool Package::depends_from(int index)
         }
     }
     return(false);
+}
+
+void Package::parseForSuggestions(CompletionHint *hint)
+{
+    Lexer           lexer;
+    Parser          parser;
+
+    clearParsedData();
+    if (status_ != PkgStatus::LOADED) {
+        return;
+    }
+    lexer.Init(source_.getAsString());
+    parser.Init(&lexer, hint);
+    root_ = parser.ParseAll(&errors_, ParseMode::INTELLISENSE);
+    checked_ = false;
+    status_ = PkgStatus::FULL;
+}
+
+void Package::getAllPublicTypeNames(NamesList *names)
+{
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE && declaration->IsPublic()) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            names->AddName(tdecl->name_.c_str());
+        }
+    }
+}
+
+void Package::getAllPublicDeclNames(NamesList *names)
+{
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->IsPublic()) {
+            if (declaration->GetType() == ANT_VAR) {
+                VarDeclaration *decl = (VarDeclaration*)declaration;
+                names->AddName(decl->name_.c_str());
+            } else if (declaration->GetType() == ANT_FUNC) {
+                FuncDeclaration *decl = (FuncDeclaration*)declaration;
+                names->AddName(decl->name_.c_str());
+            } else if (declaration->GetType() == ANT_TYPE) {
+                TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+                names->AddName(tdecl->name_.c_str());
+            }
+        }
+    }
+}
+
+IAstDeclarationNode *Package::getDeclaration(const char *name)
+{
+    symbols_.FindGlobalDeclaration(name);
 }
 
 } // namespace
