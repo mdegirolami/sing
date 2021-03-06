@@ -106,6 +106,7 @@ public:
     virtual int SizeOf(void) = 0;
     virtual bool NeedsZeroIniter(void) = 0;
     virtual bool SupportsEqualOperator(void) = 0;
+    virtual void SynthSingType(string *dst) const = 0;
 };
 
 const IAstTypeNode *SolveTypedefs(const IAstTypeNode *begin);
@@ -153,6 +154,7 @@ public:
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(true); }
     virtual bool SupportsEqualOperator(void) { return(true); }
+    virtual void SynthSingType(string *dst) const;
     void SetVarArgs(void) { varargs_ = true; }
     void AddArgument(VarDeclaration *arg) { arguments_.push_back(arg); }
     void SetReturnType(IAstTypeNode *type) { return_type_ = type; }
@@ -179,6 +181,7 @@ public:
     virtual int SizeOf(void) { return(KPointerSize); }
     virtual bool NeedsZeroIniter(void) { return(false); }
     virtual bool SupportsEqualOperator(void) { return(!isweak_); }
+    virtual void SynthSingType(string *dst) const;
     bool CheckConstness(IAstTypeNode *src_tree, TypeComparisonMode mode);
     void Set(bool isconst, bool isweak, IAstTypeNode *pointed) { isconst_ = isconst; isweak_ = isweak; pointed_type_ = pointed; }
     void SetWithRef(bool isconst, IAstTypeNode *pointed) { isconst_ = isconst; owning_ = false; pointed_type_ = pointed; }
@@ -200,6 +203,7 @@ public:
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
     virtual bool SupportsEqualOperator(void) { return(false); }
+    virtual void SynthSingType(string *dst) const;
     void SetKeyType(IAstTypeNode *key) { key_type_ = key; }
     void SetReturnType(IAstTypeNode *return_type) { returned_type_ = return_type; }
 };
@@ -234,6 +238,7 @@ public:
     virtual int SizeOf(void) { return(0); }
     virtual bool NeedsZeroIniter(void) { return(false); }
     virtual bool SupportsEqualOperator(void);
+    virtual void SynthSingType(string *dst) const;
     void SetDimensionExpression(IAstExpNode *exp) { dimension_ = 0; expression_ = exp; }
     void SetElementType(IAstTypeNode *etype) { element_type_ = etype; }
     void SetDynamic(bool dyna) { is_dynamic_ = dyna; }
@@ -259,8 +264,9 @@ public:
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void);
     virtual bool SupportsEqualOperator(void);
+    virtual void SynthSingType(string *dst) const { AppendFullName(dst); }
     void ChainComponent(AstNamedType *next) { next_component = next; }
-    void AppendFullName(string *fullname);  // for the purpose of emitting error messages
+    void AppendFullName(string *fullname) const;  // for the purpose of emitting error messages
 };
 
 class AstBaseType : public IAstTypeNode {
@@ -281,6 +287,7 @@ public:
                 base_type_ != TOKEN_STRING);
     }
     virtual bool SupportsEqualOperator(void) { return(true); }
+    virtual void SynthSingType(string *dst) const { *dst += Lexer::GetTokenString(base_type_); }
 };
 
 class AstEnumType : public IAstTypeNode
@@ -302,6 +309,7 @@ public:
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(true); }
     virtual bool SupportsEqualOperator(void) { return(true); }
+    virtual void SynthSingType(string *dst) const {}
     void AddItem(const char *name, IAstExpNode *initer) { items_.push_back(name); initers_.push_back(initer); }
 };
 
@@ -324,6 +332,7 @@ public:
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
     virtual bool SupportsEqualOperator(void) { return(false); }
+    virtual void SynthSingType(string *dst) const {}
     void AddAncestor(AstNamedType *anc) { ancestors_.push_back(anc); }
     void AddMember(FuncDeclaration *member) { members_.push_back(member); }
     bool HasInterface(AstInterfaceType *intf);
@@ -357,6 +366,7 @@ public:
     virtual int SizeOf(void);
     virtual bool NeedsZeroIniter(void) { return(false); }
     virtual bool SupportsEqualOperator(void) { return(false); }
+    virtual void SynthSingType(string *dst) const {}
     void AddMemberVar(VarDeclaration *member) { 
         member_vars_.push_back(member); 
     }

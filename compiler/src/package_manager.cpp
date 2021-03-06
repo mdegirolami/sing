@@ -274,4 +274,43 @@ void PackageManager::getSuggestionsForDotInExpression(NamesList *names, AstBinop
     }
 }
 
+int PackageManager::getSignature(string *signature, int index, int row, int col, char trigger)
+{
+    int argument_index = 0;
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return(-1);
+
+    if (trigger == ',') {
+        argument_index = pkg->SearchFunctionStart(&row, &col);
+        if (argument_index == -1) {
+            return(-1);
+        }
+    }
+
+    // parse    
+    CompletionHint  hint;
+    hint.row = row + 1;
+    hint.col = col;
+    hint.trigger = '(';
+    pkg->parseForSuggestions(&hint);
+    if (hint.type != CompletionType::OP || hint.node == nullptr) {
+        return(-1);
+    }
+
+    // check
+    AstChecker checker;
+    checker.init(this, options_, index);
+    main_package_ = index;
+    pkg->check(&checker);
+    main_package_ = -1;
+
+    const ExpressionAttributes *attr = hint.node->GetAttr();
+    const AstFuncType *ft = attr->GetFunCallType();
+    *signature = "";
+    ft->SynthSingType(signature);
+
+    pkg->clearParsedData();
+    return(argument_index);
+}
+
 } // namespace

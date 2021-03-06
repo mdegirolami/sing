@@ -79,6 +79,30 @@ bool AstFuncType::ReturnsVoid(void)
     return(return_type_ != nullptr && return_type_->GetType() == ANT_BASE_TYPE && ((AstBaseType*)return_type_)->base_type_ == TOKEN_VOID);
 }
 
+void AstFuncType::SynthSingType(string *dst) const
+{
+    *dst += "(";
+    for (int ii = 0; ii < arguments_.size(); ++ii) {
+        VarDeclaration *var = arguments_[ii];
+        if (var->HasOneOfFlags(VF_READONLY)) {
+            *dst += "in ";
+        } else if (var->HasOneOfFlags(VF_WRITEONLY)) {
+            *dst += "out ";
+        } else {
+            *dst += "io ";
+        }
+        *dst += var->name_;
+        *dst += " ";
+        arguments_[ii]->type_spec_->SynthSingType(dst);
+        if (ii < arguments_.size() - 1) {
+            *dst += ", ";
+        } else {
+            *dst += ") ";
+        }
+    }
+    return_type_->SynthSingType(dst);
+}
+
 // ignore constness which must be tested with CheckConstness()
 // this was done to give specific error messages
 bool AstPointerType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
@@ -107,6 +131,12 @@ bool AstPointerType::CheckConstness(IAstTypeNode *src_tree, TypeComparisonMode m
     return(true);
 }
 
+void AstPointerType::SynthSingType(string *dst) const
+{
+    *dst += "*";
+    pointed_type_->SynthSingType(dst);
+}
+
 bool AstMapType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
@@ -116,6 +146,14 @@ bool AstMapType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
     assert(returned_type_ != nullptr);
     assert(other->returned_type_ != nullptr);
     return(true);
+}
+
+void AstMapType::SynthSingType(string *dst) const
+{
+    *dst += "map(";
+    key_type_->SynthSingType(dst);
+    *dst += ")";
+    returned_type_->SynthSingType(dst);  
 }
 
 AstArrayType::~AstArrayType()
@@ -154,6 +192,20 @@ bool AstArrayType::SupportsEqualOperator(void) {
     return(element_type_ != nullptr ? element_type_->SupportsEqualOperator() : false); 
 }
 
+void AstArrayType::SynthSingType(string *dst) const
+{
+    if (is_dynamic_) {
+        *dst += "[*]";
+    } else if (dimension_was_computed_) {
+        char buffer[100];
+        sprintf(buffer, "[%d]", dimension_);
+        *dst += buffer;
+    } else {
+        *dst += "[]";
+    }
+    element_type_->SynthSingType(dst);
+}
+
 bool AstNamedType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
 {
     if (src_tree->GetType() != GetType()) return(false);
@@ -181,7 +233,7 @@ bool AstNamedType::SupportsEqualOperator(void) {
     return(wp_decl_ != nullptr ? wp_decl_->type_spec_->SupportsEqualOperator() : false); 
 }
 
-void AstNamedType::AppendFullName(string *fullname)
+void AstNamedType::AppendFullName(string *fullname) const
 {
     *fullname += name_;
     AstNamedType *scan = next_component;

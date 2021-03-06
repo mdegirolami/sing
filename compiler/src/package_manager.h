@@ -15,6 +15,7 @@ class PackageManager {
 
     Package *pkgFromIdx(int index) const;
     void    onInvalidation(int index);
+    void    getSuggestionsForDotInExpression(NamesList *names, AstBinop *dotexp, Package *pkg);
 public:
     void        init(Options *options) { options_ = options; main_package_ = -1; }
 
@@ -31,7 +32,7 @@ public:
     void        insertInSrc(int index, const char *newtext);
     void        on_deletion(const char *name);
     void        getSuggestions(NamesList *names, int index, int row, int col, char trigger);
-    void        getSuggestionsForDotInExpression(NamesList *names, AstBinop *dotexp, Package *pkg);
+    int         getSignature(string *signature, int index, int row, int col, char trigger);
 };
 
 } // namespace

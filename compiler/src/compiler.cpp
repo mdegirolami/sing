@@ -203,7 +203,7 @@ void Compiler::AppendQuotedParameter(string *response, const char *parm)
 
 void Compiler::ServerLoop(bool log_server)
 {
-    char    buffer[1000];
+    char    buffer[2000];
     char    *parameters[10];
     bool    do_exit = false;
 
@@ -426,9 +426,9 @@ void Compiler::srv_get_errors (int num_parms, char *parameters[])
     ServerResponse("set_errors_done \"%s\"\r\n", parameters[1]);
 }
 
-// >> completion_items <file>,<line>,<col>
-// << set_completion_item <file>,<name>
-// << set_completions_done <file>
+// >> completion_items <file>,<line>,<col>,<trigger>
+// << set_completion_item <name>
+// << set_completions_done
 
 void Compiler::srv_completion_items(int num_parms, char *parameters[])
 {
@@ -451,15 +451,28 @@ void Compiler::srv_completion_items(int num_parms, char *parameters[])
     ServerResponse("set_completions_done\r\n");
 }
 
-// >> signature <file>,<line>,<col>
-// << set_signature <file>,<signature>,<parameter>
+// >> signature <file><line><col><trigger>
+// << set_signature <signature><parameter>
 
 void Compiler::srv_signature(int num_parms, char *parameters[])
 {
-    if (num_parms < 4) return;
-    string response = "set_signature ";
-    AppendQuotedParameter(&response, parameters[1]);
-    ServerResponse("%s \"filter(kk i32, k2 i32) void\" 1\r\n", response.c_str());
+    if (num_parms < 5) return;
+    string signature;    
+
+    // get the index and make sure the file is loaded
+    int idx = pmgr_.init_pkg(parameters[1]);
+    int row = atoi(parameters[2]) - 1;
+    int col = atoi(parameters[3]) - 1;
+ 
+    int parm_index = pmgr_.getSignature(&signature, idx, row, col, parameters[4][0]);
+
+    if (parm_index >= 0) {
+        string response = "set_signature ";
+        AppendQuotedParameter(&response, signature.c_str()); 
+        ServerResponse("%s %d\r\n", response.c_str(), parm_index);
+    } else {
+        ServerResponse("set_signature empty 0\r\n");
+    }
 }
 
 // >> def_position <file>,<row>,<col>
