@@ -46,6 +46,21 @@ void SplitVector::insert(const char *newtext)
     insertInGap(newtext);
 }
 
+void SplitVector::GetLine(string *line, int row)
+{
+    int start = rowCol2Offset(row, 0);
+    int end = rowCol2Offset(row + 1, 0);
+    *line = "";
+    while (start < end) {
+        if (start < gap_pos_) {
+            *line += buffer_[start];
+        } else {
+            *line += buffer_[start + gap_width_];            
+        }
+        ++start;
+    }
+}
+
 int  SplitVector::rowCol2Offset(int row, int col)
 {
     // where to start ? how many to skip ?

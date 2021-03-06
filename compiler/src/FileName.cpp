@@ -173,19 +173,3 @@ void FileName::Normalize(string *filename)
 }
 
 } // namespace
-
-/* forbidden
-
-< (less than)
-> (greater than)
-: (colon - sometimes works, but is actually NTFS Alternate Data Streams)
-" (double quote)
-/ (forward slash)
-\ (backslash)
-| (vertical bar or pipe)
-? (question mark)
-* (asterisk)
-
-~ e' speciale in linux !!!
-
-*/

@@ -45,6 +45,7 @@ public:
     bool MustCreateDFile(void) { return(create_d_file_); }
     bool GenerateHOnly(void) { return(generate_h_only_); }
     bool ServerMode(void) { return(server_mode_); }
+    void GetAllFilesIn(NamesList *names, const char *path);
 
     // helper
     FileSolveError SolveFileName(FILE **fh, string *full, const char *partial);

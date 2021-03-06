@@ -260,4 +260,77 @@ IAstDeclarationNode *Package::getDeclaration(const char *name)
     symbols_.FindGlobalDeclaration(name);
 }
 
+bool Package::GetPartialPath(string *path, int row, int col)
+{
+    if (row < 0 || col < 8) return(false);
+    source_.GetLine(path, row);
+    if (path->length() < 9) {
+        return(false);
+    } 
+
+    // past stuff after the trigger and the trigger itself
+    path->erase(col);
+    
+    const char *src = path->data();
+
+    // skip blanks
+    while (*src == ' ' || *src == '\t') {
+        ++src;
+    }
+
+    // requires ?
+    if (strncmp(src, "requires", 8) != 0) {
+        return(false);
+    }
+
+    // skip blanks to the opening "
+    src += 8;
+    while (*src == ' ' || *src == '\t') {
+        ++src;
+    }
+
+    // skip '"' - if present !
+    if (*src == '"') ++src;
+
+    // keep the final part
+    path->erase(0, src - path->data());
+    return(true);
+}
+
+int Package::SearchFunctionStart(int *row, int *col)
+{
+    string line;    
+    int level = 0;
+    int position= 0;
+
+    for (int rr = *row; rr >= 0; --rr) {
+        source_.GetLine(&line, rr);
+        for (int scan = rr == *row ? *col : line.length() - 1; scan >= 0; --scan) {
+            switch (line[scan]) {
+            case '(':
+                if (level == 0) {
+                    *row = rr;
+                    *col = scan;
+                    return(position);
+                } else {
+                    --level;
+                }
+                break;
+            case ')':
+                ++level;
+                break;
+            case ',':
+                if (level == 0) ++position;
+                break;
+            case ';':
+            case '}': 
+            case '{':
+                return(-1);
+                break; 
+            }
+        }
+    }
+    return(-1);
+}
+
 } // namespace

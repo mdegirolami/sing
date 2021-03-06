@@ -152,6 +152,22 @@ void PackageManager::getSuggestions(NamesList *names, int index, int row, int co
     Package *pkg = pkgFromIdx(index);
     if (pkg == nullptr) return;
 
+    int argument_index = -1;
+    if (trigger == '"' || trigger == '/') {
+        string path;
+        if (pkg->GetPartialPath(&path, row, col)) {
+            options_->GetAllFilesIn(names, path.c_str());
+        }
+        return;
+    } else if (trigger == ':') {
+        argument_index = pkg->SearchFunctionStart(&row, &col);
+        if (argument_index == -1) {
+            return;
+        } else {
+            trigger = '(';
+        }
+    }
+
     // parse    
     CompletionHint  hint;
     hint.row = row + 1;
@@ -194,6 +210,12 @@ void PackageManager::getSuggestions(NamesList *names, int index, int row, int co
         if (hint.node != nullptr) {
             if (trigger == '.' && hint.node->GetType() == ANT_BINOP) {
                 getSuggestionsForDotInExpression(names, (AstBinop*)hint.node, pkg);
+            } else if (trigger == '(') {
+                const ExpressionAttributes *attr = hint.node->GetAttr();
+                const AstFuncType *ft = attr->GetFunCallType();
+                if (argument_index < ft->arguments_.size()) {
+                    names->AddName(ft->arguments_[argument_index]->name_.c_str());
+                }
             }
             pkg->clearParsedData();
         }

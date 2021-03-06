@@ -3,6 +3,7 @@
 #include <string.h>
 #include "options.h"
 #include "FileName.h"
+#include "sio.h"
 
 namespace SingNames {
 
@@ -286,6 +287,36 @@ void Options::PrependInclusionPath(string *full, const char *inclusion_path, con
     }
     FileName::FixBackSlashes(full);
     FileName::ExtensionSet(full, "sing");
+}
+
+void Options::GetAllFilesIn(NamesList *names, const char *path)
+{
+    std::string fullname, drive, pathbody, base, extension;
+    std::vector<std::string> nn;
+    std::vector<sing::FileInfo> info;
+    
+    int index = 0;
+    while (true) {
+        const char *search = GetSrcDir(index++);
+        if (search == nullptr) {
+            return;
+        }
+        std::string fullname = search;
+        fullname += "/";
+        fullname += path;
+        fullname = sing::pathFix(fullname.c_str());
+        sing::dirRead(fullname.c_str(), sing::DirFilter::all, &nn, &info);
+        for (int ii = 0; ii < nn.size(); ++ii) {
+            sing::pathSplit(nn[ii].c_str(), &drive, &pathbody, &base, &extension);
+            //const char *src = nn[ii].c_str() + fullname.length();
+            //if (*src == '/') ++src;
+            if (info[ii].is_dir_) {
+                names->AddName(base.c_str());
+            } else if (extension == "sing" || extension == "SING") {
+                names->AddName(base.c_str());
+            }
+        }
+    }
 }
 
 } // namespace

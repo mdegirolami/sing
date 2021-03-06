@@ -2,16 +2,19 @@
 #define SPLIT_VECTOR_H
 
 #include "vector.h"
+#include "string"
 
 namespace SingNames {
 
 class SplitVector {
+    // NOTE: all rows/cols indices are 0-based
 public:
     SplitVector();
     char *getBufferForLoad(int length);
     const char *getAsString();
     void patch(int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext);
     void insert(const char *newtext);   // at split point !!
+    void GetLine(string *line, int row);  // 0 based row !!
 
 private:
     vector<char>    buffer_;

@@ -59,6 +59,8 @@ public:
     void getAllPublicTypeNames(NamesList *names);
     void getAllPublicDeclNames(NamesList *names);
     IAstDeclarationNode *getDeclaration(const char *name);
+    bool GetPartialPath(string *path, int row, int col);  // 0 based row/col !!
+    int  SearchFunctionStart(int *row, int *col);
 
     IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
     PkgStatus getStatus(void) { return status_; }
