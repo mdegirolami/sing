@@ -211,8 +211,15 @@ bool Package::depends_from(int index)
 
 void Package::parseForSuggestions(CompletionHint *hint)
 {
-    Lexer           lexer;
-    Parser          parser;
+    Lexer   lexer;
+    Parser  parser;
+    string  row;
+
+    // convert row/col from vsc to sing conventions
+    source_.GetLine(&row, hint->row);
+    hint->col = source_.VsCol2Offset(row.c_str(), hint->col);
+    hint->col = source_.offset2SingCol(row.c_str(), hint->col);
+    hint->row++;
 
     clearParsedData();
     if (status_ != PkgStatus::LOADED) {
@@ -269,7 +276,8 @@ bool Package::GetPartialPath(string *path, int row, int col)
     } 
 
     // past stuff after the trigger and the trigger itself
-    path->erase(col);
+    int off = source_.VsCol2Offset(path->c_str(), col);
+    path->erase(off);
     
     const char *src = path->data();
 
@@ -305,12 +313,18 @@ int Package::SearchFunctionStart(int *row, int *col)
 
     for (int rr = *row; rr >= 0; --rr) {
         source_.GetLine(&line, rr);
-        for (int scan = rr == *row ? *col : line.length() - 1; scan >= 0; --scan) {
+        int scan;
+        if (rr == *row) {
+            scan = source_.VsCol2Offset(line.c_str(), *col);
+        } else {
+            scan = line.length() - 1;
+        }
+        for (; scan >= 0; --scan) {
             switch (line[scan]) {
             case '(':
                 if (level == 0) {
                     *row = rr;
-                    *col = scan;
+                    *col = source_.offset2VsCol(line.c_str(), scan);
                     return(position);
                 } else {
                     --level;

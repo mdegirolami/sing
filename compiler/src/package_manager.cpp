@@ -170,7 +170,7 @@ void PackageManager::getSuggestions(NamesList *names, int index, int row, int co
 
     // parse    
     CompletionHint  hint;
-    hint.row = row + 1;
+    hint.row = row;
     hint.col = col;
     hint.trigger = trigger;
     pkg->parseForSuggestions(&hint);
@@ -289,7 +289,7 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
 
     // parse    
     CompletionHint  hint;
-    hint.row = row + 1;
+    hint.row = row;
     hint.col = col;
     hint.trigger = '(';
     pkg->parseForSuggestions(&hint);

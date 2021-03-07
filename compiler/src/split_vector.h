@@ -16,6 +16,11 @@ public:
     void insert(const char *newtext);   // at split point !!
     void GetLine(string *line, int row);  // 0 based row !!
 
+    int offset2VsCol(const char *row, int offset);
+    int offset2SingCol(const char *row, int offset);
+    int VsCol2Offset(const char *row, int col);
+    //int SingCol2offset(const char *row, int col);
+
 private:
     vector<char>    buffer_;
     vector<int>     lines_; 

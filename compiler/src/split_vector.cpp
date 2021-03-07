@@ -106,6 +106,57 @@ int  SplitVector::rowCol2Offset(int row, int col)
     return(scan > gap_pos_ ? scan - gap_width_ : scan);
 }
 
+int SplitVector::offset2VsCol(const char *row, int offset)
+{
+    int count = 0;
+    for (int ii = 0; ii < offset; ++ii) {
+        int cc = row[ii];
+        if (cc == 0) return(count);
+        if ((cc & 0xf8) == 0xf0) {
+            count += 2;       // takes two utf16 cols !!
+        } else if ((cc & 0xc0) != 0x80) {
+            count += 1;
+        }
+    }
+    return(count);
+}
+
+int SplitVector::offset2SingCol(const char *row, int offset)
+{
+    int count = 0;
+    for (int ii = 0; ii < offset; ++ii) {
+        int cc = row[ii];
+        if (cc == 0) return(count);
+        if ((cc & 0xc0) != 0x80) {
+            count += 1;
+        }
+    }
+    return(count);
+}
+
+int SplitVector::VsCol2Offset(const char *row, int col)
+{
+    const char *scan = row;
+    while (*scan != 0 && col > 0) {
+        char cc = *scan;
+        if ((cc & 0xf8) == 0xf0) {
+            col -= 2;       // takes two utf16 cols !!
+        } else if ((cc & 0xc0) != 0x80) {
+            col -= 1;
+        }
+        ++scan;
+    }
+    while ((*scan & 0xc0) == 0x80) {
+        ++scan;
+    }
+    return(scan - row);
+}
+
+// int SplitVector::SingCol2offset(const char *row, int col)
+// {
+
+// }
+
 void SplitVector::patch(int from, int to, const char *newtext)
 {
     if (to < from) to = from;
