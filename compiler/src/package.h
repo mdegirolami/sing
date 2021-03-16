@@ -26,6 +26,7 @@ class Package {
 
     // from init
     string          fullpath_;      // inclusive of search path
+    int32_t         idx_;
 
     // from load
     SplitVector     source_;    
@@ -41,12 +42,13 @@ class Package {
 
     bool Load(void);
     void SortErrors(void) { errors_.Sort(); }
-
+    bool IsSymbolCharacter(char value);
+    IAstNode *getDeclarationInBlockBefore(AstBlock *block, const char *symbol, int row, int col);
 public:
     Package();
     ~Package();
 
-    void Init(const char *filename);    // reverts to UNLOADED
+    void Init(const char *filename, int32_t idx);    // reverts to UNLOADED
     void clearParsedData(void);         // reverts to LOADED
     bool advanceTo(PkgStatus wanted_status, bool for_intellisense);
     bool check(AstChecker *checker);
@@ -54,13 +56,19 @@ public:
     void insertInSrc(const char *newtext);
     bool depends_from(int index);
 
-    // suggestions support
+    // intellisense support
     void parseForSuggestions(CompletionHint *hint);
     void getAllPublicTypeNames(NamesList *names);
     void getAllPublicDeclNames(NamesList *names);
     IAstDeclarationNode *getDeclaration(const char *name);
     bool GetPartialPath(string *path, int row, int col);  // 0 based row/col !!
     int  SearchFunctionStart(int *row, int *col);
+    void GetSymbolAt(string *symbol, int *dot_row, int *dot_col, int row, int col);
+    IAstNode *getDeclarationReferredAt(const char *symbol, int row, int col);
+    bool ConvertPosition(PositionInfo *pos, int *row, int *col);
+    FuncDeclaration *findFuncDefinition(AstClassType *classtype, const char *symbol);
+    bool SymbolIsInMemberDeclaration(AstClassType **classnode, IAstDeclarationNode **decl, 
+                                     const char *symbol, int row, int col);
 
     IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
     PkgStatus getStatus(void) { return status_; }

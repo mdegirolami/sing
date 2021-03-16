@@ -16,11 +16,12 @@ Package::~Package()
     if (root_ != nullptr) delete root_;
 }
 
-void Package::Init(const char *filename)
+void Package::Init(const char *filename, int32_t idx)
 {
     clearParsedData();
     fullpath_ = filename;
     status_ = PkgStatus::UNLOADED;
+    idx_ = idx;
 }
 
 void Package::clearParsedData(void)
@@ -120,7 +121,7 @@ bool Package::advanceTo(PkgStatus wanted_status, bool for_intellisense)
 
         // parse    
         lexer.Init(source_.getAsString());
-        parser.Init(&lexer, nullptr);
+        parser.Init(&lexer, nullptr, idx_);
         ParseMode mode = ParseMode::FULL;
         if (wanted_status != PkgStatus::FULL) {
             mode = ParseMode::FOR_REFERENCE;
@@ -226,7 +227,7 @@ void Package::parseForSuggestions(CompletionHint *hint)
         return;
     }
     lexer.Init(source_.getAsString());
-    parser.Init(&lexer, hint);
+    parser.Init(&lexer, hint, idx_);
     root_ = parser.ParseAll(&errors_, ParseMode::INTELLISENSE);
     checked_ = false;
     status_ = PkgStatus::FULL;
@@ -345,6 +346,237 @@ int Package::SearchFunctionStart(int *row, int *col)
         }
     }
     return(-1);
+}
+
+void Package::GetSymbolAt(string *symbol, int *dot_row, int *dot_col, int row, int col)
+{
+    string line;   
+
+    // defaults
+    *symbol = "";
+    *dot_row = -1;
+    *dot_col = -1;
+
+    // find the symbol beginning
+    source_.GetLine(&line, row);    
+    int scan = source_.VsCol2Offset(line.c_str(), col);
+    while (scan > 0 && IsSymbolCharacter(line[scan])) --scan;
+    if (isdigit(line[scan])) return;
+    int begin = scan + 1;    
+
+    // is it preceeded by a '.' operator ?
+    while (scan > 0 && isblank(line[scan])) --scan;
+    if (line[scan] == '.') {
+        *dot_col = source_.offset2VsCol(line.c_str(), scan);
+        *dot_row = row;
+    }
+
+    // read the symbol
+    scan = begin;
+    while (IsSymbolCharacter(line[scan])) {
+        *symbol += line[scan++];
+    }
+}
+
+IAstNode *Package::getDeclarationReferredAt(const char *symbol, int row, int col)
+{
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_VAR) {
+            VarDeclaration *decl = (VarDeclaration*)declaration;
+            if (decl->name_ == symbol) {
+                return(decl);
+            }
+        } else if (declaration->GetType() == ANT_FUNC) {
+            FuncDeclaration *decl = (FuncDeclaration*)declaration;
+            if (decl->name_ == symbol && !decl->is_class_member_) {
+                return(decl);
+            }
+            AstBlock *block = decl->block_;
+            if (block != nullptr && block->GetPositionRecord()->Includes(row + 1, col)) {
+                AstFuncType *func = decl->function_type_;
+                if (func != nullptr) {
+                    for (int jj = 0; jj < func->arguments_.size(); ++jj) {
+                        if (func->arguments_[jj]->name_ == symbol) {
+                            return(func->arguments_[jj]);
+                        }
+                    }
+                }
+                IAstNode *node = getDeclarationInBlockBefore(block, symbol, row, col);
+                if (node != nullptr) return(node);
+            }
+        } else if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *decl = (TypeDeclaration*)declaration;
+            if (decl->name_ == symbol) {
+                return(decl);
+            }
+        }
+    }
+    return(nullptr);
+}
+
+IAstNode *Package::getDeclarationInBlockBefore(AstBlock *block, const char *symbol, int row, int col)
+{
+    bool done = false;
+
+    if (block == nullptr || !block->GetPositionRecord()->Includes(row + 1, col)) return(nullptr);
+    vector<IAstNode*> *items = &block->block_items_;
+    for (int ii = 0; ii < items->size() && !done; ++ii) {
+        IAstNode *node = (*items)[ii];
+        if (node == nullptr || node->GetPositionRecord()->start_row > row) {
+            return(nullptr);
+        }
+        switch (node->GetType()) {
+        case ANT_VAR:
+            if (strcmp(((VarDeclaration*)node)->name_.c_str(), symbol) == 0) {
+                return(node);
+            }
+            break;
+        case ANT_BLOCK:
+            {
+                IAstNode *ret = getDeclarationInBlockBefore((AstBlock*)node, symbol, row, col);
+                if (ret != nullptr) return(ret);
+            }
+            break;
+        case ANT_WHILE:
+            {
+                IAstNode *ret = getDeclarationInBlockBefore(((AstWhile*)node)->block_, symbol, row, col);
+                if (ret != nullptr) return(ret);
+            }
+            break;
+        case ANT_IF:
+            {
+                AstIf *ifdesc = (AstIf*)node;
+                for (int jj = 0; jj < ifdesc->blocks_.size(); ++jj) {
+                    IAstNode *ret = getDeclarationInBlockBefore(ifdesc->blocks_[jj], symbol, row, col);
+                    if (ret != nullptr) return(ret);
+                }
+            }
+            break;
+        case ANT_FOR:
+            {
+                AstFor *fordesc = (AstFor*)node;
+                AstBlock *block = fordesc->block_;
+                if (block != nullptr && block->GetPositionRecord()->Includes(row + 1, col)) {
+                    if (fordesc->index_ != nullptr && fordesc->index_->name_ == symbol) {
+                        return(fordesc->index_);
+                    }
+                    if (fordesc->iterator_ != nullptr && fordesc->iterator_->name_ == symbol) {
+                        return(fordesc->iterator_);
+                    }
+                    IAstNode *ret = getDeclarationInBlockBefore(fordesc->block_, symbol, row, col);
+                    if (ret != nullptr) return(ret);
+                }
+            }
+            break;
+        case ANT_SWITCH:
+            {
+                AstSwitch *switchdesc = (AstSwitch*)node;
+                for (int jj = 0; jj < switchdesc->statements_.size(); ++jj) {
+                    if (switchdesc->statements_[jj]->GetType() == ANT_BLOCK) {
+                        IAstNode *ret = getDeclarationInBlockBefore((AstBlock*)switchdesc->statements_[jj], symbol, row, col);
+                        if (ret != nullptr) return(ret);
+                    }
+                }
+            }
+            break;
+        case ANT_TYPESWITCH:
+            if (node->GetPositionRecord()->Includes(row + 1, col)) {
+                AstTypeSwitch *switchdesc = (AstTypeSwitch*)node;
+                if (switchdesc->reference_ != nullptr && switchdesc->reference_->name_ == symbol) {
+                    return(switchdesc->reference_);
+                }
+                for (int jj = 0; jj < switchdesc->case_statements_.size(); ++jj) {
+                    if (switchdesc->case_statements_[jj]->GetType() == ANT_BLOCK) {
+                        IAstNode *ret = getDeclarationInBlockBefore((AstBlock*)switchdesc->case_statements_[jj], symbol, row, col);
+                        if (ret != nullptr) return(ret);
+                    }
+                }
+            }
+            break;
+        }
+    }
+    return(nullptr);
+}
+
+bool Package::ConvertPosition(PositionInfo *pos, int *row, int *col)
+{
+    if (pos->start_row < 1) return(false);
+    *row = pos->start_row - 1;
+
+    string line;   
+    source_.GetLine(&line, *row);    
+    int off = source_.SingCol2offset(line.c_str(), pos->start_col);
+    *col = source_.offset2VsCol(line.c_str(), off);
+    return(true);
+}
+
+bool Package::IsSymbolCharacter(char value)
+{
+    return(value >= 'a' && value <= 'z' || 
+           value >= 'A' && value <= 'Z' || 
+           value == '_' || 
+           value >= '0' && value <= '9');
+}
+
+FuncDeclaration *Package::findFuncDefinition(AstClassType *classtype, const char *symbol)
+{
+    string classname;
+
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *tdecl = (TypeDeclaration*)declaration;
+            if (tdecl->type_spec_ == classtype) {
+                classname = tdecl->name_;
+                break;
+            }
+        }
+    }
+    if (classname == "") {
+        return(nullptr);
+    }
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetType() == ANT_FUNC) {
+            FuncDeclaration *decl = (FuncDeclaration*)declaration;
+            if (decl->is_class_member_ && decl->name_ == symbol && decl->classname_ == classname) {
+                return(decl);
+            }
+        }
+    }
+    return(nullptr);
+}
+
+bool Package::SymbolIsInMemberDeclaration(AstClassType **classnode, IAstDeclarationNode **membernode, 
+                                            const char *symbol, int row, int col)
+{
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        if (declaration->GetPositionRecord()->start_row > row + 1) {
+            break;
+        }
+        if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *decl = (TypeDeclaration*)declaration;
+            if (decl->type_spec_ != nullptr && decl->GetPositionRecord()->Includes(row + 1, col)) {
+                if (decl->type_spec_->GetType() == ANT_CLASS_TYPE) {
+                    *classnode = (AstClassType*)decl->type_spec_;
+                    *membernode = (*classnode)->getMemberDeclaration(symbol);
+                    if (*membernode != nullptr && (*membernode)->GetPositionRecord()->start_row == row + 1) {
+                        return(true);
+                    }
+                } else if (decl->type_spec_->GetType() == ANT_INTERFACE_TYPE) {
+                    *membernode = ((AstInterfaceType*)decl->type_spec_)->getMemberDeclaration(symbol);
+                    if (*membernode != nullptr && (*membernode)->GetPositionRecord()->start_row == row + 1) {
+                        *classnode = nullptr;
+                        *membernode = nullptr;
+                        return(true);
+                    };
+                }
+            }
+        }
+    }
+    return(false);    
 }
 
 } // namespace

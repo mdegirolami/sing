@@ -26,7 +26,7 @@ int PackageManager::init_pkg(const char *name, bool force_init)
         if (is_same_filename(packages_[ii]->getFullPath(), fullpath.c_str())) {
             if (force_init) {
                 onInvalidation(ii);
-                packages_[ii]->Init(fullpath.c_str());
+                packages_[ii]->Init(fullpath.c_str(), ii);
             }
             return(ii);
         }
@@ -35,7 +35,7 @@ int PackageManager::init_pkg(const char *name, bool force_init)
     // if not found
     int index = (int)packages_.size();
     Package *pkg = new Package;
-    pkg->Init(fullpath.c_str());
+    pkg->Init(fullpath.c_str(), index);
     packages_.push_back(pkg);
     return(index);
 }
@@ -141,7 +141,7 @@ void PackageManager::on_deletion(const char *name)
 
             // revert to unloaded
             onInvalidation(ii);
-            packages_[ii]->Init(fullpath.c_str());
+            packages_[ii]->Init(fullpath.c_str(), ii);
         }
     }
 }
@@ -311,6 +311,160 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
 
     pkg->clearParsedData();
     return(argument_index);
+}
+
+bool PackageManager::findSymbol(string *def_file, int *file_row, int *file_col, int index, int row, int col)
+{
+    IAstNode *node = findSymbolPos(index, row, col);
+    if (node == nullptr) return(false);
+
+    PositionInfo *pos = node->GetPositionRecord();
+    if (pos == nullptr) return(false);
+
+    Package *xpkg = pkgFromIdx(pos->package_idx);
+    *def_file = xpkg->getFullPath();
+
+    return(xpkg->ConvertPosition(pos, file_row, file_col));
+}
+
+IAstNode *PackageManager::findSymbolPos(int index, int row, int col)
+{
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return(nullptr);
+
+    // extract the symbol
+    string symbol;
+    int dot_row, dot_col;
+    pkg->GetSymbolAt(&symbol, &dot_row, &dot_col, row, col);
+    if (symbol.length() < 1) return(nullptr);
+
+    // unqualifyed symbol (local)
+    if (dot_row == -1) {        
+        pkg->advanceTo(PkgStatus::FULL, true);
+        AstClassType *classnode;
+        IAstDeclarationNode *decl;
+        if (pkg->SymbolIsInMemberDeclaration(&classnode, &decl, symbol.c_str(), row, col)) {
+
+            // the name in a member declaration in a class/interface.
+            // if is a function declaration in a class, go to the definition.
+            return(Declaration2Definition(decl, classnode, symbol.c_str()));
+        } else {
+
+            // all other cases (refs to local, automatic vars, for indices, etc..)
+            return(pkg->getDeclarationReferredAt(symbol.c_str(), row, col));
+        }
+    }
+
+    // qualifyed symbols
+    // if preceeded by a dot, must know what the dot means to find the symbol context.
+    CompletionHint  hint;
+    hint.row = dot_row;
+    hint.col = dot_col;
+    hint.trigger = '.';
+    pkg->parseForSuggestions(&hint);
+    if (hint.type == CompletionType::NOT_FOUND) {
+        return(nullptr);
+    }
+
+    // check
+    AstChecker checker;
+    checker.init(this, options_, index);
+    main_package_ = index;
+    pkg->check(&checker);
+    main_package_ = -1;
+
+    switch (hint.type) {
+    case CompletionType::TAG:
+        {
+            int ext_pkg = checker.SearchAndLoadPackage(hint.tag.c_str(), nullptr, nullptr);
+            if (ext_pkg != -1) {
+                Package *xpkg = pkgFromIdx(ext_pkg);
+                if (xpkg != nullptr) {
+                    return(xpkg->getDeclaration(symbol.c_str()));
+                }
+            }
+        }
+        break;
+    case CompletionType::FUNCTION:
+        {
+            IAstDeclarationNode *decl = pkg->getDeclaration(hint.tag.c_str());
+            if (decl == nullptr) return(nullptr);
+            if (decl->GetType() != AstNodeType::ANT_TYPE) return(nullptr);
+            IAstTypeNode *ctype = ((TypeDeclaration*)decl)->type_spec_;
+            if (ctype == nullptr) return(nullptr);
+            if (ctype->GetType() != AstNodeType::ANT_CLASS_TYPE) return(nullptr);
+            return(((AstClassType*)ctype)->getMemberDeclaration(symbol.c_str()));
+        }
+        break;
+    case CompletionType::OP:
+        if (hint.node != nullptr) {
+            if (hint.node->GetType() == ANT_BINOP) {
+                return(getQualifyedSymbolDefinition(symbol.c_str(), (AstBinop*)hint.node));
+            }
+            pkg->clearParsedData();
+        }
+        break;
+    }
+    return(nullptr);
+}
+
+IAstNode *PackageManager::getQualifyedSymbolDefinition(const char *symbol, AstBinop *dotexp)
+{
+    IAstExpNode *left = dotexp->operand_left_;
+    if (left == nullptr) return(nullptr);
+    const ExpressionAttributes *attr = left->GetAttr();
+
+    int pkg_index = -1;
+    if (left->GetType() == ANT_EXP_LEAF) {
+        pkg_index = ((AstExpressionLeaf*)left)->pkg_index_;
+    }
+    if (pkg_index != -1) {
+        // case 1: <file tag>.<extern_symbol>
+        Package *extpkg = pkgFromIdx(pkg_index);
+        if (extpkg != nullptr) {
+            return(extpkg->getDeclaration(symbol));
+        }
+    } else {
+        if (attr->IsOnError()) return(nullptr);
+
+        if (attr->IsEnum()) {
+            if (!attr->HasKnownValue() && !attr->IsAVariable()) {
+                return(attr->GetTypeTree());
+           }
+        } else {
+            IAstTypeNode *thetype = attr->GetPointedType();
+            if (thetype == nullptr) thetype = attr->GetTypeTree();
+            if (thetype != nullptr) {
+                if (thetype->GetType() == ANT_CLASS_TYPE) {
+                    AstClassType *classnode = (AstClassType*)thetype;
+                    IAstDeclarationNode *decl = classnode->getMemberDeclaration(symbol);
+                    if (decl != nullptr) {
+
+                        // try to find the definition (prefer over the declaration)
+                        return(Declaration2Definition(decl, classnode, symbol));
+                    }
+                } else if (thetype->GetType() == ANT_INTERFACE_TYPE) {
+                    AstInterfaceType *ifnode = (AstInterfaceType*)thetype;
+                    return(ifnode->getMemberDeclaration(symbol));
+                }
+            }
+        }
+    }
+    return(nullptr);
+}
+
+IAstNode *PackageManager::Declaration2Definition(IAstDeclarationNode *decl, AstClassType *classnode, const char *symbol)
+{
+    if (decl != nullptr && decl->GetType() == ANT_FUNC) {
+        Package *pkg = pkgFromIdx(decl->GetPositionRecord()->package_idx);
+        if (pkg != nullptr) {
+            FuncDeclaration *def = pkg->findFuncDefinition(classnode, symbol);
+            if (def != nullptr) {
+                decl = def;
+            }
+        }
+    }
+    return(decl);
 }
 
 } // namespace

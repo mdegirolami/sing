@@ -73,7 +73,7 @@ int  SplitVector::rowCol2Offset(int row, int col)
     } else {
         scan = gap_pos_ + gap_width_;
         for (int to_skip = row - lines_.size() + 1; to_skip > 0; --to_skip) {
-            while (buffer_[scan] != 10 && scan < buffer_.size()) {
+            while (scan < buffer_.size() && buffer_[scan] != 10) {
                 ++scan;
             }
             if (scan == buffer_.size()) {
@@ -152,10 +152,21 @@ int SplitVector::VsCol2Offset(const char *row, int col)
     return(scan - row);
 }
 
-// int SplitVector::SingCol2offset(const char *row, int col)
-// {
-
-// }
+int SplitVector::SingCol2offset(const char *row, int col)
+{
+    const char *scan = row;
+    while (*scan != 0 && col > 0) {
+        char cc = *scan;
+        if ((cc & 0xc0) != 0x80) {
+            col -= 1;
+        }
+        ++scan;
+    }
+    while ((*scan & 0xc0) == 0x80) {
+        ++scan;
+    }
+    return(scan - row);
+}
 
 void SplitVector::patch(int from, int to, const char *newtext)
 {

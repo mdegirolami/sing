@@ -12,11 +12,12 @@ Parser::~Parser()
 {
 }
 
-void Parser::Init(Lexer *lexer, CompletionHint *completion)
+void Parser::Init(Lexer *lexer, CompletionHint *completion, int32_t package_idx = -1)
 {
     m_lexer = lexer;
     completion_ = completion;
     insert_completion_node_ = false;
+    package_idx_ = package_idx;
 }
 
 AstFile *Parser::ParseAll(ErrorList *errors, ParseMode mode)
@@ -2295,6 +2296,7 @@ void Parser::FillPositionInfo(PositionInfo *pnfo)
     pnfo->end_col = m_lexer->CurrTokenLastColumn();
     pnfo->last_row = pnfo->end_row;
     pnfo->last_col = pnfo->end_col;
+    pnfo->package_idx = package_idx_;
 }
 
 void Parser::UpdateEndPosition(IAstNode *node)
@@ -2303,6 +2305,7 @@ void Parser::UpdateEndPosition(IAstNode *node)
     PositionInfo *pnfo = node->GetPositionRecord();
     pnfo->last_row = m_lexer->CurrTokenLastLine();
     pnfo->last_col = m_lexer->CurrTokenLastColumn();
+    pnfo->package_idx = package_idx_;
 }
 
 void Parser::CheckCommentsAssignments(void)

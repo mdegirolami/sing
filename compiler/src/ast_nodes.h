@@ -63,6 +63,7 @@ struct PositionInfo {
     int32_t end_col;
     int32_t last_row;       // end of the node and its children - used to attribute remarks
     int32_t last_col;
+    int32_t package_idx;
 
     PositionInfo()
     {
@@ -72,6 +73,14 @@ struct PositionInfo {
         end_col = 0;
         last_row = 0;  
         last_col = 0;
+        package_idx = -1;
+    }
+
+    bool Includes(int32_t row, int32_t col) 
+    {
+        bool above_min = row > start_row || row == start_row && col >= start_col;
+        bool below_max = row < last_row || row == last_row && col <= last_col;
+        return(above_min && below_max);
     }
 };
 
@@ -337,6 +346,7 @@ public:
     void AddMember(FuncDeclaration *member) { members_.push_back(member); }
     bool HasInterface(AstInterfaceType *intf);
     void getFunctionsNames(NamesList *names);
+    FuncDeclaration *getMemberDeclaration(const char *name);
 };
 
 class AstClassType : public IAstTypeNode
@@ -381,6 +391,7 @@ public:
     void DisableCopy(void) { can_be_copied = false; }
     void getFunctionsNames(NamesList *names, bool include_private, bool include_finalize);
     void getVariablesNames(NamesList *names, bool include_private);
+    IAstDeclarationNode *getMemberDeclaration(const char *name);
 };
 
 /////////////////////////

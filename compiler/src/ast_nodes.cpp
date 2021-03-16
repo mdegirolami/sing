@@ -360,6 +360,16 @@ void AstInterfaceType::getFunctionsNames(NamesList *names)
     }
 }
 
+FuncDeclaration *AstInterfaceType::getMemberDeclaration(const char *name)
+{
+    for (int ii = 0; ii < members_.size(); ++ii) {
+        FuncDeclaration *decl = members_[ii];
+        if (decl != nullptr && decl->name_ == name) { 
+            return(decl);
+        }
+    }
+}
+
 AstClassType::AstClassType()
 {
     first_hinherited_member_ = -1;
@@ -457,6 +467,23 @@ void AstClassType::getVariablesNames(NamesList *names, bool include_private)
             }
         }
     }
+}
+
+IAstDeclarationNode *AstClassType::getMemberDeclaration(const char *name)
+{
+    for (int ii = 0; ii < member_vars_.size(); ++ii) {
+        VarDeclaration *decl = member_vars_[ii];
+        if (decl != nullptr && decl->name_ == name) {
+            return(decl); 
+        }
+    }
+    for (int ii = 0; ii < member_functions_.size(); ++ii) {
+        FuncDeclaration *decl = member_functions_[ii];
+        if (decl != nullptr && decl->name_ == name) {
+            return(decl); 
+        }
+    }
+    return(nullptr);
 }
 
 /////////////////////////

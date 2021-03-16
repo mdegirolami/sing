@@ -16,6 +16,9 @@ class PackageManager {
     Package *pkgFromIdx(int index) const;
     void    onInvalidation(int index);
     void    getSuggestionsForDotInExpression(NamesList *names, AstBinop *dotexp, Package *pkg);
+    IAstNode *findSymbolPos(int index, int row, int col);
+    IAstNode *getQualifyedSymbolDefinition(const char *symbol, AstBinop *dotexp);
+    IAstNode *Declaration2Definition(IAstDeclarationNode *decl, AstClassType *classnode, const char *symbol);
 public:
     void        init(Options *options) { options_ = options; main_package_ = -1; }
 
@@ -33,6 +36,7 @@ public:
     void        on_deletion(const char *name);
     void        getSuggestions(NamesList *names, int index, int row, int col, char trigger);
     int         getSignature(string *signature, int index, int row, int col, char trigger);
+    bool        findSymbol(string *def_file, int *file_row, int *file_col, int index, int row, int col);
 };
 
 } // namespace

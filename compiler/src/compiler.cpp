@@ -481,9 +481,21 @@ void Compiler::srv_signature(int num_parms, char *parameters[])
 void Compiler::srv_def_position(int num_parms, char *parameters[])
 {
     if (num_parms < 4) return;
-    string response = "definition_of ";
-    AppendQuotedParameter(&response, parameters[1]);
-    ServerResponse("%s %d, %d\r\n", response.c_str(), atoi(parameters[2])/2, atoi(parameters[3])/2);
+
+    // get the index and make sure the file is loaded
+    int idx = pmgr_.init_pkg(parameters[1]);
+    int row = atoi(parameters[2]) - 1;
+    int col = atoi(parameters[3]) - 1;
+
+    string file;
+    int f_row, f_col;
+    if (pmgr_.findSymbol(&file, &f_row, &f_col, idx, row, col)) {
+        string response = "definition_of ";
+        AppendQuotedParameter(&response, file.c_str());
+        ServerResponse("%s %d, %d\r\n", response.c_str(), f_row, f_col);
+    } else {
+        ServerResponse("definition_of empty -1 -1\r\n");
+    }
 }
 
-}
+} // namespace

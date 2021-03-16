@@ -19,7 +19,7 @@ public:
     int offset2VsCol(const char *row, int offset);
     int offset2SingCol(const char *row, int offset);
     int VsCol2Offset(const char *row, int col);
-    //int SingCol2offset(const char *row, int col);
+    int SingCol2offset(const char *row, int col);
 
 private:
     vector<char>    buffer_;

@@ -43,6 +43,7 @@ class Parser {
     Token           m_token;
     CompletionHint  *completion_;
     bool            insert_completion_node_;
+    int32_t         package_idx_;
 
     bool        on_error_;      // needs to recover skipping some stuff
     bool        has_errors_;    // found in previous blocks/declarations.
@@ -112,7 +113,7 @@ public:
     ~Parser();
 
     // note: completion may be null
-    void Init(Lexer *lexer, CompletionHint *completion);
+    void Init(Lexer *lexer, CompletionHint *completion, int32_t package_idx);
     AstFile *ParseAll(ErrorList *errors, ParseMode mode);
 };
 
