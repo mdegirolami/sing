@@ -155,7 +155,7 @@ IAstDeclarationNode *Package::findSymbol(const char *name, bool *is_private)
     IAstDeclarationNode *node = symbols_.FindDeclaration(name);
     if (node != nullptr) {
         *is_private = !node->IsPublic();
-    } else if (root_->private_symbols_.LinearSearch(name) >= 0) {
+    } else if (root_ != nullptr && root_->private_symbols_.LinearSearch(name) >= 0) {
         *is_private = true;
     } else {
         *is_private = false;
@@ -235,6 +235,7 @@ void Package::parseForSuggestions(CompletionHint *hint)
 
 void Package::getAllPublicTypeNames(NamesList *names)
 {
+    if (root_ == nullptr) return;
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_TYPE && declaration->IsPublic()) {
@@ -246,6 +247,7 @@ void Package::getAllPublicTypeNames(NamesList *names)
 
 void Package::getAllPublicDeclNames(NamesList *names)
 {
+    if (root_ == nullptr) return;
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->IsPublic()) {
@@ -380,6 +382,7 @@ void Package::GetSymbolAt(string *symbol, int *dot_row, int *dot_col, int row, i
 
 IAstNode *Package::getDeclarationReferredAt(const char *symbol, int row, int col)
 {
+    if (root_ == nullptr) return(nullptr);
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_VAR) {
@@ -523,6 +526,7 @@ FuncDeclaration *Package::findFuncDefinition(AstClassType *classtype, const char
 {
     string classname;
 
+    if (root_ == nullptr) return(nullptr);
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetType() == ANT_TYPE) {
@@ -551,6 +555,7 @@ FuncDeclaration *Package::findFuncDefinition(AstClassType *classtype, const char
 bool Package::SymbolIsInMemberDeclaration(AstClassType **classnode, IAstDeclarationNode **membernode, 
                                             const char *symbol, int row, int col)
 {
+    if (root_ == nullptr) return(false);
     for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
         IAstDeclarationNode *declaration = root_->declarations_[ii];
         if (declaration->GetPositionRecord()->start_row > row + 1) {
@@ -577,6 +582,57 @@ bool Package::SymbolIsInMemberDeclaration(AstClassType **classnode, IAstDeclarat
         }
     }
     return(false);    
+}
+
+void Package::getAllPublicNames(vector<SymbolNfo> *vv)
+{
+    SymbolNfo   nfo;
+
+    if (root_ == nullptr) return;
+    for (int ii = 0; ii < (int)root_->declarations_.size(); ++ii) {
+        IAstDeclarationNode *declaration = root_->declarations_[ii];
+        bool isgood = false;
+        if (declaration->GetType() == ANT_VAR) {
+            VarDeclaration *decl = (VarDeclaration*)declaration;
+            nfo.name = decl->name_;
+            nfo.type = decl->HasOneOfFlags(VF_READONLY) ? SymbolType::cvar : SymbolType::var;
+            isgood = true;
+        } else if (declaration->GetType() == ANT_FUNC) {
+            FuncDeclaration *decl = (FuncDeclaration*)declaration;
+            if (decl->is_class_member_) {
+                nfo.name = decl->classname_ + '.' + decl->name_;
+                nfo.type =  SymbolType::method;
+            } else {
+                nfo.name = decl->name_;
+                nfo.type =  SymbolType::fun;
+            }
+            isgood = true;
+        } else if (declaration->GetType() == ANT_TYPE) {
+            TypeDeclaration *decl = (TypeDeclaration*)declaration;
+            nfo.name = decl->name_;
+            nfo.type = SymbolType::type;
+            if (decl->type_spec_ != nullptr) {
+                switch (decl->type_spec_->GetType()) {
+                case ANT_CLASS_TYPE:
+                    nfo.type = SymbolType::ctype;
+                    break;
+                case ANT_ENUM_TYPE:
+                    nfo.type = SymbolType::etype;
+                    break;
+                case ANT_INTERFACE_TYPE:
+                    nfo.type = SymbolType::itype;
+                    break;
+                }
+            }
+            isgood = true;            
+        }
+        if (isgood) {
+            PositionInfo *pos = declaration->GetPositionRecord();
+            nfo.row = pos->start_row - 1;
+            nfo.col = pos->start_col;
+            vv->push_back(nfo);
+        }
+    }
 }
 
 } // namespace

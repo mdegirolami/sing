@@ -39,6 +39,7 @@ class Compiler {
     void srv_completion_items(int num_parms, char *parameters[]);
     void srv_signature(int num_parms, char *parameters[]);
     void srv_def_position(int num_parms, char *parameters[]);
+    void srv_get_symbols(int num_parms, char *parameters[]);
 
 public:
     int Run(int argc, char *argv[], bool log_server);

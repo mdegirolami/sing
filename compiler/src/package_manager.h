@@ -31,12 +31,15 @@ public:
     IAstDeclarationNode *findSymbol(int index, const char *name, bool *is_private);
     PkgStatus   getStatus(int index) const;
     const Package *getPkg(int index) const;
+
+    // intellisense support
     void        applyPatch(int index, int from_row, int from_col, int to_row, int to_col, int allocate, const char *newtext);
     void        insertInSrc(int index, const char *newtext);
     void        on_deletion(const char *name);
     void        getSuggestions(NamesList *names, int index, int row, int col, char trigger);
     int         getSignature(string *signature, int index, int row, int col, char trigger);
     bool        findSymbol(string *def_file, int *file_row, int *file_col, int index, int row, int col);
+    void        getAllSymbols(vector<SymbolNfo> *vv, int index);
 };
 
 } // namespace

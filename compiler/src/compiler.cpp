@@ -288,6 +288,8 @@ void Compiler::ServerLoop(bool log_server)
             srv_signature(num_parms, parameters);
         } else if (strcmp(parameters[0], "def_position") == 0) {
             srv_def_position(num_parms, parameters);
+        } else if (strcmp(parameters[0], "get_symbols") == 0) {
+            srv_get_symbols(num_parms, parameters);
         } else if (strcmp(parameters[0], "exit") == 0) {
             do_exit = true;
         }
@@ -402,9 +404,9 @@ void Compiler::srv_get_errors (int num_parms, char *parameters[])
 {
     if (num_parms < 2) return;
     int idx = pmgr_.init_pkg(parameters[1]);
-    if (pmgr_.getStatus(idx) == PkgStatus::FULL) {
-        return; // already tested and communicated.
-    }
+    // if (pmgr_.getStatus(idx) == PkgStatus::FULL) {
+    //     return; // already tested and communicated.
+    // }
     pmgr_.load(idx, PkgStatus::FULL);
     pmgr_.check(idx, true);
     const Package *pkg = pmgr_.getPkg(idx);
@@ -437,11 +439,11 @@ void Compiler::srv_completion_items(int num_parms, char *parameters[])
 
     // get the index and make sure the file is loaded
     int idx = pmgr_.init_pkg(parameters[1]);
-    int row = atoi(parameters[2]) - 1;
-    int col = atoi(parameters[3]) - 1;
- 
-    pmgr_.getSuggestions(&names, idx, row, col, parameters[4][0]);
-
+    if (pmgr_.load(idx, PkgStatus::LOADED)) {
+        int row = atoi(parameters[2]) - 1;
+        int col = atoi(parameters[3]) - 1; 
+        pmgr_.getSuggestions(&names, idx, row, col, parameters[4][0]);
+    }
     string response;
     for (int ii = 0; ii < names.GetNamesCount(); ++ii) {
         response = "set_completion_item ";
@@ -458,13 +460,15 @@ void Compiler::srv_signature(int num_parms, char *parameters[])
 {
     if (num_parms < 5) return;
     string signature;    
+    int parm_index = -1;
 
     // get the index and make sure the file is loaded
     int idx = pmgr_.init_pkg(parameters[1]);
-    int row = atoi(parameters[2]) - 1;
-    int col = atoi(parameters[3]) - 1;
- 
-    int parm_index = pmgr_.getSignature(&signature, idx, row, col, parameters[4][0]);
+    if (pmgr_.load(idx, PkgStatus::LOADED)) {
+        int row = atoi(parameters[2]) - 1;
+        int col = atoi(parameters[3]) - 1; 
+        parm_index = pmgr_.getSignature(&signature, idx, row, col, parameters[4][0]);
+    }
 
     if (parm_index >= 0) {
         string response = "set_signature ";
@@ -496,6 +500,27 @@ void Compiler::srv_def_position(int num_parms, char *parameters[])
     } else {
         ServerResponse("definition_of empty -1 -1\r\n");
     }
+}
+
+// >> get_symbols <file>
+// << set_symbol <name> <type> <row> <col>
+// << set_symbols_done
+// <type> = 13, 12, 11, 5, 25, 9, 10, 4 = const, var, fun, method, type, enum, interface, class.
+
+void Compiler::srv_get_symbols(int num_parms, char *parameters[])
+{
+    if (num_parms < 2) return;
+
+    // get the index and make sure the file is loaded
+    vector<SymbolNfo> vv;
+    int idx = pmgr_.init_pkg(parameters[1]);
+    if (pmgr_.load(idx, PkgStatus::FULL)) {
+        pmgr_.getAllSymbols(&vv, idx);
+        for (int ii = 0; ii < vv.size(); ++ii) {
+            ServerResponse("set_symbol %s %d %d %d\r\n", vv[ii].name.c_str(), vv[ii].type, vv[ii].row, vv[ii].col);
+        }
+    }
+    ServerResponse("set_symbols_done\r\n");
 }
 
 } // namespace

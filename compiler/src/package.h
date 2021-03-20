@@ -11,6 +11,25 @@
 
 namespace SingNames {
 
+// 13, 12, 11, 5, 25, 9, 10, 4 = const, var, fun, method, type, enum, interface, class.
+enum class SymbolType {
+    ctype = 4,
+    method = 5,
+    etype = 9,
+    itype = 10,
+    fun = 11,
+    var = 12,
+    cvar = 13,
+    type = 25
+};
+
+struct SymbolNfo {
+    string      name;
+    SymbolType  type;
+    int32_t     row;
+    int32_t     col;
+};
+
 // DONT CHANGE THE ORDER: They are from less to more complete !
 enum class PkgStatus {  UNLOADED,           // just inited
                         ERROR,              // failed to load 
@@ -56,6 +75,15 @@ public:
     void insertInSrc(const char *newtext);
     bool depends_from(int index);
 
+    IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
+    PkgStatus getStatus(void) { return status_; }
+    const char *getFullPath(void) const { return fullpath_.c_str(); }
+    const AstFile *GetRoot(void) const { return(root_); }
+
+    const char *GetErrorString(int index) const;
+    const char *GetError(int index, int *row, int *col, int *endrow, int *endcol) const;
+    bool HasErrors(void) { return(errors_.NumErrors() > 0); }
+
     // intellisense support
     void parseForSuggestions(CompletionHint *hint);
     void getAllPublicTypeNames(NamesList *names);
@@ -69,15 +97,7 @@ public:
     FuncDeclaration *findFuncDefinition(AstClassType *classtype, const char *symbol);
     bool SymbolIsInMemberDeclaration(AstClassType **classnode, IAstDeclarationNode **decl, 
                                      const char *symbol, int row, int col);
-
-    IAstDeclarationNode *findSymbol(const char *name, bool *is_private);
-    PkgStatus getStatus(void) { return status_; }
-    const char *getFullPath(void) const { return fullpath_.c_str(); }
-    const AstFile *GetRoot(void) const { return(root_); }
-
-    const char *GetErrorString(int index) const;
-    const char *GetError(int index, int *row, int *col, int *endrow, int *endcol) const;
-    bool HasErrors(void) { return(errors_.NumErrors() > 0); }
+    void getAllPublicNames(vector<SymbolNfo> *vv);
 };
 
 } // namespace

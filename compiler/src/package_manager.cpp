@@ -467,4 +467,10 @@ IAstNode *PackageManager::Declaration2Definition(IAstDeclarationNode *decl, AstC
     return(decl);
 }
 
+void PackageManager::getAllSymbols(vector<SymbolNfo> *vv, int index)
+{
+    Package *pkg = pkgFromIdx(index);
+    if (pkg != nullptr) pkg->getAllPublicNames(vv);
+}
+
 } // namespace
