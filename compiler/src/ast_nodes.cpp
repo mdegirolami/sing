@@ -65,12 +65,13 @@ bool AstFuncType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
     if (src_tree->GetType() != GetType()) return(false);
     AstFuncType *other = (AstFuncType*)src_tree;
     if (arguments_.size() != other->arguments_.size() || varargs_ != other->varargs_ || 
-        ispure_ && !other->ispure_ || is_member_ != other->is_member_) {
+        //ispure_ && !other->ispure_ || 
+        is_member_ != other->is_member_) {
         return(false);
     }
-    if (mode == FOR_EQUALITY && ispure_ != other->ispure_) {
-        return(false);
-    }
+    // if (mode == FOR_EQUALITY && ispure_ != other->ispure_) {
+    //     return(false);
+    // }
     return(true);
 }
 

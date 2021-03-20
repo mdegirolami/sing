@@ -76,7 +76,6 @@ TokenDesc keywords[] = {
     {TOKEN_CLASS, "class"},
     {TOKEN_THIS, "this"},
     {TOKEN_INTERFACE, "interface"},
-    {TOKEN_FLAGSET, "flagset"},
     {TOKEN_BY, "by"},
     {TOKEN_STEP, "step"},
     {TOKEN_MIN, "min"},

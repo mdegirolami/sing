@@ -952,13 +952,8 @@ void ExpressionAttributes::SetUsageFlags(ExpressionUsage usage)
 IAstTypeNode *ExpressionAttributes::GetIteratorType(void) const
 {
     if (exp_type_ != BT_TREE || type_tree_ == nullptr || !is_a_variable_) return(nullptr);
-    switch (type_tree_->GetType()) {
-    case ANT_ARRAY_TYPE:
+    if (type_tree_->GetType() == ANT_ARRAY_TYPE) {
         return(((AstArrayType*)type_tree_)->element_type_);
-    case ANT_MAP_TYPE:
-        return(((AstMapType*)type_tree_)->returned_type_);
-    default:
-        break;
     }
     return(nullptr); 
 }

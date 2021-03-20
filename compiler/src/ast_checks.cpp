@@ -1173,23 +1173,11 @@ void AstChecker::CheckFor(AstFor *node)
         ExpressionAttributes    attr;
 
         CheckExpression(node->set_, &attr, ExpressionUsage::READ);
-        IAstTypeNode *iterator_type = attr.GetIteratorType(); // return nullptr if not an array or map.
+        IAstTypeNode *iterator_type = attr.GetIteratorType(); // return nullptr if not an array.
         iterated_declaration = GetIteratedVar(node->set_);
         if (iterator_type == nullptr) {
-            if (attr.IsString()) {
-
-                // CASE 1: rune * iterating in a string
-                assert(node->iterator_->type_spec_ == nullptr);
-                node->iterator_->SetType(new AstBaseType(TOKEN_UINT32));
-                symbols_->InsertName(iterator_name, node->iterator_);
-                iterator_declaration = node->iterator_;
-                iterator_declaration->SetTheIteratedVar(iterated_declaration);
-            } else {
-                Error("The variable you are iterating in must be an array, map or string", node->set_);
-            }
+            Error("The variable you are iterating in must be an array", node->set_);
         } else {
-
-            // CASE 2: anytype* iterating in a vector or map
             node->iterator_->weak_type_spec_ = iterator_type;
             symbols_->InsertName(iterator_name, node->iterator_);
             iterator_declaration = node->iterator_;
@@ -1200,7 +1188,6 @@ void AstChecker::CheckFor(AstFor *node)
         Token                   ittype = TOKEN_INT32;
         bool                    onerror = false;
 
-        // CASE 3: int32/int64 integer loop (iterator is not a reference)
         CheckExpression(node->low_, &low, ExpressionUsage::READ);
         CheckExpression(node->high_, &high, ExpressionUsage::READ);
         if (node->step_ != nullptr) {
@@ -1369,8 +1356,8 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
             CheckTypeSpecification(case_type, TSCM_STD);
             IAstTypeNode *solved_type = SolveTypedefs(case_type);
             if (solved_type != nullptr && referenced_type != nullptr) {
-                if (!AreInterfaceAndClass(referenced_type, solved_type, FOR_ASSIGNMENT)) {
-                    Error("The case label type must be a class/interface implementing the typeswitch interface", case_type);
+                if (CheckInheritanceType(referenced_type, solved_type, FOR_ASSIGNMENT) != InheritanceType::CLASS_FROM_IF) {
+                    Error("The case label type must be a class implementing the typeswitch interface", case_type);
                 } else if (solved_type->GetType() == ANT_POINTER_TYPE) {
                     if (!((AstPointerType*)solved_type)->CheckConstness(referenced_type, FOR_ASSIGNMENT)) {
                         Error("The case label type should be a const pointer", case_type);
@@ -2395,7 +2382,7 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
     AstNodeType t1type = t1->GetType();
 
     // cases in which the types don't need to be the same: concrete to interface reference/pointer.
-    if (mode != FOR_EQUALITY && AreInterfaceAndClass(t0, t1, mode)) {
+    if (mode != FOR_EQUALITY && CheckInheritanceType(t0, t1, mode) != InheritanceType::UNRELATED) {
         if (mode == FOR_ASSIGNMENT && t0type == ANT_POINTER_TYPE) {
             if (!((AstPointerType*)t0)->CheckConstness(t1, mode)) {
                 return(CONST);
@@ -2462,29 +2449,35 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
     return(OK);
 }
 
-bool AstChecker::AreInterfaceAndClass(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode)
+InheritanceType AstChecker::CheckInheritanceType(IAstTypeNode *ancestor, IAstTypeNode *descendent, TypeComparisonMode mode)
 { 
+    IAstTypeNode *t0 = ancestor;
+    IAstTypeNode *t1 = descendent;
     if (t0->GetType() == ANT_POINTER_TYPE) {
 
         // must be both pointers, also checks weakness compatiblity based on mode
         if (!t0->IsCompatible(t1, mode)) {
-            return(false);
+            return(InheritanceType::UNRELATED);
         }
         t0 = SolveTypedefs(((AstPointerType*)t0)->pointed_type_);
         t1 = SolveTypedefs(((AstPointerType*)t1)->pointed_type_);
         if (t0 == nullptr || t1 == nullptr) {
-            return(false);
+            return(InheritanceType::UNRELATED);
         }
     }
     if (t0->GetType() != ANT_INTERFACE_TYPE) {
-        return(false);
+        return(InheritanceType::UNRELATED);
     }
     if (t1->GetType() == ANT_INTERFACE_TYPE) {
-        return(((AstInterfaceType*)t1)->HasInterface((AstInterfaceType*)t0));
+        if (((AstInterfaceType*)t1)->HasInterface((AstInterfaceType*)t0)) {
+            return(InheritanceType::IF_FROM_IF);
+        }
     } else if (t1->GetType() == ANT_CLASS_TYPE) {
-        return(((AstClassType*)t1)->HasInterface((AstInterfaceType*)t0));
+        if (((AstClassType*)t1)->HasInterface((AstInterfaceType*)t0)) {
+            return(InheritanceType::CLASS_FROM_IF);
+        }
     }
-    return(false);
+    return(InheritanceType::UNRELATED);
 }
 
 bool AstChecker::NodeIsConcrete(IAstTypeNode *tt)
@@ -2559,12 +2552,12 @@ bool AstChecker::BlockReturnsExplicitly(AstBlock *block)
 
 void AstChecker::CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location)
 {
-    if (in_function_block_ && current_function_->function_type_->ispure_) {
-        if (!var->HasOneOfFlags(VF_READONLY | VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_ISFORITERATOR | VF_ISLOCAL)) {
-            Error("A pure function can only access local variables !!", location);
-            return;
-        }
-    }
+    // if (in_function_block_ && current_function_->function_type_->ispure_) {
+    //     if (!var->HasOneOfFlags(VF_READONLY | VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_ISFORITERATOR | VF_ISLOCAL)) {
+    //         Error("A pure function can only access local variables !!", location);
+    //         return;
+    //     }
+    // }
     if (var->HasOneOfFlags(VF_IS_ITERATED)) {
         Error("An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)", location);
         return;
@@ -2573,9 +2566,9 @@ void AstChecker::CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *locat
 
 void AstChecker::CheckIfFunCallIsLegal(AstFuncType *func, IAstNode *location)
 {
-    if (in_function_block_ && current_function_->function_type_->ispure_ && !func->ispure_) {
-        Error("A pure function can only call pure functions !!", location);
-    }
+    // if (in_function_block_ && current_function_->function_type_->ispure_ && !func->ispure_) {
+    //     Error("A pure function can only call pure functions !!", location);
+    // }
 }
 
 VarDeclaration *AstChecker::GetIteratedVar(IAstExpNode *node)

@@ -202,7 +202,11 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:339:30: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:341:22: The iterator name must be a new name
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:346:10: The index name must be either a new name or the name of a reusable index
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:346:14: The iterator name must be a new name
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:348:19: The variable you are iterating in must be an array, map or string
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:348:19: The variable you are iterating in must be an array
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:350:19: The variable you are iterating in must be an array
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:352:19: The variable you are iterating in must be an array
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:354:19: The variable you are iterating in must be an array
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:356:19: The variable you are iterating in must be an array
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:358:5: For loop extrema and step must fit int64
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:360:5: For loop extrema and step must fit int64
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:362:5: For loop extrema and step must fit int64
@@ -255,8 +259,6 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:480:5: T
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:482:51: Undefined type
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:483:5: Type mismatch/No known conversion
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:486:5: Type mismatch/No known conversion
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:489:5: Type mismatch/No known conversion
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:494:5: Type mismatch/No known conversion
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:499:26: Weak pointers are allowed only as non aggregated class members.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:500:5: Pointer constness mismatch
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:513:2: Function must return a value !!
@@ -322,8 +324,6 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:684:29: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:686:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:693:44: Value too big to be represented in an integer variable.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:694:14: The arithmetic not '~' operator requires an integer value
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:711:10: A pure function can only call pure functions !!
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:712:5: A pure function can only access local variables !!
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:714:5: Increment and Decrement operations can be applied only to writable integer variables
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:717:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.

@@ -76,7 +76,6 @@ enum Token {
     TOKEN_CLASS,
     TOKEN_THIS,
     TOKEN_INTERFACE,
-    TOKEN_FLAGSET,      // currently unused
     TOKEN_BY,
     TOKEN_STEP,
     TOKEN_MIN,

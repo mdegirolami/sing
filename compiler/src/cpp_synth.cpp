@@ -382,48 +382,31 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
 
 void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
 {
-    char    intbuf[32];
-    int     ndims = 1;
     string  the_type, decl;
 
-    while (type_spec->is_regular) {
-        type_spec = (AstArrayType*)type_spec->element_type_;
-        ++ndims;
-    }
-    bool is_pod = IsPOD(type_spec->element_type_);
-    if (ndims == 1) {
-        if (type_spec->is_dynamic_) {
-            decl = "std::vector<";
-        } else {
-            decl = "sing::array<";
-        }
-        SynthTypeSpecification(&the_type, type_spec->element_type_);
-        decl += the_type;
-        if (!type_spec->is_dynamic_) { // i.e.: is std::array
-            if (type_spec->expression_ != nullptr) {
-                string exp;
-
-                decl += ", ";
-                int priority = SynthExpression(&exp, type_spec->expression_);
-                Protect(&exp, priority, GetBinopCppPriority(TOKEN_SHR));    // because SHR gets confused with the end of the template parameters list '>'
-                decl += exp;
-            } else {
-                // length determined based on the initializer
-                char buffer[32];
-                sprintf(buffer, ", %llu", (uint64_t)type_spec->dimension_);
-                decl += buffer;
-            }
-        }
-        decl += ">";
+    if (type_spec->is_dynamic_) {
+        decl = "std::vector<";
     } else {
-        sprintf(intbuf, "%d", ndims);
         decl = "sing::array<";
-        SynthTypeSpecification(&the_type, type_spec->element_type_);
-        decl += the_type;
-        decl += ", ";
-        decl += intbuf;
-        decl += ">";
     }
+    SynthTypeSpecification(&the_type, type_spec->element_type_);
+    decl += the_type;
+    if (!type_spec->is_dynamic_) { // i.e.: is std::array
+        if (type_spec->expression_ != nullptr) {
+            string exp;
+
+            decl += ", ";
+            int priority = SynthExpression(&exp, type_spec->expression_);
+            Protect(&exp, priority, GetBinopCppPriority(TOKEN_SHR));    // because SHR gets confused with the end of the template parameters list '>'
+            decl += exp;
+        } else {
+            // length determined based on the initializer
+            char buffer[32];
+            sprintf(buffer, ", %llu", (uint64_t)type_spec->dimension_);
+            decl += buffer;
+        }
+    }
+    decl += ">";
     PrependWithSeparator(dst, decl.c_str());
 }
 

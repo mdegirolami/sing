@@ -19,6 +19,12 @@ enum TypeSpecCheckMode {
     TSCM_MEMBER         // allow weak pointers
 };
 
+enum class InheritanceType {
+    UNRELATED,
+    IF_FROM_IF,
+    CLASS_FROM_IF
+};
+
 class AstChecker : public ITypedefSolver {
 
     // parameters from the manager (not owned stuff)
@@ -121,7 +127,7 @@ class AstChecker : public ITypedefSolver {
     bool FlagLocalVariableAsPointed(IAstExpNode *node);
     bool IsGoodForIndex(IAstDeclarationNode *declaration);
     bool CanAssign(ExpressionAttributes *dst, ExpressionAttributes *src, IAstNode *err_location);
-    bool AreInterfaceAndClass(IAstTypeNode *t0, IAstTypeNode *t1, TypeComparisonMode mode);
+    InheritanceType CheckInheritanceType(IAstTypeNode *ancestor, IAstTypeNode *descendent, TypeComparisonMode mode);
     bool NodeIsConcrete(IAstTypeNode *tt);
     bool BlockReturnsExplicitly(AstBlock *block);
     void CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location);
