@@ -36,7 +36,7 @@ int32_t compareAt(const char *first, int32_t at_pos, const char *contained, int3
 
 // splitting
 bool split(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
-bool split_any(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
+bool splitAny(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
 bool rsplit(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
 bool rsplitAny(const char *src, const char *splitter, std::string *left, std::string *right, SplitMode mode = SplitMode::sm_drop, bool insensitive = false);
 
@@ -67,12 +67,12 @@ bool findFnc(const char *src, const Selector &matches, Range *range, int32_t fro
 bool rfindFnc(const char *src, const Selector &matches, Range *range, int32_t from = npos);
 
 std::string sub(const char *src, int32_t first, int32_t last = npos);
-std::string sub_range(const char *src, const Range &range);
+std::string subRange(const char *src, const Range &range);
 int32_t pos2idx(const char *src, int32_t pos);
 int32_t idx2pos(const char *src, int32_t idx);
 void insert(std::string *str, int32_t idx, const char *to_insert);
 void erase(std::string *str, int32_t first, int32_t last = npos);
-void erase_range(std::string *str, const Range &range);
+void eraseRange(std::string *str, const Range &range);
 int32_t skipFwd(const char *str, int32_t start, int32_t numchars);
 int32_t skipBkw(const char *str, int32_t start, int32_t numchars);
 

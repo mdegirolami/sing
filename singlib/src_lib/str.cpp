@@ -172,7 +172,7 @@ bool split(const char *src, const char *splitter,
     return(split_impl(src, range, left, right, mode));    
 }
 
-bool split_any(const char *src, const char *splitter, 
+bool splitAny(const char *src, const char *splitter, 
            std::string *left, std::string *right, SplitMode mode, const bool insensitive)
 {
     Range range;
@@ -638,7 +638,7 @@ std::string sub(const char *src, const int32_t first, const int32_t last)
     return(std::string(src + ff, last - ff));
 }
 
-std::string sub_range(const char *src, const Range &range)
+std::string subRange(const char *src, const Range &range)
 {
     return(sub(src, range.begin_, range.end_));
 }
@@ -691,7 +691,7 @@ void erase(std::string *str, const int32_t first, const int32_t last)
     }
 }
 
-void erase_range(std::string *str, const Range &range)
+void eraseRange(std::string *str, const Range &range)
 {
     erase(str, range.begin_, range.end_);
 }

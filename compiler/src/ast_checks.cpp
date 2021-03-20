@@ -2314,7 +2314,6 @@ bool AstChecker::IsUnopCompileTimeConstant(AstUnop *node)
     case TOKEN_FLOAT64:
     case TOKEN_COMPLEX64:
     case TOKEN_COMPLEX128:
-    case TOKEN_STRING:
     case TOKEN_NOT:
     case TOKEN_LOGICAL_NOT:
         return(true);

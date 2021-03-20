@@ -28,7 +28,7 @@ public fn compareAt(first string, at_pos i32, contained string, out end_pos i32,
 
 // splitting
 public fn split(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
-public fn split_any(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
+public fn splitAny(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
 public fn rsplit(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
 public fn rsplitAny(src string, splitter string, out left string, out right string, mode SplitMode = SplitMode.sm_drop, insensitive bool = false) bool;
 
@@ -59,12 +59,12 @@ public fn findFnc(src string, matches Selector, out range Range, from i32 = 0) b
 public fn rfindFnc(src string, matches Selector, out range Range, from i32 = npos) bool;
 
 public fn sub(src string, first i32, last i32 = npos) string;
-public fn sub_range(src string, range Range) string;
+public fn subRange(src string, range Range) string;
 public fn pos2idx(src string, pos i32) i32;
 public fn idx2pos(src string, idx i32) i32;
 public fn insert(io str string, idx i32, to_insert string) void;
 public fn erase(io str string, first i32, last i32 = npos) void;
-public fn erase_range(io str string, range Range) void;
+public fn eraseRange(io str string, range Range) void;
 public fn skipFwd(str string, start i32, numchars i32) i32;
 public fn skipBkw(str string, start i32, numchars i32) i32;
 

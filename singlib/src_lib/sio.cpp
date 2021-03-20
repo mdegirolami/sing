@@ -428,7 +428,7 @@ void pathSplitAll(const char *fullname, int32_t *drive, bool *absolute, std::vec
     if (*absolute) fullname += 1;
     temp = fullname;
     parts->clear();    
-    while (split_any(temp.c_str(), "/\\", &part, &temp, SplitMode::sm_drop)) {
+    while (splitAny(temp.c_str(), "/\\", &part, &temp, SplitMode::sm_drop)) {
         if (part != "") {
             parts->push_back(part);
         }

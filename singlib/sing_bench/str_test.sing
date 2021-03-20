@@ -54,7 +54,7 @@ public fn str_test() bool
     var left string;
     var extension string;
     str.split(s1, ":/", drive, s1, str.SplitMode.sm_drop);
-    str.split_any(s1, "\\/", s1, part, str.SplitMode.sm_separator_left);
+    str.splitAny(s1, "\\/", s1, part, str.SplitMode.sm_separator_left);
     str.rsplit(part, ".", left, extension, str.SplitMode.sm_separator_right);
     str.rsplitAny(left, "T", left, part, str.SplitMode.sm_drop, true : insensitive);
     let res0 = str.split(s1, "X", drive, s1, str.SplitMode.sm_drop);
@@ -193,7 +193,7 @@ public fn str_test() bool
     // working with indices
     r0.begin = 18;
     r0.end = 20;
-    if (str.sub(s1, 5, 17) != "1aaaaa2aaaaa" || str.sub_range(s1, r0) != "45") {
+    if (str.sub(s1, 5, 17) != "1aaaaa2aaaaa" || str.subRange(s1, r0) != "45") {
         return(false);
     }
     s1 = "ϏϏϏϏϏ"; 
@@ -214,7 +214,7 @@ public fn str_test() bool
     s1 = "1234567890";
     r0.begin = 5;
     r0.end = 8;
-    str.erase_range(s1, r0);
+    str.eraseRange(s1, r0);
     if (s1 != "1234590") {
         return(false);
     }

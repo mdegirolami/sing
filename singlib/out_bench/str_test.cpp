@@ -52,7 +52,7 @@ bool str_test()
     std::string left;
     std::string extension;
     sing::split(s1.c_str(), ":/", &drive, &s1, sing::SplitMode::sm_drop);
-    sing::split_any(s1.c_str(), "\\/", &s1, &part, sing::SplitMode::sm_separator_left);
+    sing::splitAny(s1.c_str(), "\\/", &s1, &part, sing::SplitMode::sm_separator_left);
     sing::rsplit(part.c_str(), ".", &left, &extension, sing::SplitMode::sm_separator_right);
     sing::rsplitAny(left.c_str(), "T", &left, &part, sing::SplitMode::sm_drop, true);
     const bool res0 = sing::split(s1.c_str(), "X", &drive, &s1, sing::SplitMode::sm_drop);
@@ -190,7 +190,7 @@ bool str_test()
     // working with indices
     r0.begin_ = 18;
     r0.end_ = 20;
-    if (sing::sub(s1.c_str(), 5, 17) != "1aaaaa2aaaaa" || sing::sub_range(s1.c_str(), r0) != "45") {
+    if (sing::sub(s1.c_str(), 5, 17) != "1aaaaa2aaaaa" || sing::subRange(s1.c_str(), r0) != "45") {
         return (false);
     }
     s1 = "ϏϏϏϏϏ";
@@ -212,7 +212,7 @@ bool str_test()
     s1 = "1234567890";
     r0.begin_ = 5;
     r0.end_ = 8;
-    sing::erase_range(&s1, r0);
+    sing::eraseRange(&s1, r0);
     if (s1 != "1234590") {
         return (false);
     }

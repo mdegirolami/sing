@@ -52,11 +52,11 @@ int main() {
     //     printf("\nthread lib: failed !!\r\n");
     // }
 
-    // if (net_test()) {
-    //     printf("\nnet lib: passed\r\n");
-    // } else {
-    //     printf("\nnet lib: failed !!\r\n");
-    // }
+    if (net_test()) {
+        printf("\nnet lib: passed\r\n");
+    } else {
+        printf("\nnet lib: failed !!\r\n");
+    }
 
     getchar();
 
