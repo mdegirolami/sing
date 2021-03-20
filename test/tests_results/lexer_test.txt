@@ -34,10 +34,10 @@ ERROR !! Truncated string at 12, 7
 ERROR !! Truncated string at 13, 3
 
 
-ERROR !! Unknown/wrong escape sequence at 14, 4
+ERROR !! Unknown/wrong escape sequence at 14, 3
 
 
-ERROR !! Unknown/wrong escape sequence at 15, 4
+ERROR !! Unknown/wrong escape sequence at 15, 3
 
 
 ERROR !! Unknown/wrong escape sequence at 16, 3

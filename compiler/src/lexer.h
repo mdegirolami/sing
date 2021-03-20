@@ -183,7 +183,7 @@ class Lexer {
     bool        IsEmptyLine(vector<int32_t> *line);
     bool        ReadStringLiteral(void);
     bool        ReadEscapeSequence(int32_t *value);
-    bool        HexToChar(int32_t *retv, int32_t *cps, int maxlength);
+    bool        HexToChar(int32_t *retv, int length);
     bool        ReadNumberLiteral(void);
     bool        ReadDecimalLiteral(void);
     bool        ReadHexLiteral(uint64_t *retv);

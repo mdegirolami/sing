@@ -616,12 +616,15 @@ bool Lexer::ReadEscapeSequence(int32_t *value)
         *value = '\v';
         return(true);
     case 'x':
+        return(HexToChar(value, 2));
     case 'u':
-        if (m_line_buffer.size() - m_curcol < 1)  {
-            Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol - 1);
+        return(HexToChar(value, 4));
+    case 'U':
+        if (!HexToChar(value, 8)) {
             return(false);
         }
-        if (!HexToChar(value, &m_line_buffer[m_curcol], MIN(6, ResidualCharacters()))) {
+        if (*value > 0x1fffff || *value < 0) {
+            Error(LS_CONST_VALUE_TOO_BIG, m_curcol - 8);
             return(false);
         }
         return(true);
@@ -633,12 +636,17 @@ bool Lexer::ReadEscapeSequence(int32_t *value)
     return(false);
 }
 
-bool Lexer::HexToChar(int32_t *retv, int32_t *cps, int maxlength)
+bool Lexer::HexToChar(int32_t *retv, int length)
 {
     int digit, value;
     int retval = 0;
-    
-    for (digit = 0; digit < maxlength; ++digit) {
+
+    if (m_line_buffer.size() - m_curcol < length)  {
+        Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol - 1);
+        return(false);
+    }
+    int32_t *cps = &m_line_buffer[m_curcol];
+    for (digit = 0; digit < length; ++digit) {
         value = cps[digit];
         if (value >= '0' && value <= '9') {
             retval = (retval << 4) + value - '0';
@@ -646,15 +654,12 @@ bool Lexer::HexToChar(int32_t *retv, int32_t *cps, int maxlength)
             retval = (retval << 4) + value + (10 - 'a');
         } else if(value >= 'A' && value <= 'F') {
             retval = (retval << 4) + value + (10 - 'A');
-        } else if (digit == 0) {
-            Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol);
-            return(false);
         } else {
-            m_curcol += digit;
-            *retv = retval;
-            return(true);
+            Error(LE_WRONG_ESCAPE_SEQUENCE, m_curcol + digit);
+            return(false);
         }
     }
+    m_curcol += digit;
     *retv = retval;
     return(true);
 }
