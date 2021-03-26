@@ -876,12 +876,11 @@ AstFuncType *ExpressionAttributes::GetFunCallType(void) const
 }
 
 bool ExpressionAttributes::UpdateWithIndexing(ExpressionAttributes *low_attr, ExpressionAttributes *high_attr, AstIndexing *node, 
-                                              AstMapType **map_typedesc, ITypedefSolver *solver, string *error)
+                                              ITypedefSolver *solver, string *error)
 {
     value_is_valid_ = false;
     is_a_literal_ = false;
 
-    *map_typedesc = nullptr;
     if (exp_type_ == BT_ERROR) {
         return(true);
     }

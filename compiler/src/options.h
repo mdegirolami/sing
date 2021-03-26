@@ -3,6 +3,7 @@
 
 #include "string"
 #include "NamesList.h"
+#include "synth_options.h"
 
 namespace SingNames {
 
@@ -22,6 +23,7 @@ class Options {
     bool            create_d_file_;
     bool            generate_h_only_;
     bool            server_mode_;
+    SynthOptions    synth_options_;
 
     // for the parser
     bool        waiting_a_value_;
@@ -46,6 +48,8 @@ public:
     bool GenerateHOnly(void) { return(generate_h_only_); }
     bool ServerMode(void) { return(server_mode_); }
     void GetAllFilesIn(NamesList *names, const char *path);
+    const SynthOptions *GetSynthOptions(void) {return(&synth_options_);}
+    bool IsDebugBuild(void) { return(debug_build_); }
 
     // helper
     FileSolveError SolveFileName(FILE **fh, string *full, const char *partial);

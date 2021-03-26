@@ -76,7 +76,7 @@ public:
                            AstFuncType **func_typedesc, ITypedefSolver *solver, string *error);
     AstFuncType *GetFunCallType(void) const; // returns nullptr if the type is not a funcall
     bool UpdateWithIndexing(ExpressionAttributes *low_attr, ExpressionAttributes *high_attr, AstIndexing *node, 
-                            AstMapType **map_typedesc, ITypedefSolver *solver, string *error);
+                            ITypedefSolver *solver, string *error);
     void SetError(void) { exp_type_ = BT_ERROR; value_is_valid_ = false; }
     bool TakeAddress(void);
     void SetUsageFlags(ExpressionUsage usage);

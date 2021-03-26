@@ -26,10 +26,13 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Opti
     indent_ = 0;
     split_level_ = 0xff;
     exp_level = 0;
+    synth_options_ = options->GetSynthOptions();
+    debug_ = options->IsDebugBuild();
 
     // HPP file
     /////////////////
     formatter_.Reset();
+    formatter_.SetMaxLineLen(synth_options_->max_linelen_);
     formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
     file_ = hfd;
     text = "#pragma once";
@@ -205,11 +208,11 @@ void CppSynth::SynthFunc(FuncDeclaration *declaration)
 
 void CppSynth::SynthFunOpenBrace(string &text)
 {
-    if (!newline_before_function_bracket_) {
+    if (!synth_options_->newline_before_function_bracket_) {
         text += " {";
     }
     Write(&text, false);
-    if (newline_before_function_bracket_) {
+    if (synth_options_->newline_before_function_bracket_) {
         text = "{";
         Write(&text, false);
     }
@@ -485,7 +488,7 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
 
     // get__id (if inherits from an interface)
     if (supports_typeswitch) {
-        if (use_override_) {
+        if (synth_options_->use_override_) {
             text = "virtual void *get__id() const override { return(&id__); }";
         } else {
             text = "virtual void *get__id() const { return(&id__); }";
@@ -534,7 +537,7 @@ void CppSynth::SynthClassHeader(const char *name, vector<AstNamedType*> *bases, 
 {
     string text = "class ";
     text += name;
-    if (!is_interface && use_final_) {
+    if (!is_interface && synth_options_->use_final_) {
         text += " final";
     }
     int num_bases = bases->size();
@@ -586,7 +589,7 @@ int CppSynth::SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, 
         if (!func->is_muting_) {
             text += " const";
         }
-        if (!is_interface && ii >= first_hinerited && use_override_) {
+        if (!is_interface && ii >= first_hinerited && synth_options_->use_override_) {
             text += " override";
         }
         if (is_interface) {
@@ -600,7 +603,7 @@ int CppSynth::SynthClassMemberFunctions(vector<FuncDeclaration*> *declarations, 
             } else {
                 text = "";
             }
-            text += member_prefix_ + (*implementors)[ii] + member_suffix_ + "." + func->name_ + "(";
+            text +=synth_options_->member_prefix_ + (*implementors)[ii] + synth_options_->member_suffix_ + "." + func->name_ + "(";
             --split_level_;
             for (int ii = 0; ii < ftype->arguments_.size(); ++ii) {
                 text += ftype->arguments_[ii]->name_;
@@ -1383,24 +1386,24 @@ int CppSynth::SynthExpression(string *dst, IAstExpNode *node)
 int CppSynth::SynthIndices(string *dst, AstIndexing *node)
 {
     string  expression;
-
-    // TODO: ranges/dyna.
+    int     priority;
 
     int exp_pri = SynthExpression(dst, node->indexed_term_);
-    Protect(dst, exp_pri, GetUnopCppPriority(TOKEN_SQUARE_OPEN));
-    if (node->map_type_ == NULL) {
-
-        // an array
-        SynthExpression(&expression, node->lower_value_);
+    SynthExpression(&expression, node->lower_value_);
+    if (debug_) {
+        priority = GetUnopCppPriority(TOKEN_DOT);
+        Protect(dst, exp_pri, priority);
+        *dst += ".at(";
+        *dst += expression;
+        *dst += ')';
     } else {
-
-        // a map
-        SynthFullExpression(node->map_type_->key_type_, &expression, node->lower_value_);
+        priority = GetUnopCppPriority(TOKEN_SQUARE_OPEN);
+        Protect(dst, exp_pri, priority);
+        *dst += '[';
+        *dst += expression;
+        *dst += ']';
     }
-    *dst += '[';
-    *dst += expression;
-    *dst += ']';
-    return(2);
+    return(priority);
 }
 
 int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
@@ -3016,9 +3019,9 @@ void CppSynth::AppendMemberName(string *dst, IAstDeclarationNode *src)
     if (src == nullptr) return;
     if (src->GetType() == ANT_VAR) {
         VarDeclaration *var = (VarDeclaration*)src;
-        *dst += member_prefix_;
+        *dst += synth_options_->member_prefix_;
         *dst += var->name_;
-        *dst += member_suffix_;
+        *dst += synth_options_->member_suffix_;
     } else if (src->GetType() == ANT_FUNC) {
         FuncDeclaration *fun = (FuncDeclaration*)src;
         *dst += fun->name_;
@@ -3043,8 +3046,8 @@ void CppSynth::SynthDFile(FILE *dfd, const Package *package, const char *target_
 
 void CppSynth::SynthMapFile(FILE *mfd)
 {
-    fprintf(mfd, "prefix = %s\r\n", member_prefix_.c_str());
-    fprintf(mfd, "suffix = %s\r\n", member_suffix_.c_str());
+    fprintf(mfd, "prefix = %s\r\n", synth_options_->member_prefix_.c_str());
+    fprintf(mfd, "suffix = %s\r\n", synth_options_->member_suffix_.c_str());
     const vector<line_nums> *lines = formatter_.GetLines();
     int top = lines->size() - 1;
     if (top < 0) {

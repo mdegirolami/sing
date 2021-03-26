@@ -6,6 +6,7 @@
 #include "package.h"
 #include "cpp_formatter.h"
 #include "package_manager.h"
+#include "synth_options.h"
 
 namespace SingNames {
 
@@ -20,11 +21,8 @@ class CppSynth {
     CppFormatter        formatter_;
 
     // options
-    bool    newline_before_function_bracket_;
-    string  member_prefix_;
-    string  member_suffix_;
-    bool    use_final_;
-    bool    use_override_;
+    const SynthOptions  *synth_options_;
+    bool                debug_;
 
     enum TypeSynthMode { TSS_STD, TSS_VARDECL, TSS_FUNC_DECL }; // 
 
@@ -131,7 +129,6 @@ class CppSynth {
     AstClassType *GetLocalClassTypeDeclaration(const char *classname);
     void AppendMemberName(string *dst, IAstDeclarationNode *src);
 public:
-    void Init() { newline_before_function_bracket_ = true; member_suffix_ = "_"; use_final_ = true; use_override_ = true; }
     void Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp);
     void SynthDFile(FILE *dfd, const Package *package, const char *target_name);
     void SynthMapFile(FILE *mfd);   // can call this only after Synthetize (and before another call)

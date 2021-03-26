@@ -104,7 +104,6 @@ int Compiler::CompileSinglePackage(void)
         FILE *hfd = nullptr;
         bool empty_cpp;
 
-        cpp_synthesizer_.Init();
         output_name = options_.GetOutputFile();
 
         if (!h_only) {

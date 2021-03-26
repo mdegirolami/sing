@@ -220,6 +220,11 @@ bool Options::ParseArgs(int argc, char *argv[])
         printf("please digit 'sing -h' for help\n\n");
         return(false);
     }
+    if (c_format_source_ != nullptr) {
+        if (!synth_options_.load(c_format_source_)) {
+            printf("cannot read the %s format file\n\n", c_format_source_);
+        }
+    }
     return(true);
 }
 

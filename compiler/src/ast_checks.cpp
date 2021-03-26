@@ -1464,7 +1464,7 @@ void AstChecker::CheckIndices(AstIndexing *node, ExpressionAttributes *attr, Exp
         failure = true;
     }
     if (!failure) {
-        if (!attr->UpdateWithIndexing(&low_attr, &high_attr, node, &node->map_type_, this, &error)) {
+        if (!attr->UpdateWithIndexing(&low_attr, &high_attr, node, this, &error)) {
             Error(error.c_str(), node);
         }
     } else {

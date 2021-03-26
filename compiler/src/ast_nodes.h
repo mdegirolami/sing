@@ -522,7 +522,6 @@ public:
     bool           is_single_index_;
     PositionInfo   pos_;
 
-    AstMapType           *map_type_;     // annotations
     ExpressionAttributes attr_;
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
@@ -530,7 +529,7 @@ public:
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstIndexing();
-    AstIndexing(IAstExpNode *left) : indexed_term_(left), lower_value_(nullptr), upper_value_(nullptr), map_type_(nullptr) {}
+    AstIndexing(IAstExpNode *left) : indexed_term_(left), lower_value_(nullptr), upper_value_(nullptr) {}
     virtual AstNodeType GetType(void) const { return(ANT_INDEXING); }
     void SetAnIndex(IAstExpNode *value) { 
         lower_value_ = value; 
