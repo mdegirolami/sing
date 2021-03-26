@@ -1,0 +1,6 @@
+max_linelen = 160
+newline_before_function_bracket = t
+member_prefix = 
+member_suffix = _
+use_final = t
+use_override = t

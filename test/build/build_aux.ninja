@@ -12,7 +12,7 @@ rule cc
 rule sc
   deps = gcc
   depfile = $out.d
-  command = $singcc $sing_debug_flags $skip_usage -I ../../tests -MF -o $out $in
+  command = $singcc $sing_debug_flags $skip_usage -f ../format.txt -I ../../tests -MF -o $out $in
 
 rule ln
   command = g++ -o $out $in $singlib
