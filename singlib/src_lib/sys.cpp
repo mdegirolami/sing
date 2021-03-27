@@ -7,6 +7,12 @@
 #else
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
+
+#include <execinfo.h>
+#include <signal.h>
+#include <sys/resource.h>
+
 #endif
 
 namespace sing {
@@ -23,11 +29,11 @@ std::string utf16_to_8(const wchar_t *src);
 void utf8_to_16(const char *src, std::vector<wchar_t> *dst);
 
 // PROCESSES
-void system(const char *command)
+int32_t system(const char *command)
 {
     std::vector<wchar_t> wcommand;
     utf8_to_16(command, &wcommand);
-    ::_wsystem(wcommand.data());
+    return(::_wsystem(wcommand.data()));
 }
 
 Phandle execute(const char *command)
@@ -317,6 +323,11 @@ int64_t clocksDiff(const int64_t before, const int64_t after)
     return((after - before) * 1000000 / frequency.QuadPart);
 }
 
+OsId getOs()
+{
+    return(OsId::win);
+}
+
 #else
 
 ////////////////////////
@@ -326,11 +337,12 @@ int64_t clocksDiff(const int64_t before, const int64_t after)
 ///////////////////////
 
 // PROCESSES
+
 void exec(const char *command);
 
-void system(const char *command)
+int32_t system(const char *command)
 {
-    ::system(command);
+    return(::system(command));
 }
 
 Phandle execute(const char *command)
@@ -351,9 +363,9 @@ Phandle execute(const char *command)
 void exec(const char *command)
 {
     std::vector<char> commandv;
-    std::vector<char *const> argv;
+    std::vector<char*> argv;
 
-    commandv.reserve(strlen(command) + 1);
+    commandv.reserve(strlen(command) + 1);  // to prevent reallocations !!
     argv.reserve(16);
     bool quoted = false;
     bool separator = true;
@@ -362,11 +374,12 @@ void exec(const char *command)
             if (*command != ' ' && *command != '\t') {
                 if (*command == '"') {
                     quoted = true;
+                    argv.push_back(&commandv.back() + 1);   // where we are going to place the firs char
                 } else {
                     commandv.push_back(*command);
                     argv.push_back(&commandv.back());
                 }
-                separator == false;
+                separator = false;
             }
         } else if (quoted) {
             if (*command == '"') {
@@ -397,7 +410,7 @@ class Pipe final : public Stream {
 public:
     Pipe() { hh_ = -1; }
     void SetHandle(int hh) { hh_ = hh; }
-    virtual ~Pipe() {if (hh_ != -1) close(hh_); }
+    virtual ~Pipe();
     virtual void *get__id() const override { return(nullptr); }    // unknown type for sing !!
     virtual Error get(uint8_t *value) override;
     virtual Error gets(const int64_t maxbytes, std::string *value) override;
@@ -409,6 +422,13 @@ public:
     virtual Error tell(int64_t *pos) override { return(-1); }
     virtual bool eof() const override;
 };
+
+Pipe::~Pipe() 
+{
+    if (hh_ != -1) {
+        close(hh_); 
+    }
+}
 
 Error Pipe::get(uint8_t *value)
 {
@@ -489,17 +509,31 @@ bool Pipe::eof() const
     return(false);
 }
 
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr)
 {
     static const int PIPE_READ  = 0;
     static const int PIPE_WRITE = 1;
+    std::shared_ptr<Pipe> pin = std::make_shared<Pipe>();
+    std::shared_ptr<Pipe> pout = std::make_shared<Pipe>();
+    std::shared_ptr<Pipe> perr = std::make_shared<Pipe>();
 
     int aStdinPipe[2] = {-1, -1};
     int aStdoutPipe[2] = {-1, -1};
     int aStderrPipe[2] = {-1, -1};
     int nChild;
-    char nChar;
-    int nResult;
 
     if (pipe(aStdinPipe) < 0) {
         goto cleanup;
@@ -512,31 +546,69 @@ Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shar
     }
 
     nChild = fork();
+    if (nChild == 0) {
+
+        close(aStdinPipe[PIPE_WRITE]);
+        //close(aStdoutPipe[PIPE_READ]);
+        close(aStderrPipe[PIPE_READ]);
+
+        dup2(aStdinPipe[PIPE_READ], STDIN_FILENO);
+        //dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO);
+        dup2(aStderrPipe[PIPE_WRITE], STDERR_FILENO);
+
+        close(aStdinPipe[PIPE_READ]);
+        //close(aStdoutPipe[PIPE_WRITE]);
+        close(aStderrPipe[PIPE_WRITE]);
+        // char *argv[] = {(char*)"/bin/sh", 
+        //                 (char*)"-c", 
+        //                 (char*)command, 
+        //                 (char*)0};
+        // execvp(argv[0], argv);
+        exec(command);
+    }
+    close(aStdinPipe[PIPE_READ]);
+    return nChild;
+
+
     if (0 == nChild) {
         // child continues here
 
         // redirect stdin
-        if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1) {
-            exit(errno);
+        // if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1) {
+        //     //exit(errno);
+        // }
+        signal(SIGSEGV, handler);
+
+        FILE *fd = fopen("xxx", "wb");
+        if (fd == nullptr) {
+            exit(0);
         }
+
+        printf("\nchild: uno");
+
 
         // redirect stdout
-        if (dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1) {
-            exit(errno);
-        }
+        // if (dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1) {
+        // //     exit(errno);
+        // }
+        // if (dup2(fileno(fd), STDOUT_FILENO) == -1) {
+        // //     exit(errno);
+        // }
 
-        // redirect stderr
-        if (dup2(aStderrPipe[PIPE_WRITE], STDERR_FILENO) == -1) {
-            exit(errno);
-        }
+        // // redirect stderr
+        // if (dup2(aStderrPipe[PIPE_WRITE], STDERR_FILENO) == -1) {
+        //     //exit(errno);
+        // }
+        dup2(fileno(fd), STDERR_FILENO);
+        printf("\nchild: due");
 
-        // all these are for use by parent only
-        close(aStdinPipe[PIPE_READ]);
-        close(aStdinPipe[PIPE_WRITE]);
-        close(aStdoutPipe[PIPE_READ]);
-        close(aStdoutPipe[PIPE_WRITE]); 
-        close(aStderrPipe[PIPE_READ]);
-        close(aStderrPipe[PIPE_WRITE]); 
+        // // all these are for use by parent only
+        // close(aStdinPipe[PIPE_READ]);
+        // close(aStdinPipe[PIPE_WRITE]);
+        // close(aStdoutPipe[PIPE_READ]);
+        // close(aStdoutPipe[PIPE_WRITE]); 
+        // close(aStderrPipe[PIPE_READ]);
+        // close(aStderrPipe[PIPE_WRITE]); 
 
         // run child process image
         exec(command);
@@ -545,17 +617,17 @@ Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shar
         // parent continues here
 
         // close unused file descriptors, these are for child only
-        close(aStdinPipe[PIPE_READ]);
-        close(aStdoutPipe[PIPE_WRITE]); 
-        close(aStderrPipe[PIPE_WRITE]); 
+        // close(aStdinPipe[PIPE_READ]);
+        // close(aStdoutPipe[PIPE_WRITE]); 
+        // close(aStderrPipe[PIPE_WRITE]); 
 
-        (*pin).SetHandle(aStdinPipe[PIPE_WRITE]);
+        // (*pin).SetHandle(aStdinPipe[PIPE_WRITE]);
         (*pout).SetHandle(aStdoutPipe[PIPE_READ]);
-        (*perr).SetHandle(aStderrPipe[PIPE_READ]);
+        // (*perr).SetHandle(aStderrPipe[PIPE_READ]);
 
-        *sstdin = pin;
+        // *sstdin = pin;
         *sstdout = pout;
-        *sstderr = perr;
+        // *sstderr = perr;
 
         return(nChild);
     }
@@ -576,7 +648,8 @@ int32_t waitCommandExit(const Phandle handle)
         int status;
         waitpid(handle, &status, 0);
         if (WIFEXITED(status)) { 
-        reuturn(WEXITSTATUS(status));             
+            return(WEXITSTATUS(status));   
+        }          
     }
     return(0);
 }
@@ -598,7 +671,7 @@ std::string getenv(const char *name)
 
 void setenv(const char *name, const char *value, const bool override)
 {
-    ::setenv(key, value, override ? 1 : 0);
+    ::setenv(name, value, override ? 1 : 0);
 }
 
 // time management
@@ -629,7 +702,30 @@ int64_t clocksDiff(const int64_t before, const int64_t after)
     return(after - before);
 }
 
+void localtime_s(struct tm *bb, const time_t *tt)
+{   
+    tzset();
+    localtime_r(tt, bb);
+}
+
+void gmtime_s(struct tm *bb, const time_t *tt)
+{   
+    gmtime_r(tt, bb);
+}
+
+OsId getOs()
+{
+    return(OsId::linux);
+}
+
 #endif
+
+
+////////////////////////
+//
+// COMMON LINUX/UNIX/WINDOWS VERSIONS
+//
+///////////////////////
 
 BrokenTime::BrokenTime()
 {

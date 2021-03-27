@@ -217,7 +217,7 @@ Error File::puts(const char *value)
 
 Error File::write(const int64_t count, const std::vector<uint8_t> &src, const int64_t from)
 {
-    if (from < 0) return(-1);
+    if (from < 0 || fd_ == nullptr) return(-1);
     dirswitch((FILE*)fd_, &dir_, dir_write); 
     int64_t towrite = std::min(count, (int64_t)src.size() - from);
     if (towrite > 0) {
@@ -861,7 +861,7 @@ Error dirReadCore_r(char *buffer, DirFilter filter,
     strcpy(buffer + clip, "/");
     while ((direntp = readdir(dir)) != nullptr) {
         if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0 && clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
-            strcpy(buffer + clip, direntp->d_name);
+            strcpy(buffer + clip + 1, direntp->d_name);
             if (stat(buffer, &stat_buf) == -1) {
                 err = -1;
                 break;
@@ -923,10 +923,10 @@ Error dirRemove_r(char *buffer)
     strcpy(buffer + clip, "/");
     while (err == 0 && (direntp = readdir(dir)) != nullptr) {
         if (strcmp(direntp->d_name, ".") != 0 && strcmp(direntp->d_name, "..") != 0) {
-            if (clip + 1 + strlen(direntp->d_name) <= MAX_SING_PATH) {
+            if (clip + 1 + strlen(direntp->d_name) > MAX_SING_PATH) {
                 err = -1;
             } else {
-                strcpy(buffer + clip, direntp->d_name);
+                strcpy(buffer + clip + 1, direntp->d_name);
                 if (stat(buffer, &stat_buf) == -1) {
                     err = -1;
                     break;
@@ -979,7 +979,7 @@ Error dirCreate(const char *directory)
 
     // shorten the path 'till you find the first directory to be created 
     while (true) {
-        if (mkdir(pathcopy, 0x1f) == 0) break;
+        if (mkdir(pathcopy, 0x1fd) == 0) break;
         if (errno == EEXIST) break;
 
         // we have more than one component non existing, skip the last one
@@ -994,7 +994,7 @@ Error dirCreate(const char *directory)
     while (scan < top) {
         pathcopy[scan] = '/';
         scan = (int)strlen(pathcopy);
-        if (mkdir(pathcopy, 0x1f) != 0) {
+        if (mkdir(pathcopy, 0x1fd) != 0) {
             return(-1);
         }
     }
@@ -1011,7 +1011,7 @@ std::string formatInt(const int64_t val, const int32_t field_len, const int32_t 
     std::string result;
     int32_t fl = std::min(std::max(field_len, 1), 64);
 
-    synthFormat(format, flags & ~f_uppercase, "lld", fl);
+    synthFormat(format, flags & ~f_uppercase, PRId64, fl);
     sprintf(printout, format, val);
     if (strlen(printout) > fl) {
         std::string result;
@@ -1027,9 +1027,16 @@ std::string formatUnsigned(const uint64_t val, const int32_t field_len, const in
     char printout[70];
     std::string result;
     int32_t fl = std::min(std::max(field_len, 1), 64);
+    bool plus = (flags & f_dont_omit_plus) != 0;
 
-    synthFormat(format, flags & ~f_uppercase, "llu", fl);
-    sprintf(printout, format, val);
+    if (plus) {
+        synthFormat(format, flags & ~f_uppercase, PRIu64, std::max(fl - 1, 1));
+        printout[0] = '+';
+        sprintf(printout + 1, format, val);
+    } else {
+        synthFormat(format, flags & ~f_uppercase, PRIu64, fl);
+        sprintf(printout, format, val);
+    }
     if (strlen(printout) > fl) {
         std::string result;
         addChars(&result, '#', fl);
@@ -1047,11 +1054,11 @@ std::string formatUnsignedHex(const uint64_t val, const int32_t field_len, const
     bool plus = (flags & f_dont_omit_plus) != 0;
 
     if (plus) {
-        synthFormat(format, flags, "llx", std::max(fl - 1, 1));
+        synthFormat(format, flags, PRIx64, std::max(fl - 1, 1));
         printout[0] = '+';
         sprintf(printout + 1, format, val);
     } else {
-        synthFormat(format, flags, "llx", fl);
+        synthFormat(format, flags, PRIx64, fl);
         sprintf(printout, format, val);
     }
     if (strlen(printout) > fl) {
@@ -1140,9 +1147,9 @@ std::string formatFloatExp(const double val, int32_t exp_mult, const int32_t fie
     sprintf(printout, format, vv);
     strcat(printout, (flags & f_uppercase) != 0 ? "E" : "e");
     if (zeros) {
-        sprintf(printout + strlen(printout), "%+04d", exp);
+        sprintf(printout + strlen(printout), "%+04" PRId32, exp);
     } else {
-        sprintf(printout + strlen(printout), "%+-4d", exp);     // 3 digits long to keep the vertical alignment
+        sprintf(printout + strlen(printout), "%+-4" PRId32, exp);     // 3 digits long to keep the vertical alignment
     }
 
     if (strlen(printout) > fl) {
@@ -1280,7 +1287,7 @@ void scrClear()
 #ifdef _WIN32
     ::system("cls");
 #else    
-    ::system("clear");
+    int dummy = ::system("clear");
 #endif
 }
 

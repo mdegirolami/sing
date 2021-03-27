@@ -363,7 +363,7 @@ static void *fnStub(void *lpParameter)
 
 void runFn(void (*torun)(), const int32_t stack_size)
 {
-    startThread(fnStub, torun, stack_size);
+    startThread(fnStub, (void*)torun, stack_size);
 }
 
 static void *runnableStub(void *lpParameter)

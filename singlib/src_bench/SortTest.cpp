@@ -23,7 +23,11 @@ private:
 public:
     virtual void *get__id() const { return(nullptr); }
     virtual int32_t cmp(const int32_t first, const int32_t second) const {
-        return((*keys_)[first] - (*keys_)[second]);
+        int32_t ff = (*keys_)[first];
+        int32_t ss = (*keys_)[second];
+        if (ff > ss) return(1);
+        if (ff < ss) return(-1);
+        return(0);
     }
     void setvector(const std::vector<int32_t> *vv) { keys_ = vv; }
 };

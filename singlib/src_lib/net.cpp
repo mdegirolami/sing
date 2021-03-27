@@ -16,6 +16,8 @@ namespace sing {
 
 #ifdef _WIN32
 
+#pragma comment(lib,"ws2_32.lib")
+
 void utf8_to_16(const char *src, std::vector<wchar_t> *dst);
 
 static int getaddrinfoL(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res)

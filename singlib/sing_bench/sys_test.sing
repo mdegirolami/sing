@@ -23,45 +23,79 @@ public fn sys_test() bool
     sys.validate(true);
 
     // remark after test :-)
-    //sys.validate(false);
+    sys.validate(false);
 
     return(true);
 }
 
 public fn testProcessFunctions() bool
 {
-    sys.system("C:/Windows/notepad.exe");
+    if (sys.getOs() == sys.OsId.win) {
+        sys.system("C:/Windows/notepad.exe");
 
-    var hh = sys.execute("C:/Windows/notepad.exe");
-    if (hh == 0) {
-        return(false);
-    }
-    sio.print("\nWaiting for notepad to exit");
-    sys.waitCommandExit(hh);
-    sio.print("\nnotepad exited");
+        var hh = sys.execute("C:/Windows/notepad.exe");
+        if (hh == 0) {
+            return(false);
+        }
+        sio.print("\nWaiting for notepad to exit");
+        sys.waitCommandExit(hh);
+        sio.print("\nnotepad exited");
 
-    // automation test
-    var child_stdin *sio.Stream;
-    var child_stdout *sio.Stream;
-    var child_stderr *sio.Stream;
-    hh = sys.automate("C:/Windows/System32/choice.exe", child_stdin, child_stdout, child_stderr); 
-    if (hh == 0) {
-        return(false);
+        // automation test
+        var child_stdin *sio.Stream;
+        var child_stdout *sio.Stream;
+        var child_stderr *sio.Stream;
+        hh = sys.automate("C:/Windows/System32/choice.exe", child_stdin, child_stdout, child_stderr); 
+        if (hh == 0) {
+            return(false);
+        }
+        var prompt string;
+        if (child_stdout.gets(6, prompt) != 0) {
+            return(false);
+        }
+        if (prompt != "[Y,N]?") {
+            return(false);
+        }
+        if (child_stdin.puts("Y") != 0) {
+            return(false);
+        }
+        sys.waitCommandExit(hh);
+    } else {
+
+        // ubuntu
+        sys.system("gedit");
+
+        var hh = sys.execute("gedit");
+        if (hh == 0) {
+            return(false);
+        }
+        sio.print("\nWaiting for gedit to exit");
+        sys.waitCommandExit(hh);
+        sio.print("\ngedit exited");
+
+        // automation test
+        var child_stdin *sio.Stream;
+        var child_stdout *sio.Stream;
+        var child_stderr *sio.Stream;
+        hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
+        if (hh == 0) {
+            return(false);
+        }
+        var prompt string;
+        if (child_stdout.gets(5, prompt) != 0) {
+            return(false);
+        }
+        if (prompt != "Press") {
+            return(false);
+        }
+        if (child_stdin.puts("Y") != 0) {
+            return(false);
+        }
+        sys.waitCommandExit(hh);    
     }
-    var prompt string;
-    if (child_stdout.gets(6, prompt) != 0) {
-        return(false);
-    }
-    if (prompt != "[Y,N]?") {
-        return(false);
-    }
-    if (child_stdin.puts("Y") != 0) {
-        return(false);
-    }
-    sys.waitCommandExit(hh);
 
     // remark after first test :-)
-    // sys.exit(0);
+    sys.exit(0);
 
     return(true);
 }

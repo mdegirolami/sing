@@ -2,6 +2,7 @@
 #include <string.h>
 #include <float.h>
 #include "sing.h"
+#include "limits.h"
 
 namespace sing {
 

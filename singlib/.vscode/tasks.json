@@ -5,10 +5,15 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "ninja build",
+            "label": "debug",
 
             "command": "ninja",
-            "args": ["-v", "-f", "../build_debug.ninja"],
+            "windows": {
+                "args": ["-v", "-f", "../build_win_debug.ninja"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_debug.ninja"],
+            },
             "presentation": {
                 "clear": true 
             },
@@ -25,10 +30,15 @@
         },
         {
             "type": "shell",
-            "label": "ninja build release",
+            "label": "release",
 
             "command": "ninja",
-            "args": ["-v", "-f", "../build_release.ninja"],
+            "windows": {
+                "args": ["-v", "-f", "../build_win_release.ninja"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_release.ninja"],
+            },
             "presentation": {
                 "clear": true 
             },

@@ -32,7 +32,7 @@ void map_speed(void)
     for (int ii = 0; ii < num_keys; ++ii) {
         stdmap.insert(std::make_pair(keys[ii], ii));
     }
-    printf("\n\nstd::insert = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nstd::insert = %d", (int)((clock() - start) * 1000 / CLOCKS_PER_SEC));
 
     // extraction(pointer)
     start = clock();
@@ -40,14 +40,14 @@ void map_speed(void)
     for (int ii = 0; ii < num_keys; ++ii) {
         sum += stdmap[keys[ii]];
     }
-    printf("\n\nstd::access = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nstd::access = %d", (int)((clock() - start) * 1000 / CLOCKS_PER_SEC));
 
     // insertion (chars)
     start = clock();
     for (int ii = 0; ii < num_keys; ++ii) {
         singmap.insert(keys[ii], ii);
     }
-    printf("\n\nsing::insert = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nsing::insert = %d", (int)((clock() - start) * 1000 / CLOCKS_PER_SEC));
 
     // extraction (chars)
     start = clock();
@@ -55,7 +55,7 @@ void map_speed(void)
     for (int ii = 0; ii < num_keys; ++ii) {
         sum += singmap.get(keys[ii]);
     }
-    printf("\n\nsing::access = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nsing::access = %d", (int)((clock() - start) * 1000 / CLOCKS_PER_SEC));
 
     // test + extraction (chars)
     start = clock();
@@ -65,7 +65,7 @@ void map_speed(void)
             sum += singmap.get(keys[ii]);
         }
     }
-    printf("\n\nsing::test + access = %d", (clock() - start) * 1000 / CLOCKS_PER_SEC);
+    printf("\n\nsing::test + access = %d", (int)((clock() - start) * 1000 / CLOCKS_PER_SEC));
 }
 
 //

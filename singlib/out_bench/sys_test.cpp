@@ -24,45 +24,79 @@ bool sys_test()
     sing::validate(true);
 
     // remark after test :-)
-    //sys.validate(false);
+    sing::validate(false);
 
     return (true);
 }
 
 bool testProcessFunctions()
 {
-    sing::system("C:/Windows/notepad.exe");
+    if (sing::getOs() == sing::OsId::win) {
+        sing::system("C:/Windows/notepad.exe");
 
-    uint64_t hh = sing::execute("C:/Windows/notepad.exe");
-    if (sing::iseq(hh, 0)) {
-        return (false);
-    }
-    sing::print("\nWaiting for notepad to exit");
-    sing::waitCommandExit(hh);
-    sing::print("\nnotepad exited");
+        uint64_t hh = sing::execute("C:/Windows/notepad.exe");
+        if (sing::iseq(hh, 0)) {
+            return (false);
+        }
+        sing::print("\nWaiting for notepad to exit");
+        sing::waitCommandExit(hh);
+        sing::print("\nnotepad exited");
 
-    // automation test
-    std::shared_ptr<sing::Stream> child_stdin;
-    std::shared_ptr<sing::Stream> child_stdout;
-    std::shared_ptr<sing::Stream> child_stderr;
-    hh = sing::automate("C:/Windows/System32/choice.exe", &child_stdin, &child_stdout, &child_stderr);
-    if (sing::iseq(hh, 0)) {
-        return (false);
+        // automation test
+        std::shared_ptr<sing::Stream> child_stdin;
+        std::shared_ptr<sing::Stream> child_stdout;
+        std::shared_ptr<sing::Stream> child_stderr;
+        hh = sing::automate("C:/Windows/System32/choice.exe", &child_stdin, &child_stdout, &child_stderr);
+        if (sing::iseq(hh, 0)) {
+            return (false);
+        }
+        std::string prompt;
+        if ((*child_stdout).gets(6, &prompt) != 0) {
+            return (false);
+        }
+        if (prompt != "[Y,N]?") {
+            return (false);
+        }
+        if ((*child_stdin).puts("Y") != 0) {
+            return (false);
+        }
+        sing::waitCommandExit(hh);
+    } else {
+
+        // ubuntu
+        sing::system("gedit");
+
+        uint64_t hh = sing::execute("gedit");
+        if (sing::iseq(hh, 0)) {
+            return (false);
+        }
+        sing::print("\nWaiting for gedit to exit");
+        sing::waitCommandExit(hh);
+        sing::print("\ngedit exited");
+
+        // automation test
+        std::shared_ptr<sing::Stream> child_stdin;
+        std::shared_ptr<sing::Stream> child_stdout;
+        std::shared_ptr<sing::Stream> child_stderr;
+        hh = sing::automate("read -n1 -r -p \"Press any key to continue...\"", &child_stdin, &child_stdout, &child_stderr);
+        if (sing::iseq(hh, 0)) {
+            return (false);
+        }
+        std::string prompt;
+        if ((*child_stdout).gets(5, &prompt) != 0) {
+            return (false);
+        }
+        if (prompt != "Press") {
+            return (false);
+        }
+        if ((*child_stdin).puts("Y") != 0) {
+            return (false);
+        }
+        sing::waitCommandExit(hh);
     }
-    std::string prompt;
-    if ((*child_stdout).gets(6, &prompt) != 0) {
-        return (false);
-    }
-    if (prompt != "[Y,N]?") {
-        return (false);
-    }
-    if ((*child_stdin).puts("Y") != 0) {
-        return (false);
-    }
-    sing::waitCommandExit(hh);
 
     // remark after first test :-)
-    // sys.exit(0);
+    sing::exit(0);
 
     return (true);
 }

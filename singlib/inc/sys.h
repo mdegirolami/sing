@@ -39,7 +39,9 @@ private:
     int64_t seed_;
 };
 
-void system(const char *command);
+enum class OsId {win, linux, osx};
+
+int32_t system(const char *command);
 Phandle execute(const char *command);
 Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr);
 int32_t waitCommandExit(Phandle handle);
@@ -57,5 +59,7 @@ void setenv(const char *name, const char *value, bool override = true);
 
 // mix
 void validate(bool condition);
+
+OsId getOs();
 
 }   // namespace
