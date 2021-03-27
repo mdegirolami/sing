@@ -2,7 +2,7 @@ cflags = -fsigned-char -I $src -I../../../singlib/inc
 skip_usage = -u
 test_mode =
 sing_src = ../../tests
-singcc = ../../../compiler/bin/sing
+singcc = ../../../compiler/bin/win/sing
 
 rule cc
   deps = gcc

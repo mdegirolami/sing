@@ -1,8 +1,0 @@
-debug_flags = -O0 -g
-profile_flags =
-
-src = ../../src
-bin_target = ../../bin/sing_d.exe
-sing_lib = ../../../singlib/bin/singlib_d.a
-
-include ../build_aux.ninja

@@ -3,7 +3,7 @@ sing_debug_flags =
 
 src = ../../tests_results
 bin_target = ../../bin/tests.exe
-singlib = ../../../singlib/bin/singlib.a
+singlib = ../../../singlib/bin/win/singlib.a
 
 include ../build_aux.ninja
 

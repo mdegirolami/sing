@@ -4,7 +4,7 @@ temp = ../../out
 cppsrc = ../../src
 
 # programs
-singcc = ../../../compiler/bin/sing
+singcc = ../../../compiler/bin/win/sing
 
 # flags
 cflags = -fsigned-char -I $cppsrc -I $temp -I../../../singlib/inc

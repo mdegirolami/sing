@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <vector>
-#include <inttypes.h>
+#include <cinttypes>
 #include "cpp_synth.h"
 #include "FileName.h"
 #include "helpers.h"
@@ -2319,7 +2319,7 @@ int CppSynth::GetRealPartOfFloatLiteral(string *dst, AstExpressionLeaf *node)
 
         // must have an integer value. Use it and convert to a floating point representation.
         value = (int64_t)node->GetAttr()->GetDoubleValue();
-        sprintf(buffer, "%" PRId64, value);
+        sprintf(buffer, "%" PRId64 ".0", value);
         *dst = buffer;
     }
     if ((*dst)[0] == '-') {

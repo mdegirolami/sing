@@ -2,4 +2,4 @@
 
 #include <sing.h>
 
-void print_primes_to(const int32_t top);
+void print_primes_to(int32_t top);

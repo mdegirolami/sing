@@ -4,7 +4,7 @@ singlibs = ../../sing_headers
 temp = ../../out_bench
 
 # programs
-singcc = ../../../compiler/bin/sing
+#singcc = sing
 
 cflags = -fsigned-char -std=c++11 -I $src_b -I../../inc -fmax-errors=20
 obj = .

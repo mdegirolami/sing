@@ -1,8 +1,8 @@
 #include "siege.h"
 
-static uint32_t uint32_sqrt(const uint32_t x);
+static uint32_t uint32_sqrt(uint32_t x);
 
-void print_primes_to(const int32_t top)
+void print_primes_to(int32_t top)
 {
     std::vector<int32_t> primes;
     int32_t primes_count = 0;
@@ -21,14 +21,14 @@ void print_primes_to(const int32_t top)
             }
         }
         if (isprime) {
-            primes[primes_count] = totry;
+            primes.at(primes_count) = totry;
             ++primes_count;
         }
     }
 }
 
 // bisection
-static uint32_t uint32_sqrt(const uint32_t x)
+static uint32_t uint32_sqrt(uint32_t x)
 {
     uint32_t res = (uint32_t)0;
     uint32_t add = (uint32_t)0x8000;

@@ -2,9 +2,11 @@ debug_flags = -O2 -s -DNDEBUG
 
 src_b = ../../src_bench
 src_l = ../../src_lib
-bin_target = ../../bin/bench.exe
-lib_target = ../../bin/singlib.a
+bin_target = ../../bin/win/bench.exe
+lib_target = ../../bin/win/singlib.a
 platform_libs =  -lws2_32
+
+singcc = ../../../compiler/bin/sing
 
 include ../build_aux.ninja
 

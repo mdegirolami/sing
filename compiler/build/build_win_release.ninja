@@ -1,0 +1,11 @@
+debug_flags = -O2 -s -DNDEBUG
+
+profile_flags =
+#profile_flags = -pg
+
+src = ../../src
+bin_target = ../../bin/win/sing.exe
+sing_lib = ../../../singlib/bin/win/singlib.a
+
+include ../build_aux.ninja
+
