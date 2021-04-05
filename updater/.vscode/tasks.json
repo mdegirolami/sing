@@ -1,0 +1,107 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "debug",
+
+            "command": "ninja",
+            "windows": {
+                "args": ["-v", "-f", "../build_win_debug.ninja"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_debug.ninja"],
+            },
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/build/obj_d"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "release",
+
+            "command": "ninja",
+            "windows": {
+                "args": ["-v", "-f", "../build_win_release.ninja"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_release.ninja"],
+            },
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/build/obj_r"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "clean release",
+
+            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "windows": {
+                "args": ["-v", "-f", "../build_win_release.ninja", "-t", "clean"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_release.ninja", "-t", "clean"],
+            },
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}\\build\\obj_r"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "clean debug",
+
+            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "windows": {
+                "args": ["-v", "-f", "../build_win_debug.ninja", "-t", "clean"],
+            },
+            "linux": {
+                "args": ["-v", "-f", "../build_linux_debug.ninja", "-t", "clean"],
+            },
+            "presentation": {
+                "clear": true 
+            },
+            "options": {
+                "cwd": "${workspaceFolder}\\build\\obj_d"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

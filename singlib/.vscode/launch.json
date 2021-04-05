@@ -19,8 +19,8 @@
             "miDebuggerPath": "gdb",
             "setupCommands": [
                 {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
+                    "description": "Catch throws",
+                    "text": "catch throw",
                     "ignoreFailures": true
                 }
             ]

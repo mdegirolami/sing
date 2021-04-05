@@ -1,0 +1,10 @@
+cc_extra_flags = -O2 -s -DNDEBUG
+sing_extra_flags =
+ln_extra_libs = -lws2_32
+
+platform = win
+cfg = release
+
+bin_target = ../../bin/win/updater.exe
+
+include ../build_aux.ninja

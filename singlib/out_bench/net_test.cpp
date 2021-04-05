@@ -201,7 +201,7 @@ static bool testServer(int32_t s_port, int32_t c_port, sing::IpVersion ver)
     if (!cs.rcv(&message, 100, 100, false)) {
         return (false);
     }
-    if (message[0] != 54 || cs.timedout()) {
+    if (message.at(0) != 54 || cs.timedout()) {
         return (false);
     }
 

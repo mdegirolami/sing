@@ -9,6 +9,10 @@ bool NumberSelector::isGood(int32_t cp) const
 
 bool str_test()
 {
+    std::vector<int32_t> xxxxx;
+
+    xxxxx.at(5) = 0;
+
     // len
     const std::string s0 = "testϏ";     // upper key = 0x3cf
 

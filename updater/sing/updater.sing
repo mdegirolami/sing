@@ -1,0 +1,9 @@
+requires "sio";
+
+public fn updater(argv [*]string) i32
+{
+    sio.print("hello world !!!\r\n");
+    sio.print("\r\nPress any key to exit...");
+    sio.kbdGet();
+    return(0);
+}

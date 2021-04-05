@@ -1,0 +1,10 @@
+sing_extra_flags = -g
+cc_extra_flags = -g
+ln_extra_libs = -lpthread
+
+platform = linux
+cfg = debug
+
+bin_target = ../../bin/linux/updater_d.exe
+
+include ../build_aux.ninja

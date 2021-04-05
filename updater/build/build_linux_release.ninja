@@ -1,0 +1,10 @@
+cc_extra_flags = -O2 -s -DNDEBUG
+sing_extra_flags =
+ln_extra_libs = -lpthread
+
+platform = linux
+cfg = release
+
+bin_target = ../../bin/linux/updater.exe
+
+include ../build_aux.ninja

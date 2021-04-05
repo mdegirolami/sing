@@ -1,0 +1,49 @@
+# sdk resources
+include ../sdk_location.ninja
+singcc = $sdk/$platform/bin/sing
+singhh = $sdk/sing_headers
+singinc = $sdk/inc
+singlib = $sdk/$platform/lib/$cfg/singlib.a
+
+#optionals
+#skip_usage = -u
+
+# directories
+temp = ../../out/$cfg
+sing = ../../sing
+cpp  = ../../src
+
+# options for all the configurations/platforms
+cc_flags = -fsigned-char -std=c++11 $cc_extra_flags -I $cpp -I $temp -I $singinc -fmax-errors=20
+ln_libs = $singlib $ln_extra_libs
+
+#rules
+rule sc
+  deps = gcc
+  depfile = $out.d
+  command = $singcc $skip_usage $sing_extra_flags -I $sing -I $singhh -MF -o $out $in
+
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = g++ -MD -MF $out.d $cc_flags -c $in -o $out
+
+rule ln
+  command = g++ -std=c++11 -o $out $in $ln_libs
+
+rule aa
+  command = ar rvs $out $in
+
+# sing->temp
+build $temp/updater.h | $temp/updater.cpp : sc $sing/updater.sing
+
+# temp -> obj
+build updater.o : cc $temp/updater.cpp
+
+# cpp -> obj
+build main.o : cc $cpp/main.cpp
+
+#link
+build $bin_target: ln main.o updater.o
+
+default $bin_target

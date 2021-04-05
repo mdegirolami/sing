@@ -6,7 +6,7 @@ bin_target = ../../bin/win/bench.exe
 lib_target = ../../bin/win/singlib.a
 platform_libs =  -lws2_32
 
-singcc = ../../../compiler/bin/sing
+singcc = ../../../compiler/bin/win/sing
 
 include ../build_aux.ninja
 
