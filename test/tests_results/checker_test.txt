@@ -57,10 +57,10 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:90:10: C
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:91:8: You can apply an index list only to objects of type 'array' (did you specify too many indices ?)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:93:7: You can apply an argument list only to an object of type 'function'
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:94:22: Sum operands must be all numbers or all strings.
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:95:13: Type mismatch/No known conversion
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:95:18: Argument 2: Type mismatch/No known conversion
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:96:5: Undefined symbol
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:97:13: Argument 2 is not specified and has no default value
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:99:13: Argument 1 is an output argument and needs to be a writable variable
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:99:14: Argument 1 is an output argument and needs to be a writable variable
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:100:13: Argument 2 is not specified and has no default value
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:119:13: Sum operands must be all numbers or all strings.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:122:5: Sum operands must be all numbers or all strings.
@@ -198,7 +198,6 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:332:13: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:334:9: Writing to a read-only variable
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:335:18: Undefined type
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:339:14: The index name must be either a new name or the name of a reusable index
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:339:30: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:341:22: The iterator name must be a new name
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:346:10: The index name must be either a new name or the name of a reusable index
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:346:14: The iterator name must be a new name
@@ -294,11 +293,11 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:616:40: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:617:23: On an address the only allowed operator is '*'
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:618:19: Unary '+' only applies to numeric types
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:619:21: You can use unary * only on strong pointers
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:620:13: Argument 1 is an output argument and needs to be a writable variable
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:620:14: Argument 1 is an output argument and needs to be a writable variable
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:623:34: Weak pointers are allowed only as non aggregated class members.
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:624:13: Argument 1 type mismatch
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:624:14: Argument 1 type mismatch
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:625:18: Weak pointers are allowed only as non aggregated class members.
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:628:12: Argument 1 type mismatch
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:628:13: Argument 1 type mismatch
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:629:12: Too many arguments
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:630:12: Argument 1 is not specified and has no default value
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:631:14: You can apply the & unary operator only to a local variable.
@@ -329,7 +328,7 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:717:14: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:721:18: The argument's initer must be a compile time constant !
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:721:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:731:11: An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:731:11: An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:737:28: A public declaration cannot refer a private symbol
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:740:2: Function must return a value !!
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:742:24: You can only return values of type: numeric, enum, string, bool, pointer

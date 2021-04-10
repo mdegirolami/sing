@@ -1505,8 +1505,13 @@ void AstChecker::CheckFunCall(AstFunCall *node, ExpressionAttributes *attr)
         }
     }
     if (!failure) {
-        if (!attr->UpdateWithFunCall(&attributes, &node->arguments_, &node->func_type_, this, &error)) {
-            Error(error.c_str(), node);
+        int wrong_arg_num = -1;
+        if (!attr->UpdateWithFunCall(&attributes, &node->arguments_, &node->func_type_, this, &error, &wrong_arg_num)) {
+            IAstNode *errnode = node;
+            if ( wrong_arg_num != -1) {
+                errnode = node->arguments_[wrong_arg_num];
+            }
+            Error(error.c_str(), errnode);
         } else {
             CheckIfFunCallIsLegal(node->func_type_, node);
         }
@@ -1788,7 +1793,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                     accessed->wp_decl_ = decl;
                     attr->InitWithTree(decl->GetTypeSpec(), decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
                     decl->SetUsageFlags(usage);
-                    CheckIfVarReferenceIsLegal(decl, accessed);
+                    CheckIfVarReferenceIsLegal(usage, decl, accessed);
                     accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
                 } else {
                     Error("Can't access private member", accessed);
@@ -1871,7 +1876,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
             }
         }
         var->SetUsageFlags(usage);
-        CheckIfVarReferenceIsLegal(var, node);
+        CheckIfVarReferenceIsLegal(usage, var, node);
     } else if (decl->GetType() == ANT_FUNC) {
         node->wp_decl_ = decl;
         FuncDeclaration *func = (FuncDeclaration*)decl;
@@ -2547,7 +2552,7 @@ bool AstChecker::BlockReturnsExplicitly(AstBlock *block)
     return(false);
 }
 
-void AstChecker::CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location)
+void AstChecker::CheckIfVarReferenceIsLegal(ExpressionUsage usage, VarDeclaration *var, IAstNode *location)
 {
     // if (in_function_block_ && current_function_->function_type_->ispure_) {
     //     if (!var->HasOneOfFlags(VF_READONLY | VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_ISFORITERATOR | VF_ISLOCAL)) {
@@ -2555,8 +2560,8 @@ void AstChecker::CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *locat
     //         return;
     //     }
     // }
-    if (var->HasOneOfFlags(VF_IS_ITERATED)) {
-        Error("An Iterated variable can be accessed ONLY through the iterator. (to avoid buffer reallocations)", location);
+    if (var->HasOneOfFlags(VF_IS_ITERATED) && (usage == ExpressionUsage::WRITE || usage == ExpressionUsage::BOTH)) {
+        Error("An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)", location);
         return;
     }
 }

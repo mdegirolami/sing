@@ -130,7 +130,7 @@ class AstChecker : public ITypedefSolver {
     InheritanceType CheckInheritanceType(IAstTypeNode *ancestor, IAstTypeNode *descendent, TypeComparisonMode mode);
     bool NodeIsConcrete(IAstTypeNode *tt);
     bool BlockReturnsExplicitly(AstBlock *block);
-    void CheckIfVarReferenceIsLegal(VarDeclaration *var, IAstNode *location);
+    void CheckIfVarReferenceIsLegal(ExpressionUsage usage, VarDeclaration *var, IAstNode *location);
     void CheckIfFunCallIsLegal(AstFuncType *func, IAstNode *location);
     VarDeclaration *GetIteratedVar(IAstExpNode *node);
     void CheckInnerBlockVarUsage(void);

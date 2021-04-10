@@ -83,12 +83,12 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:224:5: Type mismatch/No known conversion
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:225:5: Left operand has not a concrete type
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:226:5: Type mismatch/No known conversion
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:230:16: Argument 2 is an output argument and needs to be a writable variable
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:230:23: Argument 2 is an output argument and needs to be a writable variable
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:233:10: Can't call a muting member function on a read-only instance (input argument or constant)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:245:5: Type mismatch/No known conversion
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:247:5: Type mismatch/No known conversion
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:250:17: Argument 2 type mismatch
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:251:17: Argument 2 is an output argument and needs to be a writable variable
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:250:22: Argument 2 type mismatch
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:251:24: Argument 2 is an output argument and needs to be a writable variable
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:259:10: Can't call a muting member function on a read-only instance (input argument or constant)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:266:8: No finalize function allowed in interfaces
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:270:8: Finalize function must be public

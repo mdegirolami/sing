@@ -131,7 +131,7 @@ bool testRndGen()
 
     // uniform generator
     for(int32_t count = 0; count < 100000; ++count) {
-        ++lin_bukets.at((int32_t)(gen.rnd() * 100.0));
+        ++lin_bukets[(int32_t)(gen.rnd() * 100.0)];
     }
     int32_t vmin = 1000000;
     int32_t vmax = 0;
@@ -145,10 +145,10 @@ bool testRndGen()
 
     // normal generator
     for(int32_t count = 0; count < 10000; ++count) {
-        ++nor_bukets.at(std::min(2, (int32_t)sing::abs(gen.rndNorm())));
+        ++nor_bukets[std::min(2, (int32_t)sing::abs(gen.rndNorm()))];
     }
-    if (nor_bukets.at(0) * 27 > nor_bukets.at(1) * 75 || nor_bukets.at(0) * 27 < nor_bukets.at(1) * 60 || nor_bukets.at(0) * 4 > nor_bukets.at(2) * 75 ||
-        nor_bukets.at(0) * 4 < nor_bukets.at(2) * 60) {
+    if (nor_bukets[0] * 27 > nor_bukets[1] * 75 || nor_bukets[0] * 27 < nor_bukets[1] * 60 || nor_bukets[0] * 4 > nor_bukets[2] * 75 ||
+        nor_bukets[0] * 4 < nor_bukets[2] * 60) {
         return (false);
     }
     return (true);

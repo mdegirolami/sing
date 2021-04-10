@@ -79,13 +79,13 @@ static bool test_File()
     if (ff.read(2, &buf, true) != 0) {
         return (false);
     }
-    if (ff.get(&buf.at(0)) != 0) {
+    if (ff.get(&buf[0]) != 0) {
         return (false);
     }
     if (ff.gets(5, &back) != 0) {
         return (false);
     }
-    if (buf.size() < 6 || buf.at(4) != 48 || buf.at(5) != 104 || buf.at(0) != 101 || back != "llo12") {
+    if (buf.size() < 6 || buf[4] != 48 || buf[5] != 104 || buf[0] != 101 || back != "llo12") {
         return (false);
     }
 
@@ -93,7 +93,7 @@ static bool test_File()
     if (ff.eof()) {                     // flag is set when an attempt to read PAST eof has done
         return (false);
     }
-    if (ff.get(&buf.at(0)) == 0) {      // the attempt must fail !
+    if (ff.get(&buf[0]) == 0) {         // the attempt must fail !
         return (false);
     }
     if (!ff.eof()) {
@@ -158,7 +158,7 @@ static bool test_File()
     if (ff.gets(100, &back) != 0 || back != " hello world") {
         return (false);
     }
-    if (ff.get(&buf.at(0)) == 0) {      // the attempt must fail !
+    if (ff.get(&buf[0]) == 0) {         // the attempt must fail !
         return (false);
     }
 
@@ -239,14 +239,14 @@ static bool test_dirfileop()
     if (sing::dirRead("dir1", sing::DirFilter::regular, &names, &nfos) != 0) {
         return (false);
     }
-    if (names.size() < 1 || names.at(0) != "dir1/in_dir1.txt") {
+    if (names.size() < 1 || names[0] != "dir1/in_dir1.txt") {
         return (false);
     }
     names.clear();
     if (sing::dirReadNames("dir1", sing::DirFilter::directory, &names) != 0) {
         return (false);
     }
-    if (names.size() < 1 || names.at(0) != "dir1/dir2") {
+    if (names.size() < 1 || names[0] != "dir1/dir2") {
         return (false);
     }
     names.clear();

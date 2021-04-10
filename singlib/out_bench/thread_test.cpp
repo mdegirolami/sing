@@ -69,7 +69,7 @@ bool thread_test()
 
     const int64_t start = sing::clock();
     for(int32_t ii = 0, ii__top = (*v1).size(); ii < ii__top; ++ii) {
-        (*v1).at(ii) += (*v2).at(ii);
+        (*v1)[ii] += (*v2)[ii];
     }
     const int64_t single_thread = sing::clocksDiff(start, sing::clock());
     const int64_t multiple_threads = DoAll(v1, v2, 2);
@@ -83,7 +83,7 @@ bool thread_test()
     done.wait();    // to reset
     sing::run(adder);
     done.wait();
-    if ((*v1).at(0) != 14.0f) {
+    if ((*v1)[0] != 14.0f) {
         return (false);
     }
     return (true);
@@ -106,7 +106,7 @@ void Add::init(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vect
 void Add::work()
 {
     for(int32_t ii = start_, ii__top = stop_; ii < ii__top; ++ii) {
-        (*v1_).at(ii) += (*v2_).at(ii);
+        (*v1_)[ii] += (*v2_)[ii];
     }
     done.signal();
 }

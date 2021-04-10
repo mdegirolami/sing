@@ -73,7 +73,7 @@ public:
     bool UpdateWithBoolOperation(ExpressionAttributes *attr_right, string *error); // returns false if fails
     bool UpdateWithUnaryOperation(Token operation, ITypedefSolver *solver, string *error); // returns false if fails
     bool UpdateWithFunCall(vector<ExpressionAttributes> *attr_args, vector<AstArgument*> *arg_descs, 
-                           AstFuncType **func_typedesc, ITypedefSolver *solver, string *error);
+                           AstFuncType **func_typedesc, ITypedefSolver *solver, string *error, int *wrong_arg_idx);
     AstFuncType *GetFunCallType(void) const; // returns nullptr if the type is not a funcall
     bool UpdateWithIndexing(ExpressionAttributes *low_attr, ExpressionAttributes *high_attr, AstIndexing *node, 
                             ITypedefSolver *solver, string *error);

@@ -756,7 +756,7 @@ bool ExpressionAttributes::UpdateValueWithUnaryOperation(Token operation, ITyped
 
 bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_args, 
                                              vector<AstArgument*> *arg_descs, AstFuncType **func_typedesc, 
-                                             ITypedefSolver *solver, string *error)
+                                             ITypedefSolver *solver, string *error, int *wrong_arg_idx)
 {
     int     ii;
     char    errorbuf[128];
@@ -798,6 +798,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         if (argvalue_attr->exp_type_ == BT_ERROR) {
             sprintf(errorbuf, "Argument %d has a wrong expression", ii + 1);
             *error = errorbuf;
+            *wrong_arg_idx = ii;
             return(false);
         }
 
@@ -805,6 +806,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         if (argvalue->name_[0] != 0 && argvalue->name_ != argdecl->name_) {
             sprintf(errorbuf, "Argument %d has mismatching name", ii + 1);
             *error = errorbuf;
+            *wrong_arg_idx = ii;
             return(false);
         }
 
@@ -815,8 +817,9 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             // NOTE: is read only inside the function, but must be written by the caller !!!
             if (GetParameterPassingMethod(argdecl->GetTypeSpec(), true) == PPM_VALUE || argvalue_attr->type_tree_ == nullptr) {
                 if (!argdecl_attr.CanAssign(argvalue_attr, solver, error)) {  
-
-                    // note: error message provided by CanAssign                 
+                    sprintf(errorbuf, "Argument %d: ", ii + 1);
+                    *error = string(errorbuf) + *error;
+                    *wrong_arg_idx = ii;
                     return(false);
                 }
             } else {
@@ -828,6 +831,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             if (!argvalue_attr->is_a_variable_ || !argvalue_attr->is_writable_) {
                 sprintf(errorbuf, "Argument %d is an output argument and needs to be a writable variable", ii + 1);
                 *error = errorbuf;
+                *wrong_arg_idx = ii;
                 return(false);
             }
 
@@ -845,10 +849,12 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
         if (typematch == ITypedefSolver::KO) {
             sprintf(errorbuf, "Argument %d type mismatch", ii + 1);
             *error = errorbuf;
+            *wrong_arg_idx = ii;
             return(false);
         } else if (typematch == ITypedefSolver::CONST) {
             sprintf(errorbuf, "Argument %d pointer constness mismatch", ii + 1);
             *error = errorbuf;
+            *wrong_arg_idx = ii;
             return(false);
         }
     }
