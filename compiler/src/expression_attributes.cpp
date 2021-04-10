@@ -810,17 +810,17 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
 
         // check types compatibility
         ITypedefSolver::TypeMatchResult typematch = ITypedefSolver::OK;
-        argdecl_attr.InitWithTree(argdecl->weak_type_spec_, nullptr, true, true, solver);
+        argdecl_attr.InitWithTree(argdecl->GetTypeSpec(), nullptr, true, true, solver);
         if (argdecl->HasOneOfFlags(VF_READONLY)) {
             // NOTE: is read only inside the function, but must be written by the caller !!!
-            if (GetParameterPassingMethod(argdecl->weak_type_spec_, true) == PPM_VALUE || argvalue_attr->type_tree_ == nullptr) {
+            if (GetParameterPassingMethod(argdecl->GetTypeSpec(), true) == PPM_VALUE || argvalue_attr->type_tree_ == nullptr) {
                 if (!argdecl_attr.CanAssign(argvalue_attr, solver, error)) {  
 
                     // note: error message provided by CanAssign                 
                     return(false);
                 }
             } else {
-                typematch = solver->AreTypeTreesCompatible(argdecl->weak_type_spec_, argvalue_attr->type_tree_, FOR_REFERENCING);
+                typematch = solver->AreTypeTreesCompatible(argdecl->GetTypeSpec(), argvalue_attr->type_tree_, FOR_REFERENCING);
             }
         } else { 
 
@@ -834,7 +834,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             // type check !!
             if (argvalue_attr->exp_type_ == argdecl_attr.exp_type_) {
                 if (argvalue_attr->exp_type_ == BT_TREE) {
-                    typematch = solver->AreTypeTreesCompatible(argdecl->weak_type_spec_, argvalue_attr->type_tree_, FOR_REFERENCING);
+                    typematch = solver->AreTypeTreesCompatible(argdecl->GetTypeSpec(), argvalue_attr->type_tree_, FOR_REFERENCING);
                 } else {
                     typematch = ITypedefSolver::OK;
                 }

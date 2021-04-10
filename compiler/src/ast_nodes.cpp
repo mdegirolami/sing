@@ -94,7 +94,10 @@ void AstFuncType::SynthSingType(string *dst) const
         }
         *dst += var->name_;
         *dst += " ";
-        arguments_[ii]->type_spec_->SynthSingType(dst);
+        IAstTypeNode *typespec = arguments_[ii]->GetTypeSpec();
+        if (typespec != nullptr) {
+            typespec->SynthSingType(dst);
+        }
         if (ii < arguments_.size() - 1) {
             *dst += ", ";
         } else {
@@ -642,6 +645,12 @@ void VarDeclaration::SetUsageFlags(ExpressionUsage usage)
         SetFlags(VF_WASREAD | VF_WASWRITTEN);
         break;
     }    
+}
+
+IAstTypeNode *VarDeclaration::GetTypeSpec() const
+{
+    if (weak_type_spec_ != nullptr) return(weak_type_spec_);
+    return(type_spec_);
 }
 
 void FuncDeclaration::SetNames(const char *name1, const char *name2)

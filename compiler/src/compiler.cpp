@@ -267,30 +267,36 @@ void Compiler::ServerLoop(bool log_server)
         if (num_parms < 1) continue;
 
         // run the command
-        if (strcmp(parameters[0], "src_read") == 0) {
-            srv_src_read(num_parms, parameters);
-        } else if (strcmp(parameters[0], "src_change") == 0) {
-            srv_src_change(num_parms, parameters);
-        } else if (strcmp(parameters[0], "src_insert") == 0) {
-            srv_src_insert(num_parms, parameters);
-        } else if (strcmp(parameters[0], "src_created") == 0) {
-            srv_src_created(num_parms, parameters);
-        } else if (strcmp(parameters[0], "src_deleted") == 0) {
-            srv_src_deleted(num_parms, parameters);
-        } else if (strcmp(parameters[0], "src_renamed") == 0) {
-            srv_src_renamed(num_parms, parameters);
-        } else if (strcmp(parameters[0], "get_errors") == 0) {
-            srv_get_errors(num_parms, parameters);
-        } else if (strcmp(parameters[0], "completion_items") == 0) {
-            srv_completion_items(num_parms, parameters);
-        } else if (strcmp(parameters[0], "signature") == 0) {
-            srv_signature(num_parms, parameters);
-        } else if (strcmp(parameters[0], "def_position") == 0) {
-            srv_def_position(num_parms, parameters);
-        } else if (strcmp(parameters[0], "get_symbols") == 0) {
-            srv_get_symbols(num_parms, parameters);
-        } else if (strcmp(parameters[0], "exit") == 0) {
-            do_exit = true;
+        try {
+            if (strcmp(parameters[0], "src_read") == 0) {
+                srv_src_read(num_parms, parameters);
+            } else if (strcmp(parameters[0], "src_change") == 0) {
+                srv_src_change(num_parms, parameters);
+            } else if (strcmp(parameters[0], "src_insert") == 0) {
+                srv_src_insert(num_parms, parameters);
+            } else if (strcmp(parameters[0], "src_created") == 0) {
+                srv_src_created(num_parms, parameters);
+            } else if (strcmp(parameters[0], "src_deleted") == 0) {
+                srv_src_deleted(num_parms, parameters);
+            } else if (strcmp(parameters[0], "src_renamed") == 0) {
+                srv_src_renamed(num_parms, parameters);
+            } else if (strcmp(parameters[0], "get_errors") == 0) {
+                srv_get_errors(num_parms, parameters);
+            } else if (strcmp(parameters[0], "completion_items") == 0) {
+                srv_completion_items(num_parms, parameters);
+            } else if (strcmp(parameters[0], "signature") == 0) {
+                srv_signature(num_parms, parameters);
+            } else if (strcmp(parameters[0], "def_position") == 0) {
+                srv_def_position(num_parms, parameters);
+            } else if (strcmp(parameters[0], "get_symbols") == 0) {
+                srv_get_symbols(num_parms, parameters);
+            } else if (strcmp(parameters[0], "exit") == 0) {
+                do_exit = true;
+            }
+        } catch (...) {
+            if (server_log_ != nullptr) {
+                fprintf(server_log_, ">> Exception !!\r\n", buffer);
+            }
         }
     } while (!do_exit);
     if (server_log_ != nullptr) fclose(server_log_);
@@ -305,6 +311,7 @@ void Compiler::ServerResponse(const char *format, ...)
     if (server_log_ != nullptr) {
         va_start(marker, format);
         vfprintf(server_log_, format, marker);
+        fflush(server_log_);
     }
     fflush(stdout);
 }

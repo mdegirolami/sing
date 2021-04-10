@@ -217,8 +217,8 @@ void PackageManager::getSuggestions(NamesList *names, int index, int row, int co
                     names->AddName(ft->arguments_[argument_index]->name_.c_str());
                 }
             }
-            pkg->clearParsedData();
         }
+        pkg->clearParsedData();
         break;
     }
 }
@@ -294,6 +294,7 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
     hint.trigger = '(';
     pkg->parseForSuggestions(&hint);
     if (hint.type != CompletionType::OP || hint.node == nullptr) {
+        pkg->clearParsedData();
         return(-1);
     }
 
@@ -315,22 +316,34 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
 
 bool PackageManager::findSymbol(string *def_file, int *file_row, int *file_col, int index, int row, int col)
 {
-    IAstNode *node = findSymbolPos(index, row, col);
-    if (node == nullptr) return(false);
+    bool need_to_clean = false;
+
+    Package *pkg = pkgFromIdx(index);
+    if (pkg == nullptr) return(false);
+
+    IAstNode *node = findSymbolPos(pkg, index, row, col, &need_to_clean);
+    if (node == nullptr) {
+        if (need_to_clean) pkg->clearParsedData();
+        return(false);
+    }
 
     PositionInfo *pos = node->GetPositionRecord();
-    if (pos == nullptr) return(false);
+    if (pos == nullptr) {
+        if (need_to_clean) pkg->clearParsedData();
+        return(false);
+    }
 
     Package *xpkg = pkgFromIdx(pos->package_idx);
     *def_file = xpkg->getFullPath();
 
+    if (need_to_clean) pkg->clearParsedData();
+
     return(xpkg->ConvertPosition(pos, file_row, file_col));
 }
 
-IAstNode *PackageManager::findSymbolPos(int index, int row, int col)
+IAstNode *PackageManager::findSymbolPos(Package *pkg, int index, int row, int col, bool *need_to_clean)
 {
-    Package *pkg = pkgFromIdx(index);
-    if (pkg == nullptr) return(nullptr);
+    *need_to_clean = false;
 
     // extract the symbol
     string symbol;
@@ -397,11 +410,11 @@ IAstNode *PackageManager::findSymbolPos(int index, int row, int col)
         }
         break;
     case CompletionType::OP:
+        *need_to_clean = true;
         if (hint.node != nullptr) {
             if (hint.node->GetType() == ANT_BINOP) {
                 return(getQualifyedSymbolDefinition(symbol.c_str(), (AstBinop*)hint.node));
             }
-            pkg->clearParsedData();
         }
         break;
     }

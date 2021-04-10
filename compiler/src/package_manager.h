@@ -16,7 +16,7 @@ class PackageManager {
     Package *pkgFromIdx(int index) const;
     void    onInvalidation(int index);
     void    getSuggestionsForDotInExpression(NamesList *names, AstBinop *dotexp, Package *pkg);
-    IAstNode *findSymbolPos(int index, int row, int col);
+    IAstNode *findSymbolPos(Package *pkg, int index, int row, int col, bool *need_to_clean);
     IAstNode *getQualifyedSymbolDefinition(const char *symbol, AstBinop *dotexp);
     IAstNode *Declaration2Definition(IAstDeclarationNode *decl, AstClassType *classnode, const char *symbol);
 public:

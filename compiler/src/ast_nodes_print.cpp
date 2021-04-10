@@ -341,7 +341,7 @@ void AstNodesPrint::PrintVarDeclaration(VarDeclaration *node)
     if (node->initer_ != NULL) fprintf(fd_, "with initer ");
     fprintf(fd_, "{");
     ++indent_;
-    PrintHierarchy(node->type_spec_);
+    PrintHierarchy(node->GetTypeSpec());
     PrintHierarchy(node->initer_);
     ClosingBrace();
 }

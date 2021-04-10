@@ -144,10 +144,10 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
     if (declaration->IsPublic() && !declaration->HasOneOfFlags(VF_READONLY)) {
         Error("Public global variables are forbidden !", declaration);
     }
-    if (declaration->type_spec_ != nullptr) {
-        if (CheckTypeSpecification(declaration->type_spec_, declaration->initer_ != nullptr ? TSCM_INITEDVAR : TSCM_STD)) {
+    if (declaration->GetTypeSpec() != nullptr) {
+        if (CheckTypeSpecification(declaration->GetTypeSpec(), declaration->initer_ != nullptr ? TSCM_INITEDVAR : TSCM_STD)) {
             if (declaration->initer_ != nullptr) {
-                if (!CheckIniter(declaration->type_spec_, declaration->initer_)) {
+                if (!CheckIniter(declaration->GetTypeSpec(), declaration->initer_)) {
                     check_constness = false;
                 }
             }
@@ -160,8 +160,8 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
         if (!attr.IsOnError()) {
 
             // inited with a variable of arbitrary type ?
-            declaration->weak_type_spec_ = attr.GetAutoType();
-            if (declaration->weak_type_spec_ == nullptr) {
+            declaration->SetWeakType(attr.GetAutoType());
+            if (declaration->GetTypeSpec() == nullptr) {
 
                 // inited with a right expression (a temporary value) of basic type ?
                 Token basetype = attr.GetAutoBaseType();
@@ -228,12 +228,12 @@ void AstChecker::CheckMemberVar(VarDeclaration *declaration)
             }
         }   
     }
-    if (declaration->type_spec_ != nullptr) {
-        if (CheckTypeSpecification(declaration->type_spec_, TSCM_MEMBER)) {
+    if (declaration->GetTypeSpec() != nullptr) {
+        if (CheckTypeSpecification(declaration->GetTypeSpec(), TSCM_MEMBER)) {
             if (!attr.IsOnError()) {
                 ExpressionAttributes dst_attr;
 
-                IAstTypeNode *type_spec = SolveTypedefs(declaration->type_spec_);
+                IAstTypeNode *type_spec = SolveTypedefs(declaration->GetTypeSpec());
                 dst_attr.InitWithTree(type_spec, nullptr, true, true, this);
                 CanAssign(&dst_attr, &attr, declaration->initer_);
             }
@@ -467,23 +467,23 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
 
             for (ii = 0; ii < (int)node->arguments_.size(); ++ii) {
                 VarDeclaration *arg = node->arguments_[ii];
-                if (arg->type_spec_ == nullptr) {
+                if (arg->GetTypeSpec() == nullptr) {
                     Error("Unspecified type", arg);
                     success = false;
-                } else if (!CheckTypeSpecification(arg->type_spec_, TSCM_REFERENCED)) {
+                } else if (!CheckTypeSpecification(arg->GetTypeSpec(), TSCM_REFERENCED)) {
                     success = false;
                 } else {
                     if (arg->initer_ != nullptr) {
                         if (!arg->HasOneOfFlags(VF_READONLY)) {
                             Error("You can apply argument initers only to input parameters", arg);
                             success = false;
-                        } else if (!IsArgTypeEligibleForAnIniter(arg->type_spec_)) {
+                        } else if (!IsArgTypeEligibleForAnIniter(arg->GetTypeSpec())) {
                             Error("You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)", arg);
                             success = false;
                         } else if (arg->initer_->GetType() == ANT_INITER) {
                             Error("Only a single value is allowed here(not an aggregate initializer)", arg);
                             success = false;
-                        } else if (!CheckIniter(arg->type_spec_, arg->initer_)) {
+                        } else if (!CheckIniter(arg->GetTypeSpec(), arg->initer_)) {
                             success = false;
                         } else if (!IsCompileTimeConstant((IAstExpNode*)arg->initer_)) {
                             Error("The argument's initer must be a compile time constant !", arg);
@@ -734,7 +734,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
 
         // if member can't be copied the class can't be copied as well !!
         if (declaration->can_be_copied) {
-            IAstTypeNode *solved = SolveTypedefs(decl->type_spec_);
+            IAstTypeNode *solved = SolveTypedefs(decl->GetTypeSpec());
             if (solved != nullptr && solved->GetType() == ANT_CLASS_TYPE) {
                 if (!((AstClassType*)solved)->can_be_copied) {
                     declaration->DisableCopy();
@@ -766,7 +766,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
                     declaration->member_vars_[jj]->SetUsageFlags(ExpressionUsage::BOTH);
-                    IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
+                    IAstTypeNode *mt = declaration->member_vars_[jj]->GetTypeSpec();
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
                         AstClassType *impl_decl = (AstClassType*)mt;
@@ -823,7 +823,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
                 if (declaration->member_vars_[jj]->name_ == *implementor) {
                     found = true;
                     declaration->member_vars_[jj]->SetUsageFlags(ExpressionUsage::BOTH);
-                    IAstTypeNode *mt = declaration->member_vars_[jj]->weak_type_spec_;
+                    IAstTypeNode *mt = declaration->member_vars_[jj]->GetTypeSpec();
                     mt = SolveTypedefs(mt);
                     if (mt != nullptr && mt->GetType() == ANT_CLASS_TYPE) {
                         AstClassType *impl_decl = (AstClassType*)mt;
@@ -1150,7 +1150,7 @@ void AstChecker::CheckFor(AstFor *node)
                 Error("The index name must be either a new name or the name of a reusable index", node->index_);
             }
         } else {
-            assert(node->index_->type_spec_ == nullptr);
+            assert(node->index_->GetTypeSpec() == nullptr);
             node->index_->SetType(new AstBaseType(TOKEN_UINT64));
             symbols_->InsertName(index_name, node->index_);         // directly call symbols_ to avoid duplicate error messages
             index_declaration = node->index_;
@@ -1178,7 +1178,7 @@ void AstChecker::CheckFor(AstFor *node)
         if (iterator_type == nullptr) {
             Error("The variable you are iterating in must be an array", node->set_);
         } else {
-            node->iterator_->weak_type_spec_ = iterator_type;
+            node->iterator_->SetWeakType(iterator_type);
             symbols_->InsertName(iterator_name, node->iterator_);
             iterator_declaration = node->iterator_;
             iterator_declaration->SetTheIteratedVar(iterated_declaration);
@@ -1211,7 +1211,7 @@ void AstChecker::CheckFor(AstFor *node)
                 node->step_value_ = -1;
             }
         }
-        assert(node->iterator_->type_spec_ == nullptr);
+        assert(node->iterator_->GetTypeSpec() == nullptr);
         node->iterator_->SetType(new AstBaseType(ittype));
         symbols_->InsertName(iterator_name, node->iterator_);
         iterator_declaration = node->iterator_;
@@ -1369,18 +1369,16 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
         if (statement != nullptr && case_type != nullptr) {
             symbols_->OpenScope();
 
-            IAstTypeNode *savetype = node->reference_->type_spec_;
+            IAstTypeNode *savetype = node->reference_->GetTypeSpec();
 
             // want to know if it is used
             node->reference_->ClearFlags(VF_WASREAD | VF_WASWRITTEN);
-            node->reference_->weak_type_spec_ = case_type;
-            node->reference_->type_spec_ = case_type;
+            node->reference_->SetType(case_type);
 
             symbols_->InsertName(reference_name, node->reference_);
             CheckStatement(statement);
 
-            node->reference_->type_spec_ = savetype;
-            node->reference_->weak_type_spec_ = savetype;
+            node->reference_->SetType(savetype);
 
             node->SetReferenceUsage(node->reference_->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN));
             symbols_->CloseScope();
@@ -1788,7 +1786,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 VarDeclaration *decl = (*member_vars)[var_idx];
                 if (has_private_access || decl->IsPublic()) {
                     accessed->wp_decl_ = decl;
-                    attr->InitWithTree(decl->weak_type_spec_, decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
+                    attr->InitWithTree(decl->GetTypeSpec(), decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
                     decl->SetUsageFlags(usage);
                     CheckIfVarReferenceIsLegal(decl, accessed);
                     accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
@@ -1866,7 +1864,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
         } else {
             readonly = var->HasOneOfFlags(VF_READONLY);
         }
-        attr->InitWithTree(var->weak_type_spec_, var, true, !readonly, this);
+        attr->InitWithTree(var->GetTypeSpec(), var, true, !readonly, this);
         if (var->HasOneOfFlags(VF_READONLY)) {
             if (var->initer_ != nullptr && var->initer_->GetType() != ANT_INITER) {
                 attr->SetTheValueFrom(((IAstExpNode*)var->initer_)->GetAttr());
@@ -2437,7 +2435,7 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
                 if ((arg0->flags_ & (VF_READONLY | VF_WRITEONLY)) != (arg1->flags_ & (VF_READONLY | VF_WRITEONLY))) {
                     return(KO);
                 }
-                result = AreTypeTreesCompatible(arg0->weak_type_spec_, arg1->weak_type_spec_, FOR_EQUALITY);
+                result = AreTypeTreesCompatible(arg0->GetTypeSpec(), arg1->GetTypeSpec(), FOR_EQUALITY);
                 if (result != OK) return(result);
             }
         }
@@ -2634,7 +2632,7 @@ void AstChecker::CheckPrivateDeclarationsUsage(void)
 
 void AstChecker::CheckPrivateVarUsage(VarDeclaration *var, bool is_member)
 {
-    bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->weak_type_spec_);
+    bool check_all = !is_member && IsArgTypeEligibleForAnIniter(var->GetTypeSpec());
     if (!var->HasOneOfFlags(VF_ISPOINTED | VF_ISARG | VF_ISFORINDEX | VF_IS_REFERENCE | VF_ISFORITERATOR | VF_IMPLEMENTED_AS_CONSTINT)) {
         if (!var->HasOneOfFlags(VF_WASREAD | VF_WASWRITTEN)) {
             UsageError("Variable/Constant unused !!", var);

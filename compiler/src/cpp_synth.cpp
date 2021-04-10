@@ -102,9 +102,9 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
         text = "static ";
     }
     if (declaration->initer_ != nullptr) {
-        SynthIniterCore(&initer, declaration->weak_type_spec_, declaration->initer_);
+        SynthIniterCore(&initer, declaration->GetTypeSpec(), declaration->initer_);
     } else if (declaration->HasOneOfFlags(VF_ISLOCAL)) {
-        SynthZeroIniter(&initer, declaration->weak_type_spec_);
+        SynthZeroIniter(&initer, declaration->GetTypeSpec());
     }
     if (declaration->HasOneOfFlags(VF_ISPOINTED)) {
         bool init_on_second_row = declaration->initer_ != nullptr && declaration->initer_->GetType() == ANT_INITER;
@@ -114,7 +114,7 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
         if (declaration->HasOneOfFlags(VF_READONLY)) {
             text += "const ";
         }
-        SynthTypeSpecification(&typedecl, declaration->weak_type_spec_);
+        SynthTypeSpecification(&typedecl, declaration->GetTypeSpec());
         text += typedecl;
         text += "> ";
         text += declaration->name_;
@@ -140,7 +140,7 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
             text += "const ";
         }
         typedecl = declaration->name_;
-        SynthTypeSpecification(&typedecl, declaration->weak_type_spec_);
+        SynthTypeSpecification(&typedecl, declaration->GetTypeSpec());
         text += typedecl;
         if (initer.length() > 0) {
             text += " = ";
@@ -231,9 +231,9 @@ void CppSynth::SynthConstructor(string *classname, AstClassType *ctype)
     for (int ii = 0; ii < ctype->member_vars_.size(); ++ii) {
         VarDeclaration *vdecl = ctype->member_vars_[ii];
         if (vdecl->initer_ != nullptr) {
-            SynthIniterCore(&initer, vdecl->weak_type_spec_, vdecl->initer_);
+            SynthIniterCore(&initer, vdecl->GetTypeSpec(), vdecl->initer_);
         } else {
-            SynthZeroIniter(&initer, vdecl->weak_type_spec_);
+            SynthZeroIniter(&initer, vdecl->GetTypeSpec());
         }
         if (initer.length() > 0) {
             text = "";
@@ -340,7 +340,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
 
             // collect info
             VarDeclaration *arg = type_spec->arguments_[ii];
-            ParmPassingMethod mode = GetParameterPassingMethod(arg->weak_type_spec_, arg->HasOneOfFlags(VF_READONLY));
+            ParmPassingMethod mode = GetParameterPassingMethod(arg->GetTypeSpec(), arg->HasOneOfFlags(VF_READONLY));
 
             // sinth the parm
             if (mode == PPM_INPUT_STRING) {
@@ -356,7 +356,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
                 } else {    // PPM_VALUE
                     the_type = arg->name_;
                 }
-                SynthTypeSpecification(&the_type, arg->weak_type_spec_);
+                SynthTypeSpecification(&the_type, arg->GetTypeSpec());
             }
 
             // add to dst
@@ -368,7 +368,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
                 *dst += "const ";
             }
             if (ii > last_uninited && prototype) {
-                SynthIniter(&the_type, arg->weak_type_spec_, arg->initer_);
+                SynthIniter(&the_type, arg->GetTypeSpec(), arg->initer_);
             }
             *dst += the_type;
         }
@@ -431,7 +431,7 @@ void CppSynth::SynthClassDeclaration(const char *name, AstClassType *type_spec)
         } else {
             has_public_var = true;
         }
-        if (vdecl->initer_ != nullptr || vdecl->weak_type_spec_->NeedsZeroIniter()) {
+        if (vdecl->initer_ != nullptr || vdecl->GetTypeSpec()->NeedsZeroIniter()) {
             needs_constructor = true;
         }
     }
@@ -642,7 +642,7 @@ void CppSynth::SynthClassMemberVariables(vector<VarDeclaration*> *d_vector, bool
 
         text = "";
         AppendMemberName(&text, declaration);
-        SynthTypeSpecification(&text, declaration->weak_type_spec_);
+        SynthTypeSpecification(&text, declaration->GetTypeSpec());
         Write(&text);
     }
 }
@@ -1181,8 +1181,8 @@ void CppSynth::SynthForIntRange(AstFor *node)
     bool use_top_var = !attr_high->HasKnownValue();
     bool use_step_var = (node->step_value_ == 0);   // is 0 when unknown at compile time (not literal)
 
-    assert(node->iterator_->weak_type_spec_->GetType() == ANT_BASE_TYPE);
-    bool using_64_bits = ((AstBaseType*)node->iterator_->weak_type_spec_)->base_type_ == TOKEN_INT64;
+    assert(node->iterator_->GetTypeSpec()->GetType() == ANT_BASE_TYPE);
+    bool using_64_bits = ((AstBaseType*)node->iterator_->GetTypeSpec())->base_type_ == TOKEN_INT64;
 
     --split_level_;
     text = "for(";
@@ -1190,7 +1190,7 @@ void CppSynth::SynthForIntRange(AstFor *node)
 
     // declaration of iterator
     aux = node->iterator_->name_;
-    SynthTypeSpecification(&aux, node->iterator_->weak_type_spec_);
+    SynthTypeSpecification(&aux, node->iterator_->GetTypeSpec());
     text += aux;
     text += " = ";
     SynthExpressionAndCastToInt(&aux, node->low_, using_64_bits);
@@ -1444,8 +1444,8 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
         VarDeclaration *var = node->func_type_->arguments_[ii];
         IAstExpNode *expression_node = node->arguments_[ii]->expression_;
         expression = "";
-        int priority = SynthFullExpression(var->weak_type_spec_, &expression, expression_node);
-        ParmPassingMethod ppm = GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY));
+        int priority = SynthFullExpression(var->GetTypeSpec(), &expression, expression_node);
+        ParmPassingMethod ppm = GetParameterPassingMethod(var->GetTypeSpec(), var->HasOneOfFlags(VF_READONLY));
         if (ppm == PPM_POINTER) {
             // passed by pointer: get the address (or simplify *)
             //if (expression[0] == '*') {
@@ -2492,7 +2492,7 @@ bool CppSynth::VarNeedsDereference(VarDeclaration *var)
     if (var->HasOneOfFlags(VF_ISPOINTED)) return(true);
     if (var->HasOneOfFlags(VF_ISARG)) {
         // output and not a vector
-        return(GetParameterPassingMethod(var->weak_type_spec_, var->HasOneOfFlags(VF_READONLY)) == PPM_POINTER);
+        return(GetParameterPassingMethod(var->GetTypeSpec(), var->HasOneOfFlags(VF_READONLY)) == PPM_POINTER);
     }
     return(false);
 }
@@ -2889,7 +2889,7 @@ void CppSynth::WriteExternalDeclarations(void)
             VarDeclaration *var = (VarDeclaration*)declaration;
             if (!var->HasOneOfFlags(VF_IMPLEMENTED_AS_CONSTINT)) {
                 text = var->name_;
-                SynthTypeSpecification(&text, var->weak_type_spec_);
+                SynthTypeSpecification(&text, var->GetTypeSpec());
                 text.insert(0, "extern const ");
                 Write(&text);
                 empty_section = false;

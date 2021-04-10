@@ -90,7 +90,7 @@ static const char *GetSignatureByKey(IFDesc *map, const char *name)
 
 const char *GetFuncSignature(const char *name, const ExpressionAttributes *attr)
 {
-    IFDesc *table;
+    IFDesc *table = nullptr;
     if (attr->IsInteger()) {
         table = g_integer_functs;
     } else if (attr->IsFloat()) {
@@ -105,6 +105,9 @@ const char *GetFuncSignature(const char *name, const ExpressionAttributes *attr)
         }
     } else if (attr->IsMap()) {
         table = g_map_functs;
+    }
+    if (table == nullptr) {
+        return(nullptr);
     }
     return(GetSignatureByKey(table, name));
 }
@@ -160,7 +163,7 @@ char GetBuiltinArgType(const char *signature, int idx)
 
 void GetBuiltinNames(NamesList *names, const ExpressionAttributes *attr)
 {
-    IFDesc *table;
+    IFDesc *table = nullptr;
     if (attr->IsInteger()) {
         table = g_integer_functs;
     } else if (attr->IsFloat()) {
@@ -176,9 +179,11 @@ void GetBuiltinNames(NamesList *names, const ExpressionAttributes *attr)
     } else if (attr->IsMap()) {
         table = g_map_functs;
     }
-    while (table->name[0] != 0) {
-        names->AddName(table->name);
-        ++table;
+    if (table != nullptr) {
+        while (table->name[0] != 0) {
+            names->AddName(table->name);
+            ++table;
+        }
     }
 }
 
@@ -283,7 +288,7 @@ static VarDeclaration *GetVarFromSignature(const char type_id, const ExpressionA
     if (owning) {
         the_var->SetType(typedesc);
     } else {
-        the_var->weak_type_spec_ = typedesc;
+        the_var->SetWeakType(typedesc);
     }
     return(the_var);
 }

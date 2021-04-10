@@ -782,15 +782,16 @@ public:
 
 class VarDeclaration : public IAstDeclarationNode
 {
+    IAstTypeNode    *type_spec_;
+
+    IAstTypeNode    *weak_type_spec_;    // annotation: weak pointer to a type spec. (for 'for loop' iterators and auto variables).
 public:
     string          name_;
     int32_t         flags_;             // annotations
-    IAstTypeNode    *type_spec_;
     IAstNode        *initer_;
     PositionInfo    pos_;
     bool            is_public_;
 
-    IAstTypeNode    *weak_type_spec_;   // annotation: weak pointer to a type spec. (for 'for loop' iterators and auto variables).
     VarDeclaration  *weak_iterated_var_; // annotation: null if the var is not a for iterator. 
 
     virtual bool IsPublic(void) { return(is_public_); }
@@ -805,6 +806,7 @@ public:
         weak_type_spec_(nullptr), is_public_(false), weak_iterated_var_(nullptr) {}
     virtual AstNodeType GetType(void) const { return(ANT_VAR); }
     void SetType(IAstTypeNode *node) { type_spec_ = node; weak_type_spec_ = node; }
+    void SetWeakType(IAstTypeNode *node) { type_spec_ = nullptr; weak_type_spec_ = node; }
     void SetIniter(IAstNode *node) { initer_ = node; }
     void ForceFlags(int32_t flags) { flags_ = flags; }
     void SetFlags(int32_t flags) { flags_ |= flags; }
@@ -813,6 +815,7 @@ public:
     bool HasAllFlags(int32_t flags) { return((flags_ & flags) == flags); }
     void SetTheIteratedVar(VarDeclaration *iterated) { weak_iterated_var_ = iterated; }
     void SetUsageFlags(ExpressionUsage usage);
+    IAstTypeNode *GetTypeSpec() const;
 };
 
 class TypeDeclaration : public IAstDeclarationNode
