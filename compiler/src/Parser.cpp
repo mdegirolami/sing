@@ -443,7 +443,7 @@ TypeDeclaration *Parser::ParseInterface(void)
             goto recovery;
         }
         if (!Advance()) goto recovery;  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE) {
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_EOF) {
             int recovery_level = curly_indent_;
             FuncDeclaration *fun = nullptr;
             {
@@ -557,7 +557,7 @@ TypeDeclaration *Parser::ParseClass(void)
             goto recovery2;
         }
         if (!Advance()) goto recovery2;  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE) {
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_EOF) {
             int recovery_level = curly_indent_;
             FuncDeclaration *fun = nullptr;
             //AstNamedType *named = nullptr;
@@ -654,7 +654,6 @@ TypeDeclaration *Parser::ParseClass(void)
 recovery:            
             if (on_error_) {
                 if (fun != nullptr) delete fun;
-                //if (named != nullptr) delete named;
                 if (!SkipToNextStatement(recovery_level)) {
                     goto recovery2;
                 }
@@ -921,7 +920,7 @@ void Parser::ParseArgsDef(AstFuncType *desc, bool is_function_body)
         // used only inside AddArgument to check if all the args after the first inited one have initers.
         bool mandatory_initer = false;
 
-        while (true) {
+        while (m_token != TOKEN_EOF) {
             if (m_token == TOKEN_ETC) {
                 desc->SetVarArgs();
                 if (!Advance()) return;
@@ -1029,7 +1028,7 @@ AstBlock *Parser::ParseBlock(void)
     AstBlock *node = new AstBlock();
     RecordPosition(node);
     if (!Advance()) goto recovery;
-    while (m_token != TOKEN_CURLY_CLOSE) {
+    while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_EOF) {
         IAstNode *statement = ParseStatement(true);
         //if (on_error_) goto recovery; // never happens, ParseStatement recovers all errors.
         if (statement != nullptr) {
@@ -1657,7 +1656,7 @@ IAstExpNode *Parser::CheckForCastedLiterals(AstUnop *node)
 AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
 {
     *negative = false;
-    while (true) {
+    while (m_token != TOKEN_EOF) {
         AstNodeType type = node->GetType();
         if (type == ANT_UNOP) {
             Token op = ((AstUnop*)node)->subtype_;
@@ -1834,7 +1833,7 @@ AstIf *Parser::ParseIf(void)
                 if (on_error_) goto recovery;
                 break;
             }
-        } while (true);
+        } while (m_token != TOKEN_EOF);
     } 
 recovery:    
     if (on_error_) {
@@ -1954,7 +1953,7 @@ AstSwitch *Parser::ParseSwitch(void)
             goto recovery2;
         }
         if (!Advance()) goto recovery2;  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT) {
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT && m_token != TOKEN_EOF) {
             int recovery_level = curly_indent_;
             do {
                 if (m_token != TOKEN_CASE) {
@@ -2052,7 +2051,7 @@ AstTypeSwitch *Parser::ParseTypeSwitch(void)
             goto recovery2;
         }
         if (!Advance()) goto recovery2;  // absorb '{'
-        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT) {
+        while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_DEFAULT && m_token != TOKEN_EOF) {
             int recovery_level = curly_indent_;
             IAstTypeNode *the_type = nullptr;
             {

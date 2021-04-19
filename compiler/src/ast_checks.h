@@ -33,7 +33,7 @@ class AstChecker : public ITypedefSolver {
     Options                 *options_; 
     bool                    fully_parsed_;
 
-    // arguments of ParseAll() - not owned
+    // arguments of CheckAll() - not owned
     AstFile                 *root_;         // not owned !!!
     ErrorList               *errors_;       // not owned !!!
     SymbolsStorage          *symbols_;      // not owned !!!
@@ -53,6 +53,10 @@ class AstChecker : public ITypedefSolver {
     AstClassType            *current_class_;
     bool                    this_was_accessed_;
     bool                    in_class_declaration_;
+
+    // IsAstBlockChild functionality
+    IAstNode                *child_to_check_;
+    bool                    child_to_check_found_;
 
     // tree parser
     void CheckVar(VarDeclaration *declaration);
@@ -149,6 +153,8 @@ public:
     //AstChecker() {}
     void init(PackageManager *packages, Options *options, int pkg_index);
     bool CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symbols, bool fully_parsed);    // returns false on error
+    void checkIfAstBlockChild(IAstNode *to_check);      // on next checkAll run verifies if this node is child of an AstBlock.
+    bool nodeWasFound(void) { return(child_to_check_found_); } // after checkAll you can retrieve the result of the above check
 
     // ITypedefSolver interface
     virtual bool            CheckArrayIndicesInTypes(AstArrayType *array, TypeSpecCheckMode mode);

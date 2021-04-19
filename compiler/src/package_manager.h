@@ -19,6 +19,7 @@ class PackageManager {
     IAstNode *findSymbolPos(Package *pkg, int index, int row, int col, bool *need_to_clean);
     IAstNode *getQualifyedSymbolDefinition(const char *symbol, AstBinop *dotexp);
     IAstNode *Declaration2Definition(IAstDeclarationNode *decl, AstClassType *classnode, const char *symbol);
+    bool    parseAndCheckForSuggestions(CompletionHint *hint, Package *pkg, int index, AstChecker *checker);
 public:
     void        init(Options *options) { options_ = options; main_package_ = -1; }
 

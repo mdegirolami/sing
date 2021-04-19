@@ -78,7 +78,7 @@ bool Package::Load()
     char *buffer = source_.getBufferForLoad(len);
     int read_result = fread(buffer, len, 1, fd);
     fclose(fd);
-    if (read_result != 1) {
+    if (read_result != 1 && len != 0) {
         errors_.AddError("Error reading the file", -1, -1, -1, -1);
         return(false);
     }

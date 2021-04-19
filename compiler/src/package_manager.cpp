@@ -173,17 +173,10 @@ void PackageManager::getSuggestions(NamesList *names, int index, int row, int co
     hint.row = row;
     hint.col = col;
     hint.trigger = trigger;
-    pkg->parseForSuggestions(&hint);
-    if (hint.type == CompletionType::NOT_FOUND) {
+    AstChecker checker;
+    if (!parseAndCheckForSuggestions(&hint, pkg, index, &checker)) {
         return;
     }
-
-    // check
-    AstChecker checker;
-    checker.init(this, options_, index);
-    main_package_ = index;
-    pkg->check(&checker);
-    main_package_ = -1;
 
     switch (hint.type) {
     case CompletionType::TAG:
@@ -292,18 +285,13 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
     hint.row = row;
     hint.col = col;
     hint.trigger = '(';
-    pkg->parseForSuggestions(&hint);
-    if (hint.type != CompletionType::OP || hint.node == nullptr) {
-        pkg->clearParsedData();
+    AstChecker checker;
+    if (!parseAndCheckForSuggestions(&hint, pkg, index, &checker)) {
         return(-1);
     }
-
-    // check
-    AstChecker checker;
-    checker.init(this, options_, index);
-    main_package_ = index;
-    pkg->check(&checker);
-    main_package_ = -1;
+    if (hint.type != CompletionType::OP || hint.node == nullptr) {
+        return(-1);
+    }
 
     const ExpressionAttributes *attr = hint.node->GetAttr();
     const AstFuncType *ft = attr->GetFunCallType();
@@ -374,17 +362,10 @@ IAstNode *PackageManager::findSymbolPos(Package *pkg, int index, int row, int co
     hint.row = dot_row;
     hint.col = dot_col;
     hint.trigger = '.';
-    pkg->parseForSuggestions(&hint);
-    if (hint.type == CompletionType::NOT_FOUND) {
+    AstChecker checker;
+    if (!parseAndCheckForSuggestions(&hint, pkg, index, &checker)) {
         return(nullptr);
     }
-
-    // check
-    AstChecker checker;
-    checker.init(this, options_, index);
-    main_package_ = index;
-    pkg->check(&checker);
-    main_package_ = -1;
 
     switch (hint.type) {
     case CompletionType::TAG:
@@ -484,6 +465,35 @@ void PackageManager::getAllSymbols(vector<SymbolNfo> *vv, int index)
 {
     Package *pkg = pkgFromIdx(index);
     if (pkg != nullptr) pkg->getAllPublicNames(vv);
+}
+
+bool PackageManager::parseAndCheckForSuggestions(CompletionHint *hint, Package *pkg, int index, AstChecker *checker)
+{
+    pkg->parseForSuggestions(hint);
+    if (hint->type == CompletionType::NOT_FOUND) {
+        return(false);
+    }
+
+    // check
+
+    checker->init(this, options_, index);
+    if (hint->type == CompletionType::OP) {
+        if (hint->node == nullptr) {
+            pkg->clearParsedData();
+            return(false);
+        }
+        checker->checkIfAstBlockChild(hint->node);
+    }
+    main_package_ = index;
+    pkg->check(checker);
+    main_package_ = -1;
+    if (hint->type == CompletionType::OP && !checker->nodeWasFound()) {
+        hint->type = CompletionType::NOT_FOUND;
+        hint->node = nullptr;
+        pkg->clearParsedData();
+        return(false);
+    }
+    return(true);
 }
 
 } // namespace

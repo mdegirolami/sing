@@ -14,6 +14,12 @@ void AstChecker::init(PackageManager *packages, Options *options, int pkg_index)
     options_ = options;
 }
 
+void AstChecker::checkIfAstBlockChild(IAstNode *to_check)
+{
+    child_to_check_ = to_check;
+    child_to_check_found_ = false;
+}
+
 bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symbols, bool fully_parsed)
 {
     root_ = root;
@@ -965,6 +971,7 @@ void AstChecker::CheckBlock(AstBlock *block, bool open_scope)
     }
     for (ii = 0; ii < (int)block->block_items_.size(); ++ii) {
         IAstNode *node = block->block_items_[ii];
+        if (node == child_to_check_) child_to_check_found_ = true;
         AstNodeType nodetype = CheckStatement(node);
         if ((nodetype == ANT_RETURN || nodetype == ANT_SIMPLE) && ii < (int)block->block_items_.size() - 1) {
             Error("Dead code after terminating statement", node);
