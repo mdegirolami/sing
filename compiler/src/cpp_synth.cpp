@@ -385,7 +385,7 @@ void CppSynth::SynthFuncTypeSpecification(string *dst, AstFuncType *type_spec, b
     ++split_level_;
 }
 
-void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
+void  CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
 {
     string  the_type, decl;
 
