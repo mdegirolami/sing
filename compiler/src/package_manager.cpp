@@ -475,7 +475,6 @@ bool PackageManager::parseAndCheckForSuggestions(CompletionHint *hint, Package *
     }
 
     // check
-
     checker->init(this, options_, index);
     if (hint->type == CompletionType::OP) {
         if (hint->node == nullptr) {

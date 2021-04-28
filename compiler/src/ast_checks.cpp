@@ -2043,17 +2043,20 @@ int AstChecker::SearchAndLoadPackage(const char *name, IAstNode *location, const
                 return(-1);
             }
 
-            // load and check the dependency
+            // load the dependency
             int index = root_->dependencies_[ii]->package_index_;
-            bool loaded = pmgr_->load(index, PkgStatus::FOR_REFERENCIES) && pmgr_->check(index, false);
-
-            // ops !!
-            if (!loaded) {
+            if (!pmgr_->load(index, PkgStatus::LOADED)) {
                 if (location != nullptr) {
                     Error("Failed to load the package", location);
                 }
                 return(-1);
             }
+
+            // parse and check. Tolerate errors.
+            pmgr_->load(index, PkgStatus::FOR_REFERENCIES);
+            pmgr_->check(index, false);
+
+            // ops !!
             return(index);
         }
     }
