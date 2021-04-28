@@ -208,7 +208,7 @@ void AstArrayType::SynthSingType(string *dst) const
         *dst += "[*]";
     } else if (dimension_was_computed_) {
         char buffer[100];
-        sprintf(buffer, "[%d]", dimension_);
+        sprintf(buffer, "[%zu]", dimension_);
         *dst += buffer;
     } else {
         *dst += "[]";

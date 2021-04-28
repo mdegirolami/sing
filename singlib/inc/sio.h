@@ -25,6 +25,7 @@ public:
     virtual Error tell(int64_t *pos) = 0;
 
     virtual bool eof() const = 0;
+    virtual Error close() = 0;
 };
 
 class FileInfo final {
@@ -44,7 +45,6 @@ public:
     virtual ~File();
     virtual void *get__id() const override { return(&id__); };
     Error open(const char *name, const char *mode);
-    Error close();
     Error flush();
     Error getInfo(FileInfo *nfo);
     virtual Error get(uint8_t *value) override;
@@ -59,6 +59,7 @@ public:
     virtual Error tell(int64_t *pos) override;
 
     virtual bool eof() const override;
+    virtual Error close() override;
 
     static char id__;
 };

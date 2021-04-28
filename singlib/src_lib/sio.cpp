@@ -12,8 +12,6 @@
 #else
 #include <termios.h>
 #include <dirent.h>
-//#include <iostream>
-//#include <string>
 #include <unistd.h>
 #endif
 

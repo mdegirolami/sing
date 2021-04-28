@@ -65,14 +65,11 @@ Phandle execute(const char *command)
 }
 
 class Pipe final : public Stream {    
-#ifdef _WIN32
     HANDLE hh_;
-#else
-#endif
 public:
     Pipe() { hh_ = nullptr; }
     void SetHandle(HANDLE hh) { hh_ = hh; }
-    virtual ~Pipe() {if (hh_ != nullptr) CloseHandle(hh_); }
+    virtual ~Pipe();
     virtual void *get__id() const override { return(nullptr); }    // unknown type for sing !!
     virtual Error get(uint8_t *value) override;
     virtual Error gets(const int64_t maxbytes, std::string *value) override;
@@ -83,7 +80,22 @@ public:
     virtual Error seek(const int64_t pos, SeekMode mode = SeekMode::seek_set) override { return(-1); }
     virtual Error tell(int64_t *pos) override { return(-1); }
     virtual bool eof() const override;
+    virtual Error close() override;
 };
+
+Pipe::~Pipe() 
+{
+    close();
+}
+
+Error Pipe::close() 
+{
+    if (hh_ != nullptr) {
+        CloseHandle(hh_); 
+        hh_ = nullptr;
+    }
+    return(0);
+}
 
 Error Pipe::get(uint8_t *value)
 {
@@ -421,18 +433,27 @@ public:
     virtual Error seek(const int64_t pos, SeekMode mode = SeekMode::seek_set) override { return(-1); }
     virtual Error tell(int64_t *pos) override { return(-1); }
     virtual bool eof() const override;
+    virtual Error close() override;
 };
 
 Pipe::~Pipe() 
 {
+    close();
+}
+
+Error Pipe::close() 
+{
     if (hh_ != -1) {
-        close(hh_); 
+        return(::close(hh_)); 
+        hh_ = -1;
     }
+    return(0);
 }
 
 Error Pipe::get(uint8_t *value)
 {
-    if (::read(hh_, &value, 1) != 1) {
+    int ret = ::read(hh_, value, 1);
+    if (ret != 1) {
         return(-1);
     }
     return(0);
@@ -486,7 +507,7 @@ Error Pipe::puts(const char *value)
     size_t towrite = strlen(value);
 
     if (towrite < 1) return(0);
-    if (::write(hh_, &value, towrite) != towrite) {
+    if (::write(hh_, value, towrite) != towrite) {
         return(-1);
     }
     return(0);
@@ -509,6 +530,7 @@ bool Pipe::eof() const
     return(false);
 }
 
+/*
 void handler(int sig) {
   void *array[10];
   size_t size;
@@ -521,6 +543,9 @@ void handler(int sig) {
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
 }
+
+        signal(SIGSEGV, handler);
+*/
 
 Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shared_ptr<Stream> *sstdout, std::shared_ptr<Stream> *sstderr)
 {
@@ -549,90 +574,32 @@ Phandle automate(const char *command, std::shared_ptr<Stream> *sstdin, std::shar
     if (nChild == 0) {
 
         close(aStdinPipe[PIPE_WRITE]);
-        //close(aStdoutPipe[PIPE_READ]);
+        close(aStdoutPipe[PIPE_READ]);
         close(aStderrPipe[PIPE_READ]);
 
         dup2(aStdinPipe[PIPE_READ], STDIN_FILENO);
-        //dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO);
+        dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO);
         dup2(aStderrPipe[PIPE_WRITE], STDERR_FILENO);
 
         close(aStdinPipe[PIPE_READ]);
-        //close(aStdoutPipe[PIPE_WRITE]);
+        close(aStdoutPipe[PIPE_WRITE]);
         close(aStderrPipe[PIPE_WRITE]);
-        // char *argv[] = {(char*)"/bin/sh", 
-        //                 (char*)"-c", 
-        //                 (char*)command, 
-        //                 (char*)0};
-        // execvp(argv[0], argv);
         exec(command);
     }
     close(aStdinPipe[PIPE_READ]);
+    close(aStdoutPipe[PIPE_WRITE]);
+    close(aStderrPipe[PIPE_WRITE]);
+    if (nChild > 0) {
+        (*pin).SetHandle(aStdinPipe[PIPE_WRITE]);
+        (*pout).SetHandle(aStdoutPipe[PIPE_READ]);
+        (*perr).SetHandle(aStderrPipe[PIPE_READ]);
+        *sstdin = pin;
+        *sstdout = pout;
+        *sstderr = perr;
+    }
     return nChild;
 
-
-    if (0 == nChild) {
-        // child continues here
-
-        // redirect stdin
-        // if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1) {
-        //     //exit(errno);
-        // }
-        signal(SIGSEGV, handler);
-
-        FILE *fd = fopen("xxx", "wb");
-        if (fd == nullptr) {
-            exit(0);
-        }
-
-        printf("\nchild: uno");
-
-
-        // redirect stdout
-        // if (dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1) {
-        // //     exit(errno);
-        // }
-        // if (dup2(fileno(fd), STDOUT_FILENO) == -1) {
-        // //     exit(errno);
-        // }
-
-        // // redirect stderr
-        // if (dup2(aStderrPipe[PIPE_WRITE], STDERR_FILENO) == -1) {
-        //     //exit(errno);
-        // }
-        dup2(fileno(fd), STDERR_FILENO);
-        printf("\nchild: due");
-
-        // // all these are for use by parent only
-        // close(aStdinPipe[PIPE_READ]);
-        // close(aStdinPipe[PIPE_WRITE]);
-        // close(aStdoutPipe[PIPE_READ]);
-        // close(aStdoutPipe[PIPE_WRITE]); 
-        // close(aStderrPipe[PIPE_READ]);
-        // close(aStderrPipe[PIPE_WRITE]); 
-
-        // run child process image
-        exec(command);
-
-    } else if (nChild > 0) {
-        // parent continues here
-
-        // close unused file descriptors, these are for child only
-        // close(aStdinPipe[PIPE_READ]);
-        // close(aStdoutPipe[PIPE_WRITE]); 
-        // close(aStderrPipe[PIPE_WRITE]); 
-
-        // (*pin).SetHandle(aStdinPipe[PIPE_WRITE]);
-        (*pout).SetHandle(aStdoutPipe[PIPE_READ]);
-        // (*perr).SetHandle(aStderrPipe[PIPE_READ]);
-
-        // *sstdin = pin;
-        *sstdout = pout;
-        // *sstderr = perr;
-
-        return(nChild);
-    }
 cleanup:
-
     if (aStdinPipe[PIPE_READ] != -1) close(aStdinPipe[PIPE_READ]);
     if (aStdinPipe[PIPE_WRITE] != -1) close(aStdinPipe[PIPE_WRITE]);
     if (aStdoutPipe[PIPE_READ] != -1) close(aStdoutPipe[PIPE_READ]);

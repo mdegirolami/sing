@@ -2,7 +2,7 @@ debug_flags = -O2 -s -DNDEBUG
 
 src_b = ../../src_bench
 src_l = ../../src_lib
-bin_target = ../../bin/linux/bench.exe
+bin_target = ../../bin/linux/bench
 lib_target = ../../bin/linux/singlib.a
 platform_libs =  -lpthread
 

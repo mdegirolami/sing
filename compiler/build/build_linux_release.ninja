@@ -3,7 +3,7 @@ profile_flags =
 #profile_flags = -pg
 
 src = ../../src
-bin_target = ../../bin/linux/sing.exe
+bin_target = ../../bin/linux/sing
 sing_lib = ../../../singlib/bin/linux/singlib.a
 
 include ../build_aux.ninja

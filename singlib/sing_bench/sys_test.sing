@@ -23,7 +23,7 @@ public fn sys_test() bool
     sys.validate(true);
 
     // remark after test :-)
-    sys.validate(false);
+    // sys.validate(false);
 
     return(true);
 }
@@ -77,25 +77,25 @@ public fn testProcessFunctions() bool
         var child_stdin *sio.Stream;
         var child_stdout *sio.Stream;
         var child_stderr *sio.Stream;
-        hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
+        //hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
+        hh = sys.automate("/usr/bin/sort", child_stdin, child_stdout, child_stderr); 
         if (hh == 0) {
             return(false);
         }
+        child_stdin.puts("c\nb\na\n");
+        child_stdin.close();
         var prompt string;
-        if (child_stdout.gets(5, prompt) != 0) {
+        if (child_stdout.gets(1, prompt) != 0) {
             return(false);
         }
-        if (prompt != "Press") {
-            return(false);
-        }
-        if (child_stdin.puts("Y") != 0) {
+        if (prompt != "a") {
             return(false);
         }
         sys.waitCommandExit(hh);    
     }
 
     // remark after first test :-)
-    sys.exit(0);
+    //sys.exit(0);
 
     return(true);
 }

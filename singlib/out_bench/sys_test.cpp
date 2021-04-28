@@ -24,7 +24,7 @@ bool sys_test()
     sing::validate(true);
 
     // remark after test :-)
-    sing::validate(false);
+    // sys.validate(false);
 
     return (true);
 }
@@ -78,25 +78,25 @@ bool testProcessFunctions()
         std::shared_ptr<sing::Stream> child_stdin;
         std::shared_ptr<sing::Stream> child_stdout;
         std::shared_ptr<sing::Stream> child_stderr;
-        hh = sing::automate("read -n1 -r -p \"Press any key to continue...\"", &child_stdin, &child_stdout, &child_stderr);
+        //hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
+        hh = sing::automate("/usr/bin/sort", &child_stdin, &child_stdout, &child_stderr);
         if (sing::iseq(hh, 0)) {
             return (false);
         }
+        (*child_stdin).puts("c\nb\na\n");
+        (*child_stdin).close();
         std::string prompt;
-        if ((*child_stdout).gets(5, &prompt) != 0) {
+        if ((*child_stdout).gets(1, &prompt) != 0) {
             return (false);
         }
-        if (prompt != "Press") {
-            return (false);
-        }
-        if ((*child_stdin).puts("Y") != 0) {
+        if (prompt != "a") {
             return (false);
         }
         sing::waitCommandExit(hh);
     }
 
     // remark after first test :-)
-    sing::exit(0);
+    //sys.exit(0);
 
     return (true);
 }
