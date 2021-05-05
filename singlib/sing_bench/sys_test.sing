@@ -77,20 +77,45 @@ public fn testProcessFunctions() bool
         var child_stdin *sio.Stream;
         var child_stdout *sio.Stream;
         var child_stderr *sio.Stream;
-        //hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
-        hh = sys.automate("/usr/bin/sort", child_stdin, child_stdout, child_stderr); 
+
+        //note: -f means 'case insensitive'. Here to check exec() parsing
+        hh = sys.automate("/usr/bin/sort -r", child_stdin, child_stdout, child_stderr); 
         if (hh == 0) {
             return(false);
         }
-        child_stdin.puts("c\nb\na\n");
+        var mess [*]u8 = {98, 10}; // "b\n"
+        child_stdin.write(2, mess);
+        child_stdin.put(99);        // "c\n"
+        child_stdin.put(10);
+        child_stdin.puts("a\n");
         child_stdin.close();
+
+        // c
         var prompt string;
-        if (child_stdout.gets(1, prompt) != 0) {
+        if (child_stdout.gets(10, prompt) != 0) {
             return(false);
         }
-        if (prompt != "a") {
+        if (prompt != "c\n") {
             return(false);
         }
+
+        // b
+        if (child_stdout.get(mess[0]) != 0) {
+            return(false);
+        }
+        if (mess[0] != 98) {
+            return(false);
+        }
+
+        // skip \n
+        child_stdout.gets(10, prompt);
+
+        // a
+        child_stdout.read(2, mess, false:append);
+        if (mess[0] != 97) {
+            return(false);
+        }
+
         sys.waitCommandExit(hh);    
     }
 

@@ -78,20 +78,45 @@ bool testProcessFunctions()
         std::shared_ptr<sing::Stream> child_stdin;
         std::shared_ptr<sing::Stream> child_stdout;
         std::shared_ptr<sing::Stream> child_stderr;
-        //hh = sys.automate("read -n1 -r -p \"Press any key to continue...\"", child_stdin, child_stdout, child_stderr); 
-        hh = sing::automate("/usr/bin/sort", &child_stdin, &child_stdout, &child_stderr);
+
+        //note: -f means 'case insensitive'. Here to check exec() parsing
+        hh = sing::automate("/usr/bin/sort -r", &child_stdin, &child_stdout, &child_stderr);
         if (sing::iseq(hh, 0)) {
             return (false);
         }
-        (*child_stdin).puts("c\nb\na\n");
+        std::vector<uint8_t> mess = {(uint8_t)98, (uint8_t)10};                 // "b\n"
+        (*child_stdin).write(2, mess);
+        (*child_stdin).put((uint8_t)99);                    // "c\n"
+        (*child_stdin).put((uint8_t)10);
+        (*child_stdin).puts("a\n");
         (*child_stdin).close();
+
+        // c
         std::string prompt;
-        if ((*child_stdout).gets(1, &prompt) != 0) {
+        if ((*child_stdout).gets(10, &prompt) != 0) {
             return (false);
         }
-        if (prompt != "a") {
+        if (prompt != "c\n") {
             return (false);
         }
+
+        // b
+        if ((*child_stdout).get(&mess[0]) != 0) {
+            return (false);
+        }
+        if (mess[0] != 98) {
+            return (false);
+        }
+
+        // skip \n
+        (*child_stdout).gets(10, &prompt);
+
+        // a
+        (*child_stdout).read(2, &mess, false);
+        if (mess[0] != 97) {
+            return (false);
+        }
+
         sing::waitCommandExit(hh);
     }
 
