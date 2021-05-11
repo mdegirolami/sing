@@ -1,8 +1,8 @@
-cflags = -fsigned-char -I $src -I../../../singlib/inc
+cflags = -fsigned-char -std=c++11 -I $src -I../../../singlib/inc -fmax-errors=20
+
 skip_usage = -u
 test_mode =
 sing_src = ../../tests
-singcc = ../../../compiler/bin/win/sing
 
 rule cc
   deps = gcc
@@ -15,7 +15,7 @@ rule sc
   command = $singcc $sing_debug_flags $skip_usage -f ../format.txt -I ../../tests -MF -o $out $in
 
 rule ln
-  command = g++ -o $out $in $singlib
+  command = g++ -std=c++11 -o $out $in $singlib
 
 build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pkgs_test.sing  
 build $src/main.h             | $src/main.cpp            : sc $sing_src/main.sing

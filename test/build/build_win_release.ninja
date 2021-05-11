@@ -2,8 +2,9 @@ debug_flags = -O2 -s -DNDEBUG
 sing_debug_flags =
 
 src = ../../tests_results
-bin_target = ../../bin/tests.exe
+bin_target = ../../bin/win/tests.exe
 singlib = ../../../singlib/bin/win/singlib.a
+singcc = ../../../compiler/bin/win/sing
 
 include ../build_aux.ninja
 

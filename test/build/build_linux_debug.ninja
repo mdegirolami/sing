@@ -1,0 +1,9 @@
+debug_flags = -O0 -g
+sing_debug_flags = -g
+
+src = ../../tests_results
+bin_target = ../../bin/linux/tests_d
+singlib = ../../../singlib/bin/linux/singlib_d.a
+singcc = ../../../compiler/bin/linux/sing
+
+include ../build_aux.ninja
