@@ -1,9 +1,256 @@
 requires "sio";
+requires "sys";
+requires "str";
+requires "buildupd";
 
 public fn updater(argv [*]string) i32
 {
-    sio.print("hello world !!!\r\n");
-    sio.print("\r\nPress any key to exit...");
-    sio.kbdGet();
+    // check args
+    if (argv.size() < 2) {
+        sio.print("\r\nUsage: updater <project_path> <sdk path>\r\n");
+        sys.exit(1);
+    }
+
+    // take out '/' from the end of the string, if present. Normalize.
+    let root = sio.pathFix(argv[0]); 
+    let sdk = sio.pathFix(argv[1]);
+    let default_target = getDefaultTarget(root);
+
+    // collect sources
+    var sources [*]buildupd.Source;
+    collectSources(root, sources);
+
+    // if there are no sources, init with hello_world
+    if (sources.size() < 1) {
+        if (!copyFolderFromSdk(sdk, root, "sing") || !copyFolderFromSdk(sdk, root, "src")) {
+            sio.print("Error: Can't copy sources to the project directory !!");
+            return(1);
+        }
+        collectSources(root, sources);
+    }
+
+    // if the build directory doesn't exist, let's create one
+    var nfo sio.FileInfo;
+    if (sio.fileGetInfo(root + "/build", nfo) != 0 || !nfo.is_dir) {
+        if (!copyFolderFromSdk(sdk, root, "build")) {
+            sio.print("Error: Can't copy build files to the project directory !!");
+            return(1);
+        }
+    }
+
+    // update sdk_location.ninja
+    let content = "sdk = " + sdk + "\r\n";
+    if (sio.fileWriteText(root + "/build/sdk_location.ninja", content) != 0) {
+        sio.print("Error: Can't write sdk_location.ninja !!");
+        return(1);        
+    }
+
+    // build index and check duplications
+    var path1 string;
+    var path2 string;
+    var srcbase2idx map(string)i32;
+    if (areThereDuplications(path1 ,path2, sources, srcbase2idx)) {
+        sio.print("Error: Base filenames must be unique !! Conflict between " + path1 + " and " + path2);
+        return(1);        
+    }
+
+    // update build_aux.ninja
+    var has_mods bool;
+    let result = buildupd.fixBuild(has_mods, root + "/build/build_aux.ninja", sources, srcbase2idx);
+    if (result != "") {
+        sio.print("Error: /build/build_aux.ninja, " + result);
+        return(1);        
+    }
+
+    // sources changed. clean up temporary files
+    if (has_mods) {
+        sio.dirRemove(root + "/out");
+        sio.dirRemove(root + "/build/obj_d");
+        sio.dirRemove(root + "/build/obj_r");
+    }
+
+    // create required directories
+    sio.dirCreate(root + "/build/obj_d");  
+    sio.dirCreate(root + "/build/obj_r");  
+    sio.dirCreate(root + "/bin/linux");  
+    sio.dirCreate(root + "/bin/win");  
+
+    // create temporary directories for sing generated c files
+    var paths map(string)i32;
+    for (src in sources) {
+        if (src.ext == "sing") {
+            paths.insert(src.path, 0);
+        }
+    }
+    for (idx in 0:paths.size()) {
+        sio.dirCreate(root + "/out/" + paths.key_at(idx));  
+    }
+
+    // create and fill .vscode if not existent
+    if (sio.fileGetInfo(root + "/.vscode", nfo) != 0 || !nfo.is_dir) {
+        if (!copyFolderFromSdk(sdk, root, ".vscode")) {
+            sio.print("Error: Can't copy .vscode files to the project directory !!");
+            return(1);
+        }
+    }
+
+    // set the default target name into build files (replacing "<PHOLD>")
+    replace_PHOLD(root + "/build/build_linux_debug.ninja", default_target, false:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_linux_release.ninja", default_target, false:forwin, false:debug);
+    replace_PHOLD(root + "/build/build_win_debug.ninja", default_target, true:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_win_release.ninja", default_target, true:forwin, false:debug);
+
+    // fix .vscode/launch.json
+    var to_launch = default_target + "_d";
+    var original string;
+    if (sio.fileReadText(root + "/.vscode/launch.json", original) == 0) {
+        var buffer = original;
+        let id = sys.getOs();
+        switch (id) {
+            case sys.OsId.linux: {
+                str.replaceAll(buffer, "/win", "/linux");
+                str.replaceAll(buffer, "/osx", "/linux");
+                str.replace(buffer, ".exe", "");
+            }
+            case sys.OsId.osx: {
+                str.replaceAll(buffer, "/win", "/osx");
+                str.replaceAll(buffer, "/linux", "/osx");
+                str.replace(buffer, ".exe", "");
+            }
+            case sys.OsId.win: {
+                str.replaceAll(buffer, "/linux", "/win");
+                str.replaceAll(buffer, "/osx", "/win");
+                var range str.Range;
+                if (str.find(buffer, to_launch, range)) {
+                    var end_pos i32;
+                    if (str.compareAt(buffer, range.end, "\"", end_pos) == 0) {
+                        str.insert(buffer, range.end, ".exe");
+                    }
+                }
+                to_launch += ".exe";
+            }
+        }
+        str.replace(buffer, "<PHOLD>", to_launch);
+        if (buffer != original) {
+            if (sio.fileWriteText(root + "/.vscode", buffer) != 0) {
+                sio.print("Error: Can't update .vscode/launch.json !!");
+            }
+        }
+    }
+
+    // create .gitignore if it doesn't exist
+    if (sio.fileGetInfo(root + "/.gitignore", nfo) != 0) {
+        let err = sio.fileWriteText(root + "/.gitignore", "bin/*\r\n"
+                                                          "build/obj*\r\n"
+                                                          "out/*\r\n");
+        if (err != 0) {
+            sio.print("Error: Can't write .gitignore");
+        }
+    }
+
+    sio.print("\r\nAll done...");
     return(0);
+}
+
+fn collectSources(root string, out buffer [*]buildupd.Source) void
+{
+    var tmp [*]string;
+
+    let singroot = root + "/sing/";
+    sio.dirReadNames(singroot, sio.DirFilter.regular, tmp, true:recursive);
+    for (name in tmp) {
+        if (str.hasSuffix(name, "sing", true:insensitive)) {
+            str.cutPrefix(name, singroot);
+            var src buildupd.Source;
+            var drive string;
+            sio.pathSplit(name, drive, src.path, src.base, src.ext);
+            buffer.push_back(src);
+        }
+    }
+
+    let cpproot = root + "/src/";
+    tmp.clear();
+    sio.dirReadNames(cpproot, sio.DirFilter.regular, tmp, true:recursive);
+    for (name in tmp) {
+        if (str.hasSuffix(name, "cpp", true:insensitive)) {
+            str.cutPrefix(name, cpproot);
+            var src buildupd.Source;
+            var drive string;
+            sio.pathSplit(name, drive, src.path, src.base, src.ext);
+            buffer.push_back(src);
+        }
+    }
+}
+
+fn copyFolderFromSdk(sdk string, root string, folder string) bool
+{
+    // source and dst directories
+    let source = sdk + "/template/" + folder;
+    let dst = root + "/" + folder;
+
+    // read the files list
+    var tocopy [*]string;
+    sio.dirReadNames(source, sio.DirFilter.regular, tocopy, false:recursive);
+
+    // be sure the destination directory exists
+    if (sio.dirCreate(dst) != 0) {
+        return(false);
+    }
+
+    // for every file in source dir..
+    var dstfile string;
+    var buffer [*]u8;
+    for (srcfile in tocopy) {
+        dstfile = srcfile;
+        str.cutPrefix(dstfile, source, false:insensitive);
+        if (sio.fileRead(srcfile, buffer) != 0) {
+            return(false);
+        }
+        if (sio.fileWrite(dst + dstfile, buffer) != 0) {
+            return(false);
+        }
+    }
+
+    return(true);
+}
+
+fn areThereDuplications(out path1 string, out path2 string, 
+                        all_srcs [*]buildupd.Source, out base2idx map(string)i32) bool
+{
+    for (count, src in all_srcs) {
+        if (base2idx.has(src.base)) {
+            path1 = all_srcs[base2idx.get(src.base)].getFullName();
+            path2 = src.getFullName();
+            return(true);
+        }
+        base2idx.insert(src.base, i32(count));
+    }
+    return(false);
+}
+
+fn getDefaultTarget(root string) string
+{
+    var last string;
+    var discard string;
+    if (!str.splitAny(root, "/\\", discard, last)) {
+        return(root);
+    }
+    return(last);
+}
+
+fn replace_PHOLD(name string, default_target string, forwin bool, debug bool) void
+{
+    var buffer string;
+    if (sio.fileReadText(name, buffer) == 0) {
+        var target = default_target;
+        if (debug) {
+            target += "_d";
+        }
+        if (forwin) {
+            target += ".exe";
+        }
+        if (str.replace(buffer, "<PHOLD>", target) != str.npos) {
+            sio.fileWriteText(name, buffer);
+        }
+    }
 }

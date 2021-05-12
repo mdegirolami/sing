@@ -1,0 +1,448 @@
+requires "sio";
+requires "str";
+requires "sort";
+
+// rows of interest to fixBuild() fall into two classes...
+enum RowType {dep, target, unknown}
+
+// dep rows are of 3 types...
+enum DepType {sing2tmp, tmp2obj, src2obj, count}
+
+public class Source {
+public:
+    var path string;
+    var base string;
+    var ext string;
+
+    fn getFullName() string;
+}
+
+fn Source.getFullName() string
+{
+    return(sio.pathJoin("", this.path, this.base, this.ext));
+}
+
+class Target {
+public:    
+    var basic_dep string;       // the row deprived of objs
+    var objs_base [*]string;
+    var row i32;
+}
+
+class Dependency {
+public:
+    var path string;
+    var base string;
+    var ext string;         // if extension is "sing" sing2tmp_.. fields can be filled
+
+    var sing2tmp_row = -1;
+    var sing2tmp_rule string;
+    var x2obj_row = -1;
+    var x2obj_rule string;
+    var target_idx = -1;
+
+    var deleted = false;
+}
+
+public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2idx map(string)i32) string
+{
+    var row_priority [*]i32;
+    var rows [*]string;
+    var targets [*]Target;
+    var deps [*]Dependency;
+    var base2idx map(string)i32;    // to find a record in deps by the base name
+
+    has_mods = false;
+
+    // read the original file
+    // place interesting rows in descriptors, the other in rows[] 
+    var build_aux sio.File;
+    var line string;
+    build_aux.open(name, "r");
+    var row_num = 0;
+    while (build_aux.gets(10_000_000, line) == 0) {   
+        ++row_num;  
+        var rtype RowType = RowType.unknown;
+        if (str.hasPrefix(line, "build")) {
+            rtype = extractDepOrTarget(deps, base2idx, targets, line, row_num);
+        }
+        if (rtype == RowType.unknown) {
+            rows.push_back(line);
+            row_priority.push_back(row_num);
+        }
+    }
+    build_aux.close();
+
+    if (targets.size() < 1) {
+        return("no targets");
+    }
+
+    // define where to place dependencies by default
+    var def_row [DepType.count]i32 = {-1, -1, -1};
+    for (count, row in rows) { 
+        if (row == "# sing->temp") {
+            def_row [DepType.sing2tmp] = row_priority[count];
+        } else if (row == "# temp -> obj") {
+            def_row [DepType.tmp2obj] = row_priority[count];
+        } else if (row == "# cpp -> obj") {
+            def_row [DepType.src2obj] = row_priority[count];
+        }
+    }
+    for (def_value in def_row) {
+        if (def_value == -1 && deps.size() > 0) {
+            def_value = deps[deps.size() - 1].x2obj_row;
+        }
+        if (def_value == -1) {
+            def_value = row_num + 1;
+        }
+    }
+
+    // update the dependencies (delete and add to align to available sources)
+    has_mods = updateDescriptors(base2idx, deps, srcbase2idx, sources, targets, def_row);
+    if (!has_mods) {
+        return("");
+    }
+
+    // align all ':' the same
+    var max_field_len [DepType.count]i32;
+    for (dep in deps) {
+        let baselen = str.numchars(dep.base);
+        let fulllen = baselen + str.numchars(dep.path) + 1;
+        if (dep.ext == "sing") {
+            max_field_len[DepType.sing2tmp] = max(max_field_len[DepType.sing2tmp], fulllen);
+            max_field_len[DepType.tmp2obj] = max(max_field_len[DepType.tmp2obj], baselen);
+        } else {
+            max_field_len[DepType.src2obj] = max(max_field_len[DepType.src2obj], baselen);
+        }
+    }
+
+    // add dep lines to rows[]
+    for (dep in deps) {
+        if (dep.ext == "sing") {
+            rows.push_back(sing2tempSynth(dep.path, dep.base, dep.sing2tmp_rule, max_field_len[DepType.sing2tmp]));
+            row_priority.push_back(dep.sing2tmp_row);
+
+            rows.push_back(temp2objSynth(dep.path, dep.base, dep.x2obj_rule, max_field_len[DepType.tmp2obj]));
+            row_priority.push_back(dep.x2obj_row);
+        } else {
+            rows.push_back(cpp2objSynth(dep.path, dep.base, dep.ext, dep.x2obj_rule, max_field_len[DepType.src2obj]));
+            row_priority.push_back(dep.x2obj_row);
+        }
+    }
+
+    // add target lines to rows[]
+    for (tar in targets) {
+        rows.push_back(targetSynth(tar));
+        row_priority.push_back(tar.row);
+    }
+
+    // sort rows[]
+    var index [*]i32;
+    sort.indexInit(index, rows.size());
+    sort.ksort_i32(index, row_priority);
+
+    // print down the new file
+    build_aux.open(name, "w");
+    for (idx in index) {
+        build_aux.puts(rows[idx]);
+    }
+    build_aux.close();
+
+    // done !!
+    return("");
+}
+
+// returns false if there is no update to be done.
+fn updateDescriptors(io base2idx map(string)i32, io deps [*]Dependency, 
+                    in srcbase2idx map(string)i32, in sources [*]Source, 
+                    io targets [*]Target, in def_row [DepType.count]i32) bool
+{
+    var has_changes = false;
+
+    // flag obsolete dependencies, 
+    // also update path/extension based on actual source values. 
+    for (dep in deps) {
+        let idx = srcbase2idx.get_safe(dep.base, -1);
+        if (idx == -1) {
+            dep.deleted = true;
+            has_changes = true;
+        } else {
+            if (dep.path != sources[idx].path || dep.ext != sources[idx].ext) {
+                has_changes = true;
+                dep.path = sources[idx].path;
+                dep.ext  = sources[idx].ext;
+            }
+        }
+    }
+
+    // create dependencies for new sources
+    for (src in sources) {
+        if (!base2idx.has(src.base)) {
+            let idx = deps.size();
+            deps.resize(idx + 1);
+            deps[idx].path = src.path;
+            deps[idx].base = src.base;
+            deps[idx].ext = src.ext;
+            base2idx.insert(src.base, idx);
+            has_changes = true;
+        }
+    }
+
+    // assign dependencies to respective targets
+    for (count, tar in targets) {
+        for (basename in tar.objs_base) {
+            let idx = base2idx.get_safe(basename, -1);
+            if (idx != -1) {
+                deps[idx].target_idx = i32(count);
+            }
+        }
+    }
+
+    // fix other uninited fields in undeleted deps
+    for (dep in deps) {
+        if (!dep.deleted) {
+            let is_sing = dep.ext == "sing";
+            if (is_sing && dep.sing2tmp_row == -1) {
+                let idx = mostSimilarDep(dep.path, dep.ext, hasSingRule, deps);
+                if (idx != -1) {
+                    dep.sing2tmp_row = deps[idx].sing2tmp_row;
+                    dep.sing2tmp_rule = deps[idx].sing2tmp_rule;
+                    if (dep.x2obj_row == -1) {
+                        dep.x2obj_row = deps[idx].x2obj_row;
+                        dep.x2obj_rule = deps[idx].x2obj_rule;
+                    }
+                    if (dep.target_idx == -1) {
+                        dep.target_idx = deps[idx].target_idx;
+                    }
+                } else {
+                    dep.sing2tmp_rule = "sc";
+                    dep.sing2tmp_row = def_row[DepType.sing2tmp];
+                }
+                has_changes = true;
+            }
+            if (dep.x2obj_row == -1) {
+                let idx = mostSimilarDep(dep.path, dep.ext, hasObjRule, deps);
+                if (idx != -1) {
+                    dep.x2obj_row = deps[idx].x2obj_row;
+                    dep.x2obj_rule = deps[idx].x2obj_rule;
+                    if (dep.target_idx == -1) {
+                        dep.target_idx = deps[idx].target_idx;
+                    }
+                } else {
+                    dep.x2obj_rule = "cc";
+                    if (is_sing) {
+                        dep.x2obj_row = def_row[DepType.tmp2obj];
+                    } else {
+                        dep.x2obj_row = def_row[DepType.src2obj];
+                    }
+                }
+                has_changes = true;
+            }
+            if (dep.target_idx == -1) {
+                let idx = mostSimilarDep(dep.path, dep.ext, hasTargetIdx, deps);
+                if (idx != -1) {
+                    dep.target_idx = deps[idx].target_idx;
+                } else {
+                    dep.target_idx = 0;
+                }
+                has_changes = true;
+            }
+        }
+    }
+
+    // rebuild targets objs lists
+    for (tar in targets) {
+        tar.objs_base.clear();
+    }
+    for (dep in deps) {
+        if (!dep.deleted && dep.target_idx >= 0) {
+            targets[dep.target_idx].objs_base.push_back(dep.base);
+        }
+    }
+    return(has_changes);
+}
+
+fn hasSingRule(dep Dependency) bool
+{
+    return(dep.sing2tmp_row >= 0);
+}
+
+fn hasObjRule(dep Dependency) bool
+{
+    return(dep.x2obj_row >= 0);
+}
+
+fn hasTargetIdx(dep Dependency) bool
+{
+    return(dep.target_idx >= 0);
+}
+
+fn mostSimilarDep(path string, ext string, is_ok (dep Dependency)bool, deps [*]Dependency) i32
+{
+    let len = str.len(path);
+    var best = -1;
+    var bestidx = -1;
+    for (count, dep in deps) {
+        if (ext == dep.ext && is_ok(dep)) {
+            var matching = -1;
+            if (str.compareAt(dep.path, 0, path, matching, true) == 0 && matching == len) {
+                return(i32(count));
+            } else if (matching > best) {
+                best = matching;
+                bestidx = i32(count);
+            }
+        }
+    }
+    return(bestidx);
+}
+
+fn extractDepOrTarget(out deps [*]Dependency, io base2idx map(string)i32, out targets [*]Target, line string, row i32) RowType
+{
+    // split at ':'
+    var left_term string;
+    var right_term string;
+    if (!str.split(line, ":", left_term, right_term)) {
+        return(RowType.unknown);
+    }
+    str.cutLeadingSpaces(right_term);
+
+    // if has a .o dependee is a target, else a depencdency
+    var range str.Range;
+    if (!str.find(right_term, ".o", range)) {
+        if (extractDependency(deps, base2idx, right_term, row)) {
+            return(RowType.dep);
+        } else {
+            return(RowType.unknown);
+        }
+    }
+    let num_targets = targets.size();
+    targets.resize(num_targets + 1);
+    extractTarget(targets[num_targets], left_term, right_term, row);
+    return(RowType.target);
+}
+
+fn extractDependency(out deps [*]Dependency, io base2idx map(string)i32, right string, row i32) bool
+{
+    // extract rule and dependee
+    var rule string;
+    var dependee string;
+    var temp string;
+    if (!str.splitAny(right, " \t", rule, temp)) {
+        return(false);
+    }
+    str.cutLeadingSpaces(temp);
+    if (!str.splitAny(temp, " \t", dependee, temp)) {
+        dependee = temp;
+    }
+    dependee = sio.pathFix(dependee);
+
+    // detect the type of dependency and cut the path prefix
+    var rtype DepType;
+    if (str.hasPrefix(dependee, "$sing/") && str.hasSuffix(dependee, ".sing")) {
+        str.cutPrefix(dependee, "$sing/");
+        rtype = DepType.sing2tmp;
+    } else if (str.hasPrefix(dependee, "$temp/") && str.hasSuffix(dependee, ".cpp")) {
+        str.cutPrefix(dependee, "$temp/");
+        rtype = DepType.tmp2obj;
+    } else if (str.hasPrefix(dependee, "$cpp/")) {
+        str.cutPrefix(dependee, "$cpp/");
+        rtype = DepType.src2obj;
+    } else {
+        return(false);
+    }
+
+    // get the path components
+    var dep Dependency;
+    sio.pathSplit(dependee, temp, dep.path, dep.base, dep.ext);
+
+    // sing2tmp and tmp2obj have 2 rules, is the record already there ?
+    if (rtype != DepType.src2obj) {
+        var idx = base2idx.get_safe(dep.base, -1);
+        if (idx == -1) {
+            idx = deps.size();
+            deps.push_back(dep);
+            base2idx.insert(dep.base, idx);
+        }
+        if (rtype == DepType.sing2tmp) {
+            deps[idx].sing2tmp_row = row;
+            deps[idx].sing2tmp_rule = rule;
+        } else {
+            deps[idx].x2obj_row = row;
+            deps[idx].x2obj_rule = rule;
+        }
+    } else {
+        base2idx.insert(dep.base, deps.size());
+        dep.x2obj_row = row;
+        dep.x2obj_rule = rule;
+        deps.push_back(dep);
+    }
+    return(true);
+}
+
+fn extractTarget(out target Target, left string, right string, row i32) void
+{
+    target.basic_dep = left + ":";
+
+    var temp = right;
+    var element string;
+    var discard string;
+    while (str.len(temp) > 0 && !str.hasPrefix(temp, "#")) {
+        if (!str.splitAny(temp, " \t", element, temp)) {
+            element = temp;
+            temp = "";
+        }
+        str.cutLeadingSpaces(temp);
+        if (str.hasSuffix(element, ".o")) {
+            str.rsplit(element, ".", element, discard);
+            str.rsplitAny(element, "/\\", discard, element);
+            target.objs_base.push_back(element);
+        } else {
+            // a dependee which is not a .o
+            target.basic_dep += " " + element;
+        }
+    }
+    target.row = row;
+}
+
+fn sing2tempSynth(path string, base string, rule string, max_field_len i32) string
+{
+    let path_and_base = path + "/" + base;
+    let left = "build $temp/" + path_and_base + ".h | $temp/" + path_and_base + ".cpp";
+
+    // add the extra characters 'left' would have if path_and_base was max_field_len long
+    let left_adj = str.numchars(left) + (max_field_len - str.numchars(path_and_base)) * 2;
+
+    return(sio.formatString(left, left_adj, sio.f_align_left) + " : " + 
+            rule + " $sing/" + path_and_base + ".sing" + "\r\n");
+}
+
+fn temp2objSynth(path string, base string, rule string, max_field_len i32) string
+{
+    let left = "build " + base + ".o";
+
+    // add the extra characters 'left' would have if path_and_base was max_field_len long
+    let left_adj = str.numchars(left) + max_field_len - str.numchars(base);
+
+    return(sio.formatString(left, left_adj, sio.f_align_left) + " : " + 
+            rule + " $temp/" + path + "/" + base + ".cpp" + "\r\n");
+}
+
+fn cpp2objSynth(path string, base string, ext string, rule string, max_field_len i32) string
+{
+    let left = "build " + base + ".o";
+
+    // add the extra characters 'left' would have if path_and_base was max_field_len long
+    let left_adj = str.numchars(left) + max_field_len - str.numchars(base);
+
+    return(sio.formatString(left, left_adj, sio.f_align_left) + " : " + 
+            rule + " $cpp/" + path + "/" + base + "." + ext + "\r\n");
+}
+
+fn targetSynth(tar Target) string
+{
+    var line = tar.basic_dep;
+    for (obj in tar.objs_base) {
+        line += " " + obj + ".o";
+    }
+    return(line + "\r\n");
+}
