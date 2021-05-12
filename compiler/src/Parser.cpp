@@ -372,6 +372,7 @@ TypeDeclaration *Parser::ParseEnum(void)
         }
         node = new TypeDeclaration(m_lexer->CurrTokenString());
         AstEnumType *typenode = new AstEnumType();
+        typenode->SetName(node->name_.c_str());
         node->SetType(typenode);
         RecordPosition(node);
         RecordPosition(typenode);

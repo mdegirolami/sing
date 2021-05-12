@@ -302,6 +302,7 @@ public:
 class AstEnumType : public IAstTypeNode
 {
 public:
+    string                  name_;              // need to build constant names
     vector<string>          items_;
     vector<IAstExpNode*>    initers_;
     PositionInfo            pos_;
@@ -319,6 +320,7 @@ public:
     virtual bool NeedsZeroIniter(void) { return(true); }
     virtual bool SupportsEqualOperator(void) { return(true); }
     virtual void SynthSingType(string *dst) const {}
+    void SetName(const char *name) { name_ = name; }
     void AddItem(const char *name, IAstExpNode *initer) { items_.push_back(name); initers_.push_back(initer); }
 };
 

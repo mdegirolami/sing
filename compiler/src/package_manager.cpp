@@ -290,11 +290,17 @@ int PackageManager::getSignature(string *signature, int index, int row, int col,
         return(-1);
     }
     if (hint.type != CompletionType::OP || hint.node == nullptr) {
+        pkg->clearParsedData();
         return(-1);
     }
 
+    // analyze the return values
     const ExpressionAttributes *attr = hint.node->GetAttr();
     const AstFuncType *ft = attr->GetFunCallType();
+    if (ft == nullptr) {
+        pkg->clearParsedData();
+        return(-1);
+    }
     *signature = "";
     ft->SynthSingType(signature);
 

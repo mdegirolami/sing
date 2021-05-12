@@ -230,6 +230,7 @@ void CppSynth::SynthConstructor(string *classname, AstClassType *ctype)
 
     for (int ii = 0; ii < ctype->member_vars_.size(); ++ii) {
         VarDeclaration *vdecl = ctype->member_vars_[ii];
+        initer = "";
         if (vdecl->initer_ != nullptr) {
             SynthIniterCore(&initer, vdecl->GetTypeSpec(), vdecl->initer_);
         } else {
@@ -395,12 +396,15 @@ void CppSynth::SynthArrayTypeSpecification(string *dst, AstArrayType *type_spec)
     }
     SynthTypeSpecification(&the_type, type_spec->element_type_);
     decl += the_type;
-    if (!type_spec->is_dynamic_) { // i.e.: is std::array
+    if (!type_spec->is_dynamic_) { // i.e.: is sing::array
         if (type_spec->expression_ != nullptr) {
             string exp;
 
             decl += ", ";
             int priority = SynthExpression(&exp, type_spec->expression_);
+            if (type_spec->expression_->GetAttr()->IsEnum()) {
+                priority = AddCast(&exp, priority, "size_t");
+            }
             Protect(&exp, priority, GetBinopCppPriority(TOKEN_SHR));    // because SHR gets confused with the end of the template parameters list '>'
             decl += exp;
         } else {
@@ -782,7 +786,15 @@ void CppSynth::SynthZeroIniter(string *dst, IAstTypeNode *type_spec)
         *dst = "nullptr";
         break;
     case ANT_ENUM_TYPE:
-        *dst = ((AstEnumType*)type_spec)->items_[0];
+        {
+            AstEnumType *etype = (AstEnumType*)type_spec;
+            *dst = etype->name_ + "::" + etype->items_[0];
+            int pkg_idx = etype->GetPositionRecord()->package_idx;
+            if (pkg_idx > 0) {
+                string partial = *dst;
+                GetFullExternName(dst, pkg_idx, partial.c_str());
+            }
+        }
         break;
     case ANT_ARRAY_TYPE:
         if (!((AstArrayType*)type_spec)->is_dynamic_) {
@@ -1390,7 +1402,10 @@ int CppSynth::SynthIndices(string *dst, AstIndexing *node)
     int     priority;
 
     int exp_pri = SynthExpression(dst, node->indexed_term_);
-    SynthExpression(&expression, node->lower_value_);
+    int index_pri = SynthExpression(&expression, node->lower_value_);
+    if (node->lower_value_->GetAttr()->IsEnum()) {
+        AddCast(&expression, index_pri, "size_t");
+    }
     if (debug_) {
         priority = GetUnopCppPriority(TOKEN_DOT);
         Protect(dst, exp_pri, priority);

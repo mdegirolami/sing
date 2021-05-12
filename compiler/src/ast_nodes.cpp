@@ -43,7 +43,13 @@ ParmPassingMethod GetParameterPassingMethod(IAstTypeNode *type_spec, bool input_
     case ANT_ENUM_TYPE:
         return(input_parm ? PPM_VALUE : PPM_POINTER);
     case ANT_NAMED_TYPE:
-        return(GetParameterPassingMethod(((AstNamedType*)type_spec)->wp_decl_->type_spec_, input_parm));
+        {
+            TypeDeclaration *decl = ((AstNamedType*)type_spec)->wp_decl_;
+            if (decl != nullptr) {
+                return(GetParameterPassingMethod(decl->type_spec_, input_parm));
+            }
+        }
+        break;       
     case ANT_ARRAY_TYPE:
     case ANT_MAP_TYPE:
     default:
