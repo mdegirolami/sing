@@ -1028,7 +1028,7 @@ std::string formatUnsigned(const uint64_t val, const int32_t field_len, const in
     bool plus = (flags & f_dont_omit_plus) != 0;
 
     if (plus) {
-        synthFormat(format, flags & ~f_uppercase, PRIu64, std::max(fl - 1, 1));
+        synthFormat(format, flags & ~(f_uppercase | f_dont_omit_plus), PRIu64, std::max(fl - 1, 1));
         printout[0] = '+';
         sprintf(printout + 1, format, val);
     } else {
