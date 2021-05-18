@@ -140,7 +140,8 @@ void CppSynth::SynthVar(VarDeclaration *declaration)
             text += "const ";
         }
         typedecl = declaration->name_;
-        SynthTypeSpecification(&typedecl, declaration->GetTypeSpec());
+        IAstTypeNode *tnode = declaration->GetTypeSpec();
+        SynthTypeSpecification(&typedecl, tnode);
         text += typedecl;
         if (initer.length() > 0) {
             text += " = ";
@@ -318,6 +319,20 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec)
         dst->insert(0, "(*");
         *dst += ")";
         SynthFuncTypeSpecification(dst, (AstFuncType*)type_spec, false);
+        break;
+    case ANT_ENUM_TYPE:
+        {
+            AstEnumType *node = (AstEnumType*)type_spec;
+            int pkg_idx = node->GetPositionRecord()->package_idx;
+            if (pkg_idx > 0) {
+                string full;
+
+                GetFullExternName(&full, pkg_idx, node->name_.c_str());
+                PrependWithSeparator(dst, full.c_str());
+            } else {
+                PrependWithSeparator(dst, node->name_.c_str());
+            }
+        }
         break;
     }
 }

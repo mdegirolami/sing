@@ -473,11 +473,6 @@ TypeDeclaration *Parser::ParseInterface(void)
                     typenode->AddMember(fun);
                     fun = nullptr;
                     CheckSemicolon();
-                // } else if (m_token == TOKEN_INTERFACE) {
-                //     if (!Advance()) goto recovery2;
-                //     typenode->AddAncestor(ParseNamedType());
-                //     if (on_error_) goto recovery2;
-                //     CheckSemicolon();
                 } else {
                     Error("Expecting 'fn' or 'interface'. Note: public/private qualifiers are not allowed here.");
                     goto recovery2;
@@ -550,9 +545,6 @@ TypeDeclaration *Parser::ParseClass(void)
                 }
             } while (m_token == TOKEN_COMMA);
         }
-
-        
-
         if (m_token != TOKEN_CURLY_OPEN) {
             Error("Expecting '{'");
             goto recovery2;
@@ -561,7 +553,6 @@ TypeDeclaration *Parser::ParseClass(void)
         while (m_token != TOKEN_CURLY_CLOSE && m_token != TOKEN_EOF) {
             int recovery_level = curly_indent_;
             FuncDeclaration *fun = nullptr;
-            //AstNamedType *named = nullptr;
             {
                 if (m_token == TOKEN_PRIVATE) {
                     public_section = false;
@@ -625,28 +616,6 @@ TypeDeclaration *Parser::ParseClass(void)
                         fun = nullptr;
                     }
                     CheckSemicolon();
-                // } else if (m_token == TOKEN_INTERFACE) {
-                //     if (!public_section) {
-                //         Error("All the interfaces must be public");
-                //         goto recovery;
-                //     }
-                //     if (!Advance()) goto recovery;
-                //     named = ParseNamedType();
-                //     if (on_error_) goto recovery;
-                //     if (m_token == TOKEN_BY) {
-                //         if (!Advance()) goto recovery;
-                //         if (m_token != TOKEN_NAME) {
-                //             Error("Expecting the name of the var member implementing the interface");
-                //             goto recovery;
-                //         }
-                //         typenode->AddMemberInterface(named, m_lexer->CurrTokenString());
-                //         named = nullptr;
-                //         if (!Advance()) goto recovery;
-                //     } else {
-                //         typenode->AddMemberInterface(named, "");
-                //         named = nullptr;
-                //     }
-                //     CheckSemicolon();
                 } else {
                     Error("Expecting a var/fn/interface declaration or a public/private qualifier");
                     goto recovery;

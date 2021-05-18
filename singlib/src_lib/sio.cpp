@@ -280,16 +280,16 @@ Error fileGetInfo(const char *filename, FileInfo *nfo)
     if (_wstat(wfilename.data(), &buf) == -1) {
         return(errno);
     }
-    nfo->length_ = buf.st_size; 
-    nfo->last_modification_time_ = buf.st_mtime;
+    nfo->is_dir_ = (buf.st_mode & _S_IFDIR) != 0;
 #else
     struct stat buf;
     if (stat(filename, &buf) == -1) {
         return(errno);
     }
+    nfo->is_dir_ = (buf.st_mode & S_IFDIR) != 0;
+#endif
     nfo->length_ = buf.st_size; 
     nfo->last_modification_time_ = buf.st_mtime;
-#endif
     return(0);    
 }
 
@@ -310,18 +310,12 @@ Error fileRead(const char *filename, std::vector<uint8_t> *dst)
 
 Error fileReadText(const char *filename, std::string *dst)
 {
-    File        ff;
-    FileInfo    nfo;
-    Error       err;
-
-    err = ff.open(filename, "r");
+    std::vector<uint8_t> buff;
+    Error err = fileRead(filename, &buff);
     if (err != 0) return(err);
-    err = ff.getInfo(&nfo);
-    if (err != 0) return(err);
-    dst->reserve(nfo.length_);
-    err = ff.gets(nfo.length_ + 1, dst);
-    if (err != 0) return(err);
-    return(ff.close());
+    buff.push_back(0);
+    *dst = (const char*)buff.data();
+    return(0);
 }
 
 Error fileWrite(const char *filename, const std::vector<uint8_t> &src)
@@ -400,11 +394,11 @@ std::string pathJoin(const char *drive, const char *path, const char *base, cons
     std::string full;
     full.reserve(strlen(drive) + strlen(path) + strlen(base) + strlen(extension) + 3);
     full = drive;
-    if (!hasSuffix(full.c_str(), ":")) {
+    if (drive[0] != 0 && !hasSuffix(drive, ":")) {
         full += ':';
     }
     full += path;
-    if (!hasSuffix(full.c_str(), "/") && !hasSuffix(full.c_str(), "\\")) {
+    if (path[0] != 0 && !hasSuffix(full.c_str(), "/") && !hasSuffix(full.c_str(), "\\")) {
         full += '/';
     }
     full += base;

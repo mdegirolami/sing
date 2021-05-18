@@ -125,6 +125,7 @@ public:
 
     void erase(const K &key)
     {
+        if (hash_mask_ == 0) return;
         hash_functor<K> hasher;
         int slot = hasher.hash_(key) & hash_mask_;        
 
@@ -258,15 +259,17 @@ public:
 private:
     V *find(const K &key) const
     {
-        hash_functor<K> hasher;
-        int pos = hashvect_[hasher.hash_(key) & hash_mask_];
-        while (pos >= 0) {
-            const map_record<K, V> *rec = &pairs_[pos];
-            if (rec->key == key) {
-                last_searched_ = pos;
-                return((V*)&rec->value);
+        if (hash_mask_ != 0) { 
+            hash_functor<K> hasher;
+            int pos = hashvect_[hasher.hash_(key) & hash_mask_];
+            while (pos >= 0) {
+                const map_record<K, V> *rec = &pairs_[pos];
+                if (rec->key == key) {
+                    last_searched_ = pos;
+                    return((V*)&rec->value);
+                }
+                pos = rec->next;
             }
-            pos = rec->next;
         }
         return(nullptr);
     }

@@ -1895,7 +1895,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
             TypeDeclaration *tdecl = (TypeDeclaration*)decl;
             IAstTypeNode *tspec = SolveTypedefs(tdecl->type_spec_);
             if (tspec != nullptr) {
-                if (tspec->GetType() == ANT_ENUM_TYPE/* || tspec->GetType() == ANT_CLASS_TYPE || tspec->GetType() == ANT_INTERFACE_TYPE*/) {
+                if (tspec->GetType() == ANT_ENUM_TYPE) {
                     is_allowed_type = true;
                     node->wp_decl_ = decl;
                     attr->InitWithTree(tdecl->type_spec_, nullptr, false, false, this);
