@@ -19,7 +19,13 @@ public:
 
 fn Source.getFullName() string
 {
-    return(sio.pathJoin("", this.path, this.base, this.ext));
+    var path string;
+    if (this.ext == "sing") {
+        path = "sing/" + this.path;
+    } else {
+        path = "src/" + this.path;
+    }
+    return(sio.pathJoin("", path, this.base, this.ext));
 }
 
 class Target {
@@ -60,31 +66,35 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
     var line string;
     build_aux.open(name, "r");
     var row_num = 0;
-    while (build_aux.gets(10_000_000, line) == 0) {   
+    while (build_aux.gets(10_000_000, line) == 0 && str.len(line) > 0) {   
         ++row_num;  
+        str.cutSuffix(line, "\n");
         var rtype RowType = RowType.unknown;
         if (str.hasPrefix(line, "build")) {
             rtype = extractDepOrTarget(deps, base2idx, targets, line, row_num);
         }
         if (rtype == RowType.unknown) {
-            rows.push_back(line);
+            rows.push_back(line + "\r\n");
             row_priority.push_back(row_num);
         }
     }
     build_aux.close();
 
+    // create a default targets if there are none
     if (targets.size() < 1) {
-        return("no targets");
+        targets.resize(1);
+        targets[0].basic_dep = "build $bin_target: ln";
+        targets[0].row = row_num + 1;
     }
 
     // define where to place dependencies by default
     var def_row [DepType.count]i32 = {-1, -1, -1};
     for (count, row in rows) { 
-        if (row == "# sing->temp") {
+        if (row == "# sing->temp\r\n") {
             def_row [DepType.sing2tmp] = row_priority[count];
-        } else if (row == "# temp -> obj") {
+        } else if (row == "# temp->obj\r\n") {
             def_row [DepType.tmp2obj] = row_priority[count];
-        } else if (row == "# cpp -> obj") {
+        } else if (row == "# cpp->obj\r\n") {
             def_row [DepType.src2obj] = row_priority[count];
         }
     }
@@ -107,7 +117,7 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
     var max_field_len [DepType.count]i32;
     for (dep in deps) {
         let baselen = str.numchars(dep.base);
-        let fulllen = baselen + str.numchars(dep.path) + 1;
+        let fulllen = baselen + str.numchars(dep.path);
         if (dep.ext == "sing") {
             max_field_len[DepType.sing2tmp] = max(max_field_len[DepType.sing2tmp], fulllen);
             max_field_len[DepType.tmp2obj] = max(max_field_len[DepType.tmp2obj], baselen);
@@ -406,7 +416,7 @@ fn extractTarget(out target Target, left string, right string, row i32) void
 
 fn sing2tempSynth(path string, base string, rule string, max_field_len i32) string
 {
-    let path_and_base = path + "/" + base;
+    let path_and_base = path + base;
     let left = "build $temp/" + path_and_base + ".h | $temp/" + path_and_base + ".cpp";
 
     // add the extra characters 'left' would have if path_and_base was max_field_len long
@@ -424,7 +434,7 @@ fn temp2objSynth(path string, base string, rule string, max_field_len i32) strin
     let left_adj = str.numchars(left) + max_field_len - str.numchars(base);
 
     return(sio.formatString(left, left_adj, sio.f_align_left) + " : " + 
-            rule + " $temp/" + path + "/" + base + ".cpp" + "\r\n");
+            rule + " $temp/" + path + base + ".cpp" + "\r\n");
 }
 
 fn cpp2objSynth(path string, base string, ext string, rule string, max_field_len i32) string
@@ -435,7 +445,7 @@ fn cpp2objSynth(path string, base string, ext string, rule string, max_field_len
     let left_adj = str.numchars(left) + max_field_len - str.numchars(base);
 
     return(sio.formatString(left, left_adj, sio.f_align_left) + " : " + 
-            rule + " $cpp/" + path + "/" + base + "." + ext + "\r\n");
+            rule + " $cpp/" + path + base + "." + ext + "\r\n");
 }
 
 fn targetSynth(tar Target) string

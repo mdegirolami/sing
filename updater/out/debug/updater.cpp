@@ -13,14 +13,14 @@ static void replace_PHOLD(const char *name, const char *default_target, bool for
 int32_t updater(const std::vector<std::string> &argv)
 {
     // check args
-    if (argv.size() < 2) {
+    if (argv.size() < 3) {
         sing::print("\r\nUsage: updater <project_path> <sdk path>\r\n");
-        sing::exit(1);
+        return (1);
     }
 
     // take out '/' from the end of the string, if present. Normalize.
-    const std::string root = sing::pathFix(argv.at(0).c_str());
-    const std::string sdk = sing::pathFix(argv.at(1).c_str());
+    const std::string root = sing::pathFix(argv.at(1).c_str());
+    const std::string sdk = sing::pathFix(argv.at(2).c_str());
     const std::string default_target = getDefaultTarget(root.c_str());
 
     // collect sources
@@ -46,10 +46,25 @@ int32_t updater(const std::vector<std::string> &argv)
     }
 
     // update sdk_location.ninja
-    const std::string content = sing::s_format("%s%s%s", "sdk = ", sdk.c_str(), "\r\n");
-    if (sing::fileWriteText((root + "/build/sdk_location.ninja").c_str(), content.c_str()) != 0) {
-        sing::print("Error: Can't write sdk_location.ninja !!");
-        return (1);
+    const std::string sdkfile = root + "/build/sdk_location.ninja";
+    bool sdkfile_ok = false;
+    std::string sdkfile_content;
+    if (sing::fileReadText((root + "/build/sdk_location.ninja").c_str(), &sdkfile_content) == 0) {
+        std::string discard;
+        if (sing::split(sdkfile_content.c_str(), "=", &discard, &sdkfile_content)) {
+            sing::cutLeadingSpaces(&sdkfile_content);
+            sing::splitAny(sdkfile_content.c_str(), " \t\r\n", &sdkfile_content, &discard);
+            if (sing::fileGetInfo(sdkfile_content.c_str(), &nfo) == 0 && nfo.is_dir_) {
+                sdkfile_ok = true;
+            }
+        }
+    }
+    if (!sdkfile_ok) {
+        sdkfile_content = sing::s_format("%s%s%s", "sdk = ", sdk.c_str(), "\r\n");
+        if (sing::fileWriteText(sdkfile.c_str(), sdkfile_content.c_str()) != 0) {
+            sing::print("Error: Can't write sdk_location.ninja !!");
+            return (1);
+        }
     }
 
     // build index and check duplications
@@ -69,11 +84,17 @@ int32_t updater(const std::vector<std::string> &argv)
         return (1);
     }
 
+    // set the default target name into build files (replacing "<PHOLD>")
+    replace_PHOLD((root + "/build/build_linux_debug.ninja").c_str(), default_target.c_str(), false, true);
+    replace_PHOLD((root + "/build/build_linux_release.ninja").c_str(), default_target.c_str(), false, false);
+    replace_PHOLD((root + "/build/build_win_debug.ninja").c_str(), default_target.c_str(), true, true);
+    replace_PHOLD((root + "/build/build_win_release.ninja").c_str(), default_target.c_str(), true, false);
+
     // sources changed. clean up temporary files
     if (has_mods) {
-        sing::dirRemove((root + "/out").c_str());
-        sing::dirRemove((root + "/build/obj_d").c_str());
-        sing::dirRemove((root + "/build/obj_r").c_str());
+        sing::dirRemove((root + "/out").c_str(), true);
+        sing::dirRemove((root + "/build/obj_d").c_str(), true);
+        sing::dirRemove((root + "/build/obj_r").c_str(), true);
     }
 
     // create required directories
@@ -90,7 +111,8 @@ int32_t updater(const std::vector<std::string> &argv)
         }
     }
     for(int32_t idx = 0, idx__top = paths.size(); idx < idx__top; ++idx) {
-        sing::dirCreate(sing::s_format("%s%s%s", root.c_str(), "/out/", paths.key_at(idx).c_str()).c_str());
+        sing::dirCreate(sing::s_format("%s%s%s", root.c_str(), "/out/debug/", paths.key_at(idx).c_str()).c_str());
+        sing::dirCreate(sing::s_format("%s%s%s", root.c_str(), "/out/release/", paths.key_at(idx).c_str()).c_str());
     }
 
     // create and fill .vscode if not existent
@@ -100,12 +122,6 @@ int32_t updater(const std::vector<std::string> &argv)
             return (1);
         }
     }
-
-    // set the default target name into build files (replacing "<PHOLD>")
-    replace_PHOLD((root + "/build/build_linux_debug.ninja").c_str(), default_target.c_str(), false, true);
-    replace_PHOLD((root + "/build/build_linux_release.ninja").c_str(), default_target.c_str(), false, false);
-    replace_PHOLD((root + "/build/build_win_debug.ninja").c_str(), default_target.c_str(), true, true);
-    replace_PHOLD((root + "/build/build_win_release.ninja").c_str(), default_target.c_str(), true, false);
 
     // fix .vscode/launch.json
     std::string to_launch = default_target + "_d";
@@ -145,9 +161,19 @@ int32_t updater(const std::vector<std::string> &argv)
         }
         sing::replace(&buffer, "<PHOLD>", to_launch.c_str());
         if (buffer != original) {
-            if (sing::fileWriteText((root + "/.vscode").c_str(), buffer.c_str()) != 0) {
+            if (sing::fileWriteText((root + "/.vscode/launch.json").c_str(), buffer.c_str()) != 0) {
                 sing::print("Error: Can't update .vscode/launch.json !!");
+                return (1);
             }
+        }
+    }
+
+    // create sing_sense.txt if it doesn't exist
+    if (sing::fileGetInfo((root + "/.vscode/sing_sense.txt").c_str(), &nfo) != 0) {
+        const int64_t err = sing::fileWriteText((root + "/.vscode/sing_sense.txt").c_str(), "sing\r\n");
+        if (err != 0) {
+            sing::print("Error: Can't write sing_sense.txt");
+            return (1);
         }
     }
 
@@ -158,6 +184,7 @@ int32_t updater(const std::vector<std::string> &argv)
             "out/*\r\n");
         if (err != 0) {
             sing::print("Error: Can't write .gitignore");
+            return (1);
         }
     }
 
@@ -169,11 +196,12 @@ static void collectSources(const char *root, std::vector<Source> *buffer)
 {
     std::vector<std::string> tmp;
 
-    const std::string singroot = sing::s_format("%s%s", root, "/sing/");
+    const std::string singroot = sing::s_format("%s%s", root, "/sing");
     sing::dirReadNames(singroot.c_str(), sing::DirFilter::regular, &tmp, true);
     for(auto &name : tmp) {
-        if (sing::hasSuffix(name.c_str(), "sing", true)) {
+        if (sing::hasSuffix(name.c_str(), ".sing", true)) {
             sing::cutPrefix(&name, singroot.c_str());
+            sing::cutPrefix(&name, "/");
             Source src;
             std::string drive;
             sing::pathSplit(name.c_str(), &drive, &src.path_, &src.base_, &src.ext_);
@@ -185,8 +213,9 @@ static void collectSources(const char *root, std::vector<Source> *buffer)
     tmp.clear();
     sing::dirReadNames(cpproot.c_str(), sing::DirFilter::regular, &tmp, true);
     for(auto &name : tmp) {
-        if (sing::hasSuffix(name.c_str(), "cpp", true)) {
+        if (sing::hasSuffix(name.c_str(), ".cpp", true)) {
             sing::cutPrefix(&name, cpproot.c_str());
+            sing::cutPrefix(&name, "/");
             Source src;
             std::string drive;
             sing::pathSplit(name.c_str(), &drive, &src.path_, &src.base_, &src.ext_);
@@ -216,6 +245,7 @@ static bool copyFolderFromSdk(const char *sdk, const char *root, const char *fol
     for(auto &srcfile : tocopy) {
         dstfile = srcfile;
         sing::cutPrefix(&dstfile, source.c_str(), false);
+        buffer.clear();
         if (sing::fileRead(srcfile.c_str(), &buffer) != 0) {
             return (false);
         }
@@ -246,7 +276,7 @@ static std::string getDefaultTarget(const char *root)
 {
     std::string last;
     std::string discard;
-    if (!sing::splitAny(root, "/\\", &discard, &last)) {
+    if (!sing::rsplitAny(root, "/\\", &discard, &last)) {
         return (root);
     }
     return (last);

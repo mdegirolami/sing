@@ -6,14 +6,14 @@ requires "buildupd";
 public fn updater(argv [*]string) i32
 {
     // check args
-    if (argv.size() < 2) {
+    if (argv.size() < 3) {
         sio.print("\r\nUsage: updater <project_path> <sdk path>\r\n");
-        sys.exit(1);
+        return(1);
     }
 
     // take out '/' from the end of the string, if present. Normalize.
-    let root = sio.pathFix(argv[0]); 
-    let sdk = sio.pathFix(argv[1]);
+    let root = sio.pathFix(argv[1]); 
+    let sdk = sio.pathFix(argv[2]);
     let default_target = getDefaultTarget(root);
 
     // collect sources
@@ -39,10 +39,25 @@ public fn updater(argv [*]string) i32
     }
 
     // update sdk_location.ninja
-    let content = "sdk = " + sdk + "\r\n";
-    if (sio.fileWriteText(root + "/build/sdk_location.ninja", content) != 0) {
-        sio.print("Error: Can't write sdk_location.ninja !!");
-        return(1);        
+    let sdkfile = root + "/build/sdk_location.ninja";
+    var sdkfile_ok = false;
+    var sdkfile_content string; 
+    if (sio.fileReadText(root + "/build/sdk_location.ninja", sdkfile_content) == 0) {
+        var discard string;
+        if (str.split(sdkfile_content, "=", discard, sdkfile_content)) {
+            str.cutLeadingSpaces(sdkfile_content);
+            str.splitAny(sdkfile_content, " \t\r\n", sdkfile_content, discard);
+            if (sio.fileGetInfo(sdkfile_content, nfo) == 0 && nfo.is_dir) {
+                sdkfile_ok = true;
+            }            
+        }
+    }
+    if (!sdkfile_ok) {
+        sdkfile_content = "sdk = " + sdk + "\r\n";
+        if (sio.fileWriteText(sdkfile, sdkfile_content) != 0) {
+            sio.print("Error: Can't write sdk_location.ninja !!");
+            return(1);        
+        }
     }
 
     // build index and check duplications
@@ -62,11 +77,17 @@ public fn updater(argv [*]string) i32
         return(1);        
     }
 
+    // set the default target name into build files (replacing "<PHOLD>")
+    replace_PHOLD(root + "/build/build_linux_debug.ninja", default_target, false:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_linux_release.ninja", default_target, false:forwin, false:debug);
+    replace_PHOLD(root + "/build/build_win_debug.ninja", default_target, true:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_win_release.ninja", default_target, true:forwin, false:debug);
+
     // sources changed. clean up temporary files
     if (has_mods) {
-        sio.dirRemove(root + "/out");
-        sio.dirRemove(root + "/build/obj_d");
-        sio.dirRemove(root + "/build/obj_r");
+        sio.dirRemove(root + "/out", true:if_not_empty);
+        sio.dirRemove(root + "/build/obj_d", true:if_not_empty);
+        sio.dirRemove(root + "/build/obj_r", true:if_not_empty);
     }
 
     // create required directories
@@ -83,7 +104,8 @@ public fn updater(argv [*]string) i32
         }
     }
     for (idx in 0:paths.size()) {
-        sio.dirCreate(root + "/out/" + paths.key_at(idx));  
+        sio.dirCreate(root + "/out/debug/" + paths.key_at(idx));  
+        sio.dirCreate(root + "/out/release/" + paths.key_at(idx));  
     }
 
     // create and fill .vscode if not existent
@@ -93,12 +115,6 @@ public fn updater(argv [*]string) i32
             return(1);
         }
     }
-
-    // set the default target name into build files (replacing "<PHOLD>")
-    replace_PHOLD(root + "/build/build_linux_debug.ninja", default_target, false:forwin, true:debug);
-    replace_PHOLD(root + "/build/build_linux_release.ninja", default_target, false:forwin, false:debug);
-    replace_PHOLD(root + "/build/build_win_debug.ninja", default_target, true:forwin, true:debug);
-    replace_PHOLD(root + "/build/build_win_release.ninja", default_target, true:forwin, false:debug);
 
     // fix .vscode/launch.json
     var to_launch = default_target + "_d";
@@ -132,9 +148,19 @@ public fn updater(argv [*]string) i32
         }
         str.replace(buffer, "<PHOLD>", to_launch);
         if (buffer != original) {
-            if (sio.fileWriteText(root + "/.vscode", buffer) != 0) {
+            if (sio.fileWriteText(root + "/.vscode/launch.json", buffer) != 0) {
                 sio.print("Error: Can't update .vscode/launch.json !!");
+                return(1);
             }
+        }
+    }
+
+    // create sing_sense.txt if it doesn't exist
+    if (sio.fileGetInfo(root + "/.vscode/sing_sense.txt", nfo) != 0) {
+        let err = sio.fileWriteText(root + "/.vscode/sing_sense.txt", "sing\r\n");
+        if (err != 0) {
+            sio.print("Error: Can't write sing_sense.txt");
+            return(1);
         }
     }
 
@@ -145,6 +171,7 @@ public fn updater(argv [*]string) i32
                                                           "out/*\r\n");
         if (err != 0) {
             sio.print("Error: Can't write .gitignore");
+            return(1);
         }
     }
 
@@ -156,11 +183,12 @@ fn collectSources(root string, out buffer [*]buildupd.Source) void
 {
     var tmp [*]string;
 
-    let singroot = root + "/sing/";
+    let singroot = root + "/sing";
     sio.dirReadNames(singroot, sio.DirFilter.regular, tmp, true:recursive);
     for (name in tmp) {
-        if (str.hasSuffix(name, "sing", true:insensitive)) {
+        if (str.hasSuffix(name, ".sing", true:insensitive)) {
             str.cutPrefix(name, singroot);
+            str.cutPrefix(name, "/");
             var src buildupd.Source;
             var drive string;
             sio.pathSplit(name, drive, src.path, src.base, src.ext);
@@ -172,8 +200,9 @@ fn collectSources(root string, out buffer [*]buildupd.Source) void
     tmp.clear();
     sio.dirReadNames(cpproot, sio.DirFilter.regular, tmp, true:recursive);
     for (name in tmp) {
-        if (str.hasSuffix(name, "cpp", true:insensitive)) {
+        if (str.hasSuffix(name, ".cpp", true:insensitive)) {
             str.cutPrefix(name, cpproot);
+            str.cutPrefix(name, "/");            
             var src buildupd.Source;
             var drive string;
             sio.pathSplit(name, drive, src.path, src.base, src.ext);
@@ -203,6 +232,7 @@ fn copyFolderFromSdk(sdk string, root string, folder string) bool
     for (srcfile in tocopy) {
         dstfile = srcfile;
         str.cutPrefix(dstfile, source, false:insensitive);
+        buffer.clear();
         if (sio.fileRead(srcfile, buffer) != 0) {
             return(false);
         }
@@ -232,7 +262,7 @@ fn getDefaultTarget(root string) string
 {
     var last string;
     var discard string;
-    if (!str.splitAny(root, "/\\", discard, last)) {
+    if (!str.rsplitAny(root, "/\\", discard, last)) {
         return(root);
     }
     return(last);

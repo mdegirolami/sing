@@ -63,7 +63,13 @@ Dependency::Dependency()
 
 std::string Source::getFullName() const
 {
-    return (sing::pathJoin("", path_.c_str(), base_.c_str(), ext_.c_str()));
+    std::string path;
+    if (ext_ == "sing") {
+        path = "sing/" + this->path_;
+    } else {
+        path = "src/" + this->path_;
+    }
+    return (sing::pathJoin("", path.c_str(), base_.c_str(), ext_.c_str()));
 }
 
 std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source> &sources, const sing::map<std::string, int32_t> &srcbase2idx)
@@ -82,21 +88,25 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
     std::string line;
     build_aux.open(name, "r");
     int32_t row_num = 0;
-    while (build_aux.gets(10000000, &line) == 0) {
+    while (build_aux.gets(10000000, &line) == 0 && sing::len(line.c_str()) > 0) {
         ++row_num;
+        sing::cutSuffix(&line, "\n");
         RowType rtype = RowType::unknown;
         if (sing::hasPrefix(line.c_str(), "build")) {
             rtype = extractDepOrTarget(&deps, &base2idx, &targets, line.c_str(), row_num);
         }
         if (rtype == RowType::unknown) {
-            rows.push_back(line.c_str());
+            rows.push_back((line + "\r\n").c_str());
             row_priority.push_back(row_num);
         }
     }
     build_aux.close();
 
+    // create a default targets if there are none
     if (targets.size() < 1) {
-        return ("no targets");
+        targets.resize(1);
+        targets.at(0).basic_dep_ = "build $bin_target: ln";
+        targets.at(0).row_ = row_num + 1;
     }
 
     // define where to place dependencies by default
@@ -104,11 +114,11 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
     int64_t count = -1;
     for(auto &row : rows) {
         ++count;
-        if (row == "# sing->temp") {
+        if (row == "# sing->temp\r\n") {
             def_row.at((size_t)DepType::sing2tmp) = row_priority.at(count);
-        } else if (row == "# temp -> obj") {
+        } else if (row == "# temp->obj\r\n") {
             def_row.at((size_t)DepType::tmp2obj) = row_priority.at(count);
-        } else if (row == "# cpp -> obj") {
+        } else if (row == "# cpp->obj\r\n") {
             def_row.at((size_t)DepType::src2obj) = row_priority.at(count);
         }
     }
@@ -131,7 +141,7 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
     sing::array<int32_t, (size_t)DepType::count> max_field_len = {0};
     for(auto &dep : deps) {
         const int32_t baselen = sing::numchars(dep.base_.c_str());
-        const int32_t fulllen = baselen + sing::numchars(dep.path_.c_str()) + 1;
+        const int32_t fulllen = baselen + sing::numchars(dep.path_.c_str());
         if (dep.ext_ == "sing") {
             max_field_len.at((size_t)DepType::sing2tmp) = std::max(max_field_len.at((size_t)DepType::sing2tmp), fulllen);
             max_field_len.at((size_t)DepType::tmp2obj) = std::max(max_field_len.at((size_t)DepType::tmp2obj), baselen);
@@ -142,25 +152,29 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
 
     // add dep lines to rows[]
     for(auto &dep : deps) {
-        if (dep.ext_ == "sing") {
-            rows.push_back(
-                sing2tempSynth(dep.path_.c_str(), dep.base_.c_str(), dep.sing2tmp_rule_.c_str(), max_field_len.at((size_t)DepType::sing2tmp)).c_str());
-            row_priority.push_back(dep.sing2tmp_row_);
+        if (!dep.deleted_) {
+            if (dep.ext_ == "sing") {
+                rows.push_back(
+                    sing2tempSynth(dep.path_.c_str(), dep.base_.c_str(), dep.sing2tmp_rule_.c_str(), max_field_len.at((size_t)DepType::sing2tmp)).c_str());
+                row_priority.push_back(dep.sing2tmp_row_);
 
-            rows.push_back(temp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.x2obj_rule_.c_str(), max_field_len.at((size_t)DepType::tmp2obj)).c_str());
-            row_priority.push_back(dep.x2obj_row_);
-        } else {
-            rows.push_back(
-                cpp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.ext_.c_str(), dep.x2obj_rule_.c_str(),
-                max_field_len.at((size_t)DepType::src2obj)).c_str());
-            row_priority.push_back(dep.x2obj_row_);
+                rows.push_back(temp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.x2obj_rule_.c_str(), max_field_len.at((size_t)DepType::tmp2obj)).c_str());
+                row_priority.push_back(dep.x2obj_row_);
+            } else {
+                rows.push_back(
+                    cpp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.ext_.c_str(), dep.x2obj_rule_.c_str(),
+                    max_field_len.at((size_t)DepType::src2obj)).c_str());
+                row_priority.push_back(dep.x2obj_row_);
+            }
         }
     }
 
     // add target lines to rows[]
     for(auto &tar : targets) {
-        rows.push_back(targetSynth(tar).c_str());
-        row_priority.push_back(tar.row_);
+        if (tar.objs_base_.size() > 0) {
+            rows.push_back(targetSynth(tar).c_str());
+            row_priority.push_back(tar.row_);
+        }
     }
 
     // sort rows[]
@@ -437,7 +451,7 @@ static void extractTarget(Target *target, const char *left, const char *right, i
 
 static std::string sing2tempSynth(const char *path, const char *base, const char *rule, int32_t max_field_len)
 {
-    const std::string path_and_base = sing::s_format("%s%s%s", path, "/", base);
+    const std::string path_and_base = sing::s_format("%s%s", path, base);
     const std::string left = sing::s_format("%s%s%s%s%s", "build $temp/", path_and_base.c_str(), ".h | $temp/", path_and_base.c_str(), ".cpp");
 
     // add the extra characters 'left' would have if path_and_base was max_field_len long
@@ -454,8 +468,8 @@ static std::string temp2objSynth(const char *path, const char *base, const char 
     // add the extra characters 'left' would have if path_and_base was max_field_len long
     const int32_t left_adj = sing::numchars(left.c_str()) + max_field_len - sing::numchars(base);
 
-    return (sing::s_format("%s%s%s%s%s%s%s%s%s", sing::formatString(left.c_str(), left_adj, sing::f_align_left).c_str(), " : ", rule, " $temp/", path, "/",
-        base, ".cpp", "\r\n"));
+    return (sing::s_format("%s%s%s%s%s%s%s%s", sing::formatString(left.c_str(), left_adj, sing::f_align_left).c_str(), " : ", rule, " $temp/", path, base,
+        ".cpp", "\r\n"));
 }
 
 static std::string cpp2objSynth(const char *path, const char *base, const char *ext, const char *rule, int32_t max_field_len)
@@ -465,8 +479,8 @@ static std::string cpp2objSynth(const char *path, const char *base, const char *
     // add the extra characters 'left' would have if path_and_base was max_field_len long
     const int32_t left_adj = sing::numchars(left.c_str()) + max_field_len - sing::numchars(base);
 
-    return (sing::s_format("%s%s%s%s%s%s%s%s%s%s", sing::formatString(left.c_str(), left_adj, sing::f_align_left).c_str(), " : ", rule, " $cpp/", path, "/",
-        base, ".", ext, "\r\n"));
+    return (sing::s_format("%s%s%s%s%s%s%s%s%s", sing::formatString(left.c_str(), left_adj, sing::f_align_left).c_str(), " : ", rule, " $cpp/", path, base,
+        ".", ext, "\r\n"));
 }
 
 static std::string targetSynth(const Target &tar)
