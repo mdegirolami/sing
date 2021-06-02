@@ -15,7 +15,7 @@ int32_t updater(const std::vector<std::string> &argv)
     // check args
     if (argv.size() < 3) {
         sing::print("\r\nUsage: updater <project_path> <sdk path>\r\n");
-        return (1);
+        return (0);
     }
 
     // take out '/' from the end of the string, if present. Normalize.
@@ -30,8 +30,8 @@ int32_t updater(const std::vector<std::string> &argv)
     // if there are no sources, init with hello_world
     if (sources.size() < 1) {
         if (!copyFolderFromSdk(sdk.c_str(), root.c_str(), "sing") || !copyFolderFromSdk(sdk.c_str(), root.c_str(), "src")) {
-            sing::print("Error: Can't copy sources to the project directory !!");
-            return (1);
+            sing::print("\r\nError, Can't copy sources to the project directory !!");
+            return (0);
         }
         collectSources(root.c_str(), &sources);
     }
@@ -40,8 +40,8 @@ int32_t updater(const std::vector<std::string> &argv)
     sing::FileInfo nfo;
     if (sing::fileGetInfo((root + "/build").c_str(), &nfo) != 0 || !nfo.is_dir_) {
         if (!copyFolderFromSdk(sdk.c_str(), root.c_str(), "build")) {
-            sing::print("Error: Can't copy build files to the project directory !!");
-            return (1);
+            sing::print("\r\nError, Can't copy build files to the project directory !!");
+            return (0);
         }
     }
 
@@ -62,8 +62,8 @@ int32_t updater(const std::vector<std::string> &argv)
     if (!sdkfile_ok) {
         sdkfile_content = sing::s_format("%s%s%s", "sdk = ", sdk.c_str(), "\r\n");
         if (sing::fileWriteText(sdkfile.c_str(), sdkfile_content.c_str()) != 0) {
-            sing::print("Error: Can't write sdk_location.ninja !!");
-            return (1);
+            sing::print("\r\nError, Can't write sdk_location.ninja !!");
+            return (0);
         }
     }
 
@@ -72,16 +72,17 @@ int32_t updater(const std::vector<std::string> &argv)
     std::string path2;
     sing::map<std::string, int32_t> srcbase2idx;
     if (areThereDuplications(&path1, &path2, sources, &srcbase2idx)) {
-        sing::print(sing::s_format("%s%s%s%s", "Error: Base filenames must be unique !! Conflict between ", path1.c_str(), " and ", path2.c_str()).c_str());
-        return (1);
+        sing::print(
+            sing::s_format("%s%s%s%s", "\r\nError, Base filenames must be unique !! Conflict between\r\n", path1.c_str(), " and\r\n", path2.c_str()).c_str());
+        return (0);
     }
 
     // update build_aux.ninja
     bool has_mods = false;
     const std::string result = fixBuild(&has_mods, (root + "/build/build_aux.ninja").c_str(), sources, srcbase2idx);
     if (result != "") {
-        sing::print(("Error: /build/build_aux.ninja, " + result).c_str());
-        return (1);
+        sing::print(("\r\nError, /build/build_aux.ninja, " + result).c_str());
+        return (0);
     }
 
     // set the default target name into build files (replacing "<PHOLD>")
@@ -118,8 +119,8 @@ int32_t updater(const std::vector<std::string> &argv)
     // create and fill .vscode if not existent
     if (sing::fileGetInfo((root + "/.vscode").c_str(), &nfo) != 0 || !nfo.is_dir_) {
         if (!copyFolderFromSdk(sdk.c_str(), root.c_str(), ".vscode")) {
-            sing::print("Error: Can't copy .vscode files to the project directory !!");
-            return (1);
+            sing::print("\r\nError, Can't copy .vscode files to the project directory !!");
+            return (0);
         }
     }
 
@@ -162,8 +163,8 @@ int32_t updater(const std::vector<std::string> &argv)
         sing::replace(&buffer, "<PHOLD>", to_launch.c_str());
         if (buffer != original) {
             if (sing::fileWriteText((root + "/.vscode/launch.json").c_str(), buffer.c_str()) != 0) {
-                sing::print("Error: Can't update .vscode/launch.json !!");
-                return (1);
+                sing::print("\r\nError, Can't update .vscode/launch.json !!");
+                return (0);
             }
         }
     }
@@ -172,8 +173,8 @@ int32_t updater(const std::vector<std::string> &argv)
     if (sing::fileGetInfo((root + "/.vscode/sing_sense.txt").c_str(), &nfo) != 0) {
         const int64_t err = sing::fileWriteText((root + "/.vscode/sing_sense.txt").c_str(), "sing\r\n");
         if (err != 0) {
-            sing::print("Error: Can't write sing_sense.txt");
-            return (1);
+            sing::print("\r\nError, Can't write sing_sense.txt");
+            return (0);
         }
     }
 
@@ -183,8 +184,8 @@ int32_t updater(const std::vector<std::string> &argv)
             "build/obj*\r\n"
             "out/*\r\n");
         if (err != 0) {
-            sing::print("Error: Can't write .gitignore");
-            return (1);
+            sing::print("\r\nError, Can't write .gitignore");
+            return (0);
         }
     }
 

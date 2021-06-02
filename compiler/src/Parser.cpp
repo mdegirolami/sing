@@ -1626,7 +1626,7 @@ IAstExpNode *Parser::CheckForCastedLiterals(AstUnop *node)
 AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
 {
     *negative = false;
-    while (m_token != TOKEN_EOF) {
+    while (node != nullptr) {
         AstNodeType type = node->GetType();
         if (type == ANT_UNOP) {
             Token op = ((AstUnop*)node)->subtype_;
@@ -1646,6 +1646,7 @@ AstExpressionLeaf *Parser::GetLiteralRoot(IAstExpNode *node, bool *negative)
             return(NULL);
         }       
     }
+    return(nullptr);
 }
 
 AstIndexing *Parser::ParseRangesOrIndices(IAstExpNode *indexed)

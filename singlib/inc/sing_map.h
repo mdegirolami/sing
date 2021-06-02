@@ -88,7 +88,8 @@ public:
         hashvect_ = src.hashvect_;         
         pairs_ = src.pairs_;
         hash_mask_ = src.hash_mask_;
-        last_searched_ = -1;                 
+        last_searched_ = -1;       
+        return(*this);          
     }
 
     // defective: returns false if order of items differ !!

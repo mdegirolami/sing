@@ -8,7 +8,7 @@ public fn updater(argv [*]string) i32
     // check args
     if (argv.size() < 3) {
         sio.print("\r\nUsage: updater <project_path> <sdk path>\r\n");
-        return(1);
+        return(0);
     }
 
     // take out '/' from the end of the string, if present. Normalize.
@@ -23,8 +23,8 @@ public fn updater(argv [*]string) i32
     // if there are no sources, init with hello_world
     if (sources.size() < 1) {
         if (!copyFolderFromSdk(sdk, root, "sing") || !copyFolderFromSdk(sdk, root, "src")) {
-            sio.print("Error: Can't copy sources to the project directory !!");
-            return(1);
+            sio.print("\r\nError, Can't copy sources to the project directory !!");
+            return(0);
         }
         collectSources(root, sources);
     }
@@ -33,8 +33,8 @@ public fn updater(argv [*]string) i32
     var nfo sio.FileInfo;
     if (sio.fileGetInfo(root + "/build", nfo) != 0 || !nfo.is_dir) {
         if (!copyFolderFromSdk(sdk, root, "build")) {
-            sio.print("Error: Can't copy build files to the project directory !!");
-            return(1);
+            sio.print("\r\nError, Can't copy build files to the project directory !!");
+            return(0);
         }
     }
 
@@ -55,8 +55,8 @@ public fn updater(argv [*]string) i32
     if (!sdkfile_ok) {
         sdkfile_content = "sdk = " + sdk + "\r\n";
         if (sio.fileWriteText(sdkfile, sdkfile_content) != 0) {
-            sio.print("Error: Can't write sdk_location.ninja !!");
-            return(1);        
+            sio.print("\r\nError, Can't write sdk_location.ninja !!");
+            return(0);        
         }
     }
 
@@ -65,16 +65,16 @@ public fn updater(argv [*]string) i32
     var path2 string;
     var srcbase2idx map(string)i32;
     if (areThereDuplications(path1 ,path2, sources, srcbase2idx)) {
-        sio.print("Error: Base filenames must be unique !! Conflict between " + path1 + " and " + path2);
-        return(1);        
+        sio.print("\r\nError, Base filenames must be unique !! Conflict between\r\n" + path1 + " and\r\n" + path2);
+        return(0);        
     }
 
     // update build_aux.ninja
     var has_mods bool;
     let result = buildupd.fixBuild(has_mods, root + "/build/build_aux.ninja", sources, srcbase2idx);
     if (result != "") {
-        sio.print("Error: /build/build_aux.ninja, " + result);
-        return(1);        
+        sio.print("\r\nError, /build/build_aux.ninja, " + result);
+        return(0);        
     }
 
     // set the default target name into build files (replacing "<PHOLD>")
@@ -111,8 +111,8 @@ public fn updater(argv [*]string) i32
     // create and fill .vscode if not existent
     if (sio.fileGetInfo(root + "/.vscode", nfo) != 0 || !nfo.is_dir) {
         if (!copyFolderFromSdk(sdk, root, ".vscode")) {
-            sio.print("Error: Can't copy .vscode files to the project directory !!");
-            return(1);
+            sio.print("\r\nError, Can't copy .vscode files to the project directory !!");
+            return(0);
         }
     }
 
@@ -149,8 +149,8 @@ public fn updater(argv [*]string) i32
         str.replace(buffer, "<PHOLD>", to_launch);
         if (buffer != original) {
             if (sio.fileWriteText(root + "/.vscode/launch.json", buffer) != 0) {
-                sio.print("Error: Can't update .vscode/launch.json !!");
-                return(1);
+                sio.print("\r\nError, Can't update .vscode/launch.json !!");
+                return(0);
             }
         }
     }
@@ -159,8 +159,8 @@ public fn updater(argv [*]string) i32
     if (sio.fileGetInfo(root + "/.vscode/sing_sense.txt", nfo) != 0) {
         let err = sio.fileWriteText(root + "/.vscode/sing_sense.txt", "sing\r\n");
         if (err != 0) {
-            sio.print("Error: Can't write sing_sense.txt");
-            return(1);
+            sio.print("\r\nError, Can't write sing_sense.txt");
+            return(0);
         }
     }
 
@@ -170,8 +170,8 @@ public fn updater(argv [*]string) i32
                                                           "build/obj*\r\n"
                                                           "out/*\r\n");
         if (err != 0) {
-            sio.print("Error: Can't write .gitignore");
-            return(1);
+            sio.print("\r\nError, Can't write .gitignore");
+            return(0);
         }
     }
 

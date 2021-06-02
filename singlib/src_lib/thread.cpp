@@ -36,6 +36,7 @@ bool Lock::init(const int32_t spincount)
         InitializeCriticalSectionAndSpinCount(c_sect, spincount);
         impl = c_sect;
     }
+    return(true);
 }
 
 void Lock::lock()
@@ -112,6 +113,7 @@ int32_t Atomic::dec()
 static DWORD WINAPI fnStub(void *lpParameter)
 {
     ((void (*)())lpParameter)();
+    return(0);
 }
 
 void runFn(void (*torun)(), const int32_t stack_size)
@@ -124,6 +126,7 @@ static DWORD WINAPI runnableStub(_In_ LPVOID lpParameter)
     std::shared_ptr<Runnable> *extra_ptr = (std::shared_ptr<Runnable>*)lpParameter;
     (*extra_ptr)->work(); 
     delete extra_ptr;
+    return(0);
 }
 
 void run(const std::shared_ptr<Runnable> torun, const int32_t stack_size)

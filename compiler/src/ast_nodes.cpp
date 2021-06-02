@@ -378,6 +378,7 @@ FuncDeclaration *AstInterfaceType::getMemberDeclaration(const char *name)
             return(decl);
         }
     }
+    return(nullptr);
 }
 
 AstClassType::AstClassType()

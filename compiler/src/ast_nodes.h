@@ -513,7 +513,7 @@ public:
     virtual AstNodeType GetType(void) const { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
     virtual bool HasFunction(void) { return(true); }
-    virtual bool FlagAsStatement(void) { is_statement_ = true; } 
+    virtual void FlagAsStatement(void) { is_statement_ = true; } 
 };
 
 class AstIndexing : public IAstExpNode {
@@ -759,7 +759,7 @@ public:
         case_types_.push_back(the_type); 
         case_statements_.push_back(statement); 
     }
-    bool SetSwitchOnInterfacePointer(void) { on_interface_ptr_ = true; }
+    void SetSwitchOnInterfacePointer(void) { on_interface_ptr_ = true; }
     void SetReferenceUsage(bool value) { uses_reference_.push_back(value); }
 };
 

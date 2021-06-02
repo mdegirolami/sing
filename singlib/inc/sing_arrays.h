@@ -35,6 +35,7 @@ public:
         for (size_t ii = 0; ii < N; ++ii) {
             data[ii] = src.data[ii];
         }
+        return(*this);
     }
 
     bool operator==(const array<T, N> &right) const

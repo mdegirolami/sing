@@ -267,7 +267,7 @@ void Package::getAllPublicDeclNames(NamesList *names)
 
 IAstDeclarationNode *Package::getDeclaration(const char *name)
 {
-    symbols_.FindGlobalDeclaration(name);
+    return(symbols_.FindGlobalDeclaration(name));
 }
 
 bool Package::GetPartialPath(string *path, int row, int col)

@@ -57,7 +57,7 @@
             "type": "shell",
             "label": "clean release",
 
-            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "command": "ninja",
             "windows": {
                 "args": ["-v", "-f", "../build_win_release.ninja", "-t", "clean"],
             },
@@ -82,7 +82,7 @@
             "type": "shell",
             "label": "clean debug",
 
-            "command": "C:\\MinGW\\bin\\ninja.exe",
+            "command": "ninja",
             "windows": {
                 "args": ["-v", "-f", "../build_win_debug.ninja", "-t", "clean"],
             },
