@@ -166,7 +166,7 @@ static bool test_File()
     if (ff.getInfo(&nfo) != 0) {
         return (false);
     }
-    if (nfo.is_dir_ || nfo.length_ != 40) {
+    if (nfo.is_dir_ || nfo.length_ != 40 || nfo.is_read_only_) {
         return (false);
     }
 
@@ -218,6 +218,23 @@ static bool test_dirfileop()
         return (false);
     }
     if (ff.close() != 0) {
+        return (false);
+    }
+
+    // try write potection
+    if (sing::fileWriteProtect("in_dir1.txt", true) != 0) {
+        return (false);
+    }
+
+    if (sing::fileGetInfo("in_dir1.txt", &nfo) != 0 || !nfo.is_read_only_) {
+        return (false);
+    }
+
+    if (sing::fileWriteProtect("in_dir1.txt", false) != 0) {
+        return (false);
+    }
+
+    if (sing::fileGetInfo("in_dir1.txt", &nfo) != 0 || nfo.is_read_only_) {
         return (false);
     }
 

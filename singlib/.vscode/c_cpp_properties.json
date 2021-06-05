@@ -3,8 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "C:/MinGW/lib/gcc/x86_64-w64-mingw32/6.3.0/include/**"       
+                "${workspaceFolder}/**"      
             ],
             "defines": [
                 "_DEBUG",
@@ -12,7 +11,6 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "8.1",
-            "compilerPath": "C:/MinGW/bin/g++.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64"
@@ -22,8 +20,6 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/local/include",
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include",   
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed",
                 "/usr/include"
             ],
             "defines": [
@@ -31,8 +27,6 @@
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "8.1",
-            "compilerPath": "/usr/bin/gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64"

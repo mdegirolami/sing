@@ -67,6 +67,7 @@ FileInfo::FileInfo()
     last_modification_time_ = 0;
     length_ = 0;
     is_dir_ = false;
+    is_read_only_ = false;
 }
 
 char File::id__;
@@ -136,7 +137,8 @@ Error File::getInfo(FileInfo *nfo)
     }
     nfo->length_ = buf.st_size; 
     nfo->last_modification_time_ = buf.st_mtime;
-    nfo->is_dir_ = false;
+    nfo->is_dir_ = (buf.st_mode & S_IFDIR) != 0;
+    nfo->is_read_only_ = (buf.st_mode & S_IWUSR) == 0;
     return(0);
 }
 
@@ -273,25 +275,58 @@ Error fileRename(const char *old_name, const char *new_name)
 
 Error fileGetInfo(const char *filename, FileInfo *nfo)
 {
-#ifdef _WIN32
     struct _stat buf;
+#ifdef _WIN32
     std::vector<wchar_t> wfilename;
     utf8_to_16(filename, &wfilename);
     if (_wstat(wfilename.data(), &buf) == -1) {
         return(errno);
     }
-    nfo->is_dir_ = (buf.st_mode & _S_IFDIR) != 0;
 #else
-    struct stat buf;
     if (stat(filename, &buf) == -1) {
         return(errno);
     }
-    nfo->is_dir_ = (buf.st_mode & S_IFDIR) != 0;
 #endif
     nfo->length_ = buf.st_size; 
     nfo->last_modification_time_ = buf.st_mtime;
+    nfo->is_dir_ = (buf.st_mode & S_IFDIR) != 0;
+    nfo->is_read_only_ = (buf.st_mode & S_IWUSR) == 0;
     return(0);    
 }
+
+#ifdef _WIN32
+
+Error fileWriteProtect(const char *filename, bool protect)
+{
+    std::vector<wchar_t> wfilename;
+    utf8_to_16(filename, &wfilename);
+    if (_wchmod(wfilename.data(), protect ? _S_IREAD : _S_IREAD | _S_IWRITE) == -1) {
+        return(errno);
+    }
+    return(0);
+}
+
+#else
+
+Error fileWriteProtect(const char *filename, bool protect)
+{
+    struct _stat buf;
+    if (stat(filename, &buf) == -1) {
+        return(errno);
+    }
+    buf.st_mode &= 0x7ff;
+    if (protect) {
+        buf.st_mode &= ~0x92;
+    } else {
+        buf.st_mode |= 0x92;
+    }
+    if (chmod(filename, buf.st_mode) == -1) {
+        return(errno);
+    }
+    return(0);    
+}
+
+#endif
 
 Error fileRead(const char *filename, std::vector<uint8_t> *dst)
 {
@@ -689,6 +724,7 @@ Error dirReadCore_r(WIN32_FIND_DATAW *desc, wchar_t *buffer, DirFilter filter,
                     nfo.last_modification_time_ = packFILETIME(&desc->ftLastWriteTime);
                     nfo.length_ = desc->nFileSizeHigh * MAXDWORD + desc->nFileSizeLow;
                     nfo.is_dir_ = isdir;
+                    nfo.is_read_only_ = isdir || (desc->dwFileAttributes & FILE_ATTRIBUTE_READONLY) != 0;
                     info->push_back(nfo);
                 }
             }
@@ -867,6 +903,7 @@ Error dirReadCore_r(char *buffer, DirFilter filter,
                     nfo.length_ = stat_buf.st_size; 
                     nfo.last_modification_time_ = stat_buf.st_mtime;
                     nfo.is_dir_ = isdir;
+                    nfo->is_read_only_ = (stat_buf.st_mode & S_IWUSR) == 0;
                     info->push_back(nfo);
                 }
             }

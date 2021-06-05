@@ -156,7 +156,7 @@ fn test_File() bool
     if (ff.getInfo(nfo) != 0) {
         return(false);
     }
-    if (nfo.is_dir || nfo.length !=  40) {
+    if (nfo.is_dir || nfo.length !=  40 || nfo.is_read_only) {
         return(false);
     }
 
@@ -208,6 +208,23 @@ fn test_dirfileop() bool
         return(false);
     }
     if (ff.close() != 0) {
+        return(false);
+    }
+
+    // try write potection
+    if (sio.fileWriteProtect("in_dir1.txt", true:protect) != 0) {
+        return(false);
+    }
+
+    if (sio.fileGetInfo("in_dir1.txt", nfo) != 0 || !nfo.is_read_only) {
+        return(false);
+    }
+
+    if (sio.fileWriteProtect("in_dir1.txt", false:protect) != 0) {
+        return(false);
+    }
+
+    if (sio.fileGetInfo("in_dir1.txt", nfo) != 0 || nfo.is_read_only) {
         return(false);
     }
 

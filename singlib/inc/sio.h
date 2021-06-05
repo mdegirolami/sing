@@ -34,6 +34,7 @@ public:
     uint64_t last_modification_time_;
     int64_t length_;
     bool is_dir_;
+    bool is_read_only_;
 };
 
 // open modes are modes: "r", "w", "r+", "w+"
@@ -77,6 +78,7 @@ static const int32_t f_align_left = 8;
 Error fileRemove(const char *filename);
 Error fileRename(const char *old_name, const char *new_name);
 Error fileGetInfo(const char *filename, FileInfo *nfo);
+Error fileWriteProtect(const char *filename, bool protect);
 Error fileRead(const char *filename, std::vector<uint8_t> *dst);
 Error fileReadText(const char *filename, std::string *dst);
 Error fileWrite(const char *filename, const std::vector<uint8_t> &src);

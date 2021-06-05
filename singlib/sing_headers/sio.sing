@@ -26,6 +26,7 @@ public:
     var last_modification_time u64;
     var length i64;
     var is_dir bool;   
+    var is_read_only bool;
 }
 
 // open modes are modes: "r", "w", "r+", "w+"
@@ -42,6 +43,7 @@ public:
 public fn fileRemove(filename string) Error;
 public fn fileRename(old_name string, new_name string) Error;
 public fn fileGetInfo(filename string, out nfo FileInfo) Error;
+public fn fileWriteProtect(filename string, protect bool) Error;
 public fn fileRead(filename string, out dst [*]u8) Error;
 public fn fileReadText(filename string, out dst string) Error;
 public fn fileWrite(filename string, src [*]u8) Error;
