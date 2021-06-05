@@ -32,6 +32,7 @@ class Target {
 public:    
     var basic_dep string;       // the row deprived of objs
     var objs_base [*]string;
+    var extras string;          // extra deps (not sing/cpp objs)
     var row i32;
 }
 
@@ -64,7 +65,9 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
     // place interesting rows in descriptors, the other in rows[] 
     var build_aux sio.File;
     var line string;
-    build_aux.open(name, "r");
+    if (build_aux.open(name, "r") != 0) {
+        return("");
+    }
     var row_num = 0;
     while (build_aux.gets(10_000_000, line) == 0 && str.len(line) > 0) {   
         ++row_num;  
@@ -396,19 +399,24 @@ fn extractTarget(out target Target, left string, right string, row i32) void
     var temp = right;
     var element string;
     var discard string;
+    var first = true;
     while (str.len(temp) > 0 && !str.hasPrefix(temp, "#")) {
         if (!str.splitAny(temp, " \t", element, temp)) {
             element = temp;
             temp = "";
         }
         str.cutLeadingSpaces(temp);
-        if (str.hasSuffix(element, ".o")) {
+        if (first) {
+            // the rule
+            target.basic_dep += " " + element;
+            first = false;
+        } else if (str.hasSuffix(element, ".o")) {
             str.rsplit(element, ".", element, discard);
             str.rsplitAny(element, "/\\", discard, element);
             target.objs_base.push_back(element);
         } else {
             // a dependee which is not a .o
-            target.basic_dep += " " + element;
+            target.extras += " " + element;
         }
     }
     target.row = row;
@@ -454,5 +462,6 @@ fn targetSynth(tar Target) string
     for (obj in tar.objs_base) {
         line += " " + obj + ".o";
     }
+    line += tar.extras;
     return(line + "\r\n");
 }

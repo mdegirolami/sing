@@ -14,6 +14,7 @@ public:
     Target();
     std::string basic_dep_;             // the row deprived of objs
     std::vector<std::string> objs_base_;
+    std::string extras_;                // extra deps (not sing/cpp objs)
     int32_t row_;
 };
 
@@ -86,7 +87,9 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
     // place interesting rows in descriptors, the other in rows[] 
     sing::File build_aux;
     std::string line;
-    build_aux.open(name, "r");
+    if (build_aux.open(name, "r") != 0) {
+        return ("");
+    }
     int32_t row_num = 0;
     while (build_aux.gets(10000000, &line) == 0 && sing::len(line.c_str()) > 0) {
         ++row_num;
@@ -427,19 +430,24 @@ static void extractTarget(Target *target, const char *left, const char *right, i
     std::string temp = right;
     std::string element;
     std::string discard;
+    bool first = true;
     while (sing::len(temp.c_str()) > 0 && !sing::hasPrefix(temp.c_str(), "#")) {
         if (!sing::splitAny(temp.c_str(), " \t", &element, &temp)) {
             element = temp;
             temp = "";
         }
         sing::cutLeadingSpaces(&temp);
-        if (sing::hasSuffix(element.c_str(), ".o")) {
+        if (first) {
+            // the rule
+            (*target).basic_dep_ += " " + element;
+            first = false;
+        } else if (sing::hasSuffix(element.c_str(), ".o")) {
             sing::rsplit(element.c_str(), ".", &element, &discard);
             sing::rsplitAny(element.c_str(), "/\\", &discard, &element);
             (*target).objs_base_.push_back(element.c_str());
         } else {
             // a dependee which is not a .o
-            (*target).basic_dep_ += " " + element;
+            (*target).extras_ += " " + element;
         }
     }
     (*target).row_ = row;
@@ -485,5 +493,6 @@ static std::string targetSynth(const Target &tar)
     for(auto &obj : tar.objs_base_) {
         line += sing::s_format("%s%s%s", " ", obj.c_str(), ".o");
     }
+    line += tar.extras_;
     return (line + "\r\n");
 }

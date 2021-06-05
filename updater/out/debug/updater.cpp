@@ -67,6 +67,12 @@ int32_t updater(const std::vector<std::string> &argv)
         }
     }
 
+    // set the default target name into build files (replacing "<PHOLD>")
+    replace_PHOLD((root + "/build/build_linux_debug.ninja").c_str(), default_target.c_str(), false, true);
+    replace_PHOLD((root + "/build/build_linux_release.ninja").c_str(), default_target.c_str(), false, false);
+    replace_PHOLD((root + "/build/build_win_debug.ninja").c_str(), default_target.c_str(), true, true);
+    replace_PHOLD((root + "/build/build_win_release.ninja").c_str(), default_target.c_str(), true, false);
+
     // build index and check duplications
     std::string path1;
     std::string path2;
@@ -84,12 +90,6 @@ int32_t updater(const std::vector<std::string> &argv)
         sing::print(("\r\nError, /build/build_aux.ninja, " + result).c_str());
         return (0);
     }
-
-    // set the default target name into build files (replacing "<PHOLD>")
-    replace_PHOLD((root + "/build/build_linux_debug.ninja").c_str(), default_target.c_str(), false, true);
-    replace_PHOLD((root + "/build/build_linux_release.ninja").c_str(), default_target.c_str(), false, false);
-    replace_PHOLD((root + "/build/build_win_debug.ninja").c_str(), default_target.c_str(), true, true);
-    replace_PHOLD((root + "/build/build_win_release.ninja").c_str(), default_target.c_str(), true, false);
 
     // sources changed. clean up temporary files
     if (has_mods) {

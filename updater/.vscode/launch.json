@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\bin\\win\\updater_d.exe",
-            "args": ["D:/Documents/w12/sing/plugin/test2", "D:/Documents/w12/GitHub/vscode-sing/sdk"],
+            "args": ["D:/Documents/w12/GitHub/stay/compiler", "D:/Documents/w12/GitHub/vscode-sing/sdk"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\bin",
             "environment": [],

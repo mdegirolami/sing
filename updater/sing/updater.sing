@@ -60,6 +60,12 @@ public fn updater(argv [*]string) i32
         }
     }
 
+    // set the default target name into build files (replacing "<PHOLD>")
+    replace_PHOLD(root + "/build/build_linux_debug.ninja", default_target, false:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_linux_release.ninja", default_target, false:forwin, false:debug);
+    replace_PHOLD(root + "/build/build_win_debug.ninja", default_target, true:forwin, true:debug);
+    replace_PHOLD(root + "/build/build_win_release.ninja", default_target, true:forwin, false:debug);
+
     // build index and check duplications
     var path1 string;
     var path2 string;
@@ -76,12 +82,6 @@ public fn updater(argv [*]string) i32
         sio.print("\r\nError, /build/build_aux.ninja, " + result);
         return(0);        
     }
-
-    // set the default target name into build files (replacing "<PHOLD>")
-    replace_PHOLD(root + "/build/build_linux_debug.ninja", default_target, false:forwin, true:debug);
-    replace_PHOLD(root + "/build/build_linux_release.ninja", default_target, false:forwin, false:debug);
-    replace_PHOLD(root + "/build/build_win_debug.ninja", default_target, true:forwin, true:debug);
-    replace_PHOLD(root + "/build/build_win_release.ninja", default_target, true:forwin, false:debug);
 
     // sources changed. clean up temporary files
     if (has_mods) {
