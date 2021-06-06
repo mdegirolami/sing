@@ -1,6 +1,5 @@
 debug_flags = -O0 -g
 
-src = ../../src
 bin_target = ../../bin/linux/sing_d
 sing_lib = ../../../singlib/bin/linux/singlib_d.a
 

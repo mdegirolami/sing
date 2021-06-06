@@ -16,11 +16,13 @@ static const int KCastPriority = 3;
 
 bool IsFloatFormat(const char *num);
 
-void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp)
+void CppSynth::Synthetize(string *cppfile, string *hppfile, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp)
 {
     string      text;
     int         num_levels, num_items;
 
+    *cppfile = "";
+    *hppfile = "";
     const Package *pkg = packages->getPkg(pkg_index);
     pkmgr_ = packages;
     root_ = (AstFile*)pkg->GetRoot();
@@ -35,7 +37,7 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Opti
     formatter_.Reset();
     formatter_.SetMaxLineLen(synth_options_->max_linelen_);
     formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
-    file_ = hfd;
+    file_str_ = hppfile;
     text = "#pragma once";
     Write(&text, false);
     EmptyLine();
@@ -66,7 +68,7 @@ void CppSynth::Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Opti
     /////////////////
     formatter_.Reset();
     formatter_.SetRemarks(&root_->remarks_[0], root_->remarks_.size());
-    file_ = cppfd;
+    file_str_ = cppfile;
     string fullname = pkg->getFullPath();
     FileName::SplitFullName(nullptr, &text, nullptr, &fullname);
     text.insert(0, "#include \"");
@@ -2391,7 +2393,7 @@ void CppSynth::Write(string *text, bool add_semicolon)
     formatter_.Format(text, indent_);
     const char *bufout = formatter_.GetString();
     int length = formatter_.GetLength();
-    fwrite(bufout, length, 1, file_);
+    *file_str_ += bufout;
 }
 
 void CppSynth::AddSplitMarker(string *dst)

@@ -1,5 +1,5 @@
 cflags = -fsigned-char -I../../../singlib/inc
-obj = .
+cpp  = ../../src
 
 rule cc
   deps = gcc
@@ -11,29 +11,29 @@ rule ln
   rspfile = $out.rsp
   rspfile_content = $in
 
-build $obj/ast_checks.o:           cc $src/ast_checks.cpp                                                                                                                                         
-build $obj/ast_nodes.o:            cc $src/ast_nodes.cpp                                                                                                                                          
-build $obj/ast_nodes_print.o:      cc $src/ast_nodes_print.cpp                                                                                                                                    
-build $obj/compiler.o:             cc $src/compiler.cpp                                                                                                                                           
-build $obj/cpp_formatter.o:        cc $src/cpp_formatter.cpp                                                                                                                                      
-build $obj/cpp_synth.o:            cc $src/cpp_synth.cpp                                                                                                                                          
-build $obj/expression_attributes.o: cc $src/expression_attributes.cpp                                                                                                                              
-build $obj/FileName.o:             cc $src/FileName.cpp                                                                                                                                           
-build $obj/helpers.o:              cc $src/helpers.cpp                                                                                                                                            
-build $obj/lexer.o:                cc $src/lexer.cpp                                                                                                                                              
-build $obj/NamesList.o:            cc $src/NamesList.cpp                                                                                                                                          
-build $obj/numeric_value.o:        cc $src/numeric_value.cpp                                                                                                                                      
-build $obj/options.o:              cc $src/options.cpp                                                                                                                                            
-build $obj/package.o:              cc $src/package.cpp                                                                                                                                            
-build $obj/Parser.o:               cc $src/Parser.cpp                                                                                                                                             
-build $obj/string.o:               cc $src/string.cpp                                                                                                                                             
-build $obj/symbols_storage.o:      cc $src/symbols_storage.cpp                                                                                                                                    
-build $obj/target.o:               cc $src/target.cpp                                                                                                                                             
-build $obj/builtin_functions.o:    cc $src/builtin_functions.cpp                                                                                                                                             
-build $obj/package_manager.o:      cc $src/package_manager.cpp                                                                                                                                             
-build $obj/split_vector.o:         cc $src/split_vector.cpp  
-build $obj/synth_options.o:        cc $src/synth_options.cpp  
+build ast_checks.o            : cc $cpp/ast_checks.cpp
+build ast_nodes.o             : cc $cpp/ast_nodes.cpp
+build ast_nodes_print.o       : cc $cpp/ast_nodes_print.cpp
+build compiler.o              : cc $cpp/compiler.cpp
+build cpp_formatter.o         : cc $cpp/cpp_formatter.cpp
+build cpp_synth.o             : cc $cpp/cpp_synth.cpp
+build expression_attributes.o : cc $cpp/expression_attributes.cpp
+build FileName.o              : cc $cpp/FileName.cpp
+build helpers.o               : cc $cpp/helpers.cpp
+build lexer.o                 : cc $cpp/lexer.cpp
+build NamesList.o             : cc $cpp/NamesList.cpp
+build numeric_value.o         : cc $cpp/numeric_value.cpp
+build options.o               : cc $cpp/options.cpp
+build package.o               : cc $cpp/package.cpp
+build Parser.o                : cc $cpp/Parser.cpp
+build string.o                : cc $cpp/string.cpp
+build symbols_storage.o       : cc $cpp/symbols_storage.cpp
+build target.o                : cc $cpp/target.cpp
+build builtin_functions.o     : cc $cpp/builtin_functions.cpp
+build package_manager.o       : cc $cpp/package_manager.cpp
+build split_vector.o          : cc $cpp/split_vector.cpp
+build synth_options.o         : cc $cpp/synth_options.cpp
 
-build $bin_target: ln $obj/ast_checks.o $obj/ast_nodes.o $obj/ast_nodes_print.o $obj/compiler.o $obj/cpp_formatter.o $obj/cpp_synth.o $obj/expression_attributes.o $obj/FileName.o $obj/helpers.o $obj/lexer.o $obj/NamesList.o $obj/numeric_value.o $obj/options.o $obj/package.o $obj/Parser.o $obj/string.o $obj/symbols_storage.o $obj/target.o builtin_functions.o package_manager.o $obj/split_vector.o synth_options.o $sing_lib
+build $bin_target: ln ast_checks.o ast_nodes.o ast_nodes_print.o compiler.o cpp_formatter.o cpp_synth.o expression_attributes.o FileName.o helpers.o lexer.o NamesList.o numeric_value.o options.o package.o Parser.o string.o symbols_storage.o target.o builtin_functions.o package_manager.o split_vector.o synth_options.o $sing_lib
 
 default $bin_target

@@ -11,7 +11,7 @@
 namespace SingNames {
 
 class CppSynth {
-    FILE                *file_;         // output for the current declaration
+    string              *file_str_;     // output for the current declaration
     PackageManager      *pkmgr_;
     AstFile             *root_;
     int                 indent_;
@@ -129,7 +129,7 @@ class CppSynth {
     AstClassType *GetLocalClassTypeDeclaration(const char *classname);
     void AppendMemberName(string *dst, IAstDeclarationNode *src);
 public:
-    void Synthetize(FILE *cppfd, FILE *hfd, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp);
+    void Synthetize(string *cppfile, string *hppfile, PackageManager *packages, Options *options, int pkg_index, bool *empty_cpp);
     void SynthDFile(FILE *dfd, const Package *package, const char *target_name);
     void SynthMapFile(FILE *mfd);   // can call this only after Synthetize (and before another call)
 };

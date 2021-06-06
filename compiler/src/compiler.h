@@ -21,6 +21,7 @@ class Compiler {
     void TestParser(void);
     void TestChecker(void);
     int  CompileSinglePackage(void);
+    bool fileSaveIfChanged(const char *filename, const char *extension, const char *content);
 
     void PrintAllPkgErrors();
     void PrintPkgErrors(const Package *pkg);

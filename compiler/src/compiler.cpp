@@ -7,6 +7,7 @@
 #include "helpers.h"
 #include "ast_nodes_print.h"
 #include "FileName.h"
+#include "sio.h"
 
 
 int main(int argc, char *argv[])
@@ -100,43 +101,26 @@ int Compiler::CompileSinglePackage(void)
         PrintAllPkgErrors();
     } else {
         string output_name;
-        FILE *cppfd = nullptr;
-        FILE *hfd = nullptr;
+        string cppfile;
+        string hppfile;
         bool empty_cpp;
 
-        output_name = options_.GetOutputFile();
-
-        if (!h_only) {
-            FileName::ExtensionSet(&output_name, "cpp");
-            cppfd = fopen(output_name.c_str(), "wb");
-            if (cppfd == nullptr) {
-                printf("\ncan't open output file: %s", output_name.c_str());
-                return(1);
-            }
-        }
-
-        FileName::ExtensionSet(&output_name, "h");
-        hfd = fopen(output_name.c_str(), "wb");
-        if (hfd == NULL) {
-            printf("\ncan't open output file: %s", output_name.c_str());
-            fclose(cppfd);
+        // synthetize and write cpp/h
+        cpp_synthesizer_.Synthetize(&cppfile, &hppfile, &pmgr_, &options_, 0, &empty_cpp);
+        if (!fileSaveIfChanged(options_.GetOutputFile(), "h", hppfile.c_str())) {
             return(1);
         }
-
-        cpp_synthesizer_.Synthetize(cppfd, hfd, &pmgr_, &options_, 0, &empty_cpp);
-        if (cppfd != nullptr) fclose(cppfd);
-        fclose(hfd);
 
         if (h_only) {
             return(0);
         }
 
-        // dont delete an empty cpp: this would cause ninja to repeat the build !!
-        // if (empty_cpp) {
-        //     FileName::ExtensionSet(&output_name, "cpp");
-        //     unlink(output_name.c_str());
-        // }
+        // save if empty too, else ninja would repeat the build.
+        if (!fileSaveIfChanged(options_.GetOutputFile(), "cpp", cppfile.c_str())) {
+            return(1);
+        }
 
+        // synthetize and write .map
         FileName::ExtensionSet(&output_name, "map");
         FILE *mfd = fopen(output_name.c_str(), "wb");
         if (mfd == NULL) {
@@ -146,6 +130,7 @@ int Compiler::CompileSinglePackage(void)
         cpp_synthesizer_.SynthMapFile(mfd);
         fclose(mfd);
 
+        // synthetize and write .d
         if (options_.MustCreateDFile()) {
             FileName::ExtensionSet(&output_name, "h");
             FILE *dfd = fopen((output_name + ".d").c_str(), "wb");
@@ -159,6 +144,35 @@ int Compiler::CompileSinglePackage(void)
         return(0);
     }
     return(1);
+}
+
+bool Compiler::fileSaveIfChanged(const char *filename, const char *extension, const char *content)
+{
+    std::string output_name = filename;
+
+    // if unchanged, don't write ! this prevents the unneeded rebuilding of many cpp files by ninja.
+    sing::pathSetExtension(&output_name, extension);
+
+    /* Doesn't work: ninja doesn't care if the file is written or not: just if it is in the dependency tree !!
+    std::string current_content;
+    if (sing::fileReadText(output_name.c_str(), &current_content) == 0) {
+        if (current_content == content) return(true);
+    }*/
+
+    // remove protection before overwriting
+    //sing::fileWriteProtect(output_name.c_str(), false);
+
+    if (sing::fileWriteText(output_name.c_str(), content) != 0) {
+        printf("\ncan't open output file: %s", output_name.c_str());
+        return(false);
+    }
+
+    // protect: this is done to prevent the programmer directly editing this file, 
+    // especially during debug sessions.
+    // Changed my mind: ninja clean can't clean if I leave the files protected !!
+    //sing::fileWriteProtect(output_name.c_str(), true);
+
+    return(true);
 }
 
 void Compiler::PrintAllPkgErrors()
