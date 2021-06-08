@@ -1,7 +1,7 @@
 
 0	/* single line */
 1	// single line
-0	/* multiline
+0	/* multiline
 *************/
 0	/* nested /**/*/
 2	identifyer67876

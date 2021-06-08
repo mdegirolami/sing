@@ -489,6 +489,8 @@ static bool test_parse()
 
 static bool test_console()
 {
+    sing::print("\npress any key to continue.");
+    sing::kbdGet();
     bool ok = false;
     while (!ok) {
         sing::scrClear();

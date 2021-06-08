@@ -68,7 +68,7 @@
                 "clear": true 
             },
             "options": {
-                "cwd": "${workspaceFolder}\\build\\obj_r"
+                "cwd": "${workspaceFolder}/build/obj_r"
             },
             "problemMatcher": [
                 "$gcc"
@@ -93,7 +93,7 @@
                 "clear": true 
             },
             "options": {
-                "cwd": "${workspaceFolder}\\build\\obj_d"
+                "cwd": "${workspaceFolder}/build/obj_d"
             },
             "problemMatcher": [
                 "$gcc"

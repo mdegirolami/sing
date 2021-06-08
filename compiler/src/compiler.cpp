@@ -309,7 +309,7 @@ void Compiler::ServerLoop(bool log_server)
             }
         } catch (...) {
             if (server_log_ != nullptr) {
-                fprintf(server_log_, ">> Exception !!\r\n", buffer);
+                fprintf(server_log_, ">> Exception !!: %s\r\n", buffer);
             }
         }
     } while (!do_exit);

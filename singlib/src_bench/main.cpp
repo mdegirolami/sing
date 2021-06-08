@@ -59,6 +59,7 @@ int main() {
         printf("\nnet lib: failed !!\r\n");
     }
 
+    printf("\npress any key to exit\r\n");
     getchar();
 
     return(0);

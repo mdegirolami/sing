@@ -275,14 +275,15 @@ Error fileRename(const char *old_name, const char *new_name)
 
 Error fileGetInfo(const char *filename, FileInfo *nfo)
 {
-    struct _stat buf;
 #ifdef _WIN32
+    struct _stat buf;
     std::vector<wchar_t> wfilename;
     utf8_to_16(filename, &wfilename);
     if (_wstat(wfilename.data(), &buf) == -1) {
         return(errno);
     }
 #else
+    struct stat buf;
     if (stat(filename, &buf) == -1) {
         return(errno);
     }
@@ -310,7 +311,7 @@ Error fileWriteProtect(const char *filename, bool protect)
 
 Error fileWriteProtect(const char *filename, bool protect)
 {
-    struct _stat buf;
+    struct stat buf;
     if (stat(filename, &buf) == -1) {
         return(errno);
     }
@@ -903,7 +904,7 @@ Error dirReadCore_r(char *buffer, DirFilter filter,
                     nfo.length_ = stat_buf.st_size; 
                     nfo.last_modification_time_ = stat_buf.st_mtime;
                     nfo.is_dir_ = isdir;
-                    nfo->is_read_only_ = (stat_buf.st_mode & S_IWUSR) == 0;
+                    nfo.is_read_only_ = (stat_buf.st_mode & S_IWUSR) == 0;
                     info->push_back(nfo);
                 }
             }

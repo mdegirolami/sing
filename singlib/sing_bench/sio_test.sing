@@ -486,6 +486,8 @@ fn test_parse() bool
 
 fn test_console() bool
 {
+    sio.print("\npress any key to continue.");
+    sio.kbdGet();
     var ok = false;
     while (!ok) {
         sio.scrClear();
