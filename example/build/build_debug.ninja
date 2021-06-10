@@ -1,6 +1,0 @@
-debug_flags = -g
-
-bin_target = ../../bin/tests_d.exe
-singlib = ../../../singlib/bin/win/singlib_d.a
-
-include ../build_aux.ninja

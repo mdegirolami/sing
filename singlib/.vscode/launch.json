@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/linux/bench_d",
+            "program": "${workspaceFolder}/bin/win/bench_d",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",

@@ -1,26 +1,26 @@
 
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:1:10: Failed to load package
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:1:10: Invalid path
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:2:10: Invalid path
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:2:10: package stuff has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:3:10: Invalid path
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:3:10: package stuff2 has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:4:10: Invalid path
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:4:10: package unused has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:6:10: package synth_test_pkg2 has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:7:10: Two 'requires' clauses share the same local name: stpn
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:7:10: package assert has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:8:10: Duplicated 'requires' clause. After search directory resolution, both clauses map to: /home/user/works/sing/test/tests/synth_test_pkg2.sing
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:8:10: package tests/synth_test_pkg2 has been required but not used.
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:10:18: Qualified type names can have at most 2 components: a package name + a type name
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:11:10: Unknown package name
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:12:18: Undefined type
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:13:18: Expected a type name
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:14:18: Cannot access private symbol
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:15:10: Failed to load the package
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:18:9: Undefined symbol
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:20:17: Undefined symbol
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:21:17: Need a variable/const/function name here
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:22:24: Argument 1 is not specified and has no default value
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:27:20: Argument 1 is not specified and has no default value
-ERROR !! file /home/user/works/sing/test/tests/checker_pkgs_test.sing:31:31: Undefined type
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:1:10: Failed to load package
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:1:10: Invalid path
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:2:10: Invalid path
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:2:10: package stuff has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:3:10: Invalid path
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:3:10: package stuff2 has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:4:10: Invalid path
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:4:10: package unused has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:6:10: package synth_test_pkg2 has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:7:10: Two 'requires' clauses share the same local name: stpn
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:7:10: package assert has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:8:10: Duplicated 'requires' clause. After search directory resolution, both clauses map to: c:/works/sing/test/tests/synth_test_pkg2.sing
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:8:10: package tests/synth_test_pkg2 has been required but not used.
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:10:18: Qualified type names can have at most 2 components: a package name + a type name
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:11:10: Unknown package name
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:12:18: Undefined type
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:13:18: Expected a type name
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:14:18: Cannot access private symbol
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:15:10: Failed to load the package
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:18:9: Undefined symbol
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:20:17: Undefined symbol
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:21:17: Need a variable/const/function name here
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:22:24: Argument 1 is not specified and has no default value
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:27:20: Argument 1 is not specified and has no default value
+ERROR !! file c:/works/sing/test/tests/checker_pkgs_test.sing:31:31: Undefined type
