@@ -5,6 +5,6 @@ ln_extra_libs = -lpthread
 platform = linux
 cfg = debug
 
-bin_target = ../../bin/linux/updater_d.exe
+bin_target = ../../bin/linux/updater_d
 
 include ../build_aux.ninja
