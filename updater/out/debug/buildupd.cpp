@@ -143,30 +143,35 @@ std::string fixBuild(bool *has_mods, const char *name, const std::vector<Source>
     // align all ':' the same
     sing::array<int32_t, (size_t)DepType::count> max_field_len = {0};
     for(auto &dep : deps) {
-        const int32_t baselen = sing::numchars(dep.base_.c_str());
-        const int32_t fulllen = baselen + sing::numchars(dep.path_.c_str());
-        if (dep.ext_ == "sing") {
-            max_field_len.at((size_t)DepType::sing2tmp) = std::max(max_field_len.at((size_t)DepType::sing2tmp), fulllen);
-            max_field_len.at((size_t)DepType::tmp2obj) = std::max(max_field_len.at((size_t)DepType::tmp2obj), baselen);
-        } else {
-            max_field_len.at((size_t)DepType::src2obj) = std::max(max_field_len.at((size_t)DepType::src2obj), baselen);
+        if (!dep.deleted_) {
+            const int32_t baselen = sing::numchars(dep.base_.c_str());
+            const int32_t fulllen = baselen + sing::numchars(dep.path_.c_str());
+            if (dep.ext_ == "sing") {
+                max_field_len.at((size_t)DepType::sing2tmp) = std::max(max_field_len.at((size_t)DepType::sing2tmp), fulllen);
+                max_field_len.at((size_t)DepType::tmp2obj) = std::max(max_field_len.at((size_t)DepType::tmp2obj), baselen);
+            } else {
+                max_field_len.at((size_t)DepType::src2obj) = std::max(max_field_len.at((size_t)DepType::src2obj), baselen);
+            }
         }
     }
 
     // add dep lines to rows[]
     for(auto &dep : deps) {
-        if (dep.ext_ == "sing") {
-            rows.push_back(
-                sing2tempSynth(dep.path_.c_str(), dep.base_.c_str(), dep.sing2tmp_rule_.c_str(), max_field_len.at((size_t)DepType::sing2tmp)).c_str());
-            row_priority.push_back(dep.sing2tmp_row_);
+        if (!dep.deleted_) {
+            if (dep.ext_ == "sing") {
+                rows.push_back(
+                    sing2tempSynth(dep.path_.c_str(), dep.base_.c_str(), dep.sing2tmp_rule_.c_str(), max_field_len.at((size_t)DepType::sing2tmp)).c_str());
+                row_priority.push_back(dep.sing2tmp_row_);
 
-            rows.push_back(temp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.x2obj_rule_.c_str(), max_field_len.at((size_t)DepType::tmp2obj)).c_str());
-            row_priority.push_back(dep.x2obj_row_);
-        } else {
-            rows.push_back(
-                cpp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.ext_.c_str(), dep.x2obj_rule_.c_str(),
-                max_field_len.at((size_t)DepType::src2obj)).c_str());
-            row_priority.push_back(dep.x2obj_row_);
+                rows.push_back(
+                    temp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.x2obj_rule_.c_str(), max_field_len.at((size_t)DepType::tmp2obj)).c_str());
+                row_priority.push_back(dep.x2obj_row_);
+            } else {
+                rows.push_back(
+                    cpp2objSynth(dep.path_.c_str(), dep.base_.c_str(), dep.ext_.c_str(), dep.x2obj_rule_.c_str(),
+                    max_field_len.at((size_t)DepType::src2obj)).c_str());
+                row_priority.push_back(dep.x2obj_row_);
+            }
         }
     }
 

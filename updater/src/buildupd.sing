@@ -119,27 +119,31 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
     // align all ':' the same
     var max_field_len [DepType.count]i32;
     for (dep in deps) {
-        let baselen = str.numchars(dep.base);
-        let fulllen = baselen + str.numchars(dep.path);
-        if (dep.ext == "sing") {
-            max_field_len[DepType.sing2tmp] = max(max_field_len[DepType.sing2tmp], fulllen);
-            max_field_len[DepType.tmp2obj] = max(max_field_len[DepType.tmp2obj], baselen);
-        } else {
-            max_field_len[DepType.src2obj] = max(max_field_len[DepType.src2obj], baselen);
+        if (!dep.deleted) {
+            let baselen = str.numchars(dep.base);
+            let fulllen = baselen + str.numchars(dep.path);
+            if (dep.ext == "sing") {
+                max_field_len[DepType.sing2tmp] = max(max_field_len[DepType.sing2tmp], fulllen);
+                max_field_len[DepType.tmp2obj] = max(max_field_len[DepType.tmp2obj], baselen);
+            } else {
+                max_field_len[DepType.src2obj] = max(max_field_len[DepType.src2obj], baselen);
+            }
         }
     }
 
     // add dep lines to rows[]
     for (dep in deps) {
-        if (dep.ext == "sing") {
-            rows.push_back(sing2tempSynth(dep.path, dep.base, dep.sing2tmp_rule, max_field_len[DepType.sing2tmp]));
-            row_priority.push_back(dep.sing2tmp_row);
+        if (!dep.deleted) {
+            if (dep.ext == "sing") {
+                rows.push_back(sing2tempSynth(dep.path, dep.base, dep.sing2tmp_rule, max_field_len[DepType.sing2tmp]));
+                row_priority.push_back(dep.sing2tmp_row);
 
-            rows.push_back(temp2objSynth(dep.path, dep.base, dep.x2obj_rule, max_field_len[DepType.tmp2obj]));
-            row_priority.push_back(dep.x2obj_row);
-        } else {
-            rows.push_back(cpp2objSynth(dep.path, dep.base, dep.ext, dep.x2obj_rule, max_field_len[DepType.src2obj]));
-            row_priority.push_back(dep.x2obj_row);
+                rows.push_back(temp2objSynth(dep.path, dep.base, dep.x2obj_rule, max_field_len[DepType.tmp2obj]));
+                row_priority.push_back(dep.x2obj_row);
+            } else {
+                rows.push_back(cpp2objSynth(dep.path, dep.base, dep.ext, dep.x2obj_rule, max_field_len[DepType.src2obj]));
+                row_priority.push_back(dep.x2obj_row);
+            }
         }
     }
 

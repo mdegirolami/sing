@@ -10,7 +10,7 @@ singlib = $sdk/$platform/lib/$cfg/singlib.a
 
 # directories
 temp = ../../out/$cfg
-sing = ../../sing
+sing = ../../src
 cpp  = ../../src
 
 # options for all the configurations/platforms
@@ -38,14 +38,15 @@ rule aa
 build $temp/updater.h | $temp/updater.cpp   : sc $sing/updater.sing
 build $temp/buildupd.h | $temp/buildupd.cpp : sc $sing/buildupd.sing
 
-# temp -> obj
+# temp->obj
 build updater.o  : cc $temp/updater.cpp
 build buildupd.o : cc $temp/buildupd.cpp
 
-# cpp -> obj
+# cpp->obj
 build main.o : cc $cpp/main.cpp
 
 #link
-build $bin_target: ln main.o updater.o buildupd.o
+build $bin_target: ln updater.o buildupd.o main.o
 
 default $bin_target
+

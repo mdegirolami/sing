@@ -5,6 +5,7 @@
 #include "buildupd.h"
 
 static void collectSources(const char *root, std::vector<Source> *buffer);
+static void scanDirForSources(const char *srcdir, std::vector<Source> *buffer);
 static bool copyFolderFromSdk(const char *sdk, const char *root, const char *folder);
 static bool areThereDuplications(std::string *path1, std::string *path2, const std::vector<Source> &all_srcs, sing::map<std::string, int32_t> *base2idx);
 static std::string getDefaultTarget(const char *root);
@@ -195,27 +196,18 @@ int32_t updater(const std::vector<std::string> &argv)
 
 static void collectSources(const char *root, std::vector<Source> *buffer)
 {
+    scanDirForSources(sing::s_format("%s%s", root, "/sing").c_str(), &*buffer);
+    scanDirForSources(sing::s_format("%s%s", root, "/src").c_str(), &*buffer);
+}
+
+static void scanDirForSources(const char *srcdir, std::vector<Source> *buffer)
+{
     std::vector<std::string> tmp;
 
-    const std::string singroot = sing::s_format("%s%s", root, "/sing");
-    sing::dirReadNames(singroot.c_str(), sing::DirFilter::regular, &tmp, true);
+    sing::dirReadNames(srcdir, sing::DirFilter::regular, &tmp, true);
     for(auto &name : tmp) {
-        if (sing::hasSuffix(name.c_str(), ".sing", true)) {
-            sing::cutPrefix(&name, singroot.c_str());
-            sing::cutPrefix(&name, "/");
-            Source src;
-            std::string drive;
-            sing::pathSplit(name.c_str(), &drive, &src.path_, &src.base_, &src.ext_);
-            (*buffer).push_back(src);
-        }
-    }
-
-    const std::string cpproot = sing::s_format("%s%s", root, "/src/");
-    tmp.clear();
-    sing::dirReadNames(cpproot.c_str(), sing::DirFilter::regular, &tmp, true);
-    for(auto &name : tmp) {
-        if (sing::hasSuffix(name.c_str(), ".cpp", true)) {
-            sing::cutPrefix(&name, cpproot.c_str());
+        if (sing::hasSuffix(name.c_str(), ".sing", true) || sing::hasSuffix(name.c_str(), ".cpp", true)) {
+            sing::cutPrefix(&name, srcdir);
             sing::cutPrefix(&name, "/");
             Source src;
             std::string drive;

@@ -1,4 +1,4 @@
-cc_extra_flags = -g
+cc_extra_flags = -O0 -g
 sing_extra_flags = -g
 ln_extra_libs = -lws2_32
 

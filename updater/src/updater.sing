@@ -181,28 +181,20 @@ public fn updater(argv [*]string) i32
 
 fn collectSources(root string, out buffer [*]buildupd.Source) void
 {
+    scanDirForSources(root + "/sing", buffer);
+    scanDirForSources(root + "/src", buffer);
+}
+
+fn scanDirForSources(srcdir string, out buffer [*]buildupd.Source) void
+{
     var tmp [*]string;
 
-    let singroot = root + "/sing";
-    sio.dirReadNames(singroot, sio.DirFilter.regular, tmp, true:recursive);
+    sio.dirReadNames(srcdir, sio.DirFilter.regular, tmp, true:recursive);
     for (name in tmp) {
-        if (str.hasSuffix(name, ".sing", true:insensitive)) {
-            str.cutPrefix(name, singroot);
+        if (str.hasSuffix(name, ".sing", true:insensitive) ||
+            str.hasSuffix(name, ".cpp", true:insensitive)) {
+            str.cutPrefix(name, srcdir);
             str.cutPrefix(name, "/");
-            var src buildupd.Source;
-            var drive string;
-            sio.pathSplit(name, drive, src.path, src.base, src.ext);
-            buffer.push_back(src);
-        }
-    }
-
-    let cpproot = root + "/src/";
-    tmp.clear();
-    sio.dirReadNames(cpproot, sio.DirFilter.regular, tmp, true:recursive);
-    for (name in tmp) {
-        if (str.hasSuffix(name, ".cpp", true:insensitive)) {
-            str.cutPrefix(name, cpproot);
-            str.cutPrefix(name, "/");            
             var src buildupd.Source;
             var drive string;
             sio.pathSplit(name, drive, src.path, src.base, src.ext);
