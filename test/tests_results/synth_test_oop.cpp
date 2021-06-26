@@ -9,8 +9,14 @@ static int32_t check_typeswitch(const tester &object);
 static int32_t check_typeswitch2(std::shared_ptr<tester> object);
 static void check_builtin();
 
+const Concrete xxx;
+
+const Derived xxy;
+
 char c0_test::id__;
 char delegating::id__;
+char Concrete::id__;
+char Derived::id__;
 
 //
 // STAT class
@@ -332,6 +338,22 @@ static void check_builtin()
     test = map2.has("two");
     std::string ts = map2.key_at(1);
     int32 = map2.value_at(1);
+}
+
+void Concrete::uno(int32_t a, int32_t b) const
+{
+}
+
+void Concrete::due(int32_t a, int32_t b) const
+{
+}
+
+void Concrete::tre(float a, int32_t b) const
+{
+}
+
+void Derived::tre(float a, int32_t b) const
+{
 }
 
 }   // namespace

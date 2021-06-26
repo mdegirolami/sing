@@ -112,6 +112,7 @@ class AstChecker : public ITypedefSolver {
     void CheckNameConflictsInIfFunctions(AstNamedType *typespec,
         vector<VarDeclaration*> *member_vars,
         vector<FuncDeclaration*> *member_functions,
+        vector<string>  *function_implementors,
         vector<AstNamedType*> *origins,
         int first_inherited_fun);
 

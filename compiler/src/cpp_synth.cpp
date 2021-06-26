@@ -567,6 +567,7 @@ void CppSynth::SynthClassHeader(const char *name, vector<AstNamedType*> *bases, 
         string basename;
         text += " :";
         for (int ii = 0; ii < num_bases; ++ii) {
+            basename = "";
             SynthTypeSpecification(&basename, (*bases)[ii]);
             text += " public ";
             text += basename;

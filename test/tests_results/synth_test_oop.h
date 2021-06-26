@@ -86,6 +86,55 @@ public:
     std::string xxx_;
 };
 
+// how to implement inheritance
+class if1 {
+public:
+    virtual ~if1() {}
+    virtual void *get__id() const = 0;
+    virtual void uno(int32_t a, int32_t b) const = 0;
+    virtual void due(int32_t a, int32_t b) const = 0;
+};
+
+class if2 {
+public:
+    virtual ~if2() {}
+    virtual void *get__id() const = 0;
+    virtual void uno(int32_t a, int32_t b) const = 0;
+    virtual void tre(float a, int32_t b) const = 0;
+};
+
+class Concrete final : public if1, public if2 {
+public:
+    virtual void *get__id() const override { return(&id__); };
+    virtual void uno(int32_t a, int32_t b) const override;
+    virtual void due(int32_t a, int32_t b) const override;
+    virtual void tre(float a, int32_t b) const override;
+
+    static char id__;
+};
+
+class Derived final : public if1, public if2 {
+public:
+    virtual void *get__id() const override { return(&id__); };
+    void uno(int32_t a, int32_t b) const
+    {
+        embedded_.uno(a, b);
+    };
+    void due(int32_t a, int32_t b) const
+    {
+        embedded_.due(a, b);
+    };
+    virtual void tre(float a, int32_t b) const override;
+
+    static char id__;
+
+private:
+    Concrete embedded_;
+};
+
 std::shared_ptr<delegating> test_oop();
+
+extern const Concrete xxx;
+extern const Derived xxy;
 
 }   // namespace

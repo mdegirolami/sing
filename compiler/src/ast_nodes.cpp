@@ -318,7 +318,9 @@ AstInterfaceType::~AstInterfaceType()
     for (int ii = 0; ii < (int)ancestors_.size(); ++ii) {
         if (ancestors_[ii] != nullptr) delete ancestors_[ii];
     }
-    for (int ii = 0; ii < (int)members_.size(); ++ii) {
+    int top = (int)members_.size();
+    if (first_hinherited_member_ != -1) top = first_hinherited_member_;
+    for (int ii = 0; ii < top; ++ii) {
         FuncDeclaration *member = members_[ii];
         if (member != nullptr) delete member;
     }

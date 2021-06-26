@@ -351,3 +351,47 @@ fn check_builtin() void
     int32 = map2.value_at(1);
 }
 
+// how to implement inheritance
+public interface if1 {
+    fn uno(a i32, b i32) void;
+    fn due(a i32, b i32) void;    
+}
+
+public interface if2 {
+    fn uno(a i32, b i32) void;
+    fn tre(a f32, b i32) void;    
+}
+
+public class Concrete: if1, if2 {
+public:
+}
+
+fn Concrete.uno(a i32, b i32) void
+{
+}
+
+fn Concrete.due(a i32, b i32) void
+{
+}
+
+fn Concrete.tre(a f32, b i32) void
+{
+}
+
+public let xxx Concrete; 
+
+public class Derived: if1, if2
+{
+    var embedded Concrete; 
+public:    
+    fn uno by embedded;
+    fn due by embedded;
+}
+
+fn Derived.tre(a f32, b i32) void
+{
+}
+
+public let xxy Derived; 
+
+

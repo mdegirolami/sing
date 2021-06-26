@@ -47,7 +47,6 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:120:8: Function member conflicts with function from interface if1
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:120:8: Function member conflicts with function from interface if1B
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:123:21: Inherited Function "f1" has not an implementation
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:123:21: Inherited Function "f1" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:123:21: Inherited Function "f2" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:123:21: Inherited Function "f3" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:131:12: Switch expression must be of integer or enum type
@@ -75,7 +74,6 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:205:14: Can't access private member
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:207:14: Member not found
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:208:5: 'This' is allowed only in member functions
-ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:214:15: Inherited Function "f1" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:214:15: Inherited Function "f1" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:214:15: Inherited Function "f2" has not an implementation
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test_classes.sing:214:15: Inherited Function "f3" has not an implementation

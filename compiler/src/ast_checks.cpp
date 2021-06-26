@@ -723,7 +723,7 @@ void AstChecker::CheckInterface(AstInterfaceType *declaration)
             }
         }
         if (!duplicated) {
-            CheckNameConflictsInIfFunctions(typespec, nullptr, &declaration->members_, &origins, func_count);
+            CheckNameConflictsInIfFunctions(typespec, nullptr, &declaration->members_, nullptr, &origins, func_count);
         }
     }
 }
@@ -859,7 +859,7 @@ void AstChecker::CheckClass(AstClassType *declaration)
         }
         if (!duplicated) {
             CheckNameConflictsInIfFunctions(typespec, &declaration->member_vars_,
-                &declaration->member_functions_, &origins, func_count);
+                &declaration->member_functions_, &declaration->fn_implementors_, &origins, func_count);
             while (declaration->implemented_.size() < declaration->member_functions_.size()) {
                 declaration->implemented_.push_back(has_implementor);
                 declaration->fn_implementors_.push_back(*implementor);
@@ -901,6 +901,7 @@ void AstChecker::CheckMemberFuncDeclaration(FuncDeclaration *declaration, bool f
 void AstChecker::CheckNameConflictsInIfFunctions(AstNamedType *typespec,
     vector<VarDeclaration*> *member_vars,
     vector<FuncDeclaration*> *member_functions,
+    vector<string>  *function_implementors,
     vector<AstNamedType*> *origins,
     int first_inherited_fun)
 {
@@ -933,20 +934,28 @@ void AstChecker::CheckNameConflictsInIfFunctions(AstNamedType *typespec,
                 for (int kk = 0; kk < (int)member_functions->size() && !duplicated; ++kk) {
                     FuncDeclaration *cmp_function = (*member_functions)[kk];
                     if (function->name_ == cmp_function->name_) {
+                        duplicated = true;
                         if (kk < first_inherited_fun) {
-                            string error = "Function member conflicts with function from interface ";
-                            error += ancestor_name;
-                            Error(error.c_str(), cmp_function);
-                            duplicated = true;
-                        } else if (!function->function_type_->IsCompatible(cmp_function->function_type_, FOR_EQUALITY)) {
-                            string error = "Function ";
-                            error += function->name_;
-                            error += " from interface ";
-                            error += ancestor_name;
-                            error += " conflicts (has same name, different type) with a function from interface ";
-                            (*origins)[jj - first_inherited_fun]->AppendFullName(&error);
-                            Error(error.c_str(), typespec);
-                            duplicated = true;
+
+                            // is not an error if the locally declared function is delegated and compatible
+                            if (function_implementors == nullptr || (*function_implementors)[kk] == "" ||
+                                AreTypeTreesCompatible(function->function_type_, cmp_function->function_type_, FOR_EQUALITY) != OK) {
+                                string error = "Function member conflicts with function from interface ";
+                                error += ancestor_name;
+                                Error(error.c_str(), cmp_function);
+                            }
+                        } else {
+
+                            // is not an error if the function from another interface is identical.
+                            if (AreTypeTreesCompatible(function->function_type_, cmp_function->function_type_, FOR_EQUALITY) != OK) {
+                                string error = "Function ";
+                                error += function->name_;
+                                error += " from interface ";
+                                error += ancestor_name;
+                                error += " conflicts (has same name, different type) with a function from interface ";
+                                (*origins)[jj - first_inherited_fun]->AppendFullName(&error);
+                                Error(error.c_str(), typespec);
+                            }
                         }
                     }
                 }
