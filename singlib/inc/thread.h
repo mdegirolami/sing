@@ -60,7 +60,7 @@ public:
 private:
     Event insertion_;
     Event stopped_;
-    std::shared_ptr<Event> def_ready_;
+    Event def_ready_;
     std::shared_ptr<Event> ready_;
     Atomic status_;
 

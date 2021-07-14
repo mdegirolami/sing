@@ -15,6 +15,7 @@ bool sio_test();
 bool sys_test();
 bool thread_test();
 bool net_test();
+bool jsonTest();
 
 int main() {
     // test_intrinsics();
@@ -22,6 +23,8 @@ int main() {
     // speed_test();
     // test_map();
     // test_std_vectors(10);
+
+    /*
 
     if (str_test()) {
         printf("string lib: passed\r\n");
@@ -57,6 +60,14 @@ int main() {
         printf("\nnet lib: passed\r\n");
     } else {
         printf("\nnet lib: failed !!\r\n");
+    }
+
+    */
+
+    if (jsonTest()) {
+        printf("\njson lib: passed\r\n");
+    } else {
+        printf("\njson lib: failed !!\r\n");
     }
 
     printf("\npress any key to exit\r\n");

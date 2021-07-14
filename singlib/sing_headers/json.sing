@@ -1,0 +1,39 @@
+namespace sing;
+
+public enum TokenType {string_type, number, symbol, interpunction, comment, eol, eof}
+
+public class Lexer {
+public:
+    fn mut init(json string) void;
+    fn mut stepToNextToken() bool;
+
+    fn getErrorString() string;
+    fn mut getCurrentPosition(out row i32, out column i32) void;
+    fn mut resetError() void;
+
+    fn getTokenType() TokenType;
+    fn getTokenString() string;
+    fn isTokenSeparated() bool;
+}
+
+/* DOM reader/writer */
+public enum JsonEntryType {number, string_type, boolean, null_type, array, object, comment}
+
+public class JsonEntry {
+public:
+    var entry_type JsonEntryType;   
+    var level i32;
+    var string_rep string;
+    var property_name string;
+}
+
+public class JsonError {
+public:
+    fn getString() string;
+    fn getLocation(out row i32, out col i32) void;    
+}
+
+public fn parseJson(json string, out records [*]JsonEntry, out errors [*]JsonError) bool;
+
+// only fails if JsonEntry levels sequence is wrong
+public fn writeJson(records [*]JsonEntry, out json string) bool;

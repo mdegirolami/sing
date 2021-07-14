@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/bin/win/bench_d",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin",
+            "cwd": "${workspaceFolder}/run",
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",

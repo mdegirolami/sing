@@ -1,0 +1,25 @@
+[
+    -123.378e-7,
+    123e+7,
+    123e11,
+    null,
+    true,
+    false,
+    "a string\\\"\b\t\n\f\r\uf3f3",
+    [
+        110,
+        [],
+    ],
+    [
+    ],
+    {
+        "key0": 124,
+        "key1": 100,
+        // for the purpose of setting the comma, this must be ignored
+    },
+    {
+        "key0": "124"
+    },
+    {
+    }
+]

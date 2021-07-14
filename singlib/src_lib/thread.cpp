@@ -444,7 +444,7 @@ void Executer::stop()
     }
     while (status_.get() == es_stopping) {
         insertion_.signal();
-        stopped_.wait();
+        // stopped_.wait();
     }
     queue_.clear(); // destroy the smart pointers to free the Runnables
 }
@@ -497,13 +497,8 @@ std::shared_ptr<Runnable> Executer::getRunnable(bool blocking)
                 (*ready_).wait();
             }
         } else {
-            if (def_ready_ == nullptr) {
-                def_ready_ = std::make_shared<Event>();    
-                if (def_ready_ == nullptr) return(nullptr);            
-            }
-            ready_ = def_ready_;
             while (done_count_.get() <= 0) {
-                (*ready_).wait();
+                def_ready_.wait();
             }
             ready_ = nullptr;
         }
@@ -545,8 +540,12 @@ void Executer::Run()
             if (++todo_idx_ >= queue_.size()) todo_idx_ = 0;
             done_count_.inc();
             todo_count_.dec();
-            if (ready_ != nullptr && status_.get() == es_running) {
-                (*ready_).signal();
+            if (status_.get() == es_running) {
+                if (ready_ != nullptr) {
+                    (*ready_).signal();
+                } else {
+                    def_ready_.signal();
+                }
             }
         }
 
@@ -557,7 +556,7 @@ void Executer::Run()
         }
     }
     status_.set(es_stopped);
-    stopped_.signal();
+    // stopped_.signal();       // no guarantee stopped_ still exists
 }
 
 }   // namespace

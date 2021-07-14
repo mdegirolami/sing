@@ -1,0 +1,20 @@
+array 0  [
+number 1  -123.378e-7
+number 1  123e+7
+number 1  123e11
+null 1  null
+bool 1  true
+bool 1  false
+string 1  a string\"	
+
+array 1  [
+number 2  110
+array 2  [
+array 1  [
+object 1  {
+number 2 key0 124
+number 2 key1 100
+comment 2  // for the purpose of setting the comma, this must be ignored
+object 1  {
+string 2 key0 124
+object 1  {

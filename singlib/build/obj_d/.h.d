@@ -1,3 +1,2 @@
-.h: d:/Documents/w12/GitHub/stay/singlib/sing_headers/thread.sing \
- d:/Documents/w12/GitHub/stay/singlib/sing_headers/sys.sing \
+.h: d:/Documents/w12/GitHub/stay/singlib/sing_headers/str.sing \
  d:/Documents/w12/GitHub/stay/singlib/sing_headers/sio.sing

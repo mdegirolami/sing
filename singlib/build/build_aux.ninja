@@ -27,7 +27,15 @@ rule aa
   command = ar rvs $out $in
 
 # the library
+############
 
+# sing->temp
+build $temp/json.h | $temp/json.cpp : sc $src_l/json.sing
+
+# temp -> obj
+build json.o  : cc $temp/json.cpp
+
+# cpp -> obj
 build sing.o        : cc $src_l/sing.cpp      
 build str.o         : cc $src_l/str.cpp
 build str_tables.o  : cc $src_l/str_tables.cpp
@@ -37,9 +45,10 @@ build sys.o         : cc $src_l/sys.cpp
 build thread.o      : cc $src_l/thread.cpp
 build net.o         : cc $src_l/net.cpp
 
-build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o sys.o thread.o net.o
+build $lib_target : aa  sing.o str.o str_tables.o sort.o sio.o sys.o thread.o net.o json.o
 
 # the bench
+############
 
 # sing->temp
 build $temp/str_test.h | $temp/str_test.cpp : sc $singsrc/str_test.sing
@@ -47,6 +56,7 @@ build $temp/sio_test.h | $temp/sio_test.cpp : sc $singsrc/sio_test.sing
 build $temp/sys_test.h | $temp/sys_test.cpp : sc $singsrc/sys_test.sing
 build $temp/thread_test.h | $temp/thread_test.cpp : sc $singsrc/thread_test.sing
 build $temp/net_test.h | $temp/net_test.cpp : sc $singsrc/net_test.sing
+build $temp/json_test.h | $temp/json_test.cpp : sc $singsrc/json_test.sing
 
 # temp -> obj
 build str_test.o  : cc $temp/str_test.cpp
@@ -54,6 +64,7 @@ build sio_test.o  : cc $temp/sio_test.cpp
 build sys_test.o  : cc $temp/sys_test.cpp
 build thread_test.o : cc $temp/thread_test.cpp
 build net_test.o  : cc $temp/net_test.cpp
+build json_test.o  : cc $temp/json_test.cpp
 
 # cpp -> obj
 build main.o             : cc $src_b/main.cpp
@@ -65,6 +76,6 @@ build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp
 build SortTest.o         : cc $src_b/SortTest.cpp 
 
 #link
-build $bin_target: ln main.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o net_test.o $lib_target
+build $bin_target: ln main.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o net_test.o json_test.o $lib_target
 
 default $bin_target

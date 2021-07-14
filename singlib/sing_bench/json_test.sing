@@ -1,0 +1,51 @@
+requires "json";
+requires "sio";
+
+public fn jsonTest() bool
+{
+    var original string;
+    var entries [*]json.JsonEntry;
+    var errors [*]json.JsonError;
+
+    // parse
+    if (sio.fileReadText("json_test/tst.json", original) != 0) {
+        return(false);
+    }
+    if (!json.parseJson(original, entries, errors)) {
+        return(false);
+    }
+
+    // list the found entries
+    var list string;
+    for (record in entries) {
+        let record_type = record.entry_type;
+        switch (record_type) {
+            case json.JsonEntryType.number: list += "number";
+            case json.JsonEntryType.string_type: list += "string";
+            case json.JsonEntryType.boolean: list += "bool";
+            case json.JsonEntryType.null_type: list += "null";
+            case json.JsonEntryType.array: list += "array";
+            case json.JsonEntryType.object: list += "object";
+            case json.JsonEntryType.comment: list += "comment";
+        }
+        list += " " + string(record.level) + " " + record.property_name + " " + record.string_rep + "\r\n";
+    }
+    sio.fileWriteText("json_test/list.txt", list);
+
+    // rebuild
+    var rebuilt string;
+    if (!json.writeJson(entries, rebuilt)) {
+        return(false);
+    }
+
+    // compare, write down if in error
+    var fixed string;
+    if (sio.fileReadText("json_test/fixed.json", fixed) != 0) {
+        return(false);
+    }
+    if (rebuilt != fixed) {
+        sio.fileWriteText("json_test/rebuilt.json", rebuilt);
+        return(false);
+    }
+    return(true);
+}
