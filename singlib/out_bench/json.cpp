@@ -542,7 +542,7 @@ static bool parseSingleValue(int32_t level, Lexer *lexer, std::vector<JsonEntry>
             const std::string symbol = (*lexer).getTokenString();
             if (symbol == "[") {
                 insertRecord(JsonEntryType::array, level, symbol.c_str(), &*records);
-                if (!lexerAdvance(level, &*lexer, &*records, &*errors)) {
+                if (!lexerAdvance(level + 1, &*lexer, &*records, &*errors)) {
                     return (false);
                 }
                 if (!parseValues(level + 1, &*lexer, &*records, &*errors)) {
@@ -554,7 +554,7 @@ static bool parseSingleValue(int32_t level, Lexer *lexer, std::vector<JsonEntry>
                 }
             } else if (symbol == "{") {
                 insertRecord(JsonEntryType::object, level, symbol.c_str(), &*records);
-                if (!lexerAdvance(level, &*lexer, &*records, &*errors)) {
+                if (!lexerAdvance(level + 1, &*lexer, &*records, &*errors)) {
                     return (false);
                 }
                 if (!parseProperties(level + 1, &*lexer, &*records, &*errors)) {
@@ -700,7 +700,7 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
 
             // search the next record which is not a comment
             int32_t level = -1;
-            for(int32_t scan = (int32_t)count + 1, scan__top = records.size() - 1; scan < scan__top; ++scan) {
+            for(int32_t scan = (int32_t)count + 1, scan__top = records.size(); scan < scan__top; ++scan) {
                 if (records[scan].entry_type_ != JsonEntryType::comment) {
                     level = records[scan].level_;
                     break;

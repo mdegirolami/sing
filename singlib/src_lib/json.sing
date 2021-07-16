@@ -522,7 +522,7 @@ fn parseSingleValue(level i32, io lexer Lexer, out records [*]JsonEntry, out err
             let symbol = lexer.getTokenString();
             if (symbol == "[") {
                 insertRecord(JsonEntryType.array, level, symbol, records);
-                if (!lexerAdvance(level, lexer, records, errors)) {
+                if (!lexerAdvance(level + 1, lexer, records, errors)) {
                     return(false);
                 }
                 if (!parseValues(level + 1, lexer, records, errors)) {
@@ -534,7 +534,7 @@ fn parseSingleValue(level i32, io lexer Lexer, out records [*]JsonEntry, out err
                 }
             } else if (symbol == "{") {
                 insertRecord(JsonEntryType.object, level, symbol, records);
-                if (!lexerAdvance(level, lexer, records, errors)) {
+                if (!lexerAdvance(level + 1, lexer, records, errors)) {
                     return(false);
                 }
                 if (!parseProperties(level + 1, lexer, records, errors)) {
@@ -667,7 +667,7 @@ public fn writeJson(records [*]JsonEntry, out json string) bool
 
             // search the next record which is not a comment
             var level = -1;
-            for (scan in i32(count) + 1 : records.size() - 1) {
+            for (scan in i32(count) + 1 : records.size()) {
                 if (records[scan].entry_type != JsonEntryType.comment) {
                     level = records[scan].level;
                     break;
