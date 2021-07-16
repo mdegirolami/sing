@@ -1,6 +1,7 @@
 requires "sio";
 requires "sys";
 requires "str";
+requires "json";
 requires "buildupd";
 
 public fn updater(argv [*]string) i32
@@ -117,42 +118,15 @@ public fn updater(argv [*]string) i32
     }
 
     // fix .vscode/launch.json
-    var to_launch = default_target + "_d";
-    var original string;
-    if (sio.fileReadText(root + "/.vscode/launch.json", original) == 0) {
-        var buffer = original;
-        let id = sys.getOs();
-        switch (id) {
-            case sys.OsId.linux: {
-                str.replaceAll(buffer, "/win", "/linux");
-                str.replaceAll(buffer, "/osx", "/linux");
-                str.replace(buffer, ".exe", "");
-            }
-            case sys.OsId.osx: {
-                str.replaceAll(buffer, "/win", "/osx");
-                str.replaceAll(buffer, "/linux", "/osx");
-                str.replace(buffer, ".exe", "");
-            }
-            case sys.OsId.win: {
-                str.replaceAll(buffer, "/linux", "/win");
-                str.replaceAll(buffer, "/osx", "/win");
-                var range str.Range;
-                if (str.find(buffer, to_launch, range)) {
-                    var end_pos i32;
-                    if (str.compareAt(buffer, range.end, "\"", end_pos) == 0) {
-                        str.insert(buffer, range.end, ".exe");
-                    }
-                }
-                to_launch += ".exe";
-            }
-        }
-        str.replace(buffer, "<PHOLD>", to_launch);
-        if (buffer != original) {
-            if (sio.fileWriteText(root + "/.vscode/launch.json", buffer) != 0) {
-                sio.print("\r\nError, Can't update .vscode/launch.json !!");
-                return(0);
-            }
-        }
+    if (!fixLaunchFile(root, default_target)) {
+        sio.print("\r\nError, Can't update .vscode/launch.json !!");
+        return(0);
+    }
+
+    // patch c_cpp_poperties.json with the sing include files
+    if (!addSingLibraryToCppIntellisense(root, sdk)) {
+        sio.print("\r\nError, Can't update .vscode/c_cpp_properties.json !!");
+        return(0);
     }
 
     // create sing_sense.txt if it doesn't exist
@@ -275,4 +249,139 @@ fn replace_PHOLD(name string, default_target string, forwin bool, debug bool) vo
             sio.fileWriteText(name, buffer);
         }
     }
+}
+
+fn addSingLibraryToCppIntellisense(root string, sdk string) bool
+{
+    // read the file
+    var content string;
+    let filname = root + "/.vscode/c_cpp_properties.json";
+    if (sio.fileReadText(filname, content) != 0) {
+        return(true);
+    }
+
+    // parse the json content
+    var entries [*]json.JsonEntry;
+    var errors [*]json.JsonError;
+    if (!json.parseJson(content, entries, errors)) {
+        return(false);
+    }
+
+    // check the content            
+    let inclusion = sdk + "/inc";
+    var scan = 0;
+    while (scan < entries.size()) {
+
+        // look for the path array to patch
+        if (entries[scan].entry_type == json.JsonEntryType.array && entries[scan].property_name == "includePath") {
+
+            // if there is a wrong path replace it
+            let array_level = entries[scan].level;
+            ++scan;
+            var found = false;
+            while (scan < entries.size() && entries[scan].level > array_level) {
+                if (entries[scan].entry_type == json.JsonEntryType.string_type &&
+                    entries[scan].level == array_level + 1 &&
+                    str.hasSuffix(entries[scan].string_rep, "vscode-sing/sdk/inc")) {
+                    if (entries[scan].string_rep == inclusion) {
+
+                        // path is present and is correct
+                        return(true);
+                    }
+                    entries[scan].string_rep = inclusion;
+                    found = true;
+                    break;
+                }
+                ++scan;
+            }
+            if (!found) {
+                var incentry json.JsonEntry;
+
+                incentry.entry_type = json.JsonEntryType.string_type;
+                incentry.level = array_level + 1;
+                incentry.string_rep = inclusion;
+                entries.insert(scan, 1, incentry);
+            }
+        }
+        ++scan;
+    }
+
+    // write back the updated json
+    if (!json.writeJson(entries, content)) {
+        return(false);
+    }
+    if (sio.fileWriteText(filname, content) != 0) {
+        return(false);
+    }
+    return(true);
+}
+
+fn fixLaunchFile(root string, default_target string) bool
+{
+    var to_launch = default_target + "_d";
+    var original string;
+    if (sio.fileReadText(root + "/.vscode/launch.json", original) != 0) {
+        return(true);
+    }
+
+    var buffer = original;
+    let id = sys.getOs();
+    switch (id) {
+        case sys.OsId.linux: {
+            str.replaceAll(buffer, "/win", "/linux");
+            str.replaceAll(buffer, "/osx", "/linux");
+            str.replace(buffer, ".exe", "");
+            str.replace(buffer, "<PHOLD>", to_launch);
+        }
+        case sys.OsId.osx: {
+            str.replaceAll(buffer, "/win", "/osx");
+            str.replaceAll(buffer, "/linux", "/osx");
+            str.replace(buffer, ".exe", "");
+            str.replace(buffer, "<PHOLD>", to_launch);
+        }
+        case sys.OsId.win: {
+            to_launch += ".exe";
+            str.replaceAll(buffer, "/linux", "/win");
+            str.replaceAll(buffer, "/osx", "/win");
+            if (str.replace(buffer, "<PHOLD>", to_launch) == str.npos) {
+                if (!addExeToProgram(buffer)) {
+                    return(false);
+                }
+            }
+        }
+    }
+
+    if (buffer != original) {
+        if (sio.fileWriteText(root + "/.vscode/launch.json", buffer) != 0) {
+            return(false);
+        }
+    }
+    return(true);
+}
+
+fn addExeToProgram(io buffer string) bool
+{
+    // parse the json content
+    var entries [*]json.JsonEntry;
+    var errors [*]json.JsonError;
+    if (!json.parseJson(buffer, entries, errors)) {
+        return(false);
+    }
+
+    var changed = false;
+    for (record in entries) {
+        if (record.entry_type == json.JsonEntryType.string_type && record.property_name == "program") {
+            if (!str.hasSuffix(record.string_rep, ".exe", true:insensitive)) {
+                sio.pathSetExtension(record.string_rep, "exe");
+                changed = true;
+            }
+        }
+    }
+
+    if (changed) {
+        if (!json.writeJson(entries, buffer)) {
+            return(false);
+        }
+    }
+    return(true);
 }
