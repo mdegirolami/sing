@@ -1777,7 +1777,6 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
 {
     bool has_private_access = attr->GetTypeTree() == current_class_;        // i.e. the function is a member of the accessed class.
     bool class_is_writable = attr->IsWritable();
-    bool in_notmuting = has_private_access && current_function_ != nullptr && !current_function_->is_muting_;
     for (int fun_idx = 0; fun_idx < (int)member_functions->size(); ++fun_idx) {
         if ((*member_functions)[fun_idx]->name_ == accessed->value_) {
             FuncDeclaration *decl = (*member_functions)[fun_idx];
@@ -1786,12 +1785,8 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 attr->InitWithTree(decl->function_type_, nullptr, false, false, this);
                 decl->SetUsed();
                 CheckIfFunCallIsLegal(decl->function_type_, accessed);
-                if (decl->is_muting_) {
-                    if (in_notmuting) {
-                        Error("Can't call a muting member function from a non-muting one", accessed);
-                    } else if (!class_is_writable) {
-                        Error("Can't call a muting member function on a read-only instance (input argument or constant)", accessed);
-                    } 
+                if (decl->is_muting_ && !class_is_writable) {
+                    Error("Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)", accessed);
                 }
                 accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
             } else {
@@ -1807,7 +1802,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 VarDeclaration *decl = (*member_vars)[var_idx];
                 if (has_private_access || decl->IsPublic()) {
                     accessed->wp_decl_ = decl;
-                    attr->InitWithTree(decl->GetTypeSpec(), decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable() && !in_notmuting, this);
+                    attr->InitWithTree(decl->GetTypeSpec(), decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable()/* && !in_notmuting*/, this);
                     decl->SetUsageFlags(usage);
                     CheckIfVarReferenceIsLegal(usage, decl, accessed);
                     accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
@@ -1883,7 +1878,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
                 readonly = var->weak_iterated_var_->HasOneOfFlags(VF_READONLY);
             }
         } else {
-            readonly = var->HasOneOfFlags(VF_READONLY);
+            readonly = var->HasOneOfFlags(VF_READONLY | VF_IS_ITERATED);
         }
         attr->InitWithTree(var->GetTypeSpec(), var, true, !readonly, this);
         if (var->HasOneOfFlags(VF_READONLY)) {
@@ -1978,6 +1973,16 @@ void AstChecker::SetUsageOnNamedLeaf(IAstDeclarationNode *decl, AstExpressionLea
 
 void AstChecker::InsertName(const char *name, IAstDeclarationNode *declaration)
 {
+    for (int ii = 0; ii < (int)root_->dependencies_.size(); ++ii) {
+        AstDependency *dependency = root_->dependencies_[ii];
+        if (dependency->package_name_ == name) {
+            string message = "Symbol '";
+            message += name;
+            message += "' conflicts with imported file tag (see 'requires' declarations)";
+            Error(message.c_str(), declaration);
+            return;
+        }
+    }
     if (!symbols_->InsertName(name, declaration)) {
         string message = "Symbol '";
         message += name;

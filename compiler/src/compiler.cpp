@@ -121,6 +121,7 @@ int Compiler::CompileSinglePackage(void)
         }
 
         // synthetize and write .map
+        output_name = options_.GetOutputFile();
         FileName::ExtensionSet(&output_name, "map");
         FILE *mfd = fopen(output_name.c_str(), "wb");
         if (mfd == NULL) {

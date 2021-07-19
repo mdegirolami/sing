@@ -33,3 +33,10 @@ public fn test2(in p0 the_pkg.pkg_type2) void
     var tt the_pkg.pkg_type;    // needed by a public, but not in the declaration: private inclusion.
     the_pkg.invisible();        // need to be public !!
 }
+
+fn xyz() void
+{
+    var the_pkg i32;    // conflicts with file tag
+}
+
+var the_pkg i32;    // conflicts with file tag

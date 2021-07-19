@@ -328,6 +328,7 @@ ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:717:14: 
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:721:18: The argument's initer must be a compile time constant !
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:721:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
+ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:731:9: Increment and Decrement operations can be applied only to writable integer variables
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:731:11: An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:737:28: A public declaration cannot refer a private symbol
 ERROR !! file d:/Documents/w12/GitHub/stay/test/tests/checker_test.sing:740:2: Function must return a value !!
