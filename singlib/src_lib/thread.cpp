@@ -93,10 +93,12 @@ void Event::signal()
 void Atomic::set(const int32_t value)
 {
     atomic = (unsigned)value;
+    __sync_synchronize();
 }
 
 int32_t Atomic::get() const
 {
+    __sync_synchronize();
     return((int32_t)atomic);
 }
 
@@ -328,10 +330,12 @@ void Event::signal()
 void Atomic::set(const int32_t value)
 {
     atomic = (unsigned)value;
+    __sync_synchronize();
 }
 
 int32_t Atomic::get() const
 {
+    __sync_synchronize();
     return((int32_t)atomic);
 }
 

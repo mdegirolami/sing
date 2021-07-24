@@ -24,8 +24,6 @@ int main() {
     // test_map();
     // test_std_vectors(10);
 
-    /*
-
     if (str_test()) {
         printf("string lib: passed\r\n");
     } else {
@@ -62,7 +60,6 @@ int main() {
         printf("\nnet lib: failed !!\r\n");
     }
 
-    */
 
     if (jsonTest()) {
         printf("\njson lib: passed\r\n");
