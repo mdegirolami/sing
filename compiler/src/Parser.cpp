@@ -1003,7 +1003,8 @@ AstBlock *Parser::ParseBlock(void)
         //if (on_error_) goto recovery; // never happens, ParseStatement recovers all errors.
         if (statement != nullptr) {
             node->AddItem(statement);
-        } else if (insert_completion_node_) {
+        } 
+        if (insert_completion_node_) {
 
             // it is an error for sure but must be here to be parsed by the checker.
             // (we want to know its type !!)
