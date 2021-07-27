@@ -1,5 +1,6 @@
 requires "json";
 requires "sio";
+requires "str";
 
 public fn jsonTest() bool
 {
@@ -43,6 +44,11 @@ public fn jsonTest() bool
     if (sio.fileReadText("json_test/fixed.json", fixed) != 0) {
         return(false);
     }
+
+    // in case git changes /r/n in /n
+    str.replaceAll(rebuilt, "\r\n", "\n");
+    str.replaceAll(fixed, "\r\n", "\n");
+
     if (rebuilt != fixed) {
         sio.fileWriteText("json_test/rebuilt.json", rebuilt);
         return(false);

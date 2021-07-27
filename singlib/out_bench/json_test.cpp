@@ -1,6 +1,7 @@
 #include "json_test.h"
 #include "json.h"
 #include "sio.h"
+#include "str.h"
 
 bool jsonTest()
 {
@@ -58,6 +59,11 @@ bool jsonTest()
     if (sing::fileReadText("json_test/fixed.json", &fixed) != 0) {
         return (false);
     }
+
+    // in case git changes /r/n in /n
+    sing::replaceAll(&rebuilt, "\r\n", "\n");
+    sing::replaceAll(&fixed, "\r\n", "\n");
+
     if (rebuilt != fixed) {
         sing::fileWriteText("json_test/rebuilt.json", rebuilt.c_str());
         return (false);

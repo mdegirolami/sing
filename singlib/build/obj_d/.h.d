@@ -1,2 +1,3 @@
-.h: d:/Documents/w12/GitHub/stay/singlib/sing_headers/json.sing \
- d:/Documents/w12/GitHub/stay/singlib/sing_headers/sio.sing
+.h: /home/user/works/sing/singlib/sing_headers/json.sing \
+ /home/user/works/sing/singlib/sing_headers/sio.sing \
+ /home/user/works/sing/singlib/sing_headers/str.sing

@@ -29,7 +29,9 @@ rule cc
   command = g++ -MD -MF $out.d $cc_flags -c $in -o $out
 
 rule ln
-  command = g++ -std=c++11 -o $out $in $ln_libs
+  command = g++ -std=c++11 -o $out @$out.rsp
+  rspfile = $out.rsp
+  rspfile_content = $in $ln_libs
 
 rule aa
   command = ar rvs $out $in
