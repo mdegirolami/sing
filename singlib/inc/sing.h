@@ -188,6 +188,13 @@ namespace sing {
         dst.insert(dst.begin() + idx, count, value);
     }
 
+    inline void insert(std::vector<std::string> &dst, int64_t idx, int64_t count, const char *value)
+    {
+        if (idx < 0) return;
+        if (idx > dst.size()) idx = dst.size();
+        dst.insert(dst.begin() + idx, count, value);
+    }
+
     template<class T>
     inline void erase(std::vector<T> &dst, int64_t idx, int64_t top)
     {

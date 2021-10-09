@@ -338,6 +338,19 @@ static void check_builtin()
     test = map2.has("two");
     std::string ts = map2.key_at(1);
     int32 = map2.value_at(1);
+
+    // check how string are correctly sent to intrinsic functions
+    std::vector<std::string> stringvec;
+    sing::map<std::string, std::string> stringmap;
+    const std::string tst = "ta_daa";
+
+    stringvec.push_back("aaa");
+    sing::insert(stringvec, 0, 1, "aaa");
+    stringmap.insert("first", tst.c_str());
+    stringmap.get("first");
+    stringmap.get_safe("first", tst.c_str());
+    stringmap.erase("first");
+    stringmap.has("first");
 }
 
 void Concrete::uno(int32_t a, int32_t b) const

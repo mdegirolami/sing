@@ -349,6 +349,19 @@ fn check_builtin() void
     test = map2.has("two");
     var ts string = map2.key_at(1);
     int32 = map2.value_at(1);
+
+    // check how string are correctly sent to intrinsic functions
+    var stringvec [*]string;
+    var stringmap map(string) string;
+    let tst = "ta_daa";
+
+    stringvec.push_back("aaa");
+    stringvec.insert(0, 1, "aaa");
+    stringmap.insert("first", tst);
+    stringmap.get("first");
+    stringmap.get_safe("first", tst);
+    stringmap.erase("first");
+    stringmap.has("first");
 }
 
 // how to implement inheritance
