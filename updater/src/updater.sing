@@ -282,15 +282,21 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
             while (scan < entries.size() && entries[scan].level > array_level) {
                 if (entries[scan].entry_type == json.JsonEntryType.string_type &&
                     entries[scan].level == array_level + 1 &&
-                    str.hasSuffix(entries[scan].string_rep, "vscode-sing/sdk/inc")) {
-                    if (entries[scan].string_rep == inclusion) {
+                    str.hasSuffix(entries[scan].string_rep, "/sdk/inc")) {
+                    var range str.Range;
+                    if (str.find(entries[scan].string_rep, "vscode-sing", range)) {
+                        if (found) {
 
-                        // path is present and is correct
-                        return(true);
+                            // is a duplicate: delete !
+                            entries.erase(scan, scan + 1);
+                            --scan; // compensate the future increment
+                        } else {
+                            found = true;
+                            if (entries[scan].string_rep != inclusion) {
+                                entries[scan].string_rep = inclusion;
+                            }
+                        }
                     }
-                    entries[scan].string_rep = inclusion;
-                    found = true;
-                    break;
                 }
                 ++scan;
             }

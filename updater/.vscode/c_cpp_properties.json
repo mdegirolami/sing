@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/../singlib/inc"
+                "${workspaceFolder}/../singlib/inc",
+                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc",
+                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
             ],
             "defines": [
                 "_DEBUG",
@@ -21,7 +23,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/local/include",
-                "/usr/include"
+                "/usr/include",
+                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc",
+                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
             ],
             "defines": [
                 "_DEBUG",
