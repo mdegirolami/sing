@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/../singlib/inc",
                 "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc",
-                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
+                "/home/user/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
             ],
             "defines": [
                 "_DEBUG",
@@ -24,8 +24,8 @@
                 "${workspaceFolder}/**",
                 "/usr/local/include",
                 "/usr/include",
-                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc",
-                "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
+                "/home/user/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc",
+                "/home/user/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.2/sdk/inc"
             ],
             "defines": [
                 "_DEBUG",

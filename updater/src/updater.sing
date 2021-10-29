@@ -272,10 +272,18 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
     var scan = 0;
     while (scan < entries.size()) {
 
-        // look for the path array to patch
-        if (entries[scan].entry_type == json.JsonEntryType.array && entries[scan].property_name == "includePath") {
+        if (entries[scan].entry_type == json.JsonEntryType.string_type && 
+            entries[scan].property_name == "name" && cfgIsForAnotherPlatform(entries[scan].string_rep)) {
 
-            // if there is a wrong path replace it
+            // discard blocks that are meant for another platform
+            let array_level = entries[scan].level;
+            ++scan;
+            while (scan < entries.size() && entries[scan].level > array_level) {
+                ++scan;
+            }        
+        } else if (entries[scan].entry_type == json.JsonEntryType.array && entries[scan].property_name == "includePath") {
+
+            // we found the paths array, let's scan it            
             let array_level = entries[scan].level;
             ++scan;
             var found = false;
@@ -293,6 +301,8 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
                         } else {
                             found = true;
                             if (entries[scan].string_rep != inclusion) {
+
+                                // if there is a wrong path replace it
                                 entries[scan].string_rep = inclusion;
                             }
                         }
@@ -300,6 +310,8 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
                 }
                 ++scan;
             }
+
+            // there is none, add it !
             if (!found) {
                 var incentry json.JsonEntry;
 
@@ -308,8 +320,9 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
                 incentry.string_rep = inclusion;
                 entries.insert(scan, 1, incentry);
             }
+        } else {
+            ++scan;
         }
-        ++scan;
     }
 
     // write back the updated json
@@ -320,6 +333,18 @@ fn addSingLibraryToCppIntellisense(root string, sdk string) bool
         return(false);
     }
     return(true);
+}
+
+fn cfgIsForAnotherPlatform(name string) bool
+{
+    if (name == "Linux") {
+        return(sys.getOs() != sys.OsId.linux);
+    } else if (name == "Mac") {
+        return(sys.getOs() != sys.OsId.osx);
+    } else if (name == "Win32") {
+        return(sys.getOs() != sys.OsId.win);
+    }
+    return(false);
 }
 
 fn fixLaunchFile(root string, default_target string) bool
