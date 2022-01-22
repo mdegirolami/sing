@@ -437,6 +437,9 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
             }
             if (!CheckTypeSpecification(node->element_type_, mode == TSCM_INITEDVAR ? TSCM_INITEDVAR : TSCM_STD)) {
                 success = false;
+            } else if (node->is_dynamic_ && !node->element_type_->SupportsAssignment()) {
+                Error("Element type must support the = operator (not contain a class with finalize())", node->element_type_);
+                success = false;
             }
         }
         break;
@@ -448,8 +451,14 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
             } else if (!node->key_type_->SupportsEqualOperator()) {
                 Error("Key type must support the == operator (not be a class/interface/map)", node->key_type_);
                 success = false;
+            } else if (!node->key_type_->SupportsAssignment()) {
+                Error("Key type must support the = operator (not contain a class with finalize())", node->key_type_);
+                success = false;
             }
             if (!CheckTypeSpecification(node->returned_type_, TSCM_STD)) {
+                success = false;
+            } else if (!node->returned_type_->SupportsAssignment()) {
+                Error("Returned type must support the = operator (not contain a class with finalize())", node->returned_type_);
                 success = false;
             }
         }
@@ -2395,10 +2404,8 @@ ITypedefSolver::TypeMatchResult AstChecker::AreTypeTreesCompatible(IAstTypeNode 
     }
 
     // some classes are not copyable
-    if (mode == FOR_ASSIGNMENT && t1->GetType() == ANT_CLASS_TYPE) {
-        if (!((AstClassType*)t0)->can_be_copied) {
-            return(NONCOPY);
-        }
+    if (mode == FOR_ASSIGNMENT && (!t0->SupportsAssignment() || !t1->SupportsAssignment())) {
+        return(NONCOPY);
     }
 
     // optimization (check the pointers instead of the content)

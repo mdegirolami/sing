@@ -198,8 +198,14 @@ bool AstArrayType::IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode)
     return(true);
 }
 
-bool AstArrayType::SupportsEqualOperator(void) { 
+bool AstArrayType::SupportsEqualOperator(void) 
+{ 
     return(element_type_ != nullptr ? element_type_->SupportsEqualOperator() : false); 
+}
+
+bool AstArrayType::SupportsAssignment(void) 
+{ 
+    return((is_dynamic_ || element_type_ == nullptr) ? true : element_type_->SupportsAssignment()); 
 }
 
 void AstArrayType::SynthSingType(string *dst) const
@@ -241,6 +247,10 @@ bool AstNamedType::NeedsZeroIniter(void) {
 
 bool AstNamedType::SupportsEqualOperator(void) {
     return(wp_decl_ != nullptr ? wp_decl_->type_spec_->SupportsEqualOperator() : false); 
+}
+
+bool AstNamedType::SupportsAssignment(void) { 
+    return(wp_decl_ != nullptr ? wp_decl_->type_spec_->SupportsAssignment() : false); 
 }
 
 void AstNamedType::AppendFullName(string *fullname) const
@@ -430,9 +440,7 @@ void AstClassType::AddMemberFun(FuncDeclaration *member, string implementor) {
     fn_implementors_.push_back(implementor);
     if (member->name_ == "finalize") {
         has_destructor = true;
-        //can_be_copied = false;    // just a bad idea: imagine if we added a log in finalize() for debug purpose...
-                                    // also, if you do this, remember to check arrays and maps who have non-copiable items.
-                                    // the best would be to have a IAstTypeNode::SupportsEssignOperator() function.
+        can_be_copied = false;
     }
 }
 

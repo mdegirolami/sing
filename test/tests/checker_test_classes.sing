@@ -353,3 +353,42 @@ fn switchtest2(in vv [*]*if1) void
     case *if1implementor: imp = *tref;
     }
 }
+
+class has_noncopiable {
+    var nocopy privatedesc;
+}
+
+// cannot have dyna vectors and maps with noncopiable objects
+var cancopytest1 [*]privatedesc;
+var cancopytest3 map(string)has_noncopiable;
+
+// can have dyna vectors and maps with copiable objects
+var cancopytest4 [*]delegated;
+var cancopytest6 map(string)delegated;
+
+fn trycopies() void
+{
+    {
+        var v0 [2]privatedesc;
+        var v1 [2]privatedesc;
+
+        v0 = v1;            // should fail (has a finalize method)
+
+        var v2 [2]delegated;
+        var v3 [2]delegated;
+
+        v2 = v3;
+    }
+
+    {
+        var v0 privatedesc;
+        var v1 privatedesc;
+
+        v0 = v1;            // should fail (has a finalize method)
+
+        var v2 delegated;
+        var v3 delegated;
+
+        v2 = v3;
+    }
+}

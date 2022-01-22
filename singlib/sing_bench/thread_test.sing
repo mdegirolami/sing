@@ -94,11 +94,13 @@ fn Add.work() void
 
 fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
 {
-    var executers [*]thread.Executer; 
+    var executers [*]*thread.Executer; 
     executers.resize(count);
     let len = v2.size() / count;
-    for (ex in executers) {
+    for (ptr in executers) {
+        var ex thread.Executer;
         ex.start();
+        ptr = &ex;
     }
     sys.wait(1);    // be sure the threads are running !!
 

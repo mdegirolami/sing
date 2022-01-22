@@ -1110,7 +1110,7 @@ bool ExpressionAttributes::CanAssign(ExpressionAttributes *src, ITypedefSolver *
                 break;
             case ITypedefSolver::NONCOPY:
                 can_assign = false;
-                *error = "Classes with finalize or with a non-copyable member are not copyable";
+                *error = "Interfaces and Classes with finalize or with a non-copyable member are not copyable";
                 break;
             }
         } else {

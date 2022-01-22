@@ -113,11 +113,13 @@ void Add::work()
 
 static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count)
 {
-    std::vector<sing::Executer> executers;
+    std::vector<std::shared_ptr<sing::Executer>> executers;
     executers.resize(count);
     const int32_t len = (*v2).size() / count;
-    for(auto &ex : executers) {
-        ex.start();
+    for(auto &ptr : executers) {
+        std::shared_ptr<sing::Executer> ex = std::make_shared<sing::Executer>();
+        (*ex).start();
+        ptr = ex;
     }
     sing::wait(1);                      // be sure the threads are running !!
 
@@ -133,10 +135,10 @@ static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std
         } else {
             (*adder).init(v1, v2, start_idx, (*v2).size());
         }
-        ex.enqueue(adder);
+        (*ex).enqueue(adder);
     }
     for(auto &ex : executers) {
-        ex.getRunnable(true);
+        (*ex).getRunnable(true);
     }
     return (sing::clocksDiff(start, sing::clock()));
 }
