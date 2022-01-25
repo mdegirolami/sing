@@ -194,7 +194,11 @@ void Compiler::PrintPkgErrors(const Package *pkg)
     do {
         error = pkg->GetErrorString(error_idx++);
         if (error != NULL) {
-            printf("\nERROR !! file %s:%s", pkg->getFullPath() ,error);
+            if (options_.GetTestMode() != 0) {
+                printf("\n%s", error);
+            } else {
+                printf("\nERROR !! file %s:%s", pkg->getFullPath() ,error);
+            }
             has_errors = true;
         }
     } while (error != NULL);

@@ -1,108 +1,108 @@
 
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:11:19: Values are not numbers nor of same type or the type doesn't support the == operator
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:14:12: You can't compare two enums of different type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:18:11: Index value is out of bound
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:19:14: Sum operands must be all numbers or all strings.
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:23:4: Can't find the function's class declaration
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:38:16: Inherited Function "conflicting" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:38:16: Inherited Function "from_if0" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:40:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:47:35: The delegated member has not the required interface
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:47:56: Implementor not found
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:47:56: Interface included twice
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:47:78: Interface included twice
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:50:9: Var member name conflicts with function from interface if0
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:51:9: Duplicated member name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:54:8: The delegated member has not the required function
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:55:8: Implementor not found
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:59:8: Duplicated member name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:59:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:60:8: Duplicated member name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:62:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:63:8: Did you mean 'finalize' (please check the case) ?
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:63:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:64:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:64:8: The finalize function must have no arguments and no return value
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:65:13: Undefined type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:67:21: Member variables only support single value initers
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:68:21: Type mismatch/No known conversion
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:71:19: The argument's initer must be a compile time constant !
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:74:8: Duplicated member name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:74:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:77:26: You can initialize only member variables of base type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:80:4: Function doesn't belong to the class
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:84:4: A not inherited member function should access at least a class member
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:88:4: Double defined function
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:92:4: Function signature differs from class declaration
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:96:11: Original declaration is not public !
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:96:32: A public declaration cannot refer a private symbol
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:100:21: Type mismatch/No known conversion
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:102:6: Enum case "uno" is duplicated
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:102:31: The enum case initer must be a compile time integer constant and fit an i32 type !
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:107:8: Duplicated member name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:119:22: Interface included twice
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:119:27: Function f2 from interface if1B conflicts (has same name, different type) with a function from interface if1
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:119:33: Name doesn't refer to an object of type interface
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:120:8: Function member conflicts with function from interface if1
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:120:8: Function member conflicts with function from interface if1
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:120:8: Function member conflicts with function from interface if1B
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:123:21: Inherited Function "f1" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:123:21: Inherited Function "f2" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:123:21: Inherited Function "f3" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:131:12: Switch expression must be of integer or enum type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:139:10: Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:140:10: Switch cases must match the switch expression type (or be scalar values)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:143:16: The reference name must be a new name
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:146:23: The expression must evaluate to an interface or interface pointer type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:151:10: The case label type must be a class implementing the typeswitch interface
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:155:26: Can't use a weak pointer in a typeswitch
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:156:10: The case label type must be a class implementing the typeswitch interface
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:158:25: You can use unary * only on strong pointers
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:160:5: Need a variable/const/function name here
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:160:17: You can use unary * only on strong pointers
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:169:9: Undefined symbol
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:170:9: Cannot access private symbol
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:171:9: Need a variable/const/function name here
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:172:29: Not a case of the enumeration
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:173:9: Left operand is not compatible with the dot operator or the selected function
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:181:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:187:5: Undefined symbol
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:188:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:190:5: Undefined symbol
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:191:5: Writing to a read-only variable
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:203:14: Can't access private member
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:205:14: Can't access private member
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:207:14: Member not found
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:208:5: 'This' is allowed only in member functions
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:214:15: Inherited Function "f1" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:214:15: Inherited Function "f2" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:214:15: Inherited Function "f3" has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:219:12: An Interface type is not allowed here (only concrete types)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:224:5: Interfaces and Classes with finalize or with a non-copyable member are not copyable
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:225:5: Left operand has not a concrete type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:226:5: Type mismatch/No known conversion
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:230:23: Argument 2 is an output argument and needs to be a writable variable
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:233:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:245:5: Type mismatch/No known conversion
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:247:5: Type mismatch/No known conversion
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:250:22: Argument 2 type mismatch
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:251:24: Argument 2 is an output argument and needs to be a writable variable
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:259:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:266:8: No finalize function allowed in interfaces
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:270:8: Finalize function must be public
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:270:8: Function has not an implementation
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:273:10: You can't have a type declaration whose only purpose is to rename an existing type
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:283:5: The Switch statement must have at least a non-default case
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:288:14: Values are not numbers nor of same type or the type doesn't support the == operator
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:293:5: Not All Enum Values are present
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:308:5: Duplicated case values !
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:324:12: Muting attribute can't be assigned to a delegating function (depends on the delegated object)
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:328:32: The enum case value must be greter than the previous one.
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:329:6: The enum case value overflows i32 capacity.
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:335:5: Left operand is not compatible with the dot operator
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:337:8: Can't call a muting member function on a constant variable/field
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:352:26: The typeswitch expression can't include function calls
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:362:21: Element type must support the = operator (not contain a class with finalize())
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:363:29: Returned type must support the = operator (not contain a class with finalize())
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:375:9: Interfaces and Classes with finalize or with a non-copyable member are not copyable
-ERROR !! file c:/works/sing/test/tests/checker_test_classes.sing:387:9: Interfaces and Classes with finalize or with a non-copyable member are not copyable
+11:19: Values are not numbers nor of same type or the type doesn't support the == operator
+14:12: You can't compare two enums of different type
+18:11: Index value is out of bound
+19:14: Sum operands must be all numbers or all strings.
+23:4: Can't find the function's class declaration
+38:16: Inherited Function "conflicting" has not an implementation
+38:16: Inherited Function "from_if0" has not an implementation
+40:8: Function has not an implementation
+47:35: The delegated member has not the required interface
+47:56: Implementor not found
+47:56: Interface included twice
+47:78: Interface included twice
+50:9: Var member name conflicts with function from interface if0
+51:9: Duplicated member name
+54:8: The delegated member has not the required function
+55:8: Implementor not found
+59:8: Duplicated member name
+59:8: Function has not an implementation
+60:8: Duplicated member name
+62:8: Function has not an implementation
+63:8: Did you mean 'finalize' (please check the case) ?
+63:8: Function has not an implementation
+64:8: Function has not an implementation
+64:8: The finalize function must have no arguments and no return value
+65:13: Undefined type
+67:21: Member variables only support single value initers
+68:21: Type mismatch/No known conversion
+71:19: The argument's initer must be a compile time constant !
+74:8: Duplicated member name
+74:8: Function has not an implementation
+77:26: You can initialize only member variables of base type
+80:4: Function doesn't belong to the class
+84:4: A not inherited member function should access at least a class member
+88:4: Double defined function
+92:4: Function signature differs from class declaration
+96:11: Original declaration is not public !
+96:32: A public declaration cannot refer a private symbol
+100:21: Type mismatch/No known conversion
+102:6: Enum case "uno" is duplicated
+102:31: The enum case initer must be a compile time integer constant and fit an i32 type !
+107:8: Duplicated member name
+119:22: Interface included twice
+119:27: Function f2 from interface if1B conflicts (has same name, different type) with a function from interface if1
+119:33: Name doesn't refer to an object of type interface
+120:8: Function member conflicts with function from interface if1
+120:8: Function member conflicts with function from interface if1
+120:8: Function member conflicts with function from interface if1B
+123:21: Inherited Function "f1" has not an implementation
+123:21: Inherited Function "f2" has not an implementation
+123:21: Inherited Function "f3" has not an implementation
+131:12: Switch expression must be of integer or enum type
+139:10: Switch case must be a simple integer compile time constant and fit the range of the switch type. Can't contain the ^, ~ operators.
+140:10: Switch cases must match the switch expression type (or be scalar values)
+143:16: The reference name must be a new name
+146:23: The expression must evaluate to an interface or interface pointer type
+151:10: The case label type must be a class implementing the typeswitch interface
+155:26: Can't use a weak pointer in a typeswitch
+156:10: The case label type must be a class implementing the typeswitch interface
+158:25: You can use unary * only on strong pointers
+160:5: Need a variable/const/function name here
+160:17: You can use unary * only on strong pointers
+169:9: Undefined symbol
+170:9: Cannot access private symbol
+171:9: Need a variable/const/function name here
+172:29: Not a case of the enumeration
+173:9: Left operand is not compatible with the dot operator or the selected function
+181:8: Function has not an implementation
+187:5: Undefined symbol
+188:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
+190:5: Undefined symbol
+191:5: Writing to a read-only variable
+203:14: Can't access private member
+205:14: Can't access private member
+207:14: Member not found
+208:5: 'This' is allowed only in member functions
+214:15: Inherited Function "f1" has not an implementation
+214:15: Inherited Function "f2" has not an implementation
+214:15: Inherited Function "f3" has not an implementation
+219:12: An Interface type is not allowed here (only concrete types)
+224:5: Interfaces and Classes with finalize or with a non-copyable member are not copyable
+225:5: Left operand has not a concrete type
+226:5: Type mismatch/No known conversion
+230:23: Argument 2 is an output argument and needs to be a writable variable
+233:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
+245:5: Type mismatch/No known conversion
+247:5: Type mismatch/No known conversion
+250:22: Argument 2 type mismatch
+251:24: Argument 2 is an output argument and needs to be a writable variable
+259:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
+266:8: No finalize function allowed in interfaces
+270:8: Finalize function must be public
+270:8: Function has not an implementation
+273:10: You can't have a type declaration whose only purpose is to rename an existing type
+283:5: The Switch statement must have at least a non-default case
+288:14: Values are not numbers nor of same type or the type doesn't support the == operator
+293:5: Not All Enum Values are present
+308:5: Duplicated case values !
+324:12: Muting attribute can't be assigned to a delegating function (depends on the delegated object)
+328:32: The enum case value must be greter than the previous one.
+329:6: The enum case value overflows i32 capacity.
+335:5: Left operand is not compatible with the dot operator
+337:8: Can't call a muting member function on a constant variable/field
+352:26: The typeswitch expression can't include function calls
+362:21: Element type must support the = operator (not contain a class with finalize())
+363:29: Returned type must support the = operator (not contain a class with finalize())
+375:9: Interfaces and Classes with finalize or with a non-copyable member are not copyable
+387:9: Interfaces and Classes with finalize or with a non-copyable member are not copyable
