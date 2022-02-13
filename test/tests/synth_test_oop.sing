@@ -377,6 +377,7 @@ public interface if2 {
 
 public class Concrete: if1, if2 {
 public:
+    fn mut passMyself(p0 Concrete, io p1 Concrete, out p2 Concrete) void;
 }
 
 fn Concrete.uno(a i32, b i32) void
@@ -407,4 +408,8 @@ fn Derived.tre(a f32, b i32) void
 
 public let xxy Derived; 
 
+fn Concrete.passMyself(p0 Concrete, io p1 Concrete, out p2 Concrete) void
+{
+    this.passMyself(this, this, this);
+}
 

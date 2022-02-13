@@ -1480,12 +1480,12 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
         int priority = SynthFullExpression(var->GetTypeSpec(), &expression, expression_node);
         ParmPassingMethod ppm = GetParameterPassingMethod(var->GetTypeSpec(), var->HasOneOfFlags(VF_READONLY));
         if (ppm == PPM_POINTER) {
-            // passed by pointer: get the address (or simplify *)
-            //if (expression[0] == '*') {
-            //    expression.erase(0, 1);
-            //} else {
+            // passed by pointer: get the address (or simplify *this)
+            if (expression == "*this") {
+                expression.erase(0, 1);
+            } else {
                 expression.insert(0, "&");
-            //}
+            }
         } else if (ppm == PPM_INPUT_STRING && !IsInputArg(expression_node) && !IsLiteralString(expression_node)) {
             Protect(&expression, priority, GetBinopCppPriority(TOKEN_DOT));
             expression += ".c_str()";
@@ -1558,7 +1558,7 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
     assert(node->operand_right_->GetType() == ANT_EXP_LEAF);
     AstExpressionLeaf* right_leaf = (AstExpressionLeaf*)node->operand_right_;
 
-    // is a package resolution operator ?
+    // is a package resolution operator or 'this' ?
     int pkg_index = -1;
     if (node->operand_left_->GetType() == ANT_EXP_LEAF) {
         AstExpressionLeaf* left_leaf = (AstExpressionLeaf*)node->operand_left_;
@@ -2235,7 +2235,8 @@ int CppSynth::SynthLeaf(string *dst, AstExpressionLeaf *node)
         *dst += ')';
         break;
     case TOKEN_THIS:
-        *dst = "this";
+        *dst = "*this";
+        priority = GetUnopCppPriority(TOKEN_MPY);
         break;
     case TOKEN_NAME:
         {

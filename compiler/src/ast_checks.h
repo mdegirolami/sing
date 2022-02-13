@@ -95,8 +95,7 @@ class AstChecker : public ITypedefSolver {
     void CheckUnop(AstUnop *node, ExpressionAttributes *attr);
     void CheckDotOp(AstBinop *node, ExpressionAttributes *attr, ExpressionUsage usage, bool dotop_left);
     void CheckMemberAccess(AstExpressionLeaf *accessed, vector<FuncDeclaration*> *member_functions, vector<VarDeclaration*> *member_vars, ExpressionAttributes *attr, ExpressionUsage usage);
-    void CheckDotOpLeftLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage);
-    void CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage);
+    void CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop);
     void CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop);
 
     bool VerifyIndexConstness(IAstExpNode *node);

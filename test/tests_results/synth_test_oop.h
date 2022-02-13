@@ -106,6 +106,7 @@ public:
 class Concrete final : public if1, public if2 {
 public:
     virtual void *get__id() const override { return(&id__); };
+    void passMyself(const Concrete &p0, Concrete *p1, Concrete *p2);
     virtual void uno(int32_t a, int32_t b) const override;
     virtual void due(int32_t a, int32_t b) const override;
     virtual void tre(float a, int32_t b) const override;

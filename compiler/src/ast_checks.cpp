@@ -1461,7 +1461,7 @@ void AstChecker::CheckExpression(IAstExpNode *node, ExpressionAttributes *attr, 
         CheckUnop((AstUnop*)node, attr);
         break;
     case ANT_EXP_LEAF:
-        CheckLeaf((AstExpressionLeaf*)node, attr, usage);
+        CheckLeaf((AstExpressionLeaf*)node, attr, usage, false);
         break;
     }
 }
@@ -1657,7 +1657,7 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
     int pkg_index = -1;
     if (node->operand_left_->GetType() == ANT_EXP_LEAF) {
         AstExpressionLeaf* left_leaf = (AstExpressionLeaf*)node->operand_left_;
-        CheckDotOpLeftLeaf(left_leaf, attr, ExpressionUsage::READ);
+        CheckLeaf(left_leaf, attr, ExpressionUsage::READ, true);
         pkg_index = left_leaf->pkg_index_;
     } else if (node->operand_left_->GetType() == ANT_BINOP && ((AstBinop*)node->operand_left_)->subtype_ == TOKEN_DOT) {
         CheckDotOp((AstBinop*)node->operand_left_, attr, ExpressionUsage::READ, true);
@@ -1827,8 +1827,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
     attr->SetError();
 }
 
-// with respect to other leaves can additionally be a file reference or an enum type.
-void AstChecker::CheckDotOpLeftLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage)
+void AstChecker::CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop)
 {
     if (node->subtype_ == TOKEN_THIS) {
         if (current_class_ != nullptr && current_function_ != nullptr)
@@ -1838,31 +1837,17 @@ void AstChecker::CheckDotOpLeftLeaf(AstExpressionLeaf *node, ExpressionAttribute
         } else {
             Error("'This' is allowed only in member functions", node);
         }
-        node->attr_ = *attr;
     } else if (node->subtype_ == TOKEN_NAME) {
         IAstDeclarationNode *decl = SearchDeclaration(node->value_.c_str(), node);
         if (decl != nullptr) {
-            CheckNamedLeaf(decl, node, attr, usage, true);
-        } else {
+            CheckNamedLeaf(decl, node, attr, usage, preceeds_dotop);
+        } else if (preceeds_dotop) {
             int pkg = SearchAndLoadPackage(node->value_.c_str(), node, "Undefined symbol");
             if (pkg != -1) {
                 node->pkg_index_ = pkg;
             } else {
                 attr->SetError();
             }
-        }
-        node->attr_ = *attr;
-    } else {
-        CheckLeaf(node, attr, usage);
-    }
-}
-
-void AstChecker::CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage)
-{
-    if (node->subtype_ == TOKEN_NAME) {
-        IAstDeclarationNode *decl = SearchDeclaration(node->value_.c_str(), node);
-        if (decl != nullptr) {
-            CheckNamedLeaf(decl, node, attr, usage, false);
         } else {
             Error("Undefined symbol", node);
         }

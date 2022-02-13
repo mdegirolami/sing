@@ -155,6 +155,10 @@ bool ExpressionAttributes::InitWithLiteral(Token literal_type, const char *value
         }
         value_is_valid_ = is_a_literal_ = true;
         break;
+    default:
+        *error = "Unknown value type.";
+        exp_type_ = BT_ERROR;
+        return(false);
     }
     type_tree_ = original_tree_ = nullptr;
     is_a_variable_ = is_writable_ = false;

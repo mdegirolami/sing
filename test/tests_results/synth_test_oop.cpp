@@ -369,4 +369,9 @@ void Derived::tre(float a, int32_t b) const
 {
 }
 
+void Concrete::passMyself(const Concrete &p0, Concrete *p1, Concrete *p2)
+{
+    passMyself(*this, this, this);
+}
+
 }   // namespace
