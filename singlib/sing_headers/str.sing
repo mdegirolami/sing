@@ -73,6 +73,7 @@ public fn encode(src [*]i32) string;
 public fn decode(src string, out dst [*]i32) void;
 public fn decodeOne(src string, io at i32) i32;
 public fn encodeOne(src i32) string;
+public fn toCp(src string) i32;
 
 // char classify
 public fn isDigit(cc i32) bool;

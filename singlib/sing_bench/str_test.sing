@@ -265,7 +265,7 @@ public fn str_test() bool
         str.isLower(0x3CF) || !str.isLower(str.ccTolower(0x3CF))) {
         return(false);
     }
-    if (str.ccTolower(0x41) != 0x61) {
+    if (str.ccTolower(0x41) != str.toCp("a")) {
         return(false);
     }
 

@@ -4,6 +4,17 @@
 
 namespace sing {
 
+int32_t decode_or_skip(const char **src);
+inline int32_t toCp(const char *src) 
+{
+    if ((*src & 0x80) == 0) {
+        return(*src);
+    } else {
+        const char *scan = src;
+        return(decode_or_skip(&scan));
+    }
+}
+
 enum class SplitMode {sm_separator_left, sm_separator_right, sm_drop};
 
 static const int32_t npos = -1;

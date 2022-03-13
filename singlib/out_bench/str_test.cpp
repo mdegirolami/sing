@@ -259,7 +259,7 @@ bool str_test()
     if (sing::isLower(0x20) || sing::isLower(0x41) || !sing::isLower(0x61) || sing::isLower(0x3CF) || !sing::isLower(sing::ccTolower(0x3CF))) {
         return (false);
     }
-    if (sing::ccTolower(0x41) != 0x61) {
+    if (sing::ccTolower(0x41) != sing::toCp("a")) {
         return (false);
     }
 

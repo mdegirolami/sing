@@ -3,6 +3,21 @@
 #include "str.h"
 #include "str_tables.h"
 
+// NOTE:
+// to be added to the automatically generated File class declaration: 
+/*
+int32_t decode_or_skip(const char **src);
+inline int32_t toCp(const char *src) 
+{
+    if ((*src & 0x80) == 0) {
+        return(*src);
+    } else {
+        const char *scan = src;
+        return(decode_or_skip(&scan));
+    }
+}
+*/
+
 namespace sing {
 
 Range::Range()
@@ -13,7 +28,6 @@ Range::Range()
 // local functions
 static void cp_encode(std::string *dst, int32_t cp);
 static int32_t cp_decode_impl(const char **src);
-static int32_t decode_or_skip(const char **src);
 static bool split_impl(const char *src, const Range &range, std::string *left, std::string *right,  SplitMode mode);
 static const char *skip_chars_forward(const char *start, int32_t num_chars);
 static const char *skip_chars_reverse(const char *start, int32_t num_chars, const char *base);
@@ -887,7 +901,7 @@ static int32_t cp_decode_impl(const char **src)
     return(value);
 }
 
-static int32_t decode_or_skip(const char **src)
+int32_t decode_or_skip(const char **src)
 {
     int32_t value = -1;
     const char *scan = *src;
@@ -983,20 +997,16 @@ std::string utf16_to_8(const wchar_t *src)
             return(result);
         } else if (value < 0xd800) {
             cp_encode(&result, value);
-            //result += encodeOne(value);
         } else if (value < 0xdc00) {
             wchar_t v_low = *src;
             if (v_low >= 0xdc00 && v_low < 0xe000) {
                 cp_encode(&result, 0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
-                // result += encodeOne(0x100000 | ((value - 0xd800) << 10) | (v_low - 0xdc00));
                 ++src;
             } else {
                 cp_encode(&result, value);
-                // result += encodeOne(value);
             }
         } else {
             cp_encode(&result, value);
-            // result += encodeOne(value);
         }
     }
 }
