@@ -46,7 +46,7 @@ public fn testProcessFunctions() bool
         var child_stdout *sio.Stream;
         var child_stderr *sio.Stream;
         hh = sys.automate("C:/Windows/System32/choice.exe", child_stdin, child_stdout, child_stderr); 
-        if (hh == 0) {
+        if (hh == 0 || child_stdout == null || child_stdin == null) {
             return(false);
         }
         var prompt string;
@@ -80,7 +80,7 @@ public fn testProcessFunctions() bool
 
         //note: -f means 'case insensitive'. Here to check exec() parsing
         hh = sys.automate("/usr/bin/sort -r", child_stdin, child_stdout, child_stderr); 
-        if (hh == 0) {
+        if (hh == 0 || child_stdout == null || child_stdin == null) {
             return(false);
         }
         var mess [*]u8 = {98, 10}; // "b\n"

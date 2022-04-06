@@ -87,6 +87,12 @@
 247:5: Type mismatch/No known conversion
 250:22: Argument 2 type mismatch
 251:24: Argument 2 is an output argument and needs to be a writable variable
+254:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+255:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+256:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+257:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+258:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+259:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 259:10: Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)
 266:8: No finalize function allowed in interfaces
 270:8: Finalize function must be public

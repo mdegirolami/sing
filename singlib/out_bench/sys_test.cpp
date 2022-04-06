@@ -47,7 +47,7 @@ bool testProcessFunctions()
         std::shared_ptr<sing::Stream> child_stdout;
         std::shared_ptr<sing::Stream> child_stderr;
         hh = sing::automate("C:/Windows/System32/choice.exe", &child_stdin, &child_stdout, &child_stderr);
-        if (sing::iseq(hh, 0)) {
+        if (sing::iseq(hh, 0) || child_stdout == nullptr || child_stdin == nullptr) {
             return (false);
         }
         std::string prompt;
@@ -81,7 +81,7 @@ bool testProcessFunctions()
 
         //note: -f means 'case insensitive'. Here to check exec() parsing
         hh = sing::automate("/usr/bin/sort -r", &child_stdin, &child_stdout, &child_stderr);
-        if (sing::iseq(hh, 0)) {
+        if (sing::iseq(hh, 0) || child_stdout == nullptr || child_stdin == nullptr) {
             return (false);
         }
         std::vector<uint8_t> mess = {(uint8_t)98, (uint8_t)10};                 // "b\n"

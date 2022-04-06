@@ -105,14 +105,21 @@ void Add::init(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vect
 
 void Add::work()
 {
-    for(int32_t ii = start_, ii__top = stop_; ii < ii__top; ++ii) {
-        (*v1_)[ii] += (*v2_)[ii];
+    const std::shared_ptr<std::vector<float>> src1 = v1_;
+    const std::shared_ptr<std::vector<float>> src2 = v2_;
+    if (src1 != nullptr && src2 != nullptr) {
+        for(int32_t ii = start_, ii__top = stop_; ii < ii__top; ++ii) {
+            (*src1)[ii] += (*src2)[ii];
+        }
     }
     done.signal();
 }
 
 static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std::vector<float>> v2, int32_t count)
 {
+    if (v2 == nullptr || count == 0) {
+        return (0);
+    }
     std::vector<std::shared_ptr<sing::Executer>> executers;
     executers.resize(count);
     const int32_t len = (*v2).size() / count;
@@ -135,10 +142,16 @@ static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std
         } else {
             (*adder).init(v1, v2, start_idx, (*v2).size());
         }
-        (*ex).enqueue(adder);
+        const std::shared_ptr<sing::Executer> exp = ex;
+        if (exp != nullptr) {
+            (*exp).enqueue(adder);
+        }
     }
     for(auto &ex : executers) {
-        (*ex).getRunnable(true);
+        const std::shared_ptr<sing::Executer> exp = ex;
+        if (exp != nullptr) {
+            (*exp).getRunnable(true);
+        }
     }
     return (sing::clocksDiff(start, sing::clock()));
 }

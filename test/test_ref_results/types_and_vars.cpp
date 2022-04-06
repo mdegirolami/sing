@@ -175,7 +175,10 @@ void test_types_and_vars()
 
     sing::array<std::shared_ptr<std::string>, 2> ptrvec = {hv_string, hvi_string};
     for(auto &ptriterator : ptrvec) {
-        *ptriterator += "-";
+        const std::shared_ptr<std::string> item = ptriterator;
+        if (item != nullptr) {
+            *item += "-";
+        }
     }
 
     sing::array<sing::array<std::string, 3>, 3> arrvec = {{"a", "b", "c"}, {"d", "e"}, {"f", "g"}};

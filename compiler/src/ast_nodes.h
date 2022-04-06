@@ -35,7 +35,8 @@ enum VarFlags {
     VF_IS_REFERENCE = 0x1000,   // for iterator or typeswitch placement name
     VF_ISLOCAL = 0x2000,
     VF_IMPLEMENTED_AS_CONSTINT = 0x4000, // is implemented as a static const int (run time constant).
-    VF_IS_ITERATED = 0x8000
+    VF_IS_ITERATED = 0x8000,
+    VF_IS_NOT_NULL = 0x10000
 };
 
 enum AstNodeType {
@@ -823,8 +824,8 @@ public:
     void ForceFlags(int32_t flags) { flags_ = flags; }
     void SetFlags(int32_t flags) { flags_ |= flags; }
     void ClearFlags(int32_t flags) { flags_ &= ~flags; }
-    bool HasOneOfFlags(int32_t flags) { return((flags_ & flags) != 0); }
-    bool HasAllFlags(int32_t flags) { return((flags_ & flags) == flags); }
+    bool HasOneOfFlags(int32_t flags) const { return((flags_ & flags) != 0); }
+    bool HasAllFlags(int32_t flags) const { return((flags_ & flags) == flags); }
     void SetTheIteratedVar(VarDeclaration *iterated) { weak_iterated_var_ = iterated; }
     void SetUsageFlags(ExpressionUsage usage);
     IAstTypeNode *GetTypeSpec() const;

@@ -33,7 +33,8 @@ build builtin_functions.o     : cc $cpp/builtin_functions.cpp
 build package_manager.o       : cc $cpp/package_manager.cpp
 build split_vector.o          : cc $cpp/split_vector.cpp
 build synth_options.o         : cc $cpp/synth_options.cpp
+build value_checker.o         : cc $cpp/value_checker.cpp
 
-build $bin_target: ln ast_checks.o ast_nodes.o ast_nodes_print.o compiler.o cpp_formatter.o cpp_synth.o expression_attributes.o FileName.o helpers.o lexer.o NamesList.o numeric_value.o options.o package.o Parser.o string.o symbols_storage.o target.o builtin_functions.o package_manager.o split_vector.o synth_options.o $sing_lib
+build $bin_target: ln ast_checks.o ast_nodes.o ast_nodes_print.o compiler.o cpp_formatter.o cpp_synth.o expression_attributes.o FileName.o helpers.o lexer.o NamesList.o numeric_value.o options.o package.o Parser.o string.o symbols_storage.o target.o builtin_functions.o package_manager.o split_vector.o synth_options.o value_checker.o $sing_lib
 
 default $bin_target

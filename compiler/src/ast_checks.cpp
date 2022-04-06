@@ -155,6 +155,11 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
             if (declaration->initer_ != nullptr) {
                 if (!CheckIniter(declaration->GetTypeSpec(), declaration->initer_)) {
                     check_constness = false;
+                } else if (in_function_block_ && declaration->initer_->GetType() != ANT_INITER) {
+                    ExpressionAttributes attr_left, attr_right;
+                    CheckExpression((IAstExpNode*)declaration->initer_, &attr_right, ExpressionUsage::READ);
+                    attr_left.InitWithTree(declaration->GetTypeSpec(), declaration, true, true, this);
+                    value_checks_.onAssignment(attr_left, attr_right);
                 }
             }
         }
@@ -189,6 +194,11 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
                         check_constness = false;
                     }
                 }
+            }
+            if (in_function_block_) {
+                ExpressionAttributes attr_left;
+                attr_left.InitWithTree(declaration->GetTypeSpec(), declaration, true, true, this);
+                value_checks_.onAssignment(attr_left, attr);
             }
         } else {
             check_constness = false;
@@ -348,7 +358,17 @@ void AstChecker::CheckFuncBody(FuncDeclaration *declaration)
         current_class_ = nullptr;
     }
 
+    value_checks_.onFunctionStart();
+
     CheckBlock(declaration->block_, false);
+
+    const DeferredCheck *err = nullptr;
+    do {
+        err = value_checks_.getError();
+        if (err != nullptr) {
+            Error(value_checks_.GetErrorString(err->type_), err->location_);
+        }
+    } while (err != nullptr);
 
     in_function_block_ = false;
     current_class_ = nullptr;
@@ -1006,8 +1026,8 @@ AstNodeType AstChecker::CheckStatement(IAstNode *node)
     AstNodeType nodetype = node->GetType();
     switch (nodetype) {
     case ANT_VAR:
-        CheckVar((VarDeclaration*)node);
         ((VarDeclaration*)node)->SetFlags(VF_ISLOCAL);
+        CheckVar((VarDeclaration*)node);
         break;
     case ANT_UPDATE:
         CheckUpdateStatement((AstUpdate*)node);
@@ -1076,6 +1096,7 @@ void AstChecker::CheckUpdateStatement(AstUpdate *node)
             Error("Left operand has not a concrete type", node);
         } else if (node->operation_ == TOKEN_ASSIGN) {
             CanAssign(&attr_left, &attr_right, node);
+            value_checks_.onAssignment(attr_left, attr_right);
         } else if (attr_left.RequiresPromotion()) {
             Error("Can't use update operators on 8/16 bit integers (a cast and assignment are required)", node);
         } else {
@@ -1132,9 +1153,11 @@ void AstChecker::CheckWhile(AstWhile *node)
     if (!attr.IsOnError() && !attr.IsBool()) {
         Error("Expression must evaluate to a bool", node);
     }
+    value_checks_.onWhile(node->expression_);
     ++loops_nesting;
     CheckBlock(node->block_, true);
     --loops_nesting;
+    value_checks_.onLoopEnd();
 }
 
 void AstChecker::CheckIf(AstIf *node)
@@ -1147,11 +1170,18 @@ void AstChecker::CheckIf(AstIf *node)
         if (!attr.IsOnError() && !attr.IsBool()) {
             Error("Expression must evaluate to a bool", node->expressions_[ii]);
         }
+        if (ii == 0) {
+             value_checks_.onIf(node->expressions_[0]);
+        } else {
+             value_checks_.onElseIf(node->expressions_[ii]);
+        }
         CheckBlock(node->blocks_[ii], true);
     }
     if (node->default_block_ != nullptr) {
+        value_checks_.onElseIf(nullptr);
         CheckBlock(node->default_block_, true);
     }
+    value_checks_.onEndIf();
 }
 
 //
@@ -1250,9 +1280,11 @@ void AstChecker::CheckFor(AstFor *node)
         iterated_declaration->SetFlags(VF_IS_ITERATED);
     }
 
+    value_checks_.onFor();
     ++loops_nesting;
     CheckBlock(node->block_, false);
     --loops_nesting;
+    value_checks_.onLoopEnd();
 
     if (index_declaration != nullptr) {
         index_declaration->ClearFlags(VF_ISBUSY);
@@ -1339,12 +1371,15 @@ void AstChecker::CheckSwitch(AstSwitch *node)
         }
     }
 
+    value_checks_.onIf(nullptr);
     for (int ii = 0; ii < (int)node->statements_.size(); ++ii) {
         IAstNode *statement = node->statements_[ii];
         if (statement != nullptr) {
+            value_checks_.onElseIf(nullptr);
             CheckStatement(statement);
         }
     }
+    value_checks_.onEndIf();
 }
 
 void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
@@ -1373,9 +1408,12 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
             Error("Can't use a weak pointer in a typeswitch", node->expression_);
         }
         node->reference_->ClearFlags(VF_IS_REFERENCE);  // is the actual pointer, not a reference to pointer !
+        node->reference_->SetFlags(VF_READONLY | VF_IS_NOT_NULL);
         node->SetSwitchOnInterfacePointer();
     }
+    value_checks_.onIf(nullptr);
     for (int ii = 0; ii < (int)node->case_types_.size(); ++ii) {
+        value_checks_.onElseIf(nullptr);
         IAstTypeNode *case_type = node->case_types_[ii];
         if (case_type != nullptr) {
             CheckTypeSpecification(case_type, TSCM_STD);
@@ -1414,6 +1452,7 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
             node->SetReferenceUsage(false);
         }
     }
+    value_checks_.onEndIf();
 }
 
 void AstChecker::CheckSimpleStatement(AstSimpleStatement *node)
@@ -1421,6 +1460,7 @@ void AstChecker::CheckSimpleStatement(AstSimpleStatement *node)
     if (loops_nesting == 0) {
         Error("You can only break/continue a for or while loop.", node);
     }
+    value_checks_.onBreak();
 }
 
 void AstChecker::CheckReturn(AstReturn *node)
@@ -1439,6 +1479,7 @@ void AstChecker::CheckReturn(AstReturn *node)
             CanAssign(&return_fake_variable_, &attr, node);     // don't need to check - it emits the necessary messages.
         }
     }
+    value_checks_.onBreak();
 }
 
 void AstChecker::CheckExpression(IAstExpNode *node, ExpressionAttributes *attr, ExpressionUsage usage)
@@ -1569,6 +1610,10 @@ void AstChecker::CheckBinop(AstBinop *node, ExpressionAttributes *attr)
     case TOKEN_MAX:
         if (!attr->UpdateWithBinopOperation(&attr_right, node->subtype_, &error)) {
             Error(error.c_str(), node);
+        } else if (node->subtype_ == TOKEN_DIVIDE && !attr->IsOnError()) {
+            if (!value_checks_.zeroDivisionIsSafe(node)) {
+                Error(value_checks_.GetErrorString(TypeOfCheck::ZERO_DIVISOR), node);
+            }
         }
         break;
     case TOKEN_ANGLE_OPEN_LT:
@@ -1635,6 +1680,10 @@ void AstChecker::CheckUnop(AstUnop *node, ExpressionAttributes *attr)
             string error;
             if (!attr->UpdateWithUnaryOperation(node->subtype_, this, &error)) {
                 Error(error.c_str(), node);
+            } else if (node->subtype_ == TOKEN_MPY && !attr->IsOnError()) {
+                if (!value_checks_.pointerDereferenceIsSafe(node)) {
+                    Error(value_checks_.GetErrorString(TypeOfCheck::NULL_DEREFERENCE), node);
+                }
             }
         }
     }
@@ -1722,10 +1771,12 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
 
                 // case 3: <class/interface instance>.<member function/variable>
                 //          this.<member function/variable>
+                bool ispointer = false;
                 if (nodetype == ANT_POINTER_TYPE) {
                     AstPointerType *ptrnode = (AstPointerType*)tnode;
                     attr->InitWithTree(ptrnode->pointed_type_, nullptr, true, !ptrnode->isconst_, this);
                     tnode = attr->GetTypeTree();
+                    ispointer = true;
                 }
                 if (tnode != nullptr) {
                     nodetype = tnode->GetType();
@@ -1738,7 +1789,12 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                         AstInterfaceType *ifnode = (AstInterfaceType*)tnode;
                         CheckMemberAccess(right_leaf, &ifnode->members_, nullptr, attr, usage);
                     }
-                }                
+                }       
+                if (ispointer && !attr->IsOnError()) {
+                    if (!value_checks_.pointerToMemberOpIsSafe(node)) {
+                        Error(value_checks_.GetErrorString(TypeOfCheck::NULL_DEREFERENCE), node);
+                    }
+                }
             }
         }
         if (!is_valid) {
@@ -1752,6 +1808,7 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                 Error("Left operand is not compatible with the dot operator or the selected function", node);
                 attr->SetError();
             } else {
+                bool ispointer = attr->IsPointer();
                 node->SetSignature(signature);
                 if (signature[0] == 'M') {
                     if (!attr->IsWritable()) {
@@ -1761,6 +1818,11 @@ void AstChecker::CheckDotOp(AstBinop *node, ExpressionAttributes *attr, Expressi
                     }
                 } 
                 attr->InitWithTree(node->builtin_, nullptr, false, false, this);
+                if (ispointer && !attr->IsOnError()) {
+                    if (!value_checks_.pointerToMemberOpIsSafe(node)) {
+                        Error(value_checks_.GetErrorString(TypeOfCheck::NULL_DEREFERENCE), node);
+                    }
+                }
             }
         }
     }
@@ -1882,6 +1944,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
         }
         var->SetUsageFlags(usage);
         CheckIfVarReferenceIsLegal(usage, var, node);
+        value_checks_.onVariableAccess(var, attr, usage);
     } else if (decl->GetType() == ANT_FUNC) {
         node->wp_decl_ = decl;
         FuncDeclaration *func = (FuncDeclaration*)decl;
@@ -2764,9 +2827,9 @@ FuncDeclaration *AstChecker::SearchFunctionInClass(AstClassType *the_class, cons
     return(nullptr);
 }
 
-void AstChecker::Error(const char *message, IAstNode *location, bool use_last_location)
+void AstChecker::Error(const char *message, const IAstNode *location, bool use_last_location)
 {
-    PositionInfo *pos = location->GetPositionRecord();
+    const PositionInfo *pos = ((IAstNode *)location)->GetPositionRecord();
     int     row, col, endrow, endcol;
 
     if (use_last_location) {

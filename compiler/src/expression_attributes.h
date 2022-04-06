@@ -120,6 +120,7 @@ public:
     static bool BinopRequiresNumericConversion(const ExpressionAttributes *attr_left, const ExpressionAttributes *attr_right, Token operation);
     static bool CanAssignWithoutLoss(Token dst, Token src);
     bool IsAVariable(void) const { return(is_a_variable_); }
+    VarDeclaration *GetVariable(void) const { return(variable_); }
     bool IsEnum(void) const;
     bool IsArray(void) const;
     bool IsMap(void) const;

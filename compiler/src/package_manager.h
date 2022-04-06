@@ -21,6 +21,7 @@ class PackageManager {
     IAstNode *Declaration2Definition(IAstDeclarationNode *decl, AstClassType *classnode, const char *symbol);
     bool    parseAndCheckForSuggestions(CompletionHint *hint, Package *pkg, int index, AstChecker *checker);
 public:
+    ~PackageManager();
     void        init(Options *options) { options_ = options; main_package_ = -1; }
 
     int         init_pkg(const char *name, bool force_init = false);

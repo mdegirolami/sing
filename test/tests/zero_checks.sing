@@ -1,0 +1,571 @@
+public interface X1 {}
+class C0: X1 {}
+class C1: X1 {
+public:
+    var member1 i32;
+}
+
+public fn test_ptr(cc X1) void
+{
+    var a = 0;
+    var pippo *i32;
+    var pluto *i32;
+
+    // how tests affect the knowledge of the value
+
+    *pippo = 0;             // ko
+    if (pippo != null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ko
+    }
+
+    if (pippo == null) {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    } else if (pluto == null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ko
+    } else {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ok
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    if (pippo == null) {
+        return;
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ko
+
+    if (pluto == null) {
+        return;
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ok
+
+    pippo = null;
+    pluto = null;
+
+    if (pippo != null && pluto != null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ok
+    } else if (pippo != null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ko
+    } else if (pluto == null) {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    } else {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ok
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    while (pippo == null) {
+        *pippo = 0;         // ko
+    }
+    *pippo = 0;         // ok
+
+    while (pippo != null) {
+        *pippo = 0;         // ok
+    }
+    *pippo = 0;         // ko
+
+    while (pippo != null && pluto != null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ok
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    while (pippo == null && pluto == null) {
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    // how assignments affect knowledge
+    pippo = &a;
+    *pippo = 0;         // ok
+    pippo = null;
+    *pippo = 0;         // ko
+    pippo = pluto;
+    *pippo = 0;         // ko
+
+    //
+    // how assignments before and inside an if-else construct affect knowledge
+    //
+    pippo = &a;
+
+    // not affectd by tests 
+    if (pippo != null) {
+    } else if (pluto != null) {
+    } else {
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ko
+
+    pippo = &a;
+
+    switch (a) {
+    case 0: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = null;
+        }
+    case 1: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = &a;
+        }
+    default: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pluto = &a;
+        }
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    pippo = &a;
+
+    switch (a) {
+    case 0: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = null;
+        }
+    case 1: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = &a;
+        }
+    default: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pluto = &a;
+        }
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    pippo = &a;
+
+    typeswitch(ref = cc) {
+    case C0: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = null;
+        }
+    case C1: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pippo = &a;
+        }
+    default: {
+            *pippo = 0;         // ok
+            *pluto = 0;         // ko
+            pluto = &a;
+        }
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    pippo = &a;
+
+    while (a > 0) {
+        // must ignore previous knowledge
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ko
+
+    while (a > 0) {
+        // must ignore previous knowledge
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+        pippo = null;
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+
+    pippo = &a;
+
+    for (it in 0:10) {
+        // must ignore previous knowledge
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ko
+
+    for (it in 0:10) {
+        // must ignore previous knowledge
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+        pippo = null;
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+}
+
+public fn test_int(cc X1) void
+{
+    let a = 0;
+    let todiv = 10;
+    var res i32;
+    var pippo i32;
+    var pluto i32;
+
+    // how tests affect the knowledge of the value
+
+    res = todiv / pippo;             // ko
+    if (pippo != 0) {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ko
+    }
+
+    if (pippo == 0) {
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+    } else if (pluto == 0) {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ko
+    } else {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ok
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    if (pippo == 0) {
+        return;
+    }
+    res = todiv / pippo;         // ok
+    res = todiv / pluto;         // ko
+
+    if (pluto == 0) {
+        return;
+    }
+    res = todiv / pippo;         // ok
+    res = todiv / pluto;         // ok
+
+    pippo = 0;
+    pluto = 0;
+
+    if (pippo != 0 && pluto != 0) {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ok
+    } else if (pippo != 0) {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ko
+    } else if (pluto == 0) {
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+    } else {
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ok
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    while (pippo == 0) {
+        res = todiv / pippo;         // ko
+    }
+    res = todiv / pippo;         // ok
+
+    while (pippo != 0) {
+        res = todiv / pippo;         // ok
+    }
+    res = todiv / pippo;         // ko
+
+    while (pippo != 0 && pluto != 0) {
+        res = todiv / pippo;         // ok
+        res = todiv / pluto;         // ok
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    while (pippo == 0 && pluto == 0) {
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    // how assignments affect knowledge
+    pippo = 5;
+    res = todiv / pippo;         // ok
+    pippo = 0;
+    res = todiv / pippo;         // ko
+    pippo = pluto;
+    res = todiv / pippo;         // ko
+    pippo = 5;
+    ++pippo;
+    res = todiv / pippo;         // ko
+    pippo = 5;
+    vartype(0, 0.0, pippo);
+    res = todiv / pippo;         // ko - corrupted by funcall
+
+    //
+    // how assignments before and inside an if-else construct affect knowledge
+    //
+    pippo = 5;
+
+    // not affectd by tests 
+    if (pippo != 0) {
+    } else if (pluto != 0) {
+    } else {
+    }
+    res = todiv / pippo;         // ok
+    res = todiv / pluto;         // ko
+
+    pippo = 5;
+
+    switch (a) {
+    case 0: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 0;
+        }
+    case 1: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 5;
+        }
+    default: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pluto = 5;
+        }
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    pippo = 5;
+
+    switch (a) {
+    case 0: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 0;
+        }
+    case 1: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 5;
+        }
+    default: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pluto = 5;
+        }
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    pippo = 5;
+
+    typeswitch(ref = cc) {
+    case C0: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 0;
+        }
+    case C1: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pippo = 5;
+        }
+    default: {
+            res = todiv / pippo;         // ok
+            res = todiv / pluto;         // ko
+            pluto = 5;
+        }
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    pippo = 5;
+
+    while (a > 0) {
+        // must ignore previous knowledge
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+    }
+    res = todiv / pippo;         // ok
+    res = todiv / pluto;         // ko
+
+    while (a > 0) {
+        // must ignore previous knowledge
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+        pippo = 0;
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+
+    pippo = 5;
+
+    for (it in 0:10) {
+        // must ignore previous knowledge
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+    }
+    res = todiv / pippo;         // ok
+    res = todiv / pluto;         // ko
+
+    for (it in 0:10) {
+        // must ignore previous knowledge
+        res = todiv / pippo;         // ko
+        res = todiv / pluto;         // ko
+        pippo = 0;
+    }
+    res = todiv / pippo;         // ko
+    res = todiv / pluto;         // ko
+}
+
+public fn vartype(div i32, fdiv f32, out outparm i32) void
+{
+    let a = 1;
+    var b = 0;
+    let todiv = 10;
+    let pointer = &b;
+    var array[3] i32;
+    var res i32;
+    var pippo i32;
+    let pluto = div;
+    var clara i32;
+    var claraptr *i32;
+
+    outparm = div;
+
+    res = todiv / a;    // ok: no need to check
+    if (b != 0) {
+        res = todiv / b;    // ko: pointed var unallowed
+    }
+    for (value in array) {
+        if (value != 0) {
+            res = todiv / value;    // ko: referred unallowed
+        }
+        if (array[0] != 0) {
+            res = todiv / array[0];    // ko: not a simple local var
+        }
+    }
+    for (count, it in 0:10) {
+        if (it != 0) {
+            res = todiv / it;    // ok
+        }
+        if (count != 0) {
+            res = i32(u64(todiv) / count);    // ok
+        }
+    }
+    if (div != 0) {
+        res = todiv / div;    // ok
+    }
+    if (outparm != 0) {
+        res = todiv / outparm;    // ko
+    }
+
+    let x = 1.0/fdiv;  // never a problem
+
+    // for an int a check ==5 is like != 0
+    if (pippo == 5) {
+        res = todiv / pippo;    // ok
+    }
+
+    pippo = 5;
+    if (pippo == 4) {
+    } else {
+        res = todiv / pippo;    // ok - ==4 condition doesn't invert
+    }
+    if (pippo == 4) {
+        return;
+    }
+    res = todiv / pippo;    // ok - ==4 condition doesn't invert
+
+    if (pluto == 0) {
+        return;
+    }
+
+    while (a == 0) {
+        res = todiv / pluto;    // ok - checks preceeding the while propagate inside for constants
+    }
+
+    // deferred error: when parsing here all looks ok
+    if (clara != 0) {
+        res = todiv / clara;    // ko
+    }
+
+    // but then we discover clara is escaping
+    claraptr = &clara;
+
+    var arr [3]i32;
+    arr[0] = 0;
+    res = todiv / arr[0];   // ko : tracks only base variables
+
+    return;
+}
+
+public fn classmembers() void
+{
+    let pippo *C1;
+
+    pippo.member1 = 0;  // ko
+
+    if (pippo != null) {
+        pippo.member1 = 0;  // ok
+    }
+
+    let ciccio *X1 = pippo;
+    typeswitch(pp = ciccio) {
+    case *C1: pp.member1 = 0;   // ok - downcasted pointers are always not null
+    }
+}
+
+public fn test_ptr_ored() void
+{
+    let a = 0;
+    var pippo *i32;
+    var pluto *i32;
+    let clara *i32;
+
+    if (pippo != null || pluto != null) {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko 
+
+    if (pippo == null || pluto == null) {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    } else if (clara != null) {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ok
+        *clara = 0;         // ok
+    } else {
+        *pippo = 0;         // ok
+        *pluto = 0;         // ok
+        *clara = 0;         // ko
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+    *clara = 0;         // ko
+
+    if (pippo == null || pluto == null) {
+        return;
+    }
+    *pippo = 0;         // ok
+    *pluto = 0;         // ok
+
+    pippo = null;
+    pluto = null;
+
+    while (pippo != null || pluto != null) {
+        *pippo = 0;         // ko
+        *pluto = 0;         // ko
+    }
+    *pippo = 0;         // ko
+    *pluto = 0;         // ko
+}

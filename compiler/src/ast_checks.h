@@ -8,6 +8,7 @@
 #include "expression_attributes.h"
 #include "package.h"
 #include "package_manager.h"
+#include "value_checker.h"
 
 namespace SingNames {
 
@@ -53,6 +54,7 @@ class AstChecker : public ITypedefSolver {
     AstClassType            *current_class_;
     bool                    this_was_accessed_;
     bool                    in_class_declaration_;
+    ValueChecker            value_checks_;
 
     // IsAstBlockChild functionality
     IAstNode                *child_to_check_;
@@ -147,10 +149,10 @@ class AstChecker : public ITypedefSolver {
     AstClassType *GetLocalClassTypeDeclaration(const char *classname, bool solve_typedefs);
     FuncDeclaration *SearchFunctionInClass(AstClassType *the_class, const char *name);
 
-    void Error(const char *message, IAstNode *location, bool use_last_location = false);
+    void Error(const char *message, const IAstNode *location, bool use_last_location = false);
     void UsageError(const char *message, IAstNode *location);
 public:
-    //AstChecker() {}
+    AstChecker() { child_to_check_ = nullptr; }
     void init(PackageManager *packages, Options *options, int pkg_index);
     bool CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symbols, bool fully_parsed);    // returns false on error
     void checkIfAstBlockChild(IAstNode *to_check);      // on next checkAll run verifies if this node is child of an AstBlock.

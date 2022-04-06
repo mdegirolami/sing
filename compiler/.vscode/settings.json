@@ -54,6 +54,7 @@
         "xmemory0": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "xxatomic": "cpp"
     }
 }

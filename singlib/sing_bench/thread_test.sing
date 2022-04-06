@@ -86,14 +86,21 @@ fn Add.init(v1 *[*]f32, v2 *[*]f32, start i32, stop i32) void
 
 fn Add.work() void
 {
-    for (ii in this.start : this.stop) {
-        (*this.v1)[ii] += (*this.v2)[ii];
+    let src1 = this.v1;
+    let src2 = this.v2;
+    if (src1 != null && src2 != null) {
+        for (ii in this.start : this.stop) {
+            (*src1)[ii] += (*src2)[ii];
+        }
     }
     done.signal();
 }
 
 fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
 {
+    if (v2 == null || count == 0) {
+        return(0);
+    }
     var executers [*]*thread.Executer; 
     executers.resize(count);
     let len = v2.size() / count;
@@ -114,10 +121,16 @@ fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
         } else {
             adder.init(v1, v2, start_idx, v2.size());
         }
-        ex.enqueue(&adder);
+        let exp = ex;
+        if (exp != null) {
+            exp.enqueue(&adder);
+        }
     }
     for (ex in executers) {
-        ex.getRunnable(true:blocking);
+        let exp = ex;
+        if (exp != null) {
+            exp.getRunnable(true:blocking);
+        }
     }
     return(sys.clocksDiff(start, sys.clock()));
 }

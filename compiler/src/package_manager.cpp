@@ -6,6 +6,15 @@
 
 namespace SingNames {
 
+PackageManager::~PackageManager()
+{
+    for (int ii = 0; ii < packages_.size(); ++ii) {
+        if (packages_[ii] != nullptr) {
+            delete packages_[ii];
+        }
+    }
+}
+
 Package *PackageManager::pkgFromIdx(int index) const
 {
     if (index < (int)packages_.size() && index >= 0) {
