@@ -21,7 +21,7 @@ rule cc
   command = g++ -MD -MF $out.d $cflags $debug_flags -c $in -o $out
 
 rule ln
-  command = g++ -std=c++11 -o $out $in $platform_libs
+  command = g++ -std=c++11 -no-pie -o $out $in $platform_libs
 
 rule aa
   command = ar rvs $out $in

@@ -15,7 +15,7 @@ rule sc
   command = $singcc $sing_debug_flags $skip_usage -f ../format.txt -I ../../tests -MF -o $out $in
 
 rule ln
-  command = g++ -std=c++11 -o $out $in $singlib
+  command = g++ -std=c++11 -no-pie -o $out $in $singlib
 
 build $src/synth_pkgs_test.h  | $src/synth_pkgs_test.cpp : sc $sing_src/synth_pkgs_test.sing  
 build $src/main.h             | $src/main.cpp            : sc $sing_src/main.sing

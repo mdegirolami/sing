@@ -10,7 +10,7 @@
 6:10: package synth_test_pkg2 has been required but not used.
 7:10: Two 'requires' clauses share the same local name: stpn
 7:10: package assert has been required but not used.
-8:10: Duplicated 'requires' clause. After search directory resolution, both clauses map to: d:/Documents/w12/GitHub/stay/test/tests/synth_test_pkg2.sing
+8:10: Duplicated 'requires' clause. After search directory resolution, both clauses map to: /home/maurizio/works/sing/test/tests/synth_test_pkg2.sing
 8:10: package tests/synth_test_pkg2 has been required but not used.
 10:18: Qualified type names can have at most 2 components: a package name + a type name
 11:10: Unknown package name

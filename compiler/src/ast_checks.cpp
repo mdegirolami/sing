@@ -537,7 +537,13 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                     }
                 }
             }
-            bool is_void = node->return_type_->GetType() == ANT_BASE_TYPE && ((AstBaseType*)type_spec)->base_type_ == TOKEN_VOID;
+            bool is_void = false;
+            if (node->return_type_ != nullptr && node->return_type_->GetType() == ANT_BASE_TYPE) {
+                AstBaseType *base = (AstBaseType*)node->return_type_;
+                if (base != nullptr && base->base_type_ == TOKEN_VOID) {
+                    is_void = true;
+                }
+            }
             if (!is_void) {
                 if (!CheckTypeSpecification(node->return_type_, TSCM_RETVALUE)) {
                     success = false;
