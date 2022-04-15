@@ -126,3 +126,46 @@
 567:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 569:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 570:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+579:9: Before using an optional output you must check it against null.
+582:13: Before using an optional output you must check it against null.
+586:13: Before using an optional output you must check it against null.
+587:13: Before using an optional output you must check it against null.
+590:13: Before using an optional output you must check it against null.
+595:9: Before using an optional output you must check it against null.
+596:9: Before using an optional output you must check it against null.
+602:9: Before using an optional output you must check it against null.
+615:13: Before using an optional output you must check it against null.
+617:13: Before using an optional output you must check it against null.
+618:13: Before using an optional output you must check it against null.
+620:13: Before using an optional output you must check it against null.
+623:9: Before using an optional output you must check it against null.
+624:9: Before using an optional output you must check it against null.
+627:13: Before using an optional output you must check it against null.
+634:9: Before using an optional output you must check it against null.
+640:9: Before using an optional output you must check it against null.
+641:9: Before using an optional output you must check it against null.
+645:9: Before using an optional output you must check it against null.
+646:9: Before using an optional output you must check it against null.
+650:5: Before using an optional output you must check it against null.
+650:5: Type mismatch/No known conversion
+658:5: Before using an optional output you must check it against null.
+659:5: Before using an optional output you must check it against null.
+663:13: Before using an optional output you must check it against null.
+664:13: Before using an optional output you must check it against null.
+671:13: Before using an optional output you must check it against null.
+677:13: Before using an optional output you must check it against null.
+681:5: Before using an optional output you must check it against null.
+682:5: Before using an optional output you must check it against null.
+684:22: The expression must evaluate to an interface or interface pointer type
+684:22: Undefined symbol
+686:13: Before using an optional output you must check it against null.
+687:13: Before using an optional output you must check it against null.
+694:13: Before using an optional output you must check it against null.
+700:13: Before using an optional output you must check it against null.
+704:5: Before using an optional output you must check it against null.
+705:5: Before using an optional output you must check it against null.
+713:9: Before using an optional output you must check it against null.
+716:5: Before using an optional output you must check it against null.
+720:9: Before using an optional output you must check it against null.
+723:5: Before using an optional output you must check it against null.
+727:13: def() can operate only on optional output arguments.

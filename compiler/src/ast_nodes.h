@@ -36,7 +36,8 @@ enum VarFlags {
     VF_ISLOCAL = 0x2000,
     VF_IMPLEMENTED_AS_CONSTINT = 0x4000, // is implemented as a static const int (run time constant).
     VF_IS_ITERATED = 0x8000,
-    VF_IS_NOT_NULL = 0x10000
+    VF_IS_NOT_NULL = 0x10000,
+    VF_IS_OPTOUT = 0x20000
 };
 
 enum AstNodeType {

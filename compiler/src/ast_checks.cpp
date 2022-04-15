@@ -537,19 +537,10 @@ bool AstChecker::CheckTypeSpecification(IAstNode *type_spec, TypeSpecCheckMode m
                     }
                 }
             }
-            bool is_void = false;
-            if (node->return_type_ != nullptr && node->return_type_->GetType() == ANT_BASE_TYPE) {
-                AstBaseType *base = (AstBaseType*)node->return_type_;
-                if (base != nullptr && base->base_type_ == TOKEN_VOID) {
-                    is_void = true;
-                }
-            }
-            if (!is_void) {
-                if (!CheckTypeSpecification(node->return_type_, TSCM_RETVALUE)) {
-                    success = false;
-                } else if (!IsArgTypeEligibleForAnIniter(node->return_type_)) {
-                    Error("You can only return values of type: numeric, enum, string, bool, pointer", node->return_type_);
-                }
+            if (!CheckTypeSpecification(node->return_type_, TSCM_RETVALUE)) {
+                success = false;
+            } else if (!IsArgTypeEligibleForAnIniter(node->return_type_)) {
+                Error("You can only return values of type: numeric, enum, string, bool, pointer", node->return_type_);
             }
         }
         break;
@@ -1681,7 +1672,11 @@ void AstChecker::CheckUnop(AstUnop *node, ExpressionAttributes *attr)
             }
         }
     } else {
-        CheckExpression(node->operand_, attr, ExpressionUsage::READ);
+        if (node->subtype_ == TOKEN_DEF) {
+            CheckExpression(node->operand_, attr, ExpressionUsage::NONE);
+        } else {
+            CheckExpression(node->operand_, attr, ExpressionUsage::READ);
+        }
         if (!attr->IsOnError()) {
             string error;
             if (!attr->UpdateWithUnaryOperation(node->subtype_, this, &error)) {
@@ -2648,6 +2643,9 @@ void AstChecker::CheckIfVarReferenceIsLegal(ExpressionUsage usage, VarDeclaratio
     if (var->HasOneOfFlags(VF_IS_ITERATED) && (usage == ExpressionUsage::WRITE || usage == ExpressionUsage::BOTH)) {
         Error("An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)", location);
         return;
+    }
+    if (usage != ExpressionUsage::NONE && !value_checks_.optionalAccessIsSafe(var)) {
+        Error(value_checks_.GetErrorString(TypeOfCheck::OPTOUT_UNDEFINED), location);
     }
 }
 

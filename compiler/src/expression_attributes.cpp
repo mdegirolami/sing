@@ -609,6 +609,7 @@ bool ExpressionAttributes::UpdateWithUnaryOperation(Token operation, ITypedefSol
 
 bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypedefSolver *solver, string *error)
 {
+    bool is_an_optout = is_a_variable_ && variable_ != nullptr && variable_->HasOneOfFlags(VF_IS_OPTOUT);
     is_a_variable_ = false;         // except for *, as fixed in ApplyTheIndirectionOperator()
     is_writable_ = false;
     variable_ = nullptr;
@@ -698,6 +699,14 @@ bool ExpressionAttributes::UpdateTypeWithUnaryOperation(Token operation, ITypede
     case TOKEN_BOOL:
         *error = "Please use relational operators to convert numbers and strings to bools.";
         exp_type_ = BT_ERROR;
+        break;
+    case TOKEN_DEF:
+        if (is_an_optout) {
+            exp_type_ = BT_BOOL;
+        } else {
+            *error = "def() can operate only on optional output arguments.";
+            exp_type_ = BT_ERROR;
+        }
         break;
     }
     if (exp_type_ == BT_ERROR) {
@@ -829,7 +838,7 @@ bool ExpressionAttributes::UpdateWithFunCall(vector<ExpressionAttributes> *attr_
             } else {
                 typematch = solver->AreTypeTreesCompatible(argdecl->GetTypeSpec(), argvalue_attr->type_tree_, FOR_REFERENCING);
             }
-        } else { 
+        } else if (!argdecl->HasOneOfFlags(VF_IS_OPTOUT) || !argvalue_attr->IsLiteralNull()) {
 
             // out or io : is actual parameter writable ?
             if (!argvalue_attr->is_a_variable_ || !argvalue_attr->is_writable_) {

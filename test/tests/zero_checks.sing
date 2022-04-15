@@ -569,3 +569,160 @@ public fn test_ptr_ored() void
     *pippo = 0;         // ko
     *pluto = 0;         // ko
 }
+
+public fn test_opt(sel i32, out? pippo i32, out? pluto i32) void
+{
+    let a = 0;
+
+    // how tests affect the knowledge of the value
+    if (sel == 0) {
+        pippo = 0;             // ko
+        if (def(pippo)) {
+            pippo = 0;         // ok
+            pluto = 0;         // ko
+        }
+
+        if (!def(pippo)) {
+            pippo = 0;         // ko
+            pluto = 0;         // ko
+        } else if (!def(pluto)) {
+            pippo = 0;         // ok
+            pluto = 0;         // ko
+        } else {
+            pippo = 0;         // ok
+            pluto = 0;         // ok
+        }
+        pippo = 0;         // ko
+        pluto = 0;         // ko
+
+        if (!def(pippo)) {
+            return;
+        }
+        pippo = 0;         // ok
+        pluto = 0;         // ko
+
+        if (!def(pluto)) {
+            return;
+        }
+        pippo = 0;         // ok
+        pluto = 0;         // ok
+    } else {
+        if (def(pippo) && def(pluto)) {
+            pippo = 0;         // ok
+            pluto = 0;         // ok
+        } else if (def(pippo)) {
+            pippo = 0;         // ok
+            pluto = 0;         // ko
+        } else if (!def(pluto)) {
+            pippo = 0;         // ko
+            pluto = 0;         // ko
+        } else {
+            pippo = 0;         // ko
+            pluto = 0;         // ok
+        }
+        pippo = 0;         // ko
+        pluto = 0;         // ko
+
+        while (!def(pippo)) {
+            pippo = 0;         // ko
+        }
+        pippo = 0;         // ok
+
+        while (def(pippo)) {
+            pippo = 0;         // ok
+        }
+        pippo = 0;         // ko
+
+        while (def(pippo) && def(pluto)) {
+            pippo = 0;         // ok
+            pluto = 0;         // ok
+        }
+        pippo = 0;         // ko
+        pluto = 0;         // ko
+
+        while (!def(pippo) && !def(pluto)) {
+        }
+        pippo = 0;         // ko
+        pluto = 0;         // ko
+    }
+
+    // how assignments affect knowledge
+    pippo = null;       // illegal
+
+    // inner checks effect out of the block
+    // not affectd by tests 
+    if (def(pippo)) {
+    } else if (def(pluto)) {
+    } else {
+    }
+    pippo = 0;         // ko
+    pluto = 0;         // ko
+
+    switch (a) {
+    case 0: {
+            pippo = 0;         // ko
+            pluto = 0;         // ko
+        }
+    case 1: {
+            if (!def(pippo)) {
+                return;
+            }
+            pippo = 0;         // ok
+            pluto = 0;         // ko
+        }
+    default: {
+            if (!def(pluto)) {
+                return;
+            }
+            pippo = 0;         // ko
+            pluto = 0;         // ok
+        }
+    }
+    pippo = 0;         // ko
+    pluto = 0;         // ko
+
+    typeswitch(ref = cc) {
+    case C0: {
+            pippo = 0;         // ko
+            pluto = 0;         // ko
+        }
+    case C1: {
+            if (!def(pippo)) {
+                return;
+            }
+            pippo = 0;         // ok
+            pluto = 0;         // ko
+        }
+    default: {
+            if (!def(pluto)) {
+                return;
+            }
+            pippo = 0;         // ko
+            pluto = 0;         // ok
+        }
+    }
+    pippo = 0;         // ko
+    pluto = 0;         // ko
+
+    if (!def(pippo)) {
+        return;
+    }
+
+    while (a > 0) {
+        pippo = 0;         // ok
+        pluto = 0;         // ko
+    }
+    pippo = 0;         // ok
+    pluto = 0;         // ko
+
+    for (it in 0:10) {
+        pippo = 0;         // ok
+        pluto = 0;         // ko
+    }
+    pippo = 0;         // ok
+    pluto = 0;         // ko
+
+    test_opt(0, pippo, null);   // ok, can pass null to the optouts
+
+    if (def(sel)) {}            // ko: can apply def() only to optouts
+}

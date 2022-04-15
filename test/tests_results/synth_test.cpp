@@ -408,3 +408,16 @@ static void string_copy(const char *arg, std::string *aout)
 {
     *aout = arg;
 }
+
+void has_optout(int32_t *result, std::shared_ptr<int32_t> *rt)
+{
+    std::shared_ptr<int32_t> arg;
+
+    has_optout(nullptr, &arg);
+    if (result != nullptr) {
+        has_optout(&*result, &*rt);
+    }
+    if (!(result != nullptr)) {
+        return;
+    }
+}

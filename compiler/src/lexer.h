@@ -127,6 +127,8 @@ enum Token {
     TOKEN_UPD_SHL,
     TOKEN_UPD_AND,
     TOKEN_UPD_OR,
+    TOKEN_OUT_OPT,
+    TOKEN_DEF,
 
     TOKEN_UNUSED,
 

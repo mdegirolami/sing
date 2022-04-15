@@ -37,7 +37,7 @@ struct FlowBranch {
     IfReturnPattern if_return_pattern_;
 };
 
-enum class TypeOfCheck { ZERO_DIVISOR, NULL_DEREFERENCE };
+enum class TypeOfCheck { ZERO_DIVISOR, NULL_DEREFERENCE, OPTOUT_UNDEFINED };
 
 struct DeferredCheck {
     const VarDeclaration    *var_;
@@ -50,6 +50,7 @@ public:
     bool zeroDivisionIsSafe(const AstBinop *division_exp);
     bool pointerDereferenceIsSafe(const AstUnop *op);
     bool pointerToMemberOpIsSafe(const AstBinop *op);
+    bool optionalAccessIsSafe(const VarDeclaration *var);
     const DeferredCheck *getError(void);
     const char *GetErrorString(TypeOfCheck check);
 
@@ -80,6 +81,7 @@ private:
     void extractAndedConditions(const IAstExpNode *exp);
     void extractOredContditions(const IAstExpNode *exp);
     void extractRelationalCondition(const AstBinop *op);
+    void extractDefCondition(const AstUnop *op);
     void invertLastCondition(const FlowBranch *stt);
     void saveDirtyVars(const FlowBranch *stt);
     void pasteDirtyVars(const FlowBranch *stt);

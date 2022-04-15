@@ -189,48 +189,57 @@ void ValueChecker::initNewBranch(FlowBranch *stt)
 
 void ValueChecker::extractConditions(const IAstExpNode *exp)
 {
-    if (exp->GetType() != ANT_BINOP) return;
-    const AstBinop *op = (AstBinop*)exp;
-    if (op->subtype_ == TOKEN_LOGICAL_AND) {
-        int base = states_.size();
-        extractAndedConditions(op->operand_left_);
-        extractAndedConditions(op->operand_right_);
-        for (int ii = base; ii < states_.size(); ++ii) {
-            states_[ii].invertible_ = false;
+    if (exp->GetType() == ANT_UNOP) {
+        extractDefCondition((AstUnop*)exp);
+    } else if (exp->GetType() == ANT_BINOP) {
+        const AstBinop *op = (AstBinop*)exp;
+        if (op->subtype_ == TOKEN_LOGICAL_AND) {
+            int base = states_.size();
+            extractAndedConditions(op->operand_left_);
+            extractAndedConditions(op->operand_right_);
+            for (int ii = base; ii < states_.size(); ++ii) {
+                states_[ii].invertible_ = false;
+            }
+        } else if (op->subtype_ == TOKEN_LOGICAL_OR) {
+            int base = states_.size();
+            extractOredContditions(op->operand_left_);
+            extractOredContditions(op->operand_right_);
+            for (int ii = base; ii < states_.size(); ++ii) {
+                states_[ii].valid_after_inversion_ = true;
+            }
+        } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
+            extractRelationalCondition(op);
         }
-    } else if (op->subtype_ == TOKEN_LOGICAL_OR) {
-        int base = states_.size();
-        extractOredContditions(op->operand_left_);
-        extractOredContditions(op->operand_right_);
-        for (int ii = base; ii < states_.size(); ++ii) {
-            states_[ii].valid_after_inversion_ = true;
-        }
-    } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
-        extractRelationalCondition(op);
     }
 }
 
 void ValueChecker::extractAndedConditions(const IAstExpNode *exp)
 {
-    if (exp->GetType() != ANT_BINOP) return;
-    const AstBinop *op = (AstBinop*)exp;
-    if (op->subtype_ == TOKEN_LOGICAL_AND) {
-        extractAndedConditions(op->operand_left_);
-        extractAndedConditions(op->operand_right_);
-    } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
-        extractRelationalCondition(op);
+    if (exp->GetType() == ANT_UNOP) {
+        extractDefCondition((AstUnop*)exp);
+    } else if (exp->GetType() == ANT_BINOP) {
+        const AstBinop *op = (AstBinop*)exp;
+        if (op->subtype_ == TOKEN_LOGICAL_AND) {
+            extractAndedConditions(op->operand_left_);
+            extractAndedConditions(op->operand_right_);
+        } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
+            extractRelationalCondition(op);
+        }
     }
 }
 
 void ValueChecker::extractOredContditions(const IAstExpNode *exp)
 {
-    if (exp->GetType() != ANT_BINOP) return;
-    const AstBinop *op = (AstBinop*)exp;
-    if (op->subtype_ == TOKEN_LOGICAL_OR) {
-        extractOredContditions(op->operand_left_);
-        extractOredContditions(op->operand_right_);
-    } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
-        extractRelationalCondition(op);
+    if (exp->GetType() == ANT_UNOP) {
+        extractDefCondition((AstUnop*)exp);
+    } else if (exp->GetType() == ANT_BINOP) {
+        const AstBinop *op = (AstBinop*)exp;
+        if (op->subtype_ == TOKEN_LOGICAL_OR) {
+            extractOredContditions(op->operand_left_);
+            extractOredContditions(op->operand_right_);
+        } else if (op->subtype_ == TOKEN_EQUAL || op->subtype_ == TOKEN_DIFFERENT) {
+            extractRelationalCondition(op);
+        }
     }
 }
 
@@ -263,6 +272,32 @@ void ValueChecker::extractRelationalCondition(const AstBinop *op)
             states_.push_back(st);                
         } else if (isptr && isNull(constant)) {
             st.status_ = op->subtype_ == TOKEN_DIFFERENT ? VarStatus::NONZERO : VarStatus::ZERO;
+            states_.push_back(st);                
+        }
+    }
+}
+
+void ValueChecker::extractDefCondition(const AstUnop *op)
+{
+    bool inverted = false;
+    while (op->subtype_ == TOKEN_LOGICAL_NOT) {
+        inverted = !inverted;
+        if (op->operand_ == nullptr || op->operand_->GetType() != ANT_UNOP) {
+            return;
+        }
+        op = (AstUnop*)op->operand_;
+    }
+    if (op->subtype_ != TOKEN_DEF || op->operand_ == nullptr || op->operand_->GetType() != ANT_EXP_LEAF) {
+        return;
+    }
+    const AstExpressionLeaf *node = (const AstExpressionLeaf*)op->operand_;
+    if (node->subtype_ == TOKEN_NAME) {
+        VarDeclaration *var = (VarDeclaration*)node->wp_decl_;
+        if (var != nullptr && var->GetType() == ANT_VAR && var->HasOneOfFlags(VF_IS_OPTOUT)) {
+            KnownState st;
+            st.var_ = var;
+            st.status_ = inverted ? VarStatus::ZERO : VarStatus::NONZERO;
+            st.invertible_ = true;
             states_.push_back(st);                
         }
     }
@@ -361,6 +396,8 @@ const char *ValueChecker::GetErrorString(TypeOfCheck check)
 {
     if (check == TypeOfCheck::NULL_DEREFERENCE) {
         return("To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.");
+    } else if (check == TypeOfCheck::OPTOUT_UNDEFINED) {
+        return("Before using an optional output you must check it against null.");
     } else {
         return("To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.");
     }
@@ -373,7 +410,7 @@ bool ValueChecker::isNonZero(const VarDeclaration *var)
     if (var->HasOneOfFlags(VF_IS_NOT_NULL)) {
         return(true);
     }
-    if (!var->HasOneOfFlags(VF_READONLY)) {
+    if (!var->HasOneOfFlags(VF_READONLY | VF_IS_OPTOUT)) {
         for (int ii = stack_.size() - 1; ii >= 0; --ii) {
             if (stack_[ii].isloop_) {
                 bottom = stack_[ii].conditions_start_;
@@ -455,6 +492,14 @@ bool ValueChecker::pointerToMemberOpIsSafe(const AstBinop *op)
         deferred_.push_back(dc);
     }
 
+    return(true);
+}
+
+bool ValueChecker::optionalAccessIsSafe(const VarDeclaration *var)
+{
+    if (var != nullptr && var->HasOneOfFlags(VF_IS_OPTOUT)) {
+        return(isNonZero(var));
+    }
     return(true);
 }
 

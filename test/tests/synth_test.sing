@@ -390,3 +390,16 @@ fn string_copy(in arg string, out aout string) void
 {
     aout = arg;
 }
+
+public fn has_optout(out? result i32, out rt *i32) void
+{
+    var arg *i32; 
+
+    has_optout(null, arg);
+    if (def(result)) {
+        has_optout(result, rt);
+    }
+    if (!def(result)) {
+        return;
+    }
+}

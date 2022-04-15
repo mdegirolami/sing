@@ -926,6 +926,7 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
     case TOKEN_IN:
     case TOKEN_OUT:
     case TOKEN_IO:
+    case TOKEN_OUT_OPT:
         if (!Advance()) return(nullptr);
         break;
     default:
@@ -940,9 +941,11 @@ VarDeclaration *Parser::ParseSingleArgDef(bool is_function_body, bool *mandatory
     node->SetFlags(VF_ISARG);
     if (direction == TOKEN_IN) {
         node->SetFlags(VF_READONLY);
-    }
-    if (direction == TOKEN_OUT) {
+    } else if (direction == TOKEN_OUT || direction == TOKEN_OUT_OPT) {
         node->SetFlags(VF_WRITEONLY);
+        if (direction == TOKEN_OUT_OPT) {
+            node->SetFlags(VF_IS_OPTOUT);
+        }
     }
     RecordPosition(node, false);
     {
@@ -1536,6 +1539,28 @@ IAstExpNode *Parser::ParseExpressionTerm(const char *errmess)
             if (!Advance()) goto recovery;
         }
         break; 
+    case TOKEN_DEF:
+        node = new AstUnop(TOKEN_DEF);
+        RecordPosition(node);
+        if (!Advance()) goto recovery;
+        if (m_token != TOKEN_ROUND_OPEN) {
+            Error("Expecting '('");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        if (m_token == TOKEN_NAME) {
+            AstExpressionLeaf *op = new AstExpressionLeaf(TOKEN_NAME, m_lexer->CurrTokenString());
+            RecordPosition(node);
+            ((AstUnop*)node)->SetOperand(op);
+            if (!Advance()) goto recovery;
+        }
+        if (on_error_) goto recovery;
+        if (m_token != TOKEN_ROUND_CLOSE) {
+            Error("Expecting ')'");
+            goto recovery;
+        }
+        if (!Advance()) goto recovery;
+        break;
     default:
         if (errmess != nullptr && errmess[0] != 0) {
             Error(errmess);

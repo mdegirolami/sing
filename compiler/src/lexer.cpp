@@ -127,6 +127,8 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_SHL, "<<=" },
     {TOKEN_UPD_AND, "&=" },
     {TOKEN_UPD_OR, "|=" },
+    {TOKEN_OUT_OPT, "out?"},
+    {TOKEN_DEF, "def"},
 
     {TOKEN_UNUSED, "alignas"},
     {TOKEN_UNUSED, "alignof"},
@@ -958,6 +960,11 @@ bool Lexer::ReadName(void)
                 }
                 allow_underscore = true;
             }
+        } else if (ch == '?' && m_curr_token_string =="out") {
+            m_curr_token_string += ch;
+            ++m_curcol;
+            m_curr_token = TOKEN_OUT_OPT;
+            return(true);
         } else {
             break;
         }

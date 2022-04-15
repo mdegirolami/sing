@@ -1481,9 +1481,11 @@ int CppSynth::SynthFunCall(string *dst, AstFunCall *node)
         ParmPassingMethod ppm = GetParameterPassingMethod(var->GetTypeSpec(), var->HasOneOfFlags(VF_READONLY));
         if (ppm == PPM_POINTER) {
             // passed by pointer: get the address (or simplify *this)
+
+            //if (expression[0] == '*') {           // note: can't do this if * is to access an item pointed by a shared pointer.
             if (expression == "*this") {
                 expression.erase(0, 1);
-            } else {
+            } else if (expression != "nullptr") {   // note: optouts can be set to nullptr.
                 expression.insert(0, "&");
             }
         } else if (ppm == PPM_INPUT_STRING && !IsInputArg(expression_node) && !IsLiteralString(expression_node)) {
@@ -1981,6 +1983,12 @@ int CppSynth::SynthUnop(string *dst, AstUnop *node)
         break;
     case TOKEN_STRING:
         priority = SynthCastToString(dst, node);
+        break;
+    case TOKEN_DEF:
+        priority = GetBinopCppPriority(TOKEN_EQUAL);
+        dst->erase(0, 1);                           // legal args of def are variables requiring indirection: delete '*'
+        // Protect(dst, exp_priority, priority);    // no need - exp can only be a single name
+        *dst += " != nullptr";
         break;
     }
     return(priority);
