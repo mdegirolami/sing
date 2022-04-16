@@ -11,8 +11,8 @@ public fn thread_test() bool
 
     var tryok = false;  // to check trylock coverage
     var tryko = false;
-    done.init();
-    lock.init();
+    _ = done.init();
+    _ = lock.init();
     thread.runFn(increments);    
     for (ii in 0:10000) {
         if (lock.trylock()) {
@@ -26,7 +26,7 @@ public fn thread_test() bool
             sys.wait(1);        // to ease conflicts
         }
         lock.unlock();
-        atomic.inc();
+        _ = atomic.inc();
     }
     done.wait();
     if (counter != 20000 || atomic.get() != 20000 || !tryok || !tryko) {
@@ -49,7 +49,7 @@ public fn thread_test() bool
 
     sio.print("\nsingle = " + string(single_thread) + "\ndouble = " + string(multiple_threads));
     sio.print("\ncores = " + string(cores) + "\npress any key.");
-    sio.kbdGet();
+    _ = sio.kbdGet();
 
     var adder Add;    
     adder.init(&v1, &v2, 0, 10);
@@ -106,7 +106,7 @@ fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
     let len = v2.size() / count;
     for (ptr in executers) {
         var ex thread.Executer;
-        ex.start();
+        _ = ex.start();
         ptr = &ex;
     }
     sys.wait(1);    // be sure the threads are running !!
@@ -123,13 +123,13 @@ fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
         }
         let exp = ex;
         if (exp != null) {
-            exp.enqueue(&adder);
+            _ = exp.enqueue(&adder);
         }
     }
     for (ex in executers) {
         let exp = ex;
         if (exp != null) {
-            exp.getRunnable(true:blocking);
+            _ = exp.getRunnable(true:blocking);
         }
     }
     return(sys.clocksDiff(start, sys.clock()));
@@ -144,7 +144,7 @@ fn increments() void
         }
         ++counter;
         lock.unlock();
-        atomic.inc();
+        _ = atomic.inc();
     }
     done.signal();
 }

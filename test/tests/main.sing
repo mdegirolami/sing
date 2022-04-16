@@ -5,8 +5,8 @@ requires "siege";
 
 public fn main() i32
 {
-    synth_test_oop.test_oop();
-    synth_test.synth_test();
+    _ = synth_test_oop.test_oop();
+    _ = synth_test.synth_test();
     types_and_vars.test_types_and_vars();
     siege.print_primes_to(100);
     return(1);

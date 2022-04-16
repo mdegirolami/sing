@@ -309,7 +309,7 @@ fn Lexer.parseString() bool
 
                         var value u64;
                         var last_pos i32;
-                        sio.parseUnsignedHex(value, str.encode(xdigits), 0, last_pos);
+                        _ = sio.parseUnsignedHex(value, str.encode(xdigits), 0, last_pos);
                         this.buffer.push_back(i32(value));
                         state = StrState.std;
                     }

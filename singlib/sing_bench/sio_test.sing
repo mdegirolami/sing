@@ -3,10 +3,10 @@ requires "sio";
 public fn sio_test() bool
 {    
     // fix the starting conditions
-    sio.fileRemove("testfile1.txt");
-    sio.fileRemove("犬.txt");
-    sio.fileRemove("ネコ.txt");
-    sio.dirRemove("dir1", true:if_not_empty);
+    _ = sio.fileRemove("testfile1.txt");
+    _ = sio.fileRemove("犬.txt");
+    _ = sio.fileRemove("ネコ.txt");
+    _ = sio.dirRemove("dir1", true:if_not_empty);
 
     if (!test_File()) {
         return(false);
@@ -34,7 +34,7 @@ public fn sio_test() bool
     }
 
     // cleanup
-    sio.fileRemove("testfile1.txt");
+    _ = sio.fileRemove("testfile1.txt");
 
     return(true);
 }
@@ -487,7 +487,7 @@ fn test_parse() bool
 fn test_console() bool
 {
     sio.print("\npress any key to continue.");
-    sio.kbdGet();
+    _ = sio.kbdGet();
     var ok = false;
     while (!ok) {
         sio.scrClear();
@@ -500,7 +500,7 @@ fn test_console() bool
     let pressed = sio.kbdGet();
     sio.print("\n\nYou pressed: " + pressed);
     sio.print("\nnow press any key to exit.");
-    sio.kbdGet();
+    _ = sio.kbdGet();
     return(true);
 }
 
@@ -549,15 +549,15 @@ fn test_unicode() bool
 
     // get/set cwd
     let deep = sio.getCwd();
-    sio.setCwd("../..");
-    sio.setCwd(deep);
+    _ = sio.setCwd("../..");
+    _ = sio.setCwd(deep);
     if (ff.open("in_depth.txt", "r") != 0) {    // should fail
         return(false);
     }
     if (ff.close() != 0) {
         return(false);
     }
-    sio.setCwd("../..");
+    _ = sio.setCwd("../..");
 
     // dir list
     var names [*]string;

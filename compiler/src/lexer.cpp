@@ -129,6 +129,7 @@ TokenDesc keywords[] = {
     {TOKEN_UPD_OR, "|=" },
     {TOKEN_OUT_OPT, "out?"},
     {TOKEN_DEF, "def"},
+    {TOKEN_UNDERSCORE, "_"},
 
     {TOKEN_UNUSED, "alignas"},
     {TOKEN_UNUSED, "alignof"},
@@ -252,7 +253,6 @@ static const char *error_desc[] = {
     "Too many digits in number",
     "Expected a digit",
     "Symbols with multiple neighboring _ characters are reserved",
-    "A symbol must have at least a character different from '_'",
     "In numerics, underscores are allowed only between decimal/exadecimal digits",
     "Symbol starting with '_' plus an uppercase character are reserved/illegal"
 };
@@ -973,12 +973,9 @@ bool Lexer::ReadName(void)
         ash = ComputeAsh(m_curr_token_string.c_str());
         m_curr_token = AshLookUp(ash, m_curr_token_string.c_str());
     } else {
-
-        // since more than one '_' in a row triggers an error, a single underscore is the only case of
-        // underscore-only symbol.
         if (m_curr_token_string.size() == 1) {
-            Error(LE_ONLY_UNDERSCORE, (m_curcol + m_curr_token_col) >> 1);
-            return(false);
+            m_curr_token = TOKEN_UNDERSCORE;
+            return(true);
         }
         m_curr_token = TOKEN_NAME;
     }

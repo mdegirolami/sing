@@ -60,6 +60,7 @@
 95:18: Argument 2: Type mismatch/No known conversion
 96:5: Undefined symbol
 97:13: Argument 2 is not specified and has no default value
+98:13: Can't discard a function value (consider using the syntax _ = fn())
 99:14: Argument 1 is an output argument and needs to be a writable variable
 100:13: Argument 2 is not specified and has no default value
 119:13: Sum operands must be all numbers or all strings.
@@ -192,6 +193,7 @@
 316:88: Please use relational operators to convert numbers and strings to bools.
 319:13: Undefined symbol
 323:5: Type mismatch/No known conversion
+325:12: Can't discard a function value (consider using the syntax _ = fn())
 328:9: Writing to a read-only variable
 329:18: Undefined type
 332:13: Undefined symbol
@@ -294,9 +296,11 @@
 618:19: Unary '+' only applies to numeric types
 619:21: You can use unary * only on strong pointers
 620:14: Argument 1 is an output argument and needs to be a writable variable
+622:13: Can't discard a function value (consider using the syntax _ = fn())
 623:34: Weak pointers are allowed only as non aggregated class members.
 624:14: Argument 1 type mismatch
 625:18: Weak pointers are allowed only as non aggregated class members.
+626:12: Can't discard a function value (consider using the syntax _ = fn())
 628:13: Argument 1 type mismatch
 629:12: Too many arguments
 630:12: Argument 1 is not specified and has no default value

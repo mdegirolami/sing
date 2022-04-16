@@ -31,14 +31,14 @@ public fn sys_test() bool
 public fn testProcessFunctions() bool
 {
     if (sys.getOs() == sys.OsId.win) {
-        sys.system("C:/Windows/notepad.exe");
+        _ = sys.system("C:/Windows/notepad.exe");
 
         var hh = sys.execute("C:/Windows/notepad.exe");
         if (hh == 0) {
             return(false);
         }
         sio.print("\nWaiting for notepad to exit");
-        sys.waitCommandExit(hh);
+        _ = sys.waitCommandExit(hh);
         sio.print("\nnotepad exited");
 
         // automation test
@@ -59,18 +59,18 @@ public fn testProcessFunctions() bool
         if (child_stdin.puts("Y") != 0) {
             return(false);
         }
-        sys.waitCommandExit(hh);
+        _ = sys.waitCommandExit(hh);
     } else {
 
         // ubuntu
-        sys.system("gedit");
+        _ = sys.system("gedit");
 
         var hh = sys.execute("gedit");
         if (hh == 0) {
             return(false);
         }
         sio.print("\nWaiting for gedit to exit");
-        sys.waitCommandExit(hh);
+        _ = sys.waitCommandExit(hh);
         sio.print("\ngedit exited");
 
         // automation test
@@ -84,11 +84,11 @@ public fn testProcessFunctions() bool
             return(false);
         }
         var mess [*]u8 = {98, 10}; // "b\n"
-        child_stdin.write(2, mess);
-        child_stdin.put(99);        // "c\n"
-        child_stdin.put(10);
-        child_stdin.puts("a\n");
-        child_stdin.close();
+        _ = child_stdin.write(2, mess);
+        _ = child_stdin.put(99);        // "c\n"
+        _ = child_stdin.put(10);
+        _ = child_stdin.puts("a\n");
+        _ = child_stdin.close();
 
         // c
         var prompt string;
@@ -108,15 +108,15 @@ public fn testProcessFunctions() bool
         }
 
         // skip \n
-        child_stdout.gets(10, prompt);
+        _ = child_stdout.gets(10, prompt);
 
         // a
-        child_stdout.read(2, mess, false:append);
+        _ = child_stdout.read(2, mess, false:append);
         if (mess[0] != 97) {
             return(false);
         }
 
-        sys.waitCommandExit(hh);    
+        _ = sys.waitCommandExit(hh);    
     }
 
     // remark after first test :-)

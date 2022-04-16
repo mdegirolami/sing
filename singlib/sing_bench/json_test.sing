@@ -31,7 +31,7 @@ public fn jsonTest() bool
         }
         list += " " + string(record.level) + " " + record.property_name + " " + record.string_rep + "\r\n";
     }
-    sio.fileWriteText("json_test/list.txt", list);
+    _ = sio.fileWriteText("json_test/list.txt", list);
 
     // rebuild
     var rebuilt string;
@@ -46,11 +46,11 @@ public fn jsonTest() bool
     }
 
     // in case git changes /r/n in /n
-    str.replaceAll(rebuilt, "\r\n", "\n");
-    str.replaceAll(fixed, "\r\n", "\n");
+    _ = str.replaceAll(rebuilt, "\r\n", "\n");
+    _ = str.replaceAll(fixed, "\r\n", "\n");
 
     if (rebuilt != fixed) {
-        sio.fileWriteText("json_test/rebuilt.json", rebuilt);
+        _ = sio.fileWriteText("json_test/rebuilt.json", rebuilt);
         return(false);
     }
     return(true);

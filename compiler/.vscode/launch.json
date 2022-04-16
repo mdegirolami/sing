@@ -14,7 +14,7 @@
             //"args": ["-u", "-f", "../format.txt", "-I", "../../tests", "-MF", "-o", "../../tests_results/synth_test.h", "../../tests/synth_test.sing"],
             //"args": ["-u", "-f", "../format.txt", "-I", "../../tests", "-MF", "-o", "../../tests_results/synth_test.h", "../../tests/synth_test.sing"],
             //"args": ["-^", "3", "-I", "../tests", "-I", "../", "-u", "checker_pkgs_test.sing"],
-            "args": ["-I", "../tests", "-I", "../", "-u", "zero_checks.sing", "-o", "xxx"],
+            "args": ["-I", "../tests", "-I", "../", "-u", "main.sing", "-o", "xxx"],
             //"args": ["-s", "-I", "${workspaceFolder}/../singlib/sing_headers", "-I", "sing"],
             //"args": ["-g", "-I", "../../sing", "-I", "D:/Documents/w12/GitHub/vscode-sing/sdk/sing_headers", "-o", "../../out/debug/test2.h", "../../src/test2.sing"],
             //"args": ["-u", "-g", "-I", "../../sing", "-I", "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.40.3/sdk/sing_headers", "-I", "../../sing_headers", "-MF", "-o", "../../out/debug/app/test.h", "../../sing/app/test.sing"],

@@ -53,10 +53,10 @@ public fn str_test() bool
     var part string;
     var left string;
     var extension string;
-    str.split(s1, ":/", drive, s1, str.SplitMode.sm_drop);
-    str.splitAny(s1, "\\/", s1, part, str.SplitMode.sm_separator_left);
-    str.rsplit(part, ".", left, extension, str.SplitMode.sm_separator_right);
-    str.rsplitAny(left, "T", left, part, str.SplitMode.sm_drop, true : insensitive);
+    _ = str.split(s1, ":/", drive, s1, str.SplitMode.sm_drop);
+    _ = str.splitAny(s1, "\\/", s1, part, str.SplitMode.sm_separator_left);
+    _ = str.rsplit(part, ".", left, extension, str.SplitMode.sm_separator_right);
+    _ = str.rsplitAny(left, "T", left, part, str.SplitMode.sm_drop, true : insensitive);
     let res0 = str.split(s1, "X", drive, s1, str.SplitMode.sm_drop);
     if (drive != "c" || s1 != "inside/" || extension != ".ext" || left != "thedir:/" || part != "hefile.k" || res0) {
         return(false);
@@ -68,11 +68,11 @@ public fn str_test() bool
     if (s1 != "bla          alb       bla" || n0 != 16) {
         return(false);
     }
-    str.replace(s1, "BLA", "longer", true);
+    _ = str.replace(s1, "BLA", "longer", true);
     if (s1 != "longer          alb       bla" || str.replace(s1, "k2", "alb") != str.npos) {
         return(false);
     }
-    str.replace(s1, "alb", "s");
+    _ = str.replace(s1, "alb", "s");
     if (s1 != "longer          s       bla") {
         return(false);
     }
@@ -83,13 +83,13 @@ public fn str_test() bool
     }
 
     s1 = "ppppp ppp ppp";
-    str.replaceAll(s1, "ppp", "p");
+    _ = str.replaceAll(s1, "ppp", "p");
     if (s1 != "ppp p p") {
         return(false);
     }
 
     s1 = "ppppp ppp ppp";
-    str.replaceAll(s1, "ppp", "longer");
+    _ = str.replaceAll(s1, "ppp", "longer");
     if (s1 != "longerpp longer longer") {
         return(false);
     }
@@ -156,27 +156,27 @@ public fn str_test() bool
     // We dont test most find routines - we keep for good split already used them 
     s1 = "aaaaa1aaaaa2aaaaa345";
     var r0 str.Range;
-    str.findFnc(s1, selector, r0);
+    _ = str.findFnc(s1, selector, r0);
     if (r0.begin != 5 || r0.end != 6) {
         return(false);
     }
-    str.findFnc(s1, selector, r0, r0.end);
+    _ = str.findFnc(s1, selector, r0, r0.end);
     if (r0.begin != 11) {
         return(false);
     }
-    str.rfindFnc(s1, selector, r0);
+    _ = str.rfindFnc(s1, selector, r0);
     if (r0.begin != 19 || r0.end != 20) {
         return(false);
     }
-    str.rfindFnc(s1, selector, r0, r0.begin);
+    _ = str.rfindFnc(s1, selector, r0, r0.begin);
     if (r0.begin != 18) {
         return(false);
     }
-    str.rfind(s1, "a", r0, false : insensitive, 5);
+    _ = str.rfind(s1, "a", r0, false : insensitive, 5);
     if (r0.begin != 4) {
         return(false);
     }
-    str.findAny(s1, "A", r0, true : insensitive, 5);
+    _ = str.findAny(s1, "A", r0, true : insensitive, 5);
     if (r0.begin != 6) {
         return(false);
     }

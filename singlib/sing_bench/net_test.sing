@@ -25,7 +25,7 @@ fn ServerConnection.work() void
     while (this.sock.rcvString(input, 100) && str.len(input) > 0) {
         var output = sio.formatUnsignedHex(u64(i64(input).abs()), 20);
         str.cutLeadingSpaces(output);
-        this.sock.sendString(output); 
+        _ = this.sock.sendString(output); 
     }
 }
 
@@ -79,7 +79,7 @@ fn ClessServer.work() void
     while (this.sock.rcvString(src, input, 100) && str.len(input) > 0) {
         var output = sio.formatUnsignedHex(u64(i64(input).abs()), 20);
         str.cutLeadingSpaces(output);
-        this.sock.sendString(src, output); 
+        _ = this.sock.sendString(src, output); 
     }
 }
 
@@ -134,9 +134,9 @@ fn testServer(s_port i32, c_port i32, ver net.IpVersion) bool
     var srvadd net.Address;
     let srvport = srv.getLocalPort();
     if (ver == net.IpVersion.v4) {
-        srvadd.set(net.ip4_loopback, string(srvport));
+        _ = srvadd.set(net.ip4_loopback, string(srvport));
     } else {
-        srvadd.set(net.ip6_loopback, string(srvport));
+        _ = srvadd.set(net.ip6_loopback, string(srvport));
     }
 
     // connect
@@ -149,7 +149,7 @@ fn testServer(s_port i32, c_port i32, ver net.IpVersion) bool
     // make one request
     var response string;
 
-    cs.sendString("100");
+    _ = cs.sendString("100");
     if (!cs.rcvString(response, 100)) {
         return(false);
     }
@@ -162,7 +162,7 @@ fn testServer(s_port i32, c_port i32, ver net.IpVersion) bool
     message.push_back(49);
     message.push_back(48);
     message.push_back(48);
-    cs.send(message, 3);
+    _ = cs.send(message, 3);
     if (!cs.rcv(message, 100, 100:ms_timeout, false:append)) {
         return(false);
     }
@@ -186,7 +186,7 @@ fn testClessServer() bool
     // get server address
     var csrvadd net.Address;
     let csrvport = csrv.getLocalPort();
-    csrvadd.set(net.ip4_loopback, string(csrvport));
+    _ = csrvadd.set(net.ip4_loopback, string(csrvport));
 
     // use connectionless datagrams
     var cls net.Socket;
@@ -196,7 +196,7 @@ fn testClessServer() bool
     if (!cls.open()) {
         return(false);
     }
-    cls.sendString(csrvadd, "100");
+    _ = cls.sendString(csrvadd, "100");
     if (!cls.rcvString(remote, response, 100)) {
         return(false);
     }

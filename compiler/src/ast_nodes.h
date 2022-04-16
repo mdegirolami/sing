@@ -512,6 +512,7 @@ public:
     vector<AstArgument*>    arguments_;
     PositionInfo            pos_;
     bool                    is_statement_;
+    bool                    ignore_retvalue_;
 
     AstFuncType          *func_type_;     // annotations
     ExpressionAttributes attr_;
@@ -521,11 +522,13 @@ public:
     virtual const ExpressionAttributes *GetAttr(void) { return(&attr_); }
 
     virtual ~AstFunCall();
-    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr), is_statement_(false) {}
+    AstFunCall(IAstExpNode *left) : left_term_(left), func_type_(nullptr), is_statement_(false), ignore_retvalue_(false) {}
     virtual AstNodeType GetType(void) const { return(ANT_FUNCALL); }
     void AddAnArgument(AstArgument *value) { arguments_.push_back(value); }
     virtual bool HasFunction(void) { return(true); }
-    virtual void FlagAsStatement(void) { is_statement_ = true; } 
+    void FlagAsStatement(bool ignore_ret) { is_statement_ = true; ignore_retvalue_ = ignore_ret; } 
+    bool IsAStatement(void) { return(is_statement_); }
+    bool CanDiscardRetvalue(void) { return(ignore_retvalue_); }
 };
 
 class AstIndexing : public IAstExpNode {

@@ -81,7 +81,7 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
             row_priority.push_back(row_num);
         }
     }
-    build_aux.close();
+    _ = build_aux.close();
 
     // create a default targets if there are none
     if (targets.size() < 1) {
@@ -159,11 +159,17 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
     sort.ksort_i32(index, row_priority);
 
     // print down the new file
-    build_aux.open(name, "w");
-    for (idx in index) {
-        build_aux.puts(rows[idx]);
+    if (build_aux.open(name, "w") != 0) {
+        return("Can't write.");
     }
-    build_aux.close();
+    for (idx in index) {
+        if (build_aux.puts(rows[idx]) != 0) {
+            return("Can't write.");
+        }
+    }
+    if (build_aux.close() != 0) {
+        return("Didn't close correctly after write.");
+    }
 
     // done !!
     return("");
@@ -415,8 +421,8 @@ fn extractTarget(out target Target, left string, right string, row i32) void
             target.basic_dep += " " + element;
             first = false;
         } else if (str.hasSuffix(element, ".o")) {
-            str.rsplit(element, ".", element, discard);
-            str.rsplitAny(element, "/\\", discard, element);
+            _ = str.rsplit(element, ".", element, discard);
+            _ = str.rsplitAny(element, "/\\", discard, element);
             target.objs_base.push_back(element);
         } else {
             // a dependee which is not a .o

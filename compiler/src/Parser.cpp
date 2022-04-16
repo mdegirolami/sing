@@ -122,14 +122,18 @@ void Parser::ParseDeclaration(AstFile *file, ParseMode mode)
         if (!Advance()) return;
         is_public = true;
     } else if (mode == ParseMode::FOR_REFERENCE) {
+        bool may_be_composite = false;
+
         switch (m_token) {
         case TOKEN_TYPE:
         case TOKEN_VAR:
         case TOKEN_LET:
-        case TOKEN_FUNC:
         case TOKEN_ENUM:
         case TOKEN_INTERFACE:
         case TOKEN_CLASS:
+            break;
+        case TOKEN_FUNC:
+            may_be_composite = true;
             break;
         default:
             Error("Expecting a declaration: type, var, let, fn, class, interface, enum");
@@ -137,8 +141,16 @@ void Parser::ParseDeclaration(AstFile *file, ParseMode mode)
             return;
         }
         if (!Advance()) return;
-        if (m_token == TOKEN_NAME) {
-            file->AddPrivateSymbol(m_lexer->CurrTokenString());
+        if (m_token == TOKEN_NAME) { 
+            if (may_be_composite) {  
+                string name = m_lexer->CurrTokenString();
+                Advance();
+                if (m_token != TOKEN_DOT) {
+                    file->AddPrivateSymbol(name.c_str());
+                }
+            } else {
+                file->AddPrivateSymbol(m_lexer->CurrTokenString());
+            }
         } else {
             Error("Expecting the declaration name");
             return;
@@ -1148,6 +1160,26 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             CheckSemicolon();
         }
         break; 
+        case TOKEN_UNDERSCORE:
+            {
+                SaveRemarkableRow(m_lexer->CurrTokenLine());  
+                if (!Advance()) goto recovery;
+                if (m_token != TOKEN_ASSIGN) {
+                    Error("Expecting '='");
+                    goto recovery;
+                }
+                if (!Advance()) goto recovery;
+                node = ParsePostfixExpression("Expecting a function call");
+                if (on_error_) goto recovery;
+                if (node->GetType() != ANT_FUNCALL) {
+                    Error("Expression or part of it has no effects");
+                    goto recovery;
+                } else {
+                    ((AstFunCall*)node)->FlagAsStatement(true);                    
+                }
+                CheckSemicolon();
+            }
+            break;
         default:
             node = ParseLeftTermStatement();
             break;
@@ -1217,7 +1249,7 @@ IAstNode *Parser::ParseLeftTermStatement(void)
                 Error("Expression or part of it has no effects");
                 goto recovery;
             } else {
-                ((AstFunCall*)assignee)->FlagAsStatement();
+                ((AstFunCall*)assignee)->FlagAsStatement(false);
             }
             node = assignee;
             assignee = nullptr;

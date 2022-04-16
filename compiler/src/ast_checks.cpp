@@ -1577,6 +1577,11 @@ void AstChecker::CheckFunCall(AstFunCall *node, ExpressionAttributes *attr)
             Error(error.c_str(), errnode);
         } else {
             CheckIfFunCallIsLegal(node->func_type_, node);
+            if (node->IsAStatement() && !node->CanDiscardRetvalue()) {
+                if (!attr->IsVoid()) {
+                    Error("Can't discard a function value (consider using the syntax _ = fn())", node);
+                }
+            }
         }
     } else {
         attr->SetError();

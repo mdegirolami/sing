@@ -130,7 +130,7 @@ public fn test_oop() *delegating
     // direct access
     v_stat.add(5);
     v_stat.add(10);
-    v_stat.getall(avg, variance);
+    _ = v_stat.getall(avg, variance);
 
     var t_instance delegating;
     let t_p *tester = &t_instance;
@@ -162,8 +162,8 @@ public fn test_oop() *delegating
     dd.p1 = null;
     dd.p1 = dd.p2;
 
-    check_typeswitch(alternate);
-    check_typeswitch2(t_p);
+    _ = check_typeswitch(alternate);
+    _ = check_typeswitch2(t_p);
 
     check_builtin();
 
@@ -358,10 +358,10 @@ fn check_builtin() void
     stringvec.push_back("aaa");
     stringvec.insert(0, 1, "aaa");
     stringmap.insert("first", tst);
-    stringmap.get("first");
-    stringmap.get_safe("first", tst);
+    _ = stringmap.get("first");
+    _ = stringmap.get_safe("first", tst);
     stringmap.erase("first");
-    stringmap.has("first");
+    _ = stringmap.has("first");
 }
 
 // how to implement inheritance
