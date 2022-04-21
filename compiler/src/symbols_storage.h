@@ -10,7 +10,8 @@ namespace std {
         typedef std::size_t result_type;
         result_type operator()(SingNames::string const& str) const noexcept
         {
-            return(std::hash<std::string>{}(str.c_str()));
+            std::hash<std::string> stdhash;
+            return(stdhash(str.c_str()));
         }
     };
 }

@@ -1085,8 +1085,11 @@ void AstChecker::CheckUpdateStatement(AstUpdate *node)
     ExpressionAttributes attr_left, attr_right, attr_src;
     string  text;
 
-    CheckExpression(node->left_term_, &attr_left, node->operation_ == TOKEN_ASSIGN ? ExpressionUsage::WRITE : ExpressionUsage::BOTH);
+    // don't change the order !
+    // need to check pointer reads in right term before pointer corruptions in left term !
     CheckExpression(node->right_term_, &attr_right, ExpressionUsage::READ);
+    CheckExpression(node->left_term_, &attr_left, node->operation_ == TOKEN_ASSIGN ? ExpressionUsage::WRITE : ExpressionUsage::BOTH);
+
     if (!attr_left.IsOnError() && !attr_right.IsOnError()) {
         IAstTypeNode *type_node = attr_left.GetTypeTree();
         if (type_node != nullptr && !NodeIsConcrete(type_node)) {
