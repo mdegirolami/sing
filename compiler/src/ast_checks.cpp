@@ -86,7 +86,7 @@ bool AstChecker::CheckAll(AstFile *root, ErrorList *errors, SymbolsStorage *symb
     }
 
     // all the declarations
-    loops_nesting = 0;
+    loops_nesting_ = 0;
     for (current_ = 0; current_ < (int)root_->declarations_.size(); ++current_) {      
         IAstDeclarationNode *declaration = root_->declarations_[current_];
         current_is_public_ = declaration->IsPublic();
@@ -144,9 +144,9 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
 {
     bool check_constness = true;
 
-    // insert now so that we can check conflicts with names in initers
-    InsertName(declaration->name_.c_str(), declaration);
-    
+    // to correctly set the UMA flag - ensure it is reset before returning
+    local_decl_name_ = declaration->name_;
+
     if (declaration->IsPublic() && !declaration->HasOneOfFlags(VF_READONLY)) {
         Error("Public global variables are forbidden !", declaration);
     }
@@ -220,6 +220,11 @@ void AstChecker::CheckVar(VarDeclaration *declaration)
             }
         }
     }
+
+    local_decl_name_ = "";
+
+    // insert now so that it can't be used in its own declaration (es. like an initer)
+    InsertName(declaration->name_.c_str(), declaration);
 }
 
 void AstChecker::CheckMemberVar(VarDeclaration *declaration)
@@ -1154,9 +1159,9 @@ void AstChecker::CheckWhile(AstWhile *node)
         Error("Expression must evaluate to a bool", node);
     }
     value_checks_.onWhile(node->expression_);
-    ++loops_nesting;
+    ++loops_nesting_;
     CheckBlock(node->block_, true);
-    --loops_nesting;
+    --loops_nesting_;
     value_checks_.onLoopEnd();
 }
 
@@ -1281,9 +1286,9 @@ void AstChecker::CheckFor(AstFor *node)
     }
 
     value_checks_.onFor();
-    ++loops_nesting;
+    ++loops_nesting_;
     CheckBlock(node->block_, false);
-    --loops_nesting;
+    --loops_nesting_;
     value_checks_.onLoopEnd();
 
     if (index_declaration != nullptr) {
@@ -1457,7 +1462,7 @@ void AstChecker::CheckTypeSwitch(AstTypeSwitch *node)
 
 void AstChecker::CheckSimpleStatement(AstSimpleStatement *node)
 {
-    if (loops_nesting == 0) {
+    if (loops_nesting_ == 0) {
         Error("You can only break/continue a for or while loop.", node);
     }
     value_checks_.onBreak();
@@ -1868,7 +1873,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                 if (decl->is_muting_ && !class_is_writable) {
                     Error("Can't call a muting member function on a read-only instance (input argument, constant, this. in a nonmuting function, iterated variable)", accessed);
                 }
-                accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
+                SetLeafUMA(accessed);
             } else {
                 Error("Can't access private member", accessed);
                 attr->SetError();
@@ -1885,7 +1890,7 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
                     attr->InitWithTree(decl->GetTypeSpec(), decl, true, !decl->HasOneOfFlags(VF_READONLY) && attr->IsWritable()/* && !in_notmuting*/, this);
                     decl->SetUsageFlags(usage);
                     CheckIfVarReferenceIsLegal(usage, decl, accessed);
-                    accessed->SetUMA(symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr);
+                    SetLeafUMA(accessed);
                 } else {
                     Error("Can't access private member", accessed);
                     attr->SetError();
@@ -1896,6 +1901,15 @@ void AstChecker::CheckMemberAccess(AstExpressionLeaf *accessed,
     }
     Error("Member not found", accessed);
     attr->SetError();
+}
+
+void AstChecker::SetLeafUMA(AstExpressionLeaf *accessed)
+{
+    if (symbols_->FindLocalDeclaration(accessed->value_.c_str()) == nullptr) {
+        if (accessed->value_ != local_decl_name_) {
+            accessed->SetUMA(true);
+        }
+    }
 }
 
 void AstChecker::CheckLeaf(AstExpressionLeaf *node, ExpressionAttributes *attr, ExpressionUsage usage, bool preceeds_dotop)

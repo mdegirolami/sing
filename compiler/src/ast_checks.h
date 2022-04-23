@@ -42,10 +42,13 @@ class AstChecker : public ITypedefSolver {
     ErrorList               usage_errors_;
     bool                    check_usage_errors_;
 
-    // info about the currently checked declaration
+    // info about the currently checked declaration (root level - not inside a function/class)
     int                     current_;
     bool                    current_is_public_;
-    int                     loops_nesting;
+    int                     loops_nesting_;
+
+    // current declaration name (local level)
+    string                  local_decl_name_;
 
     // info about the currently checked function block
     ExpressionAttributes    return_fake_variable_;
@@ -148,6 +151,7 @@ class AstChecker : public ITypedefSolver {
     bool IsArgTypeEligibleForAnIniter(IAstTypeNode *type);
     AstClassType *GetLocalClassTypeDeclaration(const char *classname, bool solve_typedefs);
     FuncDeclaration *SearchFunctionInClass(AstClassType *the_class, const char *name);
+    void SetLeafUMA(AstExpressionLeaf *accessed);
 
     void Error(const char *message, const IAstNode *location, bool use_last_location = false);
     void UsageError(const char *message, IAstNode *location);
