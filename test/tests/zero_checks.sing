@@ -176,7 +176,7 @@ public fn test_ptr(cc X1) void
 
     while (a > 0) {
         // must ignore previous knowledge
-        *pippo = 0;         // ko
+        *pippo = 0;         // ok
         *pluto = 0;         // ko
     }
     *pippo = 0;         // ok
@@ -195,7 +195,7 @@ public fn test_ptr(cc X1) void
 
     for (it in 0:10) {
         // must ignore previous knowledge
-        *pippo = 0;         // ko
+        *pippo = 0;         // ok
         *pluto = 0;         // ko
     }
     *pippo = 0;         // ok
@@ -390,7 +390,7 @@ public fn test_int(cc X1) void
 
     while (a > 0) {
         // must ignore previous knowledge
-        res = todiv / pippo;         // ko
+        res = todiv / pippo;         // ok
         res = todiv / pluto;         // ko
     }
     res = todiv / pippo;         // ok
@@ -409,7 +409,7 @@ public fn test_int(cc X1) void
 
     for (it in 0:10) {
         // must ignore previous knowledge
-        res = todiv / pippo;         // ko
+        res = todiv / pippo;         // ok
         res = todiv / pluto;         // ko
     }
     res = todiv / pippo;         // ok
@@ -725,4 +725,57 @@ public fn test_opt(sel i32, out? pippo i32, out? pluto i32) void
     test_opt(0, pippo, null);   // ok, can pass null to the optouts
 
     if (def(sel)) {}            // ko: can apply def() only to optouts
+}
+
+public fn test_deferred_loop(dd i32) void
+{
+    var div i32;
+    for (ii in 0:10) {
+        div = 5;
+        for (jj in 0:10) {
+            for (kk in 0:10) {
+                let xx = 100 / div;     // ko
+                div = 0;                // this is a problem
+            }
+        }
+    }
+
+    for (ii in 0:10) {
+        div = 5;
+        for (jj in 0:10) {
+            for (kk in 0:10) {
+                let xx = 100 / div;     // ko
+            }
+            div = 0;                    // this is a problem too
+        }
+    }
+
+    for (ii in 0:10) {
+        div = 5;
+        for (jj in 0:10) {
+            for (kk in 0:10) {
+                let xx = 100 / div;     // ok, checked against being in the heap
+            }
+        }
+        div = 0;                        // this is not
+    }
+
+    if (dd != 0) {
+        for (kk in 0:10) {
+            let xx = 100 / dd;          // ok, not checked against being in the heap
+        }
+    }
+
+    var div_heap = 0;
+    for (ii in 0:10) {
+        div_heap = 5;
+        for (jj in 0:10) {
+            for (kk in 0:10) {
+                let xx = 100 / div_heap;     // ko, checked against being in the heap
+            }
+        }
+        div_heap = 0;                        // this is not
+    }
+
+    var xx = &div_heap;                      // ops !!
 }

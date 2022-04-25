@@ -43,6 +43,8 @@ struct DeferredCheck {
     const VarDeclaration    *var_;
     const IAstExpNode       *location_; 
     TypeOfCheck             type_;  
+    int                     outer_loop_;    // index into stack_ at the FlowBranch loop before which evidence of the non-nullity was found.
+                                            // when this loop gets fully scanned we can check if any corruption happened in the loop. 
 };
 
 class ValueChecker {
@@ -70,10 +72,21 @@ public:
     void onFunctionStart(void);
 
 private:
-    vector<KnownState>      states_;
-    vector<FlowBranch>      stack_;
-    vector<KnownState>      dirty_vars_;    // accessed into a child block.
-    vector<DeferredCheck>   deferred_;
+    vector<FlowBranch>      stack_;         // the stack with the branches we entered into following the listing.
+    vector<KnownState>      states_;        // the stack with the detected states, divided in sections by branch.
+
+    // the stack with the variables set wrong in a branch - accumulates the output of conditional branches.
+    vector<KnownState>      dirty_vars_;   
+
+    // at the end of the function we check if the vars are nonescaping (as initially assumed).
+    vector<DeferredCheck>   deferred_;    
+
+    // if was set/checked right outside one or more loop, we must check again at the end of the loop.
+    // it is ok only if it is not corrupted in the second half of the loop (would be ko in the second iteration).
+    vector<DeferredCheck>   loop_deferred_; 
+
+    // errors list and iterator
+    vector<DeferredCheck>   deferred_errors_;
     int                     deferred_scan_;
 
     void initNewBranch(FlowBranch *stt);
@@ -85,7 +98,10 @@ private:
     void invertLastCondition(const FlowBranch *stt);
     void saveDirtyVars(const FlowBranch *stt);
     void pasteDirtyVars(const FlowBranch *stt);
-    bool isNonZero(const VarDeclaration *var);
+    bool isNonZero(const VarDeclaration *var, DeferredCheck *dc);
+    VarStatus FirstRelevantEvent(const VarDeclaration *var, int *index, int bottom = 0);
+    void checkLoopDeferred(int loop_idx);
+    void checkDeferred(void);
 };
 
 } // namespace

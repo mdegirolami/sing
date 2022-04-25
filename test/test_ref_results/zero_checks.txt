@@ -37,14 +37,12 @@
 168:13: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 172:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 173:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-179:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 180:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 183:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 187:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 188:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 191:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 192:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-198:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 199:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 202:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
 206:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
@@ -91,14 +89,12 @@
 382:25: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 386:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 387:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-393:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 394:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 397:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 401:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 402:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 405:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 406:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-412:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 413:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 416:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 420:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
@@ -169,3 +165,6 @@
 720:9: Before using an optional output you must check it against null.
 723:5: Before using an optional output you must check it against null.
 727:13: def() can operate only on optional output arguments.
+737:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+747:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+774:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.

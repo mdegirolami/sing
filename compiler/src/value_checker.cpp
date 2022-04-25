@@ -356,6 +356,7 @@ void ValueChecker::onLoopEnd(void)
 {
     size_t stacklen = stack_.size();
     if (stacklen < 1) return;
+    checkLoopDeferred(stacklen - 1);
     FlowBranch *stt = &stack_[stacklen - 1];
     saveDirtyVars(stt);
     invertLastCondition(stt);
@@ -374,20 +375,20 @@ void ValueChecker::onFor(void)
 
 void ValueChecker::onFunctionStart(void)
 {
-    dirty_vars_.clear();
     stack_.clear();
     states_.clear();
+    dirty_vars_.clear();
     deferred_.clear();
+    loop_deferred_.clear();
+    deferred_errors_.clear();
     deferred_scan_ = 0;
 }
 
 const DeferredCheck *ValueChecker::getError(void)
 {
-    while (deferred_scan_ < deferred_.size()) {
-        if (deferred_[deferred_scan_].var_->HasOneOfFlags(VF_ISPOINTED)) {
-            return(&deferred_[deferred_scan_++]);
-        }
-        deferred_scan_++;
+    if (deferred_scan_ == 0) checkDeferred();
+    if (deferred_scan_ < deferred_errors_.size()) {
+        return(&deferred_errors_[deferred_scan_++]);
     }
     return(nullptr);
 }
@@ -403,28 +404,95 @@ const char *ValueChecker::GetErrorString(TypeOfCheck check)
     }
 }
 
-bool ValueChecker::isNonZero(const VarDeclaration *var)
+bool ValueChecker::isNonZero(const VarDeclaration *var, DeferredCheck *dc)
 {
-    // remember: if the var is not a constant, ignore what happened before a loop you are inside of.
-    int bottom = 0;
     if (var->HasOneOfFlags(VF_IS_NOT_NULL)) {
         return(true);
     }
+    int status_position = 0;
+    VarStatus status = FirstRelevantEvent(var, &status_position);
+    if (status != VarStatus::NONZERO && status != VarStatus::LOCAL_ADD) {
+        return(false);
+    }
+    if (dc == nullptr) return(true);
+
+    // do we need to defer some cheks ? : is the relevant status out of the loop in which we make the test ?
     if (!var->HasOneOfFlags(VF_READONLY | VF_IS_OPTOUT)) {
+        int outer = -1;
         for (int ii = stack_.size() - 1; ii >= 0; --ii) {
-            if (stack_[ii].isloop_) {
-                bottom = stack_[ii].conditions_start_;
+            if (status_position >= stack_[ii].conditions_start_ ) {
                 break;
+            } else if (stack_[ii].isloop_) {
+                outer = ii;
             }
         }
-    }
-    for (int ii = states_.size() - 1; ii >= bottom; --ii) {
-        if (states_[ii].var_ == var && !states_[ii].valid_after_inversion_) {
-            VarStatus status = states_[ii].status_;
-            return(status == VarStatus::NONZERO || status == VarStatus::LOCAL_ADD);
+        if (outer != -1) {
+            // must check the second half of the loop (from the veriable access to the end of loop)
+            dc->var_ = var;
+            dc->outer_loop_ = outer;
+            loop_deferred_.push_back(*dc);
+            return(true);
         }
     }
-    return(false);
+
+    // is the variable allocated on the heap ? (and potentially accessible to external code ?)
+    if (dc != nullptr && var->HasOneOfFlags(VF_ISLOCAL)) {
+        dc->var_ = var;    
+        deferred_.push_back(*dc);
+    }
+    return(true);
+}
+
+VarStatus ValueChecker::FirstRelevantEvent(const VarDeclaration *var, int *index, int bottom)
+{
+    for (int ii = states_.size() - 1; ii >= bottom; --ii) {
+        if (states_[ii].var_ == var && !states_[ii].valid_after_inversion_) {
+            *index = ii;
+            return(states_[ii].status_);
+        }
+    }
+    *index = -1;
+    return(VarStatus::UNKNOWN);
+}
+
+void ValueChecker::checkLoopDeferred(int loop_idx)
+{
+    int dst = 0;
+    for (int ii = 0; ii < loop_deferred_.size(); ++ii) {
+        DeferredCheck *dc = &loop_deferred_[ii];
+        if (dc->outer_loop_ < loop_idx) {
+
+            // we are not at the most external loop, we check it later.
+            if (dst != ii) {
+                loop_deferred_[dst] = *dc;
+            }
+            ++dst;
+        } else {
+            int index;
+            VarStatus status = FirstRelevantEvent(dc->var_, &index);
+            if ((status != VarStatus::NONZERO && status != VarStatus::LOCAL_ADD) || dc->var_->HasOneOfFlags(VF_ISPOINTED)) {
+
+                // the deferred test failed !
+                deferred_errors_.push_back(*dc);
+            } else if (dc->var_->HasOneOfFlags(VF_ISLOCAL)) {
+                
+                // we may discover later it is pointed
+                deferred_.push_back(*dc);
+            } // else there is nothing else that can go wrong, we forget about *dc
+        }
+    }
+    loop_deferred_.erase(dst, loop_deferred_.size());
+}
+
+void ValueChecker::checkDeferred(void)
+{
+    for (int ii = 0; ii < deferred_.size(); ++ii) {
+        DeferredCheck *dc = &deferred_[ii];
+        if (dc->var_->HasOneOfFlags(VF_ISPOINTED)) {
+            deferred_errors_.push_back(*dc);
+        }
+    }
+    deferred_.clear();
 }
 
 bool ValueChecker::zeroDivisionIsSafe(const AstBinop *division_exp)
@@ -439,17 +507,12 @@ bool ValueChecker::zeroDivisionIsSafe(const AstBinop *division_exp)
 
     bool isint, isptr;
     const VarDeclaration *var = observableVarFromExp(divisor_exp, &isint, &isptr);
-    if (var == nullptr || !isNonZero(var)) return(false);
 
-    // in case it is an escaping local and we discover it only later.
-    if (var->HasOneOfFlags(VF_ISLOCAL)) {
-        DeferredCheck dc;
-        dc.location_ = division_exp;
-        dc.var_ = var;
-        dc.type_ = TypeOfCheck::ZERO_DIVISOR;
-        deferred_.push_back(dc);
-    }
+    DeferredCheck dc;
+    dc.location_ = division_exp;
+    dc.type_ = TypeOfCheck::ZERO_DIVISOR;
 
+    if (var == nullptr || !isNonZero(var, &dc)) return(false);
     return(true);
 }
 
@@ -460,17 +523,12 @@ bool ValueChecker::pointerDereferenceIsSafe(const AstUnop *op)
 
     bool isint, isptr;
     const VarDeclaration *var = observableVarFromExp(pointer, &isint, &isptr);
-    if (var == nullptr || !isNonZero(var)) return(false);
 
-    // in case it is an escaping local and we discover it only later.
-    if (var->HasOneOfFlags(VF_ISLOCAL)) {
-        DeferredCheck dc;
-        dc.location_ = op;
-        dc.var_ = var;
-        dc.type_ = TypeOfCheck::NULL_DEREFERENCE;
-        deferred_.push_back(dc);
-    }
+    DeferredCheck dc;
+    dc.location_ = op;
+    dc.type_ = TypeOfCheck::NULL_DEREFERENCE;
 
+    if (var == nullptr || !isNonZero(var, &dc)) return(false);
     return(true);
 }
 
@@ -481,24 +539,19 @@ bool ValueChecker::pointerToMemberOpIsSafe(const AstBinop *op)
 
     bool isint, isptr;
     const VarDeclaration *var = observableVarFromExp(pointer, &isint, &isptr);
-    if (var == nullptr || !isNonZero(var)) return(false);
 
-    // in case it is an escaping local and we discover it only later.
-    if (var->HasOneOfFlags(VF_ISLOCAL)) {
-        DeferredCheck dc;
-        dc.location_ = op;
-        dc.var_ = var;
-        dc.type_ = TypeOfCheck::NULL_DEREFERENCE;
-        deferred_.push_back(dc);
-    }
+    DeferredCheck dc;
+    dc.location_ = op;
+    dc.type_ = TypeOfCheck::NULL_DEREFERENCE;
 
+    if (var == nullptr || !isNonZero(var, &dc)) return(false);
     return(true);
 }
 
 bool ValueChecker::optionalAccessIsSafe(const VarDeclaration *var)
 {
     if (var != nullptr && var->HasOneOfFlags(VF_IS_OPTOUT)) {
-        return(isNonZero(var));
+        return(isNonZero(var, nullptr));
     }
     return(true);
 }
