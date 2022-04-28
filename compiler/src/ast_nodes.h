@@ -365,6 +365,7 @@ public:
 class AstClassType : public IAstTypeNode
 {
 public:
+    string                      name_;                  // needs for name synthesys
     vector<VarDeclaration*>     member_vars_;
     vector<FuncDeclaration*>    member_functions_;      // annotations: this is grown with inherited functions
     vector<string>              fn_implementors_;       // points into  member_vars_: this is grown with inherited functions
@@ -383,7 +384,7 @@ public:
     virtual bool IsARemarkableNode(void) { return(false); }
 
     virtual ~AstClassType();
-    AstClassType();
+    AstClassType(const char *name);
     virtual AstNodeType GetType(void) const { return(ANT_CLASS_TYPE); }
     virtual bool IsCompatible(IAstTypeNode *src_tree, TypeComparisonMode mode);
     virtual int SizeOf(void);

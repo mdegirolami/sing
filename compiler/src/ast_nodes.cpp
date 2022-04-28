@@ -393,8 +393,9 @@ FuncDeclaration *AstInterfaceType::getMemberDeclaration(const char *name)
     return(nullptr);
 }
 
-AstClassType::AstClassType()
+AstClassType::AstClassType(const char *name)
 {
+    name_ = name;
     first_hinherited_member_ = -1;
     has_destructor = has_constructor = constructor_written = false;
     can_be_copied = true;

@@ -46,8 +46,9 @@ class AstChecker : public ITypedefSolver {
     int                     current_;
     bool                    current_is_public_;
     int                     loops_nesting_;
+    bool                    in_class_declaration_;
 
-    // current declaration name (local level)
+    // current variable/constant declaration name (global or function local)
     string                  local_decl_name_;
 
     // info about the currently checked function block
@@ -56,7 +57,6 @@ class AstChecker : public ITypedefSolver {
     FuncDeclaration         *current_function_;
     AstClassType            *current_class_;
     bool                    this_was_accessed_;
-    bool                    in_class_declaration_;
     ValueChecker            value_checks_;
 
     // IsAstBlockChild functionality

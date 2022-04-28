@@ -336,6 +336,12 @@ void CppSynth::SynthTypeSpecification(string *dst, IAstTypeNode *type_spec)
             }
         }
         break;
+    case ANT_CLASS_TYPE:
+        {
+            // this is possible only locally, else the class is referred as a named type.
+            AstClassType *node = (AstClassType*)type_spec;
+            PrependWithSeparator(dst, node->name_.c_str());
+        }
     }
 }
 

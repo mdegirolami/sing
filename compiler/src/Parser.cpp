@@ -530,7 +530,7 @@ TypeDeclaration *Parser::ParseClass(void)
             goto recovery2;
         }
         node = new TypeDeclaration(m_lexer->CurrTokenString());
-        AstClassType *typenode = new AstClassType();
+        AstClassType *typenode = new AstClassType(node->name_.c_str());
         node->SetType(typenode);
         RecordPosition(node);
         RecordPosition(typenode);

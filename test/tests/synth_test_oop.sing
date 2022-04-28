@@ -411,5 +411,6 @@ public let xxy Derived;
 fn Concrete.passMyself(p0 Concrete, io p1 Concrete, out p2 Concrete) void
 {
     this.passMyself(this, this, this);
+    let tst = this;                     // auto type from this
 }
 
