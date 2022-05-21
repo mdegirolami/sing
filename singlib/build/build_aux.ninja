@@ -74,8 +74,9 @@ build speed_test.o       : cc $src_b/speed_test.cpp
 build map_test.o         : cc $src_b/map_test.cpp
 build UsingStdVectors.o  : cc $src_b/UsingStdVectors.cpp 
 build SortTest.o         : cc $src_b/SortTest.cpp 
+build overflows.o        : cc $src_b/overflows.cpp 
 
 #link
-build $bin_target: ln main.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o net_test.o json_test.o $lib_target
+build $bin_target: ln main.o ptr_test.o intrinsics.o speed_test.o map_test.o UsingStdVectors.o str_test.o SortTest.o sio_test.o sys_test.o thread_test.o net_test.o json_test.o overflows.o $lib_target
 
 default $bin_target

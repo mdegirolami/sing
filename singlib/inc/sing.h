@@ -216,32 +216,183 @@ namespace sing {
     {
         dst.insert(dst.end(), src.begin(), src.end());
     }
+
+    // if signed addition overflows, operands have same sign but result has not !
+    inline bool add(int32_t op1, int32_t op2) {
+        int32_t result = op1 + op2;
+        if ((op1 ^ op2) >= 0 && (result ^ op1) < 0) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool add(int64_t op1, int64_t op2) {
+        int64_t result = op1 + op2;
+        if ((op1 ^ op2) >= 0 && (result ^ op1) < 0) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+
+    // if unsigned addition overflows, the result is smaller than one of the operands
+    inline bool add(uint32_t op1, uint32_t op2) {
+        uint32_t result = op1 + op2;
+        if (result < op1 || result < op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool add(uint64_t op1, uint64_t op2) {
+        uint64_t result = op1 + op2;
+        if (result < op1 || result < op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+
+
+    // if signed subtraction overflows, operands have different signs but result has not the sign of the first operand.
+    inline bool sub(int32_t op1, int32_t op2) {
+        int32_t result = op1 - op2;
+        if ((op1 ^ op2) < 0 && (result ^ op1) < 0) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool sub(int64_t op1, int64_t op2) {
+        int64_t result = op1 - op2;
+        if ((op1 ^ op2) < 0 && (result ^ op1) < 0) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+
+    // if unsigned subtraction overflows, the second operand is bigger than the first.
+    inline bool sub(uint32_t op1, uint32_t op2) {
+        if (op2 > op1) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(op1 - op2);
+    }
+    inline bool sub(uint64_t op1, uint64_t op2) {
+        if (op2 > op1) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(op1 - op2);
+    }
+
+    // if multiply overflows, dividing by one of the factor doesn't yeld the other one.
+    inline bool mul(int32_t op1, int32_t op2) {
+        int32_t result = op1 * op2;
+        if ((op1 ^ op2 ^ result) < 0 || op1 != 0 && result / op1 != op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool mul(int64_t op1, int64_t op2) {
+        int64_t result = op1 * op2;
+        if ((op1 ^ op2 ^ result) < 0 || op1 != 0 && result / op1 != op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool mul(uint32_t op1, uint32_t op2) {
+        uint32_t result = op1 * op2;
+        if (op1 != 0 && result / op1 != op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+    inline bool mul(uint64_t op1, uint64_t op2) {
+        uint64_t result = op1 * op2;
+        if (op1 != 0 && result / op1 != op2) {
+            throw(std::overflow_error("integer operation overflows"));  
+        }
+        return(result);
+    }
+
+    template <class T>
+    inline bool shr(int32_t op1, T op2) {        
+        if (op2 < 0 || op2 > 31) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        return(op1 >> op2);
+    }
+
+    template <class T>
+    inline bool shr(int64_t op1, T op2) {
+        if (op2 < 0 || op2 > 63) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        return(op1 >> op2);
+    }
+
+    template <class T>
+    inline bool shr(uint32_t op1, T op2) {
+        if (op2 < 0 || op2 > 31) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        return(op1 >> op2);
+    }
+
+    template <class T>
+    inline bool shr(uint64_t op1, T op2) {
+        if (op2 < 0 || op2 > 63) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        return(op1 >> op2);
+    }
+
+
+    template <class T>
+    inline bool shl(int32_t op1, T op2) { 
+        int32_t result = op1 << op2;       
+        if (op2 < 0 || op2 > 31) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        if (result >> op2 != op1) {
+            throw(std::overflow_error("integer operation overflows"));
+        }
+        return(result);
+    }
+
+    template <class T>
+    inline bool shl(int64_t op1, T op2) {
+        int64_t result = op1 << op2;       
+        if (op2 < 0 || op2 > 63) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        if (result >> op2 != op1) {
+            throw(std::overflow_error("integer operation overflows"));
+        }
+        return(result);
+    }
+
+    template <class T>
+    inline bool shl(uint32_t op1, T op2) {
+        uint32_t result = op1 << op2;       
+        if (op2 < 0 || op2 > 31) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        if (result >> op2 != op1) {
+            throw(std::overflow_error("integer operation overflows"));
+        }
+        return(result);
+    }
+
+    template <class T>
+    inline bool shl(uint64_t op1, T op2) {
+        uint64_t result = op1 << op2;       
+        if (op2 < 0 || op2 > 63) {
+            throw(std::overflow_error("shift count out of range"));  
+        }
+        if (result >> op2 != op1) {
+            throw(std::overflow_error("integer operation overflows"));
+        }
+        return(result);
+    }
     
+    // MISSING: unary minus, power da sistemare, non integer functions which cause exceptions ?
+    // conversions to int can cause overflow (from float/string)
+
+
 }   // namespace
-/*
-// from _mingw.h
-#undef MINGW_HAS_SECURE_API
-#undef USE___UUIDOF
-#undef UNALIGNED
-#undef NONAMELESSUNION
-#undef DUMMYUNIONNAME 
-#undef DUMMYUNIONNAME1
-#undef DUMMYUNIONNAME2
-#undef DUMMYUNIONNAME3
-#undef DUMMYUNIONNAME4
-#undef DUMMYUNIONNAME5
-#undef DUMMYUNIONNAME6
-#undef DUMMYUNIONNAME7
-#undef DUMMYUNIONNAME8
-#undef DUMMYUNIONNAME9
-#undef MINGW_SDK_INIT
-#undef NULL
-
-// string.h
-#undef strncasecmp
-#undef strcasecmp
-#undef wcswcs
-
-// os_defines.h
-#undef NOMINMAX
-*/

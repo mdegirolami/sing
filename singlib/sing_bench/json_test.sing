@@ -55,3 +55,82 @@ public fn jsonTest() bool
     }
     return(true);
 }
+
+public class Node {
+public:    
+    var next *Node;
+    fn clone() *Node;
+    fn clone2() *Node;
+}
+
+public fn dupList(list *Node) *Node
+{
+    if (list == null) {
+        return(null);
+    } else {
+        var dup = *list;
+        dup.next = dupList(list.next);
+        return(&dup);
+    }
+}
+
+public fn dupList2(list const*Node) *Node
+{
+    var scan = list;
+    var newlist *Node;
+    var last *Node;
+    while (scan != null) {
+        var dup = *scan;
+        if (last != null) {
+            last.next = &dup;
+        } else {
+            newlist = &dup;
+        }
+        last = &dup;
+        scan = scan.next;
+    }
+    return(newlist);
+}
+
+public fn dupList3(list const*Node) *Node
+{
+    if (list == null) {
+        return(null);
+    }
+    var scan = list;
+    var newlist = *list;
+    var last = &newlist;
+    while (scan != null) {
+        var dup = *scan;
+        if (last != null) {
+            last.next = &dup;
+        }
+        last = &dup;
+        scan = scan.next;
+    }
+    return(&newlist);
+}
+
+fn Node.clone() *Node
+{
+    var dup Node = this;
+    dup.next = dupList(this.next);
+    return(&dup);
+}
+
+
+fn Node.clone2() *Node
+{
+    var newlist = this;
+    var scan = this.next;
+    var last = &newlist;
+    while (scan != null) {
+        var dup = *scan;
+        last.next = &dup;
+        last = &dup;
+        scan = scan.next;
+    }
+    return(&newlist);
+}
+ 
+

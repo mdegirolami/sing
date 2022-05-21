@@ -17,13 +17,13 @@
             "MIMode": "gdb",
             // "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
             "miDebuggerPath": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Catch throws",
-                    "text": "catch throw",
-                    "ignoreFailures": true
-                }
-            ]
+            //"setupCommands": [
+            //    {
+            //        "description": "Catch throws",
+            //        "text": "catch throw",
+            //        "ignoreFailures": true
+            //    }
+            //]
         }
     ]
 }

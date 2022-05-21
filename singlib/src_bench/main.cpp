@@ -16,6 +16,7 @@ bool sys_test();
 bool thread_test();
 bool net_test();
 bool jsonTest();
+bool test_overflows(void);
 
 int main() {
     // test_intrinsics();
@@ -23,6 +24,9 @@ int main() {
     // speed_test();
     // test_map();
     // test_std_vectors(10);
+
+    test_overflows();
+    return(0);
 
     if (str_test()) {
         printf("string lib: passed\r\n");
