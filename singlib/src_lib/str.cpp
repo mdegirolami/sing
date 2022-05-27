@@ -346,7 +346,7 @@ bool hasSuffix(const char *src, const char *suffix, const bool insensitive)
 void cutPrefix(std::string *str, const char *prefix, const bool insensitive)
 {
     int32_t end;
-    if (compareAt(str->c_str(), 0, prefix, &end, insensitive) == 0); {
+    if (compareAt(str->c_str(), 0, prefix, &end, insensitive) == 0) {
         str->erase(0, end);
     } 
 }

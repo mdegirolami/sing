@@ -1252,7 +1252,7 @@ bool parseInt(int64_t *value, const char *from, const int32_t at, int32_t *last_
     int pp;
     const char *src = from + at;
     if (*src == '0' && src[1] == 'x' || src[1] == 'X') {
-        if (parseUnsignedHex((uint64_t*)value, from, at + 2, last_pos) && value >= 0) {
+        if (parseUnsignedHex((uint64_t*)value, from, at + 2, last_pos) && *value >= 0) {
             return(true);
         }
         return(false);
@@ -1340,11 +1340,12 @@ char _getch()
 std::string kbdGet()
 {
     char buf[2];
-    buf[0] = _getch();
-    while (buf[0] == 0xe0) {
-        _getch();
-        buf[0] = _getch();
+    int value = _getch();
+    while (value == 0xe0 || value == 0) {
+        _getch();               // second part of control char / arrow.
+        value = _getch();
     }
+    buf[0] = value;
     buf[1] = 0;
     return(std::string(buf));
 }

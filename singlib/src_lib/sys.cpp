@@ -643,7 +643,11 @@ int64_t clock()
 {
     timespec ts;
 
-    clock_gettime(CLOCK_BOOTTIME, &ts);
+#ifdef OSX
+        clock_gettime(CLOCK_UPTIME_RAW, &ts);
+#else
+        clock_gettime(CLOCK_BOOTTIME, &ts);
+#endif
     return(ts.tv_sec * 1000000 + ts.tv_nsec / 1000);
 }
 
