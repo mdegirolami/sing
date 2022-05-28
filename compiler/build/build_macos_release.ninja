@@ -1,0 +1,8 @@
+debug_flags = -O2 -s -DNDEBUG
+profile_flags =
+#profile_flags = -pg
+
+bin_target = ../../bin/macos/sing
+sing_lib = ../../../singlib/bin/macos/singlib.a
+
+include ../build_aux.ninja

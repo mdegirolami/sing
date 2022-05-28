@@ -1,6 +1,7 @@
 #ifndef SYMBOLS_STORAGE_H
 #define SYMBOLS_STORAGE_H
 
+#include <string>
 #include <unordered_map>
 #include "ast_nodes.h"
 

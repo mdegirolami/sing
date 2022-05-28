@@ -643,7 +643,7 @@ int64_t clock()
 {
     timespec ts;
 
-#ifdef OSX
+#ifdef __MACH__
         clock_gettime(CLOCK_UPTIME_RAW, &ts);
 #else
         clock_gettime(CLOCK_BOOTTIME, &ts);
