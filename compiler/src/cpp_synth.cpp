@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #include <vector>
 #include <cinttypes>
 #include "cpp_synth.h"
@@ -207,6 +208,10 @@ void CppSynth::SynthFunc(FuncDeclaration *declaration)
     }
     SynthFunOpenBrace(text);
     return_type_ = declaration->function_type_->return_type_;
+    function_name_ = declaration->name_;
+    if (debug_) {
+        WriteArgumentsGuards(declaration->function_type_);
+    }
     SynthBlock(declaration->block_);
 }
 
@@ -1199,6 +1204,11 @@ void CppSynth::SynthForEachOnDyna(AstFor *node)
     text += expression;
     text += ") {";
     Write(&text, false);
+    if (debug_) {
+        ++indent_;
+        WriteReferenceGuard(node->iterator_->name_.c_str(), true);
+        --indent_;
+    }
     if (node->index_ != nullptr) {
         ++indent_;
         text = "++";
@@ -3042,6 +3052,38 @@ int CppSynth::WriteFunctions(void)
         }
     }
     return(num_items);
+}
+
+void CppSynth::WriteReferenceGuard(const char *ref_name, bool isref)
+{
+    char buf[20];
+
+    sprintf(buf, "%d", refguard_name_++);
+    string text = "sing::Ref r";
+    text += buf;
+    text += "__(\"";
+    text += ref_name;
+    text += " in ";
+    text += function_name_;
+    text += "\", ";
+    if (isref) text += '&';
+    text += ref_name;
+    text += ")";
+    Write(&text);
+}
+
+void CppSynth::WriteArgumentsGuards(AstFuncType *type_spec)
+{
+    ++indent_;
+    refguard_name_ = 0;
+    for (int ii = 0; ii < (int)type_spec->arguments_.size(); ++ii) {
+        VarDeclaration *arg = type_spec->arguments_[ii];
+        ParmPassingMethod mode = GetParameterPassingMethod(arg->GetTypeSpec(), arg->HasOneOfFlags(VF_READONLY));
+        if (mode != PPM_VALUE) {
+            WriteReferenceGuard(arg->name_.c_str(), mode == PPM_CONSTREF);
+        }
+    }
+    --indent_;
 }
 
 AstClassType *CppSynth::GetLocalClassTypeDeclaration(const char *classname)

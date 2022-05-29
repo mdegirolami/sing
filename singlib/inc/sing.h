@@ -216,32 +216,20 @@ namespace sing {
     {
         dst.insert(dst.end(), src.begin(), src.end());
     }
-    
+
+#ifndef NDEBUG
+
+    class Ref { 
+    public:
+        Ref(const char *name, const void *location);
+        ~Ref();
+
+        const char *desc_;
+        const char *location_;     
+    };
+
+    void check_strrefs(const char *p);
+
+#endif
+
 }   // namespace
-/*
-// from _mingw.h
-#undef MINGW_HAS_SECURE_API
-#undef USE___UUIDOF
-#undef UNALIGNED
-#undef NONAMELESSUNION
-#undef DUMMYUNIONNAME 
-#undef DUMMYUNIONNAME1
-#undef DUMMYUNIONNAME2
-#undef DUMMYUNIONNAME3
-#undef DUMMYUNIONNAME4
-#undef DUMMYUNIONNAME5
-#undef DUMMYUNIONNAME6
-#undef DUMMYUNIONNAME7
-#undef DUMMYUNIONNAME8
-#undef DUMMYUNIONNAME9
-#undef MINGW_SDK_INIT
-#undef NULL
-
-// string.h
-#undef strncasecmp
-#undef strcasecmp
-#undef wcswcs
-
-// os_defines.h
-#undef NOMINMAX
-*/

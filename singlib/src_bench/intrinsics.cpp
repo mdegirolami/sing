@@ -45,3 +45,52 @@ void test_intrinsics(void)
     t3 = exp(t3);
 }
 
+#ifndef NDEBUG
+
+// remark in/out the refs. See how they cause exceptions.
+void test_refguard(void)
+{
+    std::vector<int>    vv;
+    vv.push_back(0);
+
+    // build the pointer and guard
+    int *ptr = &vv[0];
+    //sing::Ref r0__("the ptr", ptr);
+
+    // check construction/destruction
+    {
+        sing::Ref rx__("doesn't fire", ptr);
+    }
+
+    // build reference and guard
+    int &ref = vv[0];
+    //sing::Ref r1__("the ref", &ref);
+
+    // invalidate ref/ptr
+    vv.reserve(100);
+
+    // see the effect without guards
+    //int xx = *ptr;
+    //*ptr = 0;
+
+
+    std::string s0;
+
+    // string pointer and guard
+    const char *s0p = s0.c_str();
+    //sing::Ref r2__("str0", s0p);
+
+    // inavlidate
+    sing::check_strrefs(s0.c_str());   // string needs explicit call
+    s0 = "xxx";
+
+    // what happens ?
+    // xx = *s0p;
+
+    // does the guard catch ptr deallocated stuff ?
+    std::shared_ptr<int> heapstuff = std::make_shared<int>(5);
+    sing::Ref r3__("heap ptr", &*heapstuff);
+    heapstuff = nullptr;
+}
+
+#endif

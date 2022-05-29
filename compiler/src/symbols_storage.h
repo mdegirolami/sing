@@ -2,6 +2,7 @@
 #define SYMBOLS_STORAGE_H
 
 #include <unordered_map>
+#include <string>
 #include "ast_nodes.h"
 
 namespace std {

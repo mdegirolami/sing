@@ -3,6 +3,7 @@
 #include <float.h>
 #include "sing.h"
 #include "values.h"
+#include "thread.h"
 
 namespace sing {
 
@@ -129,4 +130,123 @@ int32_t hash_from_bytes(const uint8_t *buffer, int count)
     return(acc);
 }
 
+#ifndef NDEBUG
+
+static Atomic     tracking;
+
+class RefTracker {
+    std::vector<Ref*>   refs_;
+    sing::Lock          refs_lock_;
+public:
+    RefTracker();
+    ~RefTracker();
+
+    void addRef(Ref *ref);
+    void delRef(Ref *ref);
+    void checkRange(void *pp);
+    void checkAddress(void *pp);
+};
+
+RefTracker::RefTracker()
+{
+    refs_lock_.init();
+    tracking.set(1);
+}
+
+RefTracker::~RefTracker()
+{
+    tracking.set(0);
+}
+
+void RefTracker::addRef(Ref *ref)
+{
+    // if made an allocation in the next push_back it would deadlock.
+    refs_.reserve(refs_.size() + 1);
+
+    refs_lock_.lock();
+    refs_.push_back(ref);
+    refs_lock_.unlock();
+}
+
+void RefTracker::delRef(Ref *ref)
+{
+    refs_lock_.lock();
+    for (int ii = (int)refs_.size() - 1; ii >= 0; --ii) {
+        if (refs_[ii] == ref) {
+            refs_[ii] = refs_[refs_.size() - 1];
+            refs_.pop_back();
+            break;
+        }
+    }
+    refs_lock_.unlock();
+}
+
+void RefTracker::checkRange(void *pp)
+{
+    const char *start = (const char*)pp;
+    const char *end = start + _msize(pp);
+    refs_lock_.lock();
+    for (size_t ii = 0; ii < refs_.size(); ++ii) {
+        const char *loc = refs_[ii]->location_;
+        if (loc >= start && loc < end) {
+            std::string description = (std::string)"Refernce/pointer " + refs_[ii]->desc_ + " invalidated.";
+            throw(std::runtime_error(description));
+        }
+    }
+    refs_lock_.unlock();
+}
+
+void RefTracker::checkAddress(void *pp)
+{
+    refs_lock_.lock();
+    for (size_t ii = 0; ii < refs_.size(); ++ii) {
+        if (refs_[ii]->location_ == pp) {
+            std::string description = (std::string)"Refernce/pointer " + refs_[ii]->desc_ + " invalidated.";
+            throw(std::runtime_error(description));
+        }
+    }
+    refs_lock_.unlock();
+}
+
+static RefTracker the_tracker;
+
+Ref::Ref(const char *name, const void *location)
+{
+    desc_ = name;
+    location_ = (const char*)location;
+    the_tracker.addRef(this);
+}
+
+Ref::~Ref()
+{
+    the_tracker.delRef(this);
+}
+
+void check_strrefs(const char *p)
+{
+    the_tracker.checkAddress((void*)p);
+}
+
+#endif
+
 } // namespace
+
+#ifndef NDEBUG
+
+void operator delete(void *p)
+{
+    if (sing::tracking.get() != 0) {
+        sing::the_tracker.checkRange(p);
+    }
+    free(p);
+}
+
+void operator delete[](void *p)
+{
+    if (sing::tracking.get() != 0) {
+        sing::the_tracker.checkRange(p);
+    }
+    free(p);
+}
+
+#endif

@@ -19,6 +19,8 @@ class CppSynth {
     int                 exp_level;      // to see if synth_expression is recursing
     const IAstTypeNode *return_type_;
     CppFormatter        formatter_;
+    int                 refguard_name_; // refguard are automatically generated as r<num>__
+    string              function_name_; // currently synthesized function body
 
     // options
     const SynthOptions  *synth_options_;
@@ -99,6 +101,8 @@ class CppSynth {
     int  WriteClassIdsDefinitions(void);
     int  WriteConstructors(void);
     int  WriteFunctions(void);
+    void WriteReferenceGuard(const char *ref_name, bool isref);
+    void WriteArgumentsGuards(AstFuncType *type_spec);
 
     void ProcessStringSumOperand(string *format, string *parms, IAstExpNode *node);
     void Write(string *text, bool add_semicolon = true);
