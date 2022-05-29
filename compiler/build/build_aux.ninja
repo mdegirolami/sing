@@ -4,10 +4,10 @@ cpp  = ../../src
 rule cc
   deps = gcc
   depfile = $out.d
-  command = c++ -std=c++11 -MD -MF $out.d $cflags $debug_flags $profile_flags -c $in -o $out
+  command = c++ -std=c++17 -MD -MF $out.d $cflags $debug_flags $profile_flags -c $in -o $out
 
 rule ln
-  command = c++ -std=c++11 -no-pie $profile_flags -o $out @$out.rsp
+  command = c++ -std=c++17 -no-pie $profile_flags -o $out @$out.rsp
   rspfile = $out.rsp
   rspfile_content = $in
 

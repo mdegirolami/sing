@@ -1957,7 +1957,7 @@ void AstChecker::CheckNamedLeaf(IAstDeclarationNode *decl, AstExpressionLeaf *no
                 readonly = var->weak_iterated_var_->HasOneOfFlags(VF_READONLY);
             }
         } else {
-            readonly = var->HasOneOfFlags(VF_READONLY | VF_IS_ITERATED);
+            readonly = var->HasOneOfFlags(VF_READONLY);
         }
         attr->InitWithTree(var->GetTypeSpec(), var, true, !readonly, this);
         if (var->HasOneOfFlags(VF_READONLY)) {
@@ -2662,10 +2662,6 @@ void AstChecker::CheckIfVarReferenceIsLegal(ExpressionUsage usage, VarDeclaratio
     //         return;
     //     }
     // }
-    if (var->HasOneOfFlags(VF_IS_ITERATED) && (usage == ExpressionUsage::WRITE || usage == ExpressionUsage::BOTH)) {
-        Error("An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)", location);
-        return;
-    }
     if (usage != ExpressionUsage::NONE && !value_checks_.optionalAccessIsSafe(var)) {
         Error(value_checks_.GetErrorString(TypeOfCheck::OPTOUT_UNDEFINED), location);
     }

@@ -332,8 +332,6 @@
 719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
 721:18: The argument's initer must be a compile time constant !
 721:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
-731:9: Increment and Decrement operations can be applied only to writable integer variables
-731:11: An Iterated variable can be written ONLY through the iterator. (to avoid buffer reallocations)
 737:28: A public declaration cannot refer a private symbol
 740:2: Function must return a value !!
 742:24: You can only return values of type: numeric, enum, string, bool, pointer

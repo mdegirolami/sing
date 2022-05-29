@@ -14,7 +14,7 @@ sing = ../../src
 cpp  = ../../src
 
 # options for all the configurations/platforms
-cc_flags = -fsigned-char -std=c++11 $cc_extra_flags -I $cpp -I $temp -I $singinc -fmax-errors=20
+cc_flags = -fsigned-char -std=c++17 $cc_extra_flags -I $cpp -I $temp -I $singinc -fmax-errors=20
 ln_libs = $singlib $ln_extra_libs
 
 #rules
@@ -29,7 +29,7 @@ rule cc
   command = g++ -MD -MF $out.d $cc_flags -c $in -o $out
 
 rule ln
-  command = g++ -std=c++11 -o $out @$out.rsp
+  command = g++ -std=c++17 -o $out @$out.rsp
   rspfile = $out.rsp
   rspfile_content = $in $ln_libs
 
