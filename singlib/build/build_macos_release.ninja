@@ -1,0 +1,11 @@
+debug_flags = -O2 -s -DNDEBUG
+
+src_b = ../../src_bench
+src_l = ../../src_lib
+bin_target = ../../bin/macos/bench
+lib_target = ../../bin/macos/singlib.a
+platform_libs =  -lpthread
+
+singcc = ../../../compiler/bin/macos/sing
+
+include ../build_aux.ninja
