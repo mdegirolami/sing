@@ -352,3 +352,5 @@
 780:5: You can only swap two writable variables of IDENTICAL type
 781:5: You can only swap two writable variables of IDENTICAL type
 787:17: Key type must support the == operator (not be a class/interface/map)
+794:5: Both called and calling functions must return bool.
+800:5: Both called and calling functions must return bool.

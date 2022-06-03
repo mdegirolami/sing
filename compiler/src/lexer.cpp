@@ -130,6 +130,7 @@ TokenDesc keywords[] = {
     {TOKEN_OUT_OPT, "out?"},
     {TOKEN_DEF, "def"},
     {TOKEN_UNDERSCORE, "_"},
+    {TOKEN_TRY, "try"},
 
     {TOKEN_UNUSED, "alignas"},
     {TOKEN_UNUSED, "alignof"},
@@ -214,7 +215,7 @@ TokenDesc keywords[] = {
     {TOKEN_UNUSED, "thread_local"},
     {TOKEN_UNUSED, "throw"},
     //{TOKEN_UNUSED, "true"},
-    {TOKEN_UNUSED, "try"},
+    //{TOKEN_UNUSED, "try"},
     {TOKEN_UNUSED, "typedef"},
     {TOKEN_UNUSED, "typeid"},
     {TOKEN_UNUSED, "typename"},

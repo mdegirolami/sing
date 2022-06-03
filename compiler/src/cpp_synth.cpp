@@ -899,6 +899,9 @@ void CppSynth::SynthStatementOrAutoVar(IAstNode *node, AstNodeType *oldtype)
     case ANT_RETURN:
         SynthReturn((AstReturn*)node);
         break;
+    case ANT_TRY:
+        SynthTry((AstTry*)node);
+        break;
     case ANT_FUNCALL:
         text = "";
         SynthFunCall(&text, (AstFunCall*)node);
@@ -1348,6 +1351,28 @@ void CppSynth::SynthReturn(AstReturn *node)
     Write(&text);
 }
 
+void CppSynth::SynthTry(AstTry *node)
+{
+    string text;
+    bool not_optimization = false;
+
+    if (node->tried_->GetType() == ANT_UNOP) {
+        AstUnop *op = (AstUnop*)node->tried_;
+        if (op->subtype_ == TOKEN_LOGICAL_NOT) {
+            SynthExpression(&text, op->operand_);
+            not_optimization = true;
+        }
+    }
+    if (!not_optimization) {
+        int priority = SynthExpression(&text, node->tried_);
+        Protect(&text, priority, GetUnopCppPriority(TOKEN_LOGICAL_NOT));
+        text.insert(0, "!");
+    }
+    text.insert(0, "if (");
+    text += ") return(false)";
+    Write(&text);
+}
+
 //
 // Adds a final conversion in view of the assignment. Sing allows some numeric conversions c++ doesn't:
 // - If the value is a compile time constant and fits the target value.
@@ -1357,7 +1382,7 @@ void CppSynth::SynthReturn(AstReturn *node)
 // - the espression is strictly constant (recognized as such by legacy C compilers), currently:
 // 	- enum case initers
 // 	- array size
-// - left terms (or in general if the value is not written)
+// - left terms (or in general if the value is not the source for a write)
 // - values that are known not being numerics (es. typeswitch expression)
 // - values that are required to be integers (not automatically downcasted, even if constant: indices) 
 // - consider SynthExpressionAndCastToInt() for values that are known to be signed ints;

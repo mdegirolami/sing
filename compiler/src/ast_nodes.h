@@ -51,7 +51,7 @@ enum AstNodeType {
 
     // statements
     ANT_BLOCK, ANT_UPDATE, ANT_INCDEC, ANT_SWAP,
-    ANT_WHILE, ANT_IF, ANT_FOR, ANT_SIMPLE, ANT_RETURN,
+    ANT_WHILE, ANT_IF, ANT_FOR, ANT_SIMPLE, ANT_RETURN, ANT_TRY,
     ANT_SWITCH, ANT_TYPESWITCH,
 
     // expressions
@@ -722,6 +722,20 @@ public:
     AstReturn() : retvalue_(NULL) {}
     virtual AstNodeType GetType(void) const { return(ANT_RETURN); }
     void AddRetExp(IAstExpNode *exp) { retvalue_ = exp; }
+};
+
+class AstTry : public IAstNode {
+public:
+    IAstExpNode     *tried_;
+    PositionInfo    pos_;
+
+    virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
+    virtual bool IsARemarkableNode(void) { return(true); }
+
+    virtual ~AstTry() { if (tried_ != nullptr) delete tried_; }
+    AstTry() : tried_(nullptr) {}
+    virtual AstNodeType GetType(void) const { return(ANT_TRY); }
+    void AddTriedExp(IAstExpNode *exp) { tried_ = exp; }
 };
 
 class AstSwitch : public IAstNode {

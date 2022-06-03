@@ -1061,6 +1061,9 @@ AstNodeType AstChecker::CheckStatement(IAstNode *node)
     case ANT_RETURN:
         CheckReturn((AstReturn*)node);
         break;
+    case ANT_TRY:
+        CheckTry((AstTry*)node);
+        break;
     case ANT_FUNCALL:
         {
             ExpressionAttributes    attr;
@@ -1485,6 +1488,16 @@ void AstChecker::CheckReturn(AstReturn *node)
         }
     }
     value_checks_.onBreak();
+}
+
+void AstChecker::CheckTry(AstTry *node)
+{
+    ExpressionAttributes    attr;
+
+    CheckExpression(node->tried_, &attr, ExpressionUsage::READ);
+    if (!attr.IsOnError() && !attr.IsBool() || !return_fake_variable_.IsOnError() && !return_fake_variable_.IsBool()) {
+        Error("Both called and calling functions must return bool.", node);
+    }
 }
 
 void AstChecker::CheckExpression(IAstExpNode *node, ExpressionAttributes *attr, ExpressionUsage usage)

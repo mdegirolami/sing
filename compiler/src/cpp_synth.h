@@ -65,6 +65,7 @@ class CppSynth {
 
     void SynthSimpleStatement(AstSimpleStatement *node);
     void SynthReturn(AstReturn *node);
+    void SynthTry(AstTry *node);
 
     // includes a final conversion if needed/possible (you may need it because of constant expressions)
     int SynthFullExpression(const IAstTypeNode *type_spec, string *dst, IAstExpNode *node);

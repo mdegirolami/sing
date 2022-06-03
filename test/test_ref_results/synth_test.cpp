@@ -421,3 +421,10 @@ void has_optout(int32_t *result, std::shared_ptr<int32_t> *rt)
         return;
     }
 }
+
+bool testTry()
+{
+    if (!testTry()) return(false);
+    if (testTry()) return(false);
+    return (true);
+}

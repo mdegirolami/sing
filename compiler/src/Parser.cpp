@@ -1114,6 +1114,32 @@ IAstNode *Parser::ParseStatement(bool allow_let_and_var)
             CheckSemicolon();
         }
         break;
+        case TOKEN_TRY:
+        {
+            AstTry *ast_try = new AstTry();
+            node = ast_try;
+            RecordPosition(ast_try);
+
+            if (!Advance()) goto recovery;
+            if (m_token != TOKEN_ROUND_OPEN) {
+                Error("Expecting '('");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+
+            ast_try->AddTriedExp(ParseExpression());
+            if (on_error_) goto recovery;
+
+            if (m_token != TOKEN_ROUND_CLOSE) {
+                Error("Expecting ')'");
+                goto recovery;
+            }
+            if (!Advance()) goto recovery;
+
+            UpdateEndPosition(ast_try);
+            CheckSemicolon();
+        }
+        break;
         case TOKEN_INC:
         case TOKEN_DEC:
         {

@@ -91,6 +91,7 @@ class AstChecker : public ITypedefSolver {
     void CheckTypeSwitch(AstTypeSwitch *node);
     void CheckSimpleStatement(AstSimpleStatement *node);
     void CheckReturn(AstReturn *node);
+    void CheckTry(AstTry *node);
 
     void CheckExpression(IAstExpNode *node, ExpressionAttributes *attr, ExpressionUsage usage);
 

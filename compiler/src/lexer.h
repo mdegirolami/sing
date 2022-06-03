@@ -130,6 +130,7 @@ enum Token {
     TOKEN_OUT_OPT,
     TOKEN_DEF,
     TOKEN_UNDERSCORE,
+    TOKEN_TRY,
 
     TOKEN_UNUSED,
 

@@ -304,6 +304,15 @@ void AstNodesPrint::PrintReturn(AstReturn *node)
     ClosingBrace();
 }
 
+void AstNodesPrint::PrintTry(AstTry *node)
+{
+    PrintIndent();
+    fprintf(fd_, "Return {");
+    ++indent_;
+    PrintHierarchy(node->tried_);
+    ClosingBrace();
+}
+
 void AstNodesPrint::PrintBlock(AstBlock *node)
 {
     PrintIndent();
@@ -467,6 +476,7 @@ void AstNodesPrint::PrintHierarchy(IAstNode *node)
     case ANT_TYPESWITCH:        PrintTypeSwitch       ((AstTypeSwitch        *)node);break;
     case ANT_SIMPLE:            PrintSimpleStatement  ((AstSimpleStatement   *)node);break;
     case ANT_RETURN:            PrintReturn           ((AstReturn            *)node);break;
+    case ANT_TRY:               PrintTry              ((AstTry               *)node);break;
     case ANT_BLOCK:             PrintBlock            ((AstBlock             *)node);break;
     case ANT_INITER:            PrintIniter           ((AstIniter            *)node);break;
     case ANT_VAR:               PrintVarDeclaration   ((VarDeclaration       *)node);break;

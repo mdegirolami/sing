@@ -36,6 +36,7 @@ class AstNodesPrint {
     void PrintTypeSwitch        (AstTypeSwitch        *node);
     void PrintSimpleStatement   (AstSimpleStatement   *node);
     void PrintReturn            (AstReturn            *node);
+    void PrintTry               (AstTry               *node);
     void PrintBlock             (AstBlock             *node);
     void PrintIniter            (AstIniter            *node);
     void PrintVarDeclaration    (VarDeclaration       *node);

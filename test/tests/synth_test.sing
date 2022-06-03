@@ -403,3 +403,10 @@ public fn has_optout(out? result i32, out rt *i32) void
         return;
     }
 }
+
+public fn testTry() bool
+{
+    try(testTry());
+    try(!testTry());
+    return(true);
+}

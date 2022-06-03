@@ -787,3 +787,15 @@ fn maptype () void
 	var vl0 map(map(i32)i32)i32;	// map is not comparable
 	var vl1 map(string)c128;		// string is comparable
 }
+
+fn forTryTest() bool
+{
+    try(forTryTest());  // ok bool caller and bool called
+    try(trytest());     // ko called is not bool
+    return(true);
+}
+
+fn trytest() void
+{
+    try(forTryTest());     // ko caller is not bool
+}
