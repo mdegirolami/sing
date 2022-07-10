@@ -11,12 +11,13 @@ namespace SingNames {
 // cast = (T)name(T);       // cast if not double
 // plain = name(T);
 // memeber = T.member()
-enum class BInSynthMode { sing, cast, plain, member, std };
+enum class BInSynthMode { sing, cast, plain, member, std, member_cast };
 
 const char *GetFuncSignature(const char *name, const ExpressionAttributes *attr);
 AstFuncType *GetFuncTypeFromSignature(const char *signature, const ExpressionAttributes *attr);
 BInSynthMode GetBuiltinSynthMode(const char *signature);
 char GetBuiltinArgType(const char *signature, int idx); 
+char GetBuiltinReturnType(const char *signature); 
 void GetBuiltinNames(NamesList *names, const ExpressionAttributes *attr);
 
 }; // namespace

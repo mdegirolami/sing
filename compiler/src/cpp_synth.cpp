@@ -1656,11 +1656,12 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
                 (*dst) += ")";
                 priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
                 Token base_type = node->operand_left_->GetAttr()->GetAutoBaseType();
-                if (base_type != TOKEN_FLOAT64 && builtin_mode != BInSynthMode::plain) {
+                if (base_type != TOKEN_FLOAT64 && builtin_mode == BInSynthMode::cast) {
                     priority = AddCast(dst, priority, GetBaseTypeName(base_type));
                 }
             }
             break;
+        case BInSynthMode::member_cast:
         case BInSynthMode::member:
         default:
             Protect(dst,  priority, GetBinopCppPriority(TOKEN_DOT));
@@ -1668,6 +1669,22 @@ int CppSynth::SynthDotOperator(string *dst, AstBinop *node)
             (*dst) += right_leaf->value_;
             (*dst) += "()";
             priority = GetUnopCppPriority(TOKEN_ROUND_OPEN);
+            if (builtin_mode == BInSynthMode::member_cast) {
+                Token rettype = TOKENS_COUNT;
+                switch (GetBuiltinReturnType(node->builtin_signature_)) {
+                case 'i':
+                    rettype = TOKEN_INT32;
+                    break;
+                case 's':    
+                    rettype = TOKEN_INT64;
+                    break;
+                default:
+                    break;
+                }
+                if (rettype != TOKENS_COUNT) {
+                    priority = AddCast(dst, priority, GetBaseTypeName(rettype));
+                }
+            }
             break;            
         }
     } else {

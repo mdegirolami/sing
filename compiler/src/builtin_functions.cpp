@@ -17,23 +17,25 @@ static VarDeclaration *GetVarFromSignature(const char type_id, const ExpressionA
 // optional prefix: M for muting.
 // first letter is return value
 // T = same type as implicit argument
-// i = int
+// i = int32_t
+// s = size (int64_t)
 // v = void
 // b = bool
 // k = key type
 // e = value/element type
 // other are INPUT parms
-// x = index
-// s = size
+// x = index (int64_t)
+// s = size (int64_t)
 // f = compare function f(T, x, x) b
 // k = key type
 // e = value/element type
 // last letter is the implementation type:
 // s = sing::name(T);
-// c = (cast)name(T); // cast if not double
+// c = (T)name(T); // cast to T
 // p = name(T); // plain
 // m = T.member()
 // S = std::name(T)
+// C = (cast)T.member() // cast to the declared retvalue
 // NOTE: functions on integers are all with 0 values and not muting (apply also to right values)
 // the two letters are the returned value and the implementation type.
 IFDesc g_integer_functs[] = {{"abs", "Ts"}, {"sqrt", "Tc"}, {"sgn", "is"}, {"", ""}};
@@ -53,17 +55,16 @@ IFDesc g_complex_functs[] = {
 };
 
 IFDesc g_array_functs[] = {
-{"size", "im"},
-//{"sort", "Mvxsf"}, {"radix_sort", "Mvxsf"}, {"find", "ie"}, {"binary_search", "ie"}, {"upper_bound", "ie"}, {"lower_bound", "ie"},
+{"size", "im"}, {"lsize", "sm"},
 {"", ""}
 };
 
 IFDesc g_vector_functs[] = {
-{"reserve", "Mvsm"}, {"capacity", "im"}, {"shrink_to_fit", "Mvm"},
-{"resize", "Mvsm"}, {"clear", "Mvm"}, {"size", "im"}, {"empty", "bm"},
+{"reserve", "Mvsm"}, {"capacity", "iC"}, {"shrink_to_fit", "Mvm"},
+{"resize", "Mvsm"}, {"clear", "Mvm"}, {"size", "iC"}, {"empty", "bm"},
 {"push_back", "Mvem"}, {"pop_back", "Mvm"}, 
 {"insert", "Mvxses"}, {"erase", "Mvxxs"}, {"insert_v", "MvxTs"}, {"append", "MvTs"},
-//{"sort", "Mvxsf"}, {"radix_sort", "Mvxsf"}, {"find", "ie"}, {"binary_search", "ie"}, {"upper_bound", "ie"}, {"lower_bound", "ie"},
+{"lcapacity", "sC"}, {"lsize", "sC"},
 {"", ""}
 };
 
@@ -72,8 +73,7 @@ IFDesc g_map_functs[] = {
 {"clear" ,"Mvm"}, {"size", "im"}, {"isempty", "bm"},
 {"insert", "Mvkem"}, {"erase", "Mvkm"}, {"get", "ekm"}, {"get_safe", "ekem"}, {"has", "bkm"},
 {"key_at", "kxm"}, {"value_at", "exm"},
-//{"sort_by_key", "Mvxsf"}, {"radix_sort_by_key", "Mvxsf"}, {"sort_by_value", "Mvxsf"}, {"radix_sort_by_value", "Mvxsf"}, 
-//{"find_value", "ie"}, {"binary_search_value", "ie"}, {"upper_bound_value", "ie"}, {"lower_bound_value", "ie"},
+{"lcapacity", "sm"}, {"lsize", "sm"},
 {"", ""}
 };
 
@@ -144,6 +144,8 @@ BInSynthMode GetBuiltinSynthMode(const char *signature)
         return(BInSynthMode::cast);
     case 'm':
         return(BInSynthMode::member);
+    case 'C':
+        return(BInSynthMode::member_cast);
     case 'p':
     default:
         break;
@@ -159,6 +161,12 @@ char GetBuiltinArgType(const char *signature, int idx)
         return(signature[idx]);
     }
     return('s');    // default
+}
+
+char GetBuiltinReturnType(const char *signature)
+{
+    if (signature[0] == 'M') return(signature[1]);
+    return(signature[0]);
 }
 
 void GetBuiltinNames(NamesList *names, const ExpressionAttributes *attr)

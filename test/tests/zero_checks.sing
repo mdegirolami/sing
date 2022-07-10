@@ -457,7 +457,7 @@ public fn vartype(div i32, fdiv f32, out outparm i32) void
             res = todiv / it;    // ok
         }
         if (count != 0) {
-            res = i32(u64(todiv) / count);    // ok
+            res = i32(i64(todiv) / count);    // ok
         }
     }
     if (div != 0) {

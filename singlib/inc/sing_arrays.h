@@ -87,7 +87,12 @@ public:
     // support to builtins
     int32_t size(void) const
     {
-        return(N);
+        return((int32_t)N);
+    }
+
+    int64_t lsize(void) const
+    {
+        return((int64_t)N);
     }
 
     bool empty(void) const

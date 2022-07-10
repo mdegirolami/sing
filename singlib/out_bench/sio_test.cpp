@@ -85,7 +85,7 @@ static bool test_File()
     if (ff.gets(5, &back) != 0) {
         return (false);
     }
-    if (buf.size() < 6 || buf[4] != 48 || buf[5] != 104 || buf[0] != 101 || back != "llo12") {
+    if ((int32_t)buf.size() < 6 || buf[4] != 48 || buf[5] != 104 || buf[0] != 101 || back != "llo12") {
         return (false);
     }
 
@@ -256,27 +256,27 @@ static bool test_dirfileop()
     if (sing::dirRead("dir1", sing::DirFilter::regular, &names, &nfos) != 0) {
         return (false);
     }
-    if (names.size() < 1 || names[0] != "dir1/in_dir1.txt") {
+    if ((int32_t)names.size() < 1 || names[0] != "dir1/in_dir1.txt") {
         return (false);
     }
     names.clear();
     if (sing::dirReadNames("dir1", sing::DirFilter::directory, &names) != 0) {
         return (false);
     }
-    if (names.size() < 1 || names[0] != "dir1/dir2") {
+    if ((int32_t)names.size() < 1 || names[0] != "dir1/dir2") {
         return (false);
     }
     names.clear();
     if (sing::dirReadNames("dir1", sing::DirFilter::all, &names) != 0) {
         return (false);
     }
-    if (names.size() != 2) {
+    if ((int32_t)names.size() != 2) {
         return (false);
     }
     if (sing::dirReadNames("dir1", sing::DirFilter::all, &names, true) != 0) {
         return (false);
     }
-    if (names.size() != 3) {
+    if ((int32_t)names.size() != 3) {
         return (false);
     }
 
@@ -350,14 +350,14 @@ static bool test_paths()
 
     // split/join all
     sing::pathSplitAll("g:/one//two\\three.jpg", &drive_idx, &absolute, &parts);
-    if (drive_idx != 6 || !absolute || parts.size() != 3) {
+    if (drive_idx != 6 || !absolute || (int32_t)parts.size() != 3) {
         return (false);
     }
     if (sing::pathJoinAll(drive_idx, absolute, parts) != "g:/one/two/three.jpg") {
         return (false);
     }
     sing::pathSplitAll("g:one//two\\three.jpg", &drive_idx, &absolute, &parts);
-    if (drive_idx != 6 || absolute || parts.size() != 3) {
+    if (drive_idx != 6 || absolute || (int32_t)parts.size() != 3) {
         return (false);
     }
     if (sing::pathJoinAll(drive_idx, absolute, parts) != "g:one/two/three.jpg") {
@@ -568,7 +568,7 @@ static bool test_unicode()
     if (sing::dirRead("その上", sing::DirFilter::all, &names, &nfos, true) != 0) {
         return (false);
     }
-    if (names.size() != 2) {
+    if ((int32_t)names.size() != 2) {
         return (false);
     }
 

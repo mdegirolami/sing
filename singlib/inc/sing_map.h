@@ -224,6 +224,11 @@ public:
         return((int32_t)pairs_.size());
     }
 
+    int64_t lsize(void) const
+    {
+        return((int64_t)pairs_.size());
+    }
+
     size_t size64(void) const
     {
         return(pairs_.size());
@@ -240,7 +245,11 @@ public:
     }
 
     int32_t capacity(void) const {
-        return(pairs_.capacity());
+        return((int32_t)pairs_.capacity());
+    }
+
+    int64_t lcapacity(void) const {
+        return((int64_t)pairs_.capacity());
     }
 
     bool isempty(void) const {

@@ -91,12 +91,12 @@ bool Lexer::stepToNextToken()
 {
     token_ = TokenType::eof;
     separated_ = false;
-    while (scan_ < codes_.size()) {
+    while (scan_ < (int32_t)codes_.size()) {
         const int32_t cc = codes_[scan_];
         ++scan_;
         if (cc == minusAscii || isDigit(cc)) {
             return (parseNumber(cc));
-        } else if (isLetter(cc)) {
+        } else if (isLetter(cc) || cc == toCp("_")) {
             return (parseSymbol(cc));
         } else if (cc == doubleQuoteAscii) {
             return (parseString());
@@ -127,7 +127,7 @@ bool Lexer::parseNumber(int32_t cc)
     if (cc == minusAscii) {
         status = NumState::int_first;
     }
-    while (scan_ < codes_.size() && status != NumState::done) {
+    while (scan_ < (int32_t)codes_.size() && status != NumState::done) {
         const int32_t nc = codes_[scan_];
         ++scan_;
 
@@ -234,9 +234,9 @@ bool Lexer::parseSymbol(int32_t cc)
 {
     buffer_.clear();
     buffer_.push_back(cc);
-    while (scan_ < codes_.size()) {
+    while (scan_ < (int32_t)codes_.size()) {
         const int32_t nc = codes_[scan_];
-        if (isDigit(nc) || isLetter(nc)) {
+        if (isDigit(nc) || isLetter(nc) || nc == toCp("_")) {
             buffer_.push_back(nc);
             ++scan_;
         } else {
@@ -254,7 +254,7 @@ bool Lexer::parseString()
     std::vector<int32_t> xdigits;
     StrState state = StrState::std;
     buffer_.clear();
-    while (scan_ < codes_.size() && state != StrState::done) {
+    while (scan_ < (int32_t)codes_.size() && state != StrState::done) {
         const int32_t nc = codes_[scan_];
         ++scan_;
 
@@ -316,7 +316,7 @@ bool Lexer::parseString()
             {
                 if (isXdigit(nc)) {
                     xdigits.push_back(nc);
-                    if (xdigits.size() == 4) {
+                    if ((int32_t)xdigits.size() == 4) {
                         xdigits.push_back(0);
 
                         uint64_t value = 0;
@@ -345,7 +345,7 @@ bool Lexer::parseString()
 
 bool Lexer::parseComment()
 {
-    if (scan_ >= codes_.size() || codes_[scan_] != slashAscii) {
+    if (scan_ >= (int32_t)codes_.size() || codes_[scan_] != slashAscii) {
         error_ = "expecting /";
         return (false);
     }
@@ -354,7 +354,7 @@ bool Lexer::parseComment()
     buffer_.clear();
     buffer_.push_back(slashAscii);
     buffer_.push_back(slashAscii);
-    while (scan_ < codes_.size() && codes_[scan_] != 10) {
+    while (scan_ < (int32_t)codes_.size() && codes_[scan_] != 10) {
         if (codes_[scan_] > 31) {
             buffer_.push_back(codes_[scan_]);
         }
@@ -368,10 +368,10 @@ bool Lexer::parseComment()
 
 void Lexer::skipLine()
 {
-    while (scan_ < codes_.size() && codes_[scan_] != 10) {
+    while (scan_ < (int32_t)codes_.size() && codes_[scan_] != 10) {
         ++scan_;
     }
-    if (scan_ < codes_.size()) {
+    if (scan_ < (int32_t)codes_.size()) {
         token_ = TokenType::eol;
         ++scan_;
     } else {
@@ -437,14 +437,14 @@ bool parseJson(const char *json, std::vector<JsonEntry> *records, std::vector<Js
 // parses 0 or more comma separated values. the list can end with an extra comma.
 static bool parseValues(int32_t level, Lexer *lexer, std::vector<JsonEntry> *records, std::vector<JsonError> *errors)
 {
-    int32_t recsize = (*records).size();
+    int32_t recsize = (int32_t)(*records).size();
     while (parseSingleValue(level, &*lexer, &*records, &*errors)) {
 
         // no more values (what is next doesn't match the value syntax)
-        if (recsize == (*records).size()) {
+        if (recsize == (int32_t)(*records).size()) {
             return (true);
         }
-        recsize = (*records).size();
+        recsize = (int32_t)(*records).size();
 
         if ((*lexer).getTokenType() != TokenType::interpunction || (*lexer).getTokenString() != ",") {
             return (true);
@@ -461,7 +461,7 @@ static bool parseValues(int32_t level, Lexer *lexer, std::vector<JsonEntry> *rec
 // parses 0 or more comma separated properties. the list can end with an extra comma.
 static bool parseProperties(int32_t level, Lexer *lexer, std::vector<JsonEntry> *records, std::vector<JsonError> *errors)
 {
-    int32_t recsize = (*records).size();
+    int32_t recsize = (int32_t)(*records).size();
     while ((*lexer).getTokenType() == TokenType::string_type) {
 
         // absorb property name
@@ -485,12 +485,12 @@ static bool parseProperties(int32_t level, Lexer *lexer, std::vector<JsonEntry> 
         }
 
         // if we got one (we must), fix the property name
-        if (recsize == (*records).size()) {
+        if (recsize == (int32_t)(*records).size()) {
             setError("expecting a value", &*lexer, &*errors);
             return (false);
         } else {
             (*records)[recsize].property_name_ = property_name;
-            recsize = (*records).size();
+            recsize = (int32_t)(*records).size();
         }
 
         // if a comma is not following we are done
@@ -597,7 +597,7 @@ static bool lexerAdvance(int32_t level, Lexer *lexer, std::vector<JsonEntry> *re
 
 static void insertRecord(JsonEntryType record_type, int32_t level, const char *string_rep, std::vector<JsonEntry> *records)
 {
-    const int32_t top = (*records).size();
+    const int32_t top = (int32_t)(*records).size();
     (*records).resize(top + 1);
     (*records)[top].entry_type_ = record_type;
     (*records)[top].level_ = level;
@@ -606,7 +606,7 @@ static void insertRecord(JsonEntryType record_type, int32_t level, const char *s
 
 static void setError(const char *message, Lexer *lexer, std::vector<JsonError> *errors)
 {
-    const int32_t top = (*errors).size();
+    const int32_t top = (int32_t)(*errors).size();
     (*errors).resize(top + 1);
     int32_t row = 0;
     int32_t col = 0;
@@ -627,7 +627,7 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
         ++count;
 
         // if deeper than expecting (without an array/object beginning) is an error
-        int32_t curr_level = is_member.size() - 1;
+        int32_t curr_level = (int32_t)is_member.size() - 1;
         if (record.level_ > curr_level) {
             return (false);
         }
@@ -700,7 +700,7 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
 
             // search the next record which is not a comment
             int32_t level = -1;
-            for(int32_t scan = (int32_t)count + 1, scan__top = records.size(); scan < scan__top; ++scan) {
+            for(int32_t scan = (int32_t)count + 1, scan__top = (int32_t)records.size(); scan < scan__top; ++scan) {
                 if (records[scan].entry_type_ != JsonEntryType::comment) {
                     level = records[scan].level_;
                     break;
@@ -714,7 +714,7 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
     }
 
     // close all the open objects/arrays
-    for(int32_t curr_level = is_member.size() - 1; curr_level > 0; --curr_level) {
+    for(int32_t curr_level = (int32_t)is_member.size() - 1; curr_level > 0; --curr_level) {
         for(int32_t idx = 0, idx__top = curr_level - 1; idx < idx__top; ++idx) {
             *json += tab_str;
         }
