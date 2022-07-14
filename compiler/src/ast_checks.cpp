@@ -1214,7 +1214,7 @@ void AstChecker::CheckFor(AstFor *node)
             }
         } else {
             assert(node->index_->GetTypeSpec() == nullptr);
-            node->index_->SetType(new AstBaseType(TOKEN_UINT64));
+            node->index_->SetType(new AstBaseType(TOKEN_INT64));
             symbols_->InsertName(index_name, node->index_);         // directly call symbols_ to avoid duplicate error messages
             index_declaration = node->index_;
         }

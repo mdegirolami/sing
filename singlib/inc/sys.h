@@ -39,7 +39,7 @@ private:
     int64_t seed_;
 };
 
-enum class OsId {win, linux, osx};
+enum class OsId {win, linux, macos};
 
 int32_t system(const char *command);
 Phandle execute(const char *command);

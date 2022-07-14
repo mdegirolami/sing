@@ -350,7 +350,7 @@ fn cfgIsForAnotherPlatform(name string) bool
     if (name == "Linux") {
         return(sys.getOs() != sys.OsId.linux);
     } else if (name == "Mac") {
-        return(sys.getOs() != sys.OsId.osx);
+        return(sys.getOs() != sys.OsId.macos);
     } else if (name == "Win32") {
         return(sys.getOs() != sys.OsId.win);
     }
@@ -370,20 +370,20 @@ fn fixLaunchFile(root string, default_target string) bool
     switch (id) {
         case sys.OsId.linux: {
             _ = str.replaceAll(buffer, "/win", "/linux");
-            _ = str.replaceAll(buffer, "/osx", "/linux");
+            _ = str.replaceAll(buffer, "/macos", "/linux");
             _ = str.replace(buffer, ".exe", "");
             _ = str.replace(buffer, "<PHOLD>", to_launch);
         }
-        case sys.OsId.osx: {
-            _ = str.replaceAll(buffer, "/win", "/osx");
-            _ = str.replaceAll(buffer, "/linux", "/osx");
+        case sys.OsId.macos: {
+            _ = str.replaceAll(buffer, "/win", "/macos");
+            _ = str.replaceAll(buffer, "/linux", "/macos");
             _ = str.replace(buffer, ".exe", "");
             _ = str.replace(buffer, "<PHOLD>", to_launch);
         }
         case sys.OsId.win: {
             to_launch += ".exe";
             _ = str.replaceAll(buffer, "/linux", "/win");
-            _ = str.replaceAll(buffer, "/osx", "/win");
+            _ = str.replaceAll(buffer, "/macos", "/win");
             if (str.replace(buffer, "<PHOLD>", to_launch) == str.npos) {
                 if (!addExeToProgram(buffer)) {
                     return(false);

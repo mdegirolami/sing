@@ -49,6 +49,6 @@ public fn setenv(name string, value string, override bool = true) void;
 // mix
 public fn validate(condition bool) void;
 
-public enum OsId { win, linux, osx }
+public enum OsId { win, linux, macos }
 
 public fn getOs() OsId;

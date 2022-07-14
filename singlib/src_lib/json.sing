@@ -118,7 +118,7 @@ fn Lexer.stepToNextToken() bool
         this.scan++;
         if (cc == minusAscii || str.isDigit(cc)) {
             return(this.parseNumber(cc));
-        } else if (str.isLetter(cc)) {
+        } else if (str.isLetter(cc) || cc == str.toCp("_")) {
             return(this.parseSymbol(cc));
         } else if (cc == doubleQuoteAscii) {
             return(this.parseString());
@@ -243,7 +243,7 @@ fn Lexer.parseSymbol(cc i32) bool
     this.buffer.push_back(cc);
     while (this.scan < this.codes.size()) {
         let nc = this.codes[this.scan];
-        if (str.isDigit(nc) || str.isLetter(nc)) {
+        if (str.isDigit(nc) || str.isLetter(nc) || nc == str.toCp("_")) {
             this.buffer.push_back(nc);
             this.scan++;
         } else {

@@ -325,13 +325,13 @@ fn assignments() void
 	forward();
 	
 	for (idx, iter1 in v8) {
-		idx += u64(1);				// can't write
+		idx += i64(1);				// can't write
 		var idxt size_t = idx;
 		sgn32 = iter1;
 	}	
 	sgn32 = iter1;				// survives the loop
 	for (idx, iter1 in v8) {	// can recycle
-		idx += u64(1);
+		idx += i64(1);
 		var idxt size_t = idx;
 		sgn32 = iter1;
 	}

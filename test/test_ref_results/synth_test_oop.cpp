@@ -280,17 +280,17 @@ static void check_builtin()
 
     std::vector<float> aa = {(float)1, (float)2, (float)3};
     aa.reserve(100);
-    int32_t cc = aa.capacity();
-    int32_t ss = aa.size();
+    int32_t cc = (int32_t)aa.capacity();
+    int32_t ss = (int32_t)aa.size();
     aa.shrink_to_fit();
-    cc = aa.capacity();
-    ss = aa.size();
+    cc = (int32_t)aa.capacity();
+    ss = (int32_t)aa.size();
     aa.resize(10);
-    cc = aa.capacity();
-    ss = aa.size();
+    cc = (int32_t)aa.capacity();
+    ss = (int32_t)aa.size();
     aa.clear();
-    cc = aa.capacity();
-    ss = aa.size();
+    cc = (int32_t)aa.capacity();
+    ss = (int32_t)aa.size();
     bool isempty = aa.empty();
     aa.push_back((float)5);
     aa.push_back((float)6);
@@ -305,7 +305,7 @@ static void check_builtin()
     *bb = {(float)1, (float)2, (float)3};
     const std::shared_ptr<std::vector<float>> bbp = bb;
     (*bbp).push_back((float)1);
-    ss = (*bb).size();
+    ss = (int32_t)(*bb).size();
 
     // built-in on static vectors
     sing::array<std::string, 3> sv;

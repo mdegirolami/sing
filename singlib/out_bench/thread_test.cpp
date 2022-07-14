@@ -68,7 +68,7 @@ bool thread_test()
     }
 
     const int64_t start = sing::clock();
-    for(int32_t ii = 0, ii__top = (*v1).size(); ii < ii__top; ++ii) {
+    for(int32_t ii = 0, ii__top = (int32_t)(*v1).size(); ii < ii__top; ++ii) {
         (*v1)[ii] += (*v2)[ii];
     }
     const int64_t single_thread = sing::clocksDiff(start, sing::clock());
@@ -122,7 +122,7 @@ static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std
     }
     std::vector<std::shared_ptr<sing::Executer>> executers;
     executers.resize(count);
-    const int32_t len = (*v2).size() / count;
+    const int32_t len = (int32_t)(*v2).size() / count;
     for(auto &ptr : executers) {
         std::shared_ptr<sing::Executer> ex = std::make_shared<sing::Executer>();
         (*ex).start();
@@ -140,7 +140,7 @@ static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std
         if ((int32_t)idx != count - 1) {
             (*adder).init(v1, v2, start_idx, start_idx + len);
         } else {
-            (*adder).init(v1, v2, start_idx, (*v2).size());
+            (*adder).init(v1, v2, start_idx, (int32_t)(*v2).size());
         }
         const std::shared_ptr<sing::Executer> exp = ex;
         if (exp != nullptr) {
