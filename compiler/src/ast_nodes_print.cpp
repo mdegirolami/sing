@@ -222,9 +222,6 @@ void AstNodesPrint::PrintFor(AstFor *node)
     PrintIndent();
     fprintf(fd_, "For {");
     ++indent_;
-    if (node->index_ != NULL) {
-        PrintVarDeclaration(node->index_);
-    }
     if (node->iterator_ != NULL) {
         PrintVarDeclaration(node->iterator_);
     }

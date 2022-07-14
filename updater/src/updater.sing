@@ -221,13 +221,15 @@ fn copyFolderFromSdk(sdk string, root string, folder string) bool
 fn areThereDuplications(out path1 string, out path2 string, 
                         all_srcs [*]buildupd.Source, out base2idx map(string)i32) bool
 {
-    for (count, src in all_srcs) {
+    var src_idx = -1;
+    for (src in all_srcs) {
+        ++src_idx;
         if (base2idx.has(src.base)) {
             path1 = all_srcs[base2idx.get(src.base)].getFullName();
             path2 = src.getFullName();
             return(true);
         }
-        base2idx.insert(src.base, i32(count));
+        base2idx.insert(src.base, src_idx);
     }
     return(false);
 }

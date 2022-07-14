@@ -60,17 +60,19 @@ fn arrayswap(in arg0 [5]i32, out arg1 [5]i32) void
 
 fn dynaswap(in arg0 [*]i32, out arg1 [*]i32, in count i32) void
 {
-	let top = count - 1;
-	for (idx, dst in arg1) {
-		dst = arg0[top - i32(idx)];
+	var src = count - 1;
+	for (dst in arg1) {
+		dst = arg0[src];
+        --src;
 	}
 }
 
 fn stringswap(in arg0 [*]string, out arg1 [*]string, in count i32) void
 {
-	let top = count - 1;
-	for (idx, dst in arg1) {
-		dst = arg0[top - i32(idx)];
+	var src = count - 1;
+	for (dst in arg1) {
+		dst = arg0[src];
+        --src;
 	}
 }
 

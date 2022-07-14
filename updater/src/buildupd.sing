@@ -92,13 +92,15 @@ public fn fixBuild(out has_mods bool, name string, sources [*]Source, srcbase2id
 
     // define where to place dependencies by default
     var def_row [DepType.count]i32 = {-1, -1, -1};
-    for (count, row in rows) { 
+    var row_idx = -1;
+    for (row in rows) { 
+        ++row_idx;
         if (row == "# sing->temp\r\n") {
-            def_row [DepType.sing2tmp] = row_priority[count];
+            def_row [DepType.sing2tmp] = row_priority[row_idx];
         } else if (row == "# temp->obj\r\n") {
-            def_row [DepType.tmp2obj] = row_priority[count];
+            def_row [DepType.tmp2obj] = row_priority[row_idx];
         } else if (row == "# cpp->obj\r\n") {
-            def_row [DepType.src2obj] = row_priority[count];
+            def_row [DepType.src2obj] = row_priority[row_idx];
         }
     }
     for (def_value in def_row) {
@@ -212,11 +214,11 @@ fn updateDescriptors(io base2idx map(string)i32, io deps [*]Dependency,
     }
 
     // assign dependencies to respective targets
-    for (count, tar in targets) {
-        for (basename in tar.objs_base) {
+    for (count in 0 : targets.size()) {
+        for (basename in targets[count].objs_base) {
             let idx = base2idx.get_safe(basename, -1);
             if (idx != -1) {
-                deps[idx].target_idx = i32(count);
+                deps[idx].target_idx = count;
             }
         }
     }
@@ -305,14 +307,16 @@ fn mostSimilarDep(path string, ext string, is_ok (dep Dependency)bool, deps [*]D
     let len = str.len(path);
     var best = -1;
     var bestidx = -1;
-    for (count, dep in deps) {
+    var dep_idx = -1;
+    for (dep in deps) {
+        ++dep_idx;
         if (ext == dep.ext && is_ok(dep)) {
             var matching = -1;
             if (str.compareAt(dep.path, 0, path, matching, true) == 0 && matching == len) {
-                return(i32(count));
+                return(dep_idx);
             } else if (matching > best) {
                 best = matching;
-                bestidx = i32(count);
+                bestidx = dep_idx;
             }
         }
     }

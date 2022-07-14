@@ -104,67 +104,67 @@
 445:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 449:25: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
 452:25: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-467:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-497:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-505:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-514:10: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-534:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-535:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-537:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-538:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-541:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-542:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-550:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-552:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-553:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-554:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-566:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-567:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-569:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-570:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
-579:9: Before using an optional output you must check it against null.
-582:13: Before using an optional output you must check it against null.
-586:13: Before using an optional output you must check it against null.
+464:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+494:21: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+502:17: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+511:10: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+531:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+532:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+534:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+535:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+538:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+539:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+547:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+549:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+550:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+551:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+563:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+564:9: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+566:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+567:5: To prevent null dereferencing, you can only dereference pointers declared as local vars after checking their value against null in a place near enough to the usage location.
+576:9: Before using an optional output you must check it against null.
+579:13: Before using an optional output you must check it against null.
+583:13: Before using an optional output you must check it against null.
+584:13: Before using an optional output you must check it against null.
 587:13: Before using an optional output you must check it against null.
-590:13: Before using an optional output you must check it against null.
-595:9: Before using an optional output you must check it against null.
-596:9: Before using an optional output you must check it against null.
-602:9: Before using an optional output you must check it against null.
+592:9: Before using an optional output you must check it against null.
+593:9: Before using an optional output you must check it against null.
+599:9: Before using an optional output you must check it against null.
+612:13: Before using an optional output you must check it against null.
+614:13: Before using an optional output you must check it against null.
 615:13: Before using an optional output you must check it against null.
 617:13: Before using an optional output you must check it against null.
-618:13: Before using an optional output you must check it against null.
-620:13: Before using an optional output you must check it against null.
-623:9: Before using an optional output you must check it against null.
-624:9: Before using an optional output you must check it against null.
-627:13: Before using an optional output you must check it against null.
-634:9: Before using an optional output you must check it against null.
-640:9: Before using an optional output you must check it against null.
-641:9: Before using an optional output you must check it against null.
-645:9: Before using an optional output you must check it against null.
-646:9: Before using an optional output you must check it against null.
-650:5: Before using an optional output you must check it against null.
-650:5: Type mismatch/No known conversion
-658:5: Before using an optional output you must check it against null.
-659:5: Before using an optional output you must check it against null.
-663:13: Before using an optional output you must check it against null.
-664:13: Before using an optional output you must check it against null.
-671:13: Before using an optional output you must check it against null.
-677:13: Before using an optional output you must check it against null.
-681:5: Before using an optional output you must check it against null.
-682:5: Before using an optional output you must check it against null.
-684:22: The expression must evaluate to an interface or interface pointer type
-684:22: Undefined symbol
-686:13: Before using an optional output you must check it against null.
-687:13: Before using an optional output you must check it against null.
-694:13: Before using an optional output you must check it against null.
-700:13: Before using an optional output you must check it against null.
-704:5: Before using an optional output you must check it against null.
-705:5: Before using an optional output you must check it against null.
-713:9: Before using an optional output you must check it against null.
-716:5: Before using an optional output you must check it against null.
-720:9: Before using an optional output you must check it against null.
-723:5: Before using an optional output you must check it against null.
-727:13: def() can operate only on optional output arguments.
-737:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-747:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
-774:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+620:9: Before using an optional output you must check it against null.
+621:9: Before using an optional output you must check it against null.
+624:13: Before using an optional output you must check it against null.
+631:9: Before using an optional output you must check it against null.
+637:9: Before using an optional output you must check it against null.
+638:9: Before using an optional output you must check it against null.
+642:9: Before using an optional output you must check it against null.
+643:9: Before using an optional output you must check it against null.
+647:5: Before using an optional output you must check it against null.
+647:5: Type mismatch/No known conversion
+655:5: Before using an optional output you must check it against null.
+656:5: Before using an optional output you must check it against null.
+660:13: Before using an optional output you must check it against null.
+661:13: Before using an optional output you must check it against null.
+668:13: Before using an optional output you must check it against null.
+674:13: Before using an optional output you must check it against null.
+678:5: Before using an optional output you must check it against null.
+679:5: Before using an optional output you must check it against null.
+681:22: The expression must evaluate to an interface or interface pointer type
+681:22: Undefined symbol
+683:13: Before using an optional output you must check it against null.
+684:13: Before using an optional output you must check it against null.
+691:13: Before using an optional output you must check it against null.
+697:13: Before using an optional output you must check it against null.
+701:5: Before using an optional output you must check it against null.
+702:5: Before using an optional output you must check it against null.
+710:9: Before using an optional output you must check it against null.
+713:5: Before using an optional output you must check it against null.
+717:9: Before using an optional output you must check it against null.
+720:5: Before using an optional output you must check it against null.
+724:13: def() can operate only on optional output arguments.
+734:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+744:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.
+771:30: To prevent integer division by 0, the divisor must be a compile time constant or a local variable/constant tested against 0 in a place near enough to the usage location.

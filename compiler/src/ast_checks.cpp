@@ -1201,25 +1201,6 @@ void AstChecker::CheckFor(AstFor *node)
     VarDeclaration  *iterator_declaration = nullptr;
     VarDeclaration  *iterated_declaration = nullptr;
 
-    // check the index
-    if (node->index_ != nullptr) {
-        const char *index_name = node->index_->name_.c_str();
-        IAstDeclarationNode *index = SearchDeclaration(index_name, node->index_);
-        if (index != nullptr) {
-            if (IsGoodForIndex(index)) {
-                node->index_referenced_ = true;
-                index_declaration = (VarDeclaration*)index;
-            } else {
-                Error("The index name must be either a new name or the name of a reusable index", node->index_);
-            }
-        } else {
-            assert(node->index_->GetTypeSpec() == nullptr);
-            node->index_->SetType(new AstBaseType(TOKEN_INT64));
-            symbols_->InsertName(index_name, node->index_);         // directly call symbols_ to avoid duplicate error messages
-            index_declaration = node->index_;
-        }
-    }
-
     // using an existing iterator ?
     assert(node->iterator_ != nullptr);
     const char *iterator_name = node->iterator_->name_.c_str();

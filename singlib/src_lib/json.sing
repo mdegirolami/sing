@@ -601,7 +601,9 @@ public fn writeJson(records [*]JsonEntry, out json string) bool
     var is_member [*]bool;
     is_member.reserve(50);
     is_member.push_back(false); // at level 0 records are not members of object
-    for (count, record in records) {
+    var record_idx = -1;
+    for (record in records) {
+        ++record_idx;
 
         // if deeper than expecting (without an array/object beginning) is an error
         var curr_level = is_member.size() - 1;
@@ -667,7 +669,7 @@ public fn writeJson(records [*]JsonEntry, out json string) bool
 
             // search the next record which is not a comment
             var level = -1;
-            for (scan in i32(count) + 1 : records.size()) {
+            for (scan in record_idx + 1 : records.size()) {
                 if (records[scan].entry_type != JsonEntryType.comment) {
                     level = records[scan].level;
                     break;

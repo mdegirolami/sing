@@ -80,35 +80,28 @@ int32_t synth_test()
     }
 
     // for/foreach iterations
-    // with/without count
     // new/ not new iterator
     // literal/not literal step
     // positive/negative step
     // requiring conversions or not.
     int32_t it = 0;
-    int64_t count = 0;
-    for(int32_t idx = 1, idx__step = arr2[0]; idx__step > 0 ? (idx < 10) : (idx > 10); idx += idx__step, ++count) {
+    for(int32_t idx = 1, idx__step = arr2[0]; idx__step > 0 ? (idx < 10) : (idx > 10); idx += idx__step) {
         ++it;
     }
 
     it = 0;
-    count = 0;
-    for(int32_t idx = 10; idx > 1; --idx, ++count) {
+    for(int32_t idx = 10; idx > 1; --idx) {
         ++it;
     }
-    count = 0;
-    for(int32_t idx = 10; idx > 1; --idx, ++count) {
+    for(int32_t idx = 10; idx > 1; --idx) {
         ++it;
     }
-    count = 0;
-    for(int32_t idx = 10; idx > 1; idx += (int32_t)(-20000000000LL / 10000000000LL), ++count) {
+    for(int32_t idx = 10; idx > 1; idx += (int32_t)(-20000000000LL / 10000000000LL)) {
         ++it;
     }
 
     it = 0;
-    count = -1;
     for(auto &iteratedint : arr2) {
-        ++count;
         ++it;
     }
 

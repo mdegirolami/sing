@@ -68,21 +68,19 @@ static void arrayswap(const sing::array<int32_t, 5> &arg0, sing::array<int32_t, 
 
 static void dynaswap(const std::vector<int32_t> &arg0, std::vector<int32_t> *arg1, int32_t count)
 {
-    const int32_t top = count - 1;
-    int64_t idx = -1;
+    int32_t src = count - 1;
     for(auto &dst : *arg1) {
-        ++idx;
-        dst = arg0[top - (int32_t)idx];
+        dst = arg0[src];
+        --src;
     }
 }
 
 static void stringswap(const std::vector<std::string> &arg0, std::vector<std::string> *arg1, int32_t count)
 {
-    const int32_t top = count - 1;
-    int64_t idx = -1;
+    int32_t src = count - 1;
     for(auto &dst : *arg1) {
-        ++idx;
-        dst = arg0[top - (int32_t)idx];
+        dst = arg0[src];
+        --src;
     }
 }
 

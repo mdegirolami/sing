@@ -622,9 +622,9 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
     std::vector<bool> is_member;
     is_member.reserve(50);
     is_member.push_back(false);         // at level 0 records are not members of object
-    int64_t count = -1;
+    int32_t record_idx = -1;
     for(auto &record : records) {
-        ++count;
+        ++record_idx;
 
         // if deeper than expecting (without an array/object beginning) is an error
         int32_t curr_level = (int32_t)is_member.size() - 1;
@@ -700,7 +700,7 @@ bool writeJson(const std::vector<JsonEntry> &records, std::string *json)
 
             // search the next record which is not a comment
             int32_t level = -1;
-            for(int32_t scan = (int32_t)count + 1, scan__top = (int32_t)records.size(); scan < scan__top; ++scan) {
+            for(int32_t scan = record_idx + 1, scan__top = (int32_t)records.size(); scan < scan__top; ++scan) {
                 if (records[scan].entry_type_ != JsonEntryType::comment) {
                     level = records[scan].level_;
                     break;

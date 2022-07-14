@@ -113,15 +113,15 @@ fn DoAll(v1 *[*]f32, v2 *[*]f32, count i32) i64
 
     let start = sys.clock();
 
-    for (idx, ex in executers) {
+    for (idx in 0 : executers.size()) {
         var adder Add;
-        let start_idx = i32(idx) * len;
-        if (i32(idx) != count - 1) {
+        let start_idx = idx * len;
+        if (idx != count - 1) {
             adder.init(v1, v2, start_idx, start_idx + len);
         } else {
             adder.init(v1, v2, start_idx, v2.size());
         }
-        let exp = ex;
+        let exp = executers[idx];
         if (exp != null) {
             _ = exp.enqueue(&adder);
         }

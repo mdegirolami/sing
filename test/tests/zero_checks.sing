@@ -452,12 +452,9 @@ public fn vartype(div i32, fdiv f32, out outparm i32) void
             res = todiv / array[0];    // ko: not a simple local var
         }
     }
-    for (count, it in 0:10) {
+    for (it in 0:10) {
         if (it != 0) {
             res = todiv / it;    // ok
-        }
-        if (count != 0) {
-            res = i32(i64(todiv) / count);    // ok
         }
     }
     if (div != 0) {

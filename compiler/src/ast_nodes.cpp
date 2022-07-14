@@ -591,7 +591,6 @@ AstIf::~AstIf()
 
 AstFor::~AstFor() { 
     if (iterator_ != nullptr) delete iterator_;
-    if (index_ != nullptr) delete index_;
     if (set_ != nullptr) delete set_;
     if (low_ != nullptr) delete low_;
     if (high_ != nullptr) delete high_;

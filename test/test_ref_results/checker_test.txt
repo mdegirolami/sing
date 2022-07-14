@@ -194,163 +194,157 @@
 319:13: Undefined symbol
 323:5: Type mismatch/No known conversion
 325:12: Can't discard a function value (consider using the syntax _ = fn())
-328:9: Writing to a read-only variable
-329:18: Undefined type
-332:13: Undefined symbol
-334:9: Writing to a read-only variable
-335:18: Undefined type
-339:14: The index name must be either a new name or the name of a reusable index
-341:22: The iterator name must be a new name
-346:10: The index name must be either a new name or the name of a reusable index
-346:14: The iterator name must be a new name
+330:13: Undefined symbol
+337:14: The iterator name must be a new name
+342:10: The iterator name must be a new name
+344:19: The variable you are iterating in must be an array
+346:19: The variable you are iterating in must be an array
 348:19: The variable you are iterating in must be an array
 350:19: The variable you are iterating in must be an array
 352:19: The variable you are iterating in must be an array
-354:19: The variable you are iterating in must be an array
-356:19: The variable you are iterating in must be an array
+354:5: For loop extrema and step must fit int64
+356:5: For loop extrema and step must fit int64
 358:5: For loop extrema and step must fit int64
-360:5: For loop extrema and step must fit int64
-362:5: For loop extrema and step must fit int64
-372:5: Step can't be 0
-377:5: Writing to a read-only variable
+368:5: Step can't be 0
+373:5: Writing to a read-only variable
+382:5: Type mismatch in assignment. Please cast explicitly
 386:5: Type mismatch in assignment. Please cast explicitly
-390:5: Type mismatch in assignment. Please cast explicitly
-392:5: Type mismatch in assignment. Please cast explicitly
-393:5: Type mismatch in assignment. Please cast explicitly
-395:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-398:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+388:5: Type mismatch in assignment. Please cast explicitly
+389:5: Type mismatch in assignment. Please cast explicitly
+391:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+394:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+396:5: Type mismatch in assignment. Please cast explicitly
+397:5: Type mismatch in assignment. Please cast explicitly
+398:5: Type mismatch in assignment. Please cast explicitly
+399:5: Type mismatch in assignment. Please cast explicitly
 400:5: Type mismatch in assignment. Please cast explicitly
-401:5: Type mismatch in assignment. Please cast explicitly
-402:5: Type mismatch in assignment. Please cast explicitly
-403:5: Type mismatch in assignment. Please cast explicitly
-404:5: Type mismatch in assignment. Please cast explicitly
-405:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-408:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-410:5: Type mismatch in assignment. Please cast explicitly
-411:5: Type mismatch in assignment. Please cast explicitly
+401:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+404:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+406:5: Type mismatch in assignment. Please cast explicitly
+407:5: Type mismatch in assignment. Please cast explicitly
+408:5: Type mismatch in assignment. Please cast explicitly
 412:5: Type mismatch in assignment. Please cast explicitly
-416:5: Type mismatch in assignment. Please cast explicitly
-417:5: Type mismatch in assignment. Please cast explicitly
-418:5: Type mismatch in assignment. Please cast explicitly
-419:5: Type mismatch in assignment. Please cast explicitly
-421:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-424:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+413:5: Type mismatch in assignment. Please cast explicitly
+414:5: Type mismatch in assignment. Please cast explicitly
+415:5: Type mismatch in assignment. Please cast explicitly
+417:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+420:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+422:5: Type mismatch in assignment. Please cast explicitly
+423:5: Type mismatch in assignment. Please cast explicitly
+424:5: Type mismatch in assignment. Please cast explicitly
+425:5: Type mismatch in assignment. Please cast explicitly
 426:5: Type mismatch in assignment. Please cast explicitly
-427:5: Type mismatch in assignment. Please cast explicitly
-428:5: Type mismatch in assignment. Please cast explicitly
-429:5: Type mismatch in assignment. Please cast explicitly
-430:5: Type mismatch in assignment. Please cast explicitly
-431:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-434:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-436:5: Type mismatch/No known conversion
+427:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+430:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+432:5: Type mismatch/No known conversion
+434:5: You can only assign to a string another string
+436:5: You can only assign to a string another string
+437:5: You can only assign to a string another string
 438:5: You can only assign to a string another string
 440:5: You can only assign to a string another string
-441:5: You can only assign to a string another string
-442:5: You can only assign to a string another string
-444:5: You can only assign to a string another string
-446:5: You can assign a bool only with a bool (use relational operators to generate bools)
-455:5: Type mismatch/No known conversion
-458:5: Type mismatch/No known conversion
-463:5: Type mismatch/No known conversion
-468:5: Type mismatch/No known conversion
-471:5: Type mismatch/No known conversion
-474:5: Pointer constness mismatch
-477:5: Type mismatch/No known conversion
-480:5: Type mismatch/No known conversion
-482:51: Undefined type
-483:5: Type mismatch/No known conversion
-486:5: Type mismatch/No known conversion
-499:26: Weak pointers are allowed only as non aggregated class members.
-500:5: Pointer constness mismatch
-513:2: Function must return a value !!
-535:2: Function must return a value !!
+442:5: You can assign a bool only with a bool (use relational operators to generate bools)
+451:5: Type mismatch/No known conversion
+454:5: Type mismatch/No known conversion
+459:5: Type mismatch/No known conversion
+464:5: Type mismatch/No known conversion
+467:5: Type mismatch/No known conversion
+470:5: Pointer constness mismatch
+473:5: Type mismatch/No known conversion
+476:5: Type mismatch/No known conversion
+478:51: Undefined type
+479:5: Type mismatch/No known conversion
+482:5: Type mismatch/No known conversion
+495:26: Weak pointers are allowed only as non aggregated class members.
+496:5: Pointer constness mismatch
+509:2: Function must return a value !!
+531:2: Function must return a value !!
+545:9: Dead code after terminating statement
 549:9: Dead code after terminating statement
 553:9: Dead code after terminating statement
-557:9: Dead code after terminating statement
-565:33: Operand types mismatch.
-566:25: Operand types mismatch.
-568:42: Operation causes an integer overflow
-569:42: Operation causes an integer overflow
-571:21: Operand types mismatch.
-581:35: Operation causes an integer overflow
-582:35: Operation causes an integer overflow
-583:42: Operand types mismatch.
-584:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-585:42: Operand types mismatch.
-586:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-590:25: Shift amount can't be negative
-591:19: Shift amount can't be negative
-595:42: Value doesn't fit the destination (assignment would cause loss of range or precision).
-596:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
-598:19: The arithmetic not '~' operator requires an integer value
-599:19: The arithmetic not '~' operator requires an integer value
-602:25: Operand types mismatch.
-602:37: Operand types mismatch.
-603:23: Operation requires integer operands
-604:23: Divide by 0
-611:36: Operand types mismatch.
-612:21: Operation requires integer operands
-615:29: Type mismatch in assignment. Please cast explicitly
-616:40: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
-617:23: On an address the only allowed operator is '*'
-618:19: Unary '+' only applies to numeric types
-619:21: You can use unary * only on strong pointers
-620:14: Argument 1 is an output argument and needs to be a writable variable
-622:13: Can't discard a function value (consider using the syntax _ = fn())
-623:34: Weak pointers are allowed only as non aggregated class members.
-624:14: Argument 1 type mismatch
-625:18: Weak pointers are allowed only as non aggregated class members.
-626:12: Can't discard a function value (consider using the syntax _ = fn())
-628:13: Argument 1 type mismatch
-629:12: Too many arguments
-630:12: Argument 1 is not specified and has no default value
-631:14: You can apply the & unary operator only to a local variable.
-632:5: Type mismatch/No known conversion
-639:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
-642:27: Weak pointers are allowed only as non aggregated class members.
-650:9: Sizeof doesn't apply to this type (it has variable size)
-661:14: Array size must be '*' (for dynamic) or a positive integer value
-662:5: Symbol 'fvecdimf' is duplicated
-662:14: Array size must be '*' (for dynamic) or a positive integer value
-666:20: Indices must be positive integers
-668:32: Value too big for the type or can't be represented in full precision.
-669:15: Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal
-670:15: The arithmetic not '~' operator requires an integer value
-672:15: Overflow in float to int conversion
-673:41: Value too big to be represented in an integer variable.
-676:19: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-679:25: Divide by 0
-680:26: Divide by 0
-682:16: Overflow in float to int conversion
-683:36: Value too big for the type or can't be represented in full precision.
-684:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-686:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
-693:44: Value too big to be represented in an integer variable.
-694:14: The arithmetic not '~' operator requires an integer value
-714:5: Increment and Decrement operations can be applied only to writable integer variables
-717:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-719:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
-721:18: The argument's initer must be a compile time constant !
-721:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
-737:28: A public declaration cannot refer a private symbol
+561:33: Operand types mismatch.
+562:25: Operand types mismatch.
+564:42: Operation causes an integer overflow
+565:42: Operation causes an integer overflow
+567:21: Operand types mismatch.
+577:35: Operation causes an integer overflow
+578:35: Operation causes an integer overflow
+579:42: Operand types mismatch.
+580:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+581:42: Operand types mismatch.
+582:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+586:25: Shift amount can't be negative
+587:19: Shift amount can't be negative
+591:42: Value doesn't fit the destination (assignment would cause loss of range or precision).
+592:20: Value doesn't fit an int/i32. use the fake cast notation type(literal) es: i64(-0x1_0000_0000)
+594:19: The arithmetic not '~' operator requires an integer value
+595:19: The arithmetic not '~' operator requires an integer value
+598:25: Operand types mismatch.
+598:37: Operand types mismatch.
+599:23: Operation requires integer operands
+600:23: Divide by 0
+607:36: Operand types mismatch.
+608:21: Operation requires integer operands
+611:29: Type mismatch in assignment. Please cast explicitly
+612:40: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+613:23: On an address the only allowed operator is '*'
+614:19: Unary '+' only applies to numeric types
+615:21: You can use unary * only on strong pointers
+616:14: Argument 1 is an output argument and needs to be a writable variable
+618:13: Can't discard a function value (consider using the syntax _ = fn())
+619:34: Weak pointers are allowed only as non aggregated class members.
+620:14: Argument 1 type mismatch
+621:18: Weak pointers are allowed only as non aggregated class members.
+622:12: Can't discard a function value (consider using the syntax _ = fn())
+624:13: Argument 1 type mismatch
+625:12: Too many arguments
+626:12: Argument 1 is not specified and has no default value
+627:14: You can apply the & unary operator only to a local variable.
+628:5: Type mismatch/No known conversion
+635:14: On an integer base you can only use an integer exponent ranging 0 to 63 (but not 0**0)
+638:27: Weak pointers are allowed only as non aggregated class members.
+646:9: Sizeof doesn't apply to this type (it has variable size)
+657:14: Array size must be '*' (for dynamic) or a positive integer value
+658:5: Symbol 'fvecdimf' is duplicated
+658:14: Array size must be '*' (for dynamic) or a positive integer value
+662:20: Indices must be positive integers
+664:32: Value too big for the type or can't be represented in full precision.
+665:15: Result of sign inversion overflows (sing integer literals range -2**63 to 2**64-1). consider using a float literal
+666:15: The arithmetic not '~' operator requires an integer value
+668:15: Overflow in float to int conversion
+669:41: Value too big to be represented in an integer variable.
+672:19: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+675:25: Divide by 0
+676:26: Divide by 0
+678:16: Overflow in float to int conversion
+679:36: Value too big for the type or can't be represented in full precision.
+680:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+682:29: Shifting so many bits positions has no purpose on a value of such precision (you get 0 or -1)
+689:44: Value too big to be represented in an integer variable.
+690:14: The arithmetic not '~' operator requires an integer value
+710:5: Increment and Decrement operations can be applied only to writable integer variables
+713:14: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+715:20: You can't omit the array size unless you are declaring a variable or constant with an aggregate initializer.
+717:18: The argument's initer must be a compile time constant !
+717:43: You can only init arguments of type: numeric, enum, string, bool, pointer (the latter only with null)
+733:28: A public declaration cannot refer a private symbol
+736:2: Function must return a value !!
+738:24: You can only return values of type: numeric, enum, string, bool, pointer
 740:2: Function must return a value !!
-742:24: You can only return values of type: numeric, enum, string, bool, pointer
-744:2: Function must return a value !!
-746:12: Public global variables are forbidden !
-751:19: Need a const pointer here
+742:12: Public global variables are forbidden !
+747:19: Need a const pointer here
+759:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
+760:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 763:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 764:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 767:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
 768:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-771:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-772:5: Value doesn't fit the destination (assignment would cause loss of range or precision).
-774:13: Operation doesn't suppot complex operands
-775:13: Operation doesn't suppot complex operands
+770:13: Operation doesn't suppot complex operands
+771:13: Operation doesn't suppot complex operands
+773:5: You can only swap two writable variables of IDENTICAL type
+774:5: You can only swap two writable variables of IDENTICAL type
+775:5: You can only swap two writable variables of IDENTICAL type
+776:5: You can only swap two writable variables of IDENTICAL type
 777:5: You can only swap two writable variables of IDENTICAL type
-778:5: You can only swap two writable variables of IDENTICAL type
-779:5: You can only swap two writable variables of IDENTICAL type
-780:5: You can only swap two writable variables of IDENTICAL type
-781:5: You can only swap two writable variables of IDENTICAL type
-787:17: Key type must support the == operator (not be a class/interface/map)
-794:5: Both called and calling functions must return bool.
-800:5: Both called and calling functions must return bool.
+783:17: Key type must support the == operator (not be a class/interface/map)
+790:5: Both called and calling functions must return bool.
+796:5: Both called and calling functions must return bool.

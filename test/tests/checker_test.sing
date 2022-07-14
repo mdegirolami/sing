@@ -324,26 +324,22 @@ fn assignments() void
 
 	forward();
 	
-	for (idx, iter1 in v8) {
-		idx += i64(1);				// can't write
-		var idxt size_t = idx;
+	for (iter1 in v8) {
 		sgn32 = iter1;
 	}	
-	sgn32 = iter1;				// survives the loop
-	for (idx, iter1 in v8) {	// can recycle
-		idx += i64(1);
-		var idxt size_t = idx;
+	sgn32 = iter1;				// survives the loop ?
+	for (iter1 in v8) {	    // can recycle
 		sgn32 = iter1;
 	}
-	for (idx, iter1 in v8) {	
-		for (idx, iter_in in v8) {		// but not inside
+	for (iter1 in v8) {	
+		for (iter_in in v8) {		// but not inside
 		}
-		for (idx_in, iter1 in v8) {		// but not inside
+		for (iter1 in v8) {		// but not inside
 		}
-		for (idx_in, iter_in in v8) {	// ok
+		for (iter_in in v8) {	// ok
 		}
 	}
-	for (aa, comp in v8) {		// wrong index/iterator types
+	for (comp in v8) {		    // wrong iterator type
 	}
 	for (iter2 in sgn32) {			// aa must be an array, map or string
 	}

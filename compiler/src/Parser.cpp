@@ -1920,27 +1920,9 @@ AstFor *Parser::ParseFor(void)
         }
         var = new VarDeclaration(m_lexer->CurrTokenString());
         RecordPosition(var, false);
+        var->SetFlags(VF_ISFORITERATOR);
+        node->SetIteratorVar(var);
         if (!Advance()) goto recovery;
-        if (m_token == TOKEN_COMMA) {
-            if (!Advance()) goto recovery;
-            if (m_token != TOKEN_NAME) {
-                Error("Expecting the iterator name");
-                goto recovery;
-            }
-            var->SetFlags(VF_READONLY | VF_ISFORINDEX);
-            node->SetIndexVar(var);
-            var = NULL;                 // in case we have an exception in the next line
-            var = new VarDeclaration(m_lexer->CurrTokenString());
-            RecordPosition(var, false);
-            var->SetFlags(VF_ISFORITERATOR);
-            node->SetIteratorVar(var);
-            var = NULL;                 // in case we have an exception in the next lines
-            if (!Advance()) goto recovery;
-        } else {
-            var->SetFlags(VF_ISFORITERATOR);
-            node->SetIteratorVar(var);
-            var = NULL;
-        }
         if (m_token != TOKEN_IN) {
             Error("Expecting 'in' followed by the for iteration range");
             goto recovery;
@@ -1974,7 +1956,6 @@ AstFor *Parser::ParseFor(void)
 recovery:    
     if (on_error_) {
         delete node;
-        if (var != NULL) delete var;
         node = nullptr;
     }
     return(node);

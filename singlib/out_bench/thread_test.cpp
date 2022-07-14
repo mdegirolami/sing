@@ -132,17 +132,15 @@ static int64_t DoAll(std::shared_ptr<std::vector<float>> v1, std::shared_ptr<std
 
     const int64_t start = sing::clock();
 
-    int64_t idx = -1;
-    for(auto &ex : executers) {
-        ++idx;
+    for(int32_t idx = 0, idx__top = (int32_t)executers.size(); idx < idx__top; ++idx) {
         std::shared_ptr<Add> adder = std::make_shared<Add>();
-        const int32_t start_idx = (int32_t)idx * len;
-        if ((int32_t)idx != count - 1) {
+        const int32_t start_idx = idx * len;
+        if (idx != count - 1) {
             (*adder).init(v1, v2, start_idx, start_idx + len);
         } else {
             (*adder).init(v1, v2, start_idx, (int32_t)(*v2).size());
         }
-        const std::shared_ptr<sing::Executer> exp = ex;
+        const std::shared_ptr<sing::Executer> exp = executers[idx];
         if (exp != nullptr) {
             (*exp).enqueue(adder);
         }

@@ -1173,22 +1173,6 @@ void CppSynth::SynthFor(AstFor *node)
 {
     string  text;
 
-    // declare or init the index
-    // (can't do in the init clause of the for because it is a declaration, not a statement !!
-    if (node->index_ != nullptr) {
-        if (!node->index_referenced_) {
-            text = "int64_t ";
-            text += node->index_->name_;
-        } else {
-            text = node->index_->name_;
-        }
-        if (node->set_ != nullptr) {
-            text += " = -1";
-        } else {
-            text += " = 0";
-        }
-        Write(&text);
-    }
     if (node->set_ != nullptr) {
         SynthForEachOnDyna(node);
     } else {
@@ -1210,13 +1194,6 @@ void CppSynth::SynthForEachOnDyna(AstFor *node)
     if (debug_) {
         ++indent_;
         WriteReferenceGuard(node->iterator_->name_.c_str(), true);
-        --indent_;
-    }
-    if (node->index_ != nullptr) {
-        ++indent_;
-        text = "++";
-        text += node->index_->name_;
-        Write(&text);
         --indent_;
     }
     SynthBlock(node->block_);
@@ -1306,10 +1283,6 @@ void CppSynth::SynthForIntRange(AstFor *node)
             SynthExpressionAndCastToInt(&aux, node->step_, using_64_bits);
             text += aux;
         }
-    }
-    if (node->index_ != NULL) {
-        text += ", ++";
-        text += node->index_->name_;
     }
 
     // close and write down

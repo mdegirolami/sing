@@ -43,7 +43,7 @@
 114:13: Expecting ')'
 115:9: Expecting '('
 116:10: Expecting the iterator or index name
-117:13: Expecting the iterator name
+117:12: Expecting 'in' followed by the for iteration range
 118:13: Expecting 'in' followed by the for iteration range
 119:22: Expecting ')'
 120:11: Illegal name: only alpha ,digits and '_' are allowed.

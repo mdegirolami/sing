@@ -461,9 +461,6 @@ IAstNode *Package::getDeclarationInBlockBefore(AstBlock *block, const char *symb
                 AstFor *fordesc = (AstFor*)node;
                 AstBlock *block = fordesc->block_;
                 if (block != nullptr && block->GetPositionRecord()->Includes(row + 1, col)) {
-                    if (fordesc->index_ != nullptr && fordesc->index_->name_ == symbol) {
-                        return(fordesc->index_);
-                    }
                     if (fordesc->iterator_ != nullptr && fordesc->iterator_->name_ == symbol) {
                         return(fordesc->iterator_);
                     }

@@ -668,7 +668,6 @@ public:
 
 class AstFor : public IAstNode {
 public:
-    VarDeclaration  *index_;
     VarDeclaration  *iterator_;
     IAstExpNode     *set_;
     IAstExpNode     *low_;
@@ -678,17 +677,14 @@ public:
     PositionInfo    pos_;
 
     // annotations. 
-    bool            index_referenced_;      // where index and iterator aleady declared ?
     int64_t         step_value_;            // 0 if not possible to compute at compile time 
 
     virtual PositionInfo *GetPositionRecord(void) { return(&pos_); }
     virtual bool IsARemarkableNode(void) { return(true); }
 
     virtual ~AstFor();
-    AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL), index_(NULL), iterator_(NULL), 
-                index_referenced_(false), step_value_(1) {}
+    AstFor() : set_(NULL), low_(NULL), high_(NULL), step_(NULL), block_(NULL), iterator_(NULL), step_value_(1) {}
     virtual AstNodeType GetType(void) const { return(ANT_FOR); }
-    void SetIndexVar(VarDeclaration *var) { index_ = var; }
     void SetIteratorVar(VarDeclaration *var) { iterator_ = var; }
     void SetTheSet(IAstExpNode *exp) { set_ = exp; }
     void SetLowBound(IAstExpNode *exp) { low_ = exp; }
