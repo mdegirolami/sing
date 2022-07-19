@@ -1,0 +1,55 @@
+# sdk resources
+include ../sdk_location.ninja
+singcc = $sdk/$platform/bin/sing
+singhh = $sdk/sing_headers
+singinc = $sdk/inc
+singlib = $sdk/$platform/lib/$cfg/singlib.a
+
+#optionals
+#skip_usage = -u
+
+# directories
+temp = ../../out/$cfg
+sing = ../../sing
+cpp  = ../../src
+
+# options for all the configurations/platforms
+cc_flags = -fsigned-char -std=c++17 $cc_extra_flags -I $cpp -I $temp -I $singinc -fmax-errors=20
+ln_libs = $singlib $ln_extra_libs
+
+#rules
+rule sc
+  deps = gcc
+  depfile = $out.d
+  command = $singcc $skip_usage $sing_extra_flags -I $sing -I $singhh -MF -o $out $in
+
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = g++ -MD -MF $out.d $cc_flags -c $in -o $out
+
+rule ln
+  command = g++ -std=c++17 -no-pie -o $out @$out.rsp
+  rspfile = $out.rsp
+  rspfile_content = $in $ln_libs
+
+rule aa
+  command = ar rvs $out $in
+
+# sing->temp
+build $temp/singmake.h | $temp/singmake.cpp     : sc $sing/singmake.sing
+build $temp/dep_check.h | $temp/dep_check.cpp   : sc $sing/dep_check.sing
+build $temp/target_cfg.h | $temp/target_cfg.cpp : sc $sing/target_cfg.sing
+
+# temp->obj
+build singmake.o   : cc $temp/singmake.cpp
+build dep_check.o  : cc $temp/dep_check.cpp
+build target_cfg.o : cc $temp/target_cfg.cpp
+
+# cpp->obj
+build main.o : cc $cpp/main.cpp
+
+#link
+build $bin_target: ln singmake.o target_cfg.o main.o dep_check.o
+
+default $bin_target

@@ -1,0 +1,513 @@
+requires "sio";
+requires "str";
+
+public let win_mask = 1;
+public let linux_mask = 2;
+public let macos_mask = 4;
+public let android_mask = 8;
+public let ios_mask = 16;
+
+public let release_mask = 1;
+public let debug_mask = 2;
+
+public class Option {
+public:
+    fn mut fill(name string, platforms i32, modes i32, value string, extra string) void;
+
+    // getValue fails if platform / mode are incompatible or key doesn't match name.
+    fn getValue(out value string, out extra string, key string, platform i32, mode i32) bool;
+    fn isHeader() bool;
+private:
+    var name string;
+    var platforms i32;
+    var modes i32;
+    var value string;
+    var extra string;
+}
+
+fn Option.fill(name string, platforms i32, modes i32, value string, extra string) void
+{
+    this.name       = name;     
+    this.platforms  = platforms;
+    this.modes      = modes;  
+    this.value      = value;    
+    this.extra      = extra;    
+}
+
+fn Option.getValue(out value string, out extra string, key string, platform i32, mode i32) bool
+{
+    if (key != this.name) {
+        return(false);
+    }
+    if (this.platforms != 0 && this.platforms & platform == 0) {
+        return(false);
+    }
+    if (this.modes != 0 && this.modes & mode == 0) {
+        return(false);
+    }
+    value = this.value;
+    extra = this.extra;
+    return(true);
+}
+
+fn Option.isHeader() bool
+{
+    return(this.name == "target");
+}
+
+public class TargetCfg {
+public:
+    //fn mut parse(io lex json.Lexer) bool;
+    fn mut addOption(opt Option) void;
+
+    // getNameAndType fails if platform / mode are incompatible.
+    fn getNameAndType(out name string, out target_type string, platform i32, mode i32) bool;
+    fn getValues(out values [*]string, out extras [*]string, key string, platform i32, mode i32) void;
+    /*fn getSources(out srcs [*]string, out options_idx [*]i32, out options [*]string, 
+                root string, key string, extension string, platform i32, mode i32) bool;*/
+private:
+    var options [*]Option;
+}
+
+/*
+fn TargetCfg.parse(io lex json.Lexer) bool
+{
+    return(parseATarget(this.options, lex));
+}
+*/
+
+fn TargetCfg.addOption(opt Option) void
+{
+    this.options.push_back(opt);
+}
+
+fn TargetCfg.getNameAndType(out name string, out target_type string, platform i32, mode i32) bool
+{
+    if (this.options.size() < 1) {
+        return(false);
+    }
+    return(this.options[0].getValue(name, target_type, "target", platform, mode));
+}
+
+fn TargetCfg.getValues(out values [*]string, out extras [*]string, key string, platform i32, mode i32) void 
+{
+    values.clear();
+    extras.clear();
+    var value string;
+    var extra string;
+    for (option in this.options) {
+        if (option.getValue(value, extra, key, platform, mode)) {
+            values.push_back(value);
+            extras.push_back(extra);
+        }
+    }
+}
+
+public fn parseOptions(out targets [*]TargetCfg, filename string) bool
+{
+    // prepare the destination
+    targets.clear();
+    var cur_target = -1;
+
+    var file sio.File;
+    var linenum = 0;
+    if (file.open(filename, "r") != 0) {
+        sio.print("\r\nError: Can't open " + filename);
+        return(false);
+    }
+    var error string;
+    var opt Option;
+    while (parseALine2(error, opt, file, linenum)) {
+        if (opt.isHeader()) {
+            ++cur_target;
+            targets.resize(cur_target + 1);
+        } else if (cur_target == -1) {
+            sio.print("\r\nError: Expecting a target declaration line (name and type of target) at the beginning of the file.");
+            return(false);
+        }
+        targets[cur_target].addOption(opt);
+    }
+    if (str.len(error) > 0) {
+        sio.print("\r\nError: at line " + string(linenum) + ": " + error);
+        return(false);
+    }
+    return(true);
+/*
+    // setup the lexer
+    var src string;
+    if (sio.fileReadText(filename, src) != 0) {
+        sio.print("\r\nCan't open " + filename);
+        return(false);
+    }
+    var lex json.Lexer;
+    lex.init(src);
+    try(stepLexerVerbose(lex));
+    try(skipEmptyRows(lex));
+
+    // parse as many targets as can be found.
+    while (lex.getTokenType() != json.TokenType.eof) {
+        targets.resize(cur_target + 1);
+
+        // leaves the lexer on eof or on the beginning of the next target.
+        if (!targets[cur_target].parse(lex)) {
+            targets.pop_back();
+            return(false);
+        }
+        cur_target++;
+    }
+    return(true);
+    */
+}
+
+/*
+//
+// input: lex MUST BE at the beginning of the first line of the target
+// output: lex at the beginning of the first line of the NEXT target OR on eof.
+//          target vector filled.
+//
+fn parseATarget(out target [*]Option, io lex json.Lexer) bool
+{
+    target.clear();
+    target.reserve(10);
+
+    // read the header
+    target.resize(1);
+    try(parseALine(target[0], lex));
+    if (!target[0].isHeader()) {
+        printError(lex, "expecting a target declaration line (name and type of target)");
+        return(false);
+    }
+
+    // read all other options
+    var idx = 1;
+    try(skipEmptyRows(lex));
+    while (lex.getTokenType() != json.TokenType.eof) {
+        if (lex.getTokenType() == json.TokenType.symbol && lex.getTokenString() == "target") {
+            break;
+        } 
+        target.resize(idx + 1);
+        if (!parseALine(target[idx], lex)) {
+            target.pop_back();
+            return(false);
+        }
+        try(skipEmptyRows(lex));
+        ++idx;
+    }
+    return(true);
+}
+
+fn skipEmptyRows(io lex json.Lexer) bool
+{
+    while (lex.getTokenType() == json.TokenType.comment || lex.getTokenType() == json.TokenType.eol) {
+        try(stepLexerVerbose(lex));
+    }
+    return(true);
+}
+
+//
+// input: lex MUST BE at the beginning of the line
+// output: lex at the end of the line (eol/eof), opt filled.
+//
+fn parseALine(out opt Option, io lex json.Lexer) bool
+{
+    // parse key
+    if (lex.getTokenType() != json.TokenType.symbol) {
+        printError(lex, "expecting an option key");
+        return(false);
+    }
+    let key = lex.getTokenString();
+    if (!isValidKey(key)) {
+        printError(lex, "unknown option key");
+        return(false);
+    }
+    try(stepLexerVerbose(lex));
+
+    // parse qualifyers
+    var mode = 0;
+    var target = 0;
+    while (lex.getTokenType() == json.TokenType.symbol) {
+        let qualifyer = lex.getTokenString();
+        if (!isValidMode(mode, qualifyer) && !isValidTarget(target, qualifyer)) {
+            printError(lex, "unknown qualifyer");
+            return(false);
+        }
+        try(stepLexerVerbose(lex));
+    }
+
+    // parse "="
+    if (lex.getTokenType() != json.TokenType.interpunction || lex.getTokenString() != "=") {
+        printError(lex, "expecting the '=' symbol");
+        return(false);
+    }
+    try(stepLexerVerbose(lex));
+
+    // parse the value
+    if (lex.getTokenType() != json.TokenType.symbol && lex.getTokenType() != json.TokenType.string_type) {
+        printError(lex, "expecting the value of the option");
+        return(false);
+    }
+    let value = lex.getTokenString();
+    try(stepLexerVerbose(lex));
+
+    // parse extra string if present
+    var extra string;
+    while (lex.getTokenType() == json.TokenType.symbol || lex.getTokenType() == json.TokenType.string_type) {
+        if (extra != "") {
+            extra += " ";
+        }
+        extra += lex.getTokenString();
+        try(stepLexerVerbose(lex));
+    }
+
+    // skip trailing comment
+    if (lex.getTokenType() == json.TokenType.comment) {
+        try(stepLexerVerbose(lex));
+    }
+
+    // there must be nothing else.
+    if (lex.getTokenType() != json.TokenType.eof && lex.getTokenType() != json.TokenType.eol) {
+        printError(lex, "unexpected stuff after an otherwise correct line");
+        return(false);
+    }
+
+    // fill Option
+    opt.fill(key, target ,mode, value, extra);
+    return(true);
+}
+*/
+fn parseALine2(out error string, out opt Option, io file sio.File, io linenum i32) bool
+{
+    var line string;
+    var comment string;
+    while (str.len(line) == 0) {
+
+        // read the next line
+        ++linenum;
+        if (file.gets(100000, line) != 0) {
+            error = "can't read the file.";
+            return(false);
+        }
+        if (str.len(line) == 0) {
+            return(false);          // fails but returns no error cause: eof
+        }
+
+        // erase comment
+        _ = str.split(line, "//", line, comment);
+
+        // cleanup
+        str.cutSuffix(line, "\n");
+        str.cutLeadingSpaces(line);
+        str.cutTrailingSpaces(line);
+    }
+
+    // split left and right of the = sign
+    var left_part string;
+    var right_part string;
+    if (!str.split(line, "=", left_part, right_part)) {
+        error = "legal definition must have a '=' sign";
+        return(false);
+    }
+    str.cutLeadingSpaces(right_part);
+    str.cutTrailingSpaces(left_part);
+
+    // process the left part.
+    var key string;
+    var mode i32;
+    var target i32;
+    if (str.splitAny(left_part, " \t", key, left_part)) {
+        str.cutLeadingSpaces(left_part);
+        var qualifyer string;
+        while (str.len(left_part) > 0) {
+            if (str.splitAny(left_part, " \t", qualifyer, left_part)) {
+                str.cutLeadingSpaces(left_part);
+            } else {
+                qualifyer = left_part;
+                left_part = "";
+            }
+            if (!isValidMode(mode, qualifyer) && !isValidTarget(target, qualifyer)) {
+                error = "unknown qualifyer: " + qualifyer;
+                return(false);
+            }
+        }
+    } else {
+        key = left_part;
+    }
+    if (!isValidKey(key)) {
+        error = "unknown option key: " + key;
+        return(false);
+    }
+
+    // process the right part
+    var value string;
+    if (str.hasPrefix(right_part, "\"")) {
+        str.cutPrefix(right_part, "\"");
+        if (!str.split(right_part, "\"", value, right_part)) {
+            error = "quotes mismatch";
+            return(false);
+        }
+        str.cutLeadingSpaces(right_part);
+    } else {
+        if (!str.splitAny(right_part, " \t", value, right_part)) {
+            value = right_part;
+            right_part = "";
+        } else {
+            str.cutLeadingSpaces(right_part);
+        }
+    }
+    if (str.len(value) == 0) {
+        error = "value of the key can't be empty";
+        return(false);
+    }
+
+    // fill Option
+    opt.fill(key, target ,mode, value, right_part);
+    return(true);
+}
+
+fn isValidMode(io flags i32, mode_name string) bool
+{
+    if (mode_name == "debug") {
+        flags |= debug_mask;
+    } else if (mode_name == "release") {
+        flags |= release_mask;
+    } else {
+        return(false);
+    }
+    return(true);
+}
+
+fn isValidTarget(io flags i32, target_name string) bool
+{
+    if (target_name == "win") {
+        flags |= win_mask;
+    } else if (target_name == "linux") {
+        flags |= linux_mask;
+    } else if (target_name == "macos") {
+        flags |= macos_mask;
+    } else if (target_name == "android") {
+        flags |= android_mask;
+    } else if (target_name == "ios") {
+        flags |= ios_mask;
+    } else {
+        return(false);
+    }
+    return(true);
+}
+/*
+fn stepLexerVerbose(io lex json.Lexer) bool
+{
+    if (!lex.stepToNextToken()) {
+        printError(lex, lex.getErrorString());
+        return(false);
+    }
+    return(true);
+}
+
+fn printError(io lex json.Lexer, error string) void
+{
+    var row i32;
+    var column i32;
+    lex.getCurrentPosition(row, column);
+    sio.print("\r\nIgnoring row " + string(row) + ", has error at column " + string(column) + ": " + error);
+}
+*/
+
+fn isValidKey(key string) bool
+{
+    return(key == "target" || 
+        key == "sdk_path" || 
+        key == "cpp_toolchain" || 
+        key == "sing_src" || 
+        key == "cpp_src" || 
+        key == "cpp_options" ||
+        key == "link_options" || 
+        key == "lib" || 
+        key == "assets" || 
+        key == "module" || 
+        key == "singheaders" || 
+        key == "cppheaders" || 
+        key == "prebuild" || 
+        key == "postbuild");
+}
+
+/*
+target <q> = <name>, <type>
+
+// tools
+sdk_path <q> = <path>
+cpp_toolchain <q> = <path>
+    
+// inputs and options
+sing_src <q> = <path> <compile options> 
+cpp_src <q> = <path> <compile options>
+cpp_options <q> = <options>
+generate_asm <q> = true | false // NO !!! Replaced by -S (also in sing_src)
+link_options <q> = <link options>
+
+// libraries, modules, assets
+lib <q> = <path>
+assets <q> = <path>
+module <q> = <path> | <url> [as <newname>]
+
+// sources for extra outputs if type is lib or dll
+singheaders <q> = <path>
+cppheaders <q> = <path>
+    
+// may need ?
+prebuild <q> = <command>
+postbuild <q> = <command>
+
+FORMAL DEFINITION:
+
+<file> ::= <targets>
+<target> ::= <header> <definitions>
+<header> ::= target [<q>] = <name> <type> 
+<definition> ::= <key> [<q>] = <value> [<extra>]
+
+///
+
+FEATURES:
+* dir create: build, bin, out.
+* areThereDups -> easy with the src list.
+- handling sing/g++ error return.
+- cpp from sing must be read only
+- need both .h.d and .d for objs originating from sing ?
+
+* makes only files not up to date
+parse and take nto account of .h/.sing deps
+* make itself is a dependency of all targets (rebuild all if make is changed).
+
+handle .. in relative paths (possible only for sources/libs.. -> a problem in out/... computation)
+
+* all errors handled ?
+.vscode and gitignore.
+* -S
+
+- supports modules
+* $replacement ! ($sdk, $tmp)
+- supports all target types (libs and dlls)
+- other features (check the syntax)
+- multithread
+
+if (doesn't exist | rebuild_all) {
+    create_dir;
+} else {
+    if (time < maketime) {
+        rebuild_all = true;
+    } else if (time > src) {
+        if (time > latest_of.d) {
+            return;
+        }
+    }
+}
+build.
+
+// speed-up #1: cache with files time. (also fed with dst dirs)
+// not invasive: affects only the file_stat implementation and must receive paths to be prefetched.
+// leverage the cache for path assignments in path scans.
+
+tests:
+>>> build new projects for updater, mmlib, an app using mmlib, vl5plus.
+
+
+*/

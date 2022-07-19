@@ -1,0 +1,14 @@
+// target name and type
+target = test consolle
+
+// inputs and options
+sing_src = sing -I sing
+cpp_src = src
+
+cpp_options = -fsigned-char -std=c++17 -fmax-errors=20 -I src
+cpp_options release = -O2 -s -DNDEBUG
+cpp_options debug = -g
+
+link_options = -std=c++17 -no-pie
+link_options linux = -lpthread
+link_options win = -lws2_32

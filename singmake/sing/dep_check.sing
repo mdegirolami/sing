@@ -1,0 +1,76 @@
+requires "sio";
+requires "str";
+
+public class DependencyChecker {
+    var makefile_time u64;
+    var buildall bool;
+    var dst_time u64;
+public:
+    fn mut init(makefile_path string, buildall bool) void;
+    fn mut check(out need_rebuild bool, out error string, dst string, src string, has_dep_file bool) bool;
+    fn mut check_dst(out need_rebuild bool, out error string, dst string) bool;
+    fn mut check_src(out need_rebuild bool, out error string, src string) bool;
+}
+
+fn DependencyChecker.init(makefile_path string, buildall bool) void
+{
+    var nfo sio.FileInfo;
+    if (sio.fileGetInfo(makefile_path, nfo) == 0) {
+        this.makefile_time = nfo.last_modification_time;
+    }
+    this.buildall = buildall;
+}
+
+fn DependencyChecker.check(out need_rebuild bool, out error string, dst string, src string, has_dep_file bool) bool
+{
+    try(this.check_dst(need_rebuild, error, dst));
+    if (need_rebuild) {
+        return(true);
+    }
+    try(this.check_src(need_rebuild, error, src));
+    if (need_rebuild || !has_dep_file) {
+        return(true);
+    }
+
+    // examine dep_file here;
+
+    return(true);
+}
+
+fn DependencyChecker.check_dst(out need_rebuild bool, out error string, dst string) bool
+{
+    var dst_nfo sio.FileInfo;
+
+    need_rebuild = false;
+    error = "";
+
+    if (this.buildall || sio.fileGetInfo(dst, dst_nfo) != 0) {
+        var path string;
+        var discard string;
+        if (str.rsplitAny(dst, "/\\", path, discard)) {
+            if (sio.dirCreate(path) != 0) {
+                error = "\r\nCan't create directory " + path;
+                return(false);
+            }
+        }
+        need_rebuild = true;
+    } else if (dst_nfo.last_modification_time < this.makefile_time) {
+        this.buildall = true;
+        need_rebuild = true;
+    }
+    this.dst_time = dst_nfo.last_modification_time;
+    return(true);
+}
+
+fn DependencyChecker.check_src(out need_rebuild bool, out error string, src string) bool
+{
+    var src_nfo sio.FileInfo;
+    if (sio.fileGetInfo(src, src_nfo) != 0) {
+        error = "\r\nMissing source file " + src;
+        return(false);
+    }
+    if (src_nfo.last_modification_time > this.dst_time) {
+        need_rebuild = true;
+    }
+    return(true);
+}

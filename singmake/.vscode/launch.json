@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/win/singmake_d.exe",
+            "args": ["D:/Documents/w12/sing/test/updater", "c:/Users/degimau/.vscode/extensions/mauriziodegirolami.vscode-sing-0.41.0/sdk", "debug"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/win",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Catch throws",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

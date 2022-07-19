@@ -1,0 +1,750 @@
+requires "sio";
+requires "sys";
+requires "str";
+requires "target_cfg", cfg;
+requires "dep_check", dep;
+
+public fn singmain(argv [*]string) i32
+{
+    var targets [*]cfg.TargetCfg;
+    let force = argv.size() == 5 && argv[4] == "force";
+
+    if (!(argv.size() == 4) && !force) {
+        sio.print("\r\nUsage: singmake <project_path> <sdk path> <mode> [force]"
+                  "\r\n<mode> = release | debug\r\n");
+        return(1);
+    }
+
+    // take out '/' from the end of the string, if present. Normalize.
+    let root = sio.pathFix(argv[1]);
+    let sdk = sio.pathFix(argv[2]);
+
+    // parse the target specifications
+    let buildfile = root + "/build.txt";
+    if (!cfg.parseOptions(targets, buildfile)) {
+        return(1);
+    }
+
+    // collect info
+    var mode = cfg.debug_mask;
+    if (str.hasPrefix(argv[3], "r", true:insensitive)) {
+        mode = cfg.release_mask;
+    }
+    
+    let os = osid2mask(sys.getOs());
+
+    var checker dep.DependencyChecker;
+    checker.init(buildfile, force);
+
+    // build all
+    var counter = 0;
+    var obj_names map(string)string;
+    for (target in targets) {
+        if (!buildTarget(obj_names, checker, counter, root, sdk, mode, os, target)) {
+            return(1);
+        }
+    }
+
+    sio.print("\r\n" + string(counter) + " targets built for this platform in " + argv[3] + " mode\r\n");
+    return(0);
+}
+
+fn osid2mask(id sys.OsId) i32
+{
+    switch (id) {
+    case sys.OsId.win: return(cfg.win_mask);
+    case sys.OsId.linux: return(cfg.linux_mask);
+    case sys.OsId.macos: return(cfg.macos_mask);
+    }
+    return(cfg.win_mask);
+}
+
+enum TargetType { console, app, lib, dll, invalid }
+
+fn buildTarget(io obj_names map(string)string, io checker dep.DependencyChecker, out counter i32, root string, sdk string, mode_mask i32, os_mask i32, target cfg.TargetCfg) bool
+{
+    var name string;
+    var build_type string;
+    if (!target.getNameAndType(name, build_type, os_mask, mode_mask)) {
+        return(true);
+    }
+    let ttype = ttname2tt(build_type);
+    if (ttype == TargetType.invalid) {
+        sio.print("\r\nTarget '" + name + "': unknown target type '" + build_type + "'. Allowed types are: 'app', 'console', 'dll', 'lib'");
+        return(false);
+    }
+    ++counter;
+
+    sio.print("\r\nBuilding target '" + name + "'");
+
+    var sing_srcs [*]string;
+    var sing_options [*]string;
+    var sing_options_idx [*]i32;
+    try(findSourcesFromKey(sing_srcs, sing_options_idx, sing_options, "sing_src", "sing", root, mode_mask, os_mask, target));
+
+    var cpp_srcs [*]string;
+    var cpp_options [*]string;
+    var cpp_options_idx [*]i32;
+    try(findSourcesFromKey(cpp_srcs, cpp_options_idx, cpp_options, "cpp_src", "cpp", root, mode_mask, os_mask, target));
+
+    var base_names [*]string;
+    collectNames(base_names, sing_srcs);
+    collectNames(base_names, cpp_srcs);
+    var idx1 i32;
+    var idx2 i32;    
+    if (areThereDuplications(idx1, idx2, base_names)) {
+        sio.print("\r\nBase names of sources must be unique, see:\r\n" + 
+        path_from_idx(sing_srcs, cpp_srcs, idx1) + "\r\n" + path_from_idx(sing_srcs, cpp_srcs, idx2));
+        return(false);
+    }
+
+    if (sing_srcs.size() + cpp_srcs.size() == 0) {
+        sio.print("\r\nError: no sources for the target.");
+        return(false);
+    }
+
+    // collect the options
+    let common_cpp_options = getAllOptions("cpp_options", mode_mask, os_mask, target);
+    let link_options = getAllOptions("link_options", mode_mask, os_mask, target);
+
+    // move to the root for the compilation (so that paths are shorter)
+    if (sio.setCwd(root) != 0) {
+        sio.print("\r\nCan't switch to the root directory: " + root);
+        return(false);
+    }
+
+    try(sing2cpp(checker, sing_srcs, sing_options_idx, sing_options, sdk, root, mode_mask, os_mask));
+    try(singCpp2obj(checker, sing_srcs, sing_options_idx, sing_options, sdk, root, mode_mask, os_mask, common_cpp_options));
+    try(nativeCpp2obj(checker, cpp_srcs, cpp_options_idx, cpp_options, sdk, root, mode_mask, os_mask, common_cpp_options));
+
+    // move to the build directory (so to shorten the link command line)
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    let obj_dir = "build/" +  platform + "/" + mode + "/";
+    if (sio.setCwd(obj_dir) != 0) {
+        sio.print("\r\nCan't switch to the build directory: " + obj_dir);
+        return(false);
+    }
+
+    try(objs2target(checker, sing_srcs, cpp_srcs, sdk, root, mode_mask, os_mask, link_options, name, ttype));
+    return(true);
+}
+
+fn ttname2tt(name string) TargetType
+{
+    if (name == "console" || name == "consolle") {
+        return(TargetType.console);
+    } else if (name == "app") {
+        return(TargetType.app);
+    } else if (name == "lib") {
+        return(TargetType.lib);
+    } else if (name == "dll") {
+        return(TargetType.dll);
+    }
+    return(TargetType.invalid);
+}
+
+fn getAllOptions(key string, mode_mask i32, os_mask i32, target cfg.TargetCfg) string
+{
+    var first_option [*]string;
+    var options [*]string;
+    target.getValues(first_option, options, key, os_mask:platform, mode_mask:mode);
+    var all_options string;
+    for (opt in first_option) {
+        all_options += opt + " ";
+    }
+    for (opt in options) {
+        all_options += opt + " ";
+    }
+    return(all_options);
+}
+
+/*
+fn findSourcesFromKey(out srcs [*]string, out options_idx [*]i32, out options [*]string, 
+                    key string, extension string, root string, 
+                    mode_mask i32, os_mask i32, target cfg.TargetCfg) bool
+{
+    // get all source paths (must associate the source with the most detailed path)
+    var all_paths [*]string;
+    var all_options [*]string;
+    target.getValues(all_paths, all_options, key, 0xff, 0xff);
+
+    // fix paths (to be easily comparable)
+    fix_paths(all_paths, root);
+
+    // find sources from the paths
+    try(findSources(srcs, options_idx, all_paths, root, extension));
+
+    // get only qualifyed path
+    var paths [*]string;
+    target.getValues(paths, options, key, os_mask:platform, mode_mask:mode);
+
+    // fix paths (to be easily comparable)
+    fix_paths(paths, root);
+
+    // convert from index into all_options/paths to index into options/paths
+    var dst = 0;
+    for (src_idx, src in srcs) {
+        let path_idx = options_idx[src_idx];
+        for (new_path_idx, path in paths) {
+
+            // for every src find a qualifyed path equal to the path originally assigned
+            if (all_paths[path_idx] == path) {
+
+                // if found keep, else ignore
+                options_idx[dst] = i32(new_path_idx);
+                srcs[dst] = src;
+                ++dst;
+                break;
+            }
+        }
+    }
+    srcs.erase(dst, srcs.size());
+    options_idx.erase(dst, options_idx.size());
+    return(true);
+}
+*/
+
+fn findSourcesFromKey(out srcs [*]string, out options_idx [*]i32, out options [*]string, 
+                    key string, extension string, root string, 
+                    mode_mask i32, os_mask i32, target cfg.TargetCfg) bool
+{
+    // get only qualifyed path
+    var paths [*]string;
+    target.getValues(paths, options, key, os_mask:platform, mode_mask:mode);
+
+    // fix paths (to be easily comparable)
+    fix_paths(paths, root);
+
+    // find sources from the paths
+    try(findSources(srcs, options_idx, paths, root, extension));
+
+    // get all source paths (to see if a source is in an uqualified sub-path)
+    var all_paths [*]string;
+    var all_options [*]string;
+    target.getValues(all_paths, all_options, key, 0xff, 0xff);
+
+    // optimization: no unqualified paths
+    if (all_paths.size() == paths.size()) {
+        return(true);
+    }
+
+    // fix paths (to be easily comparable)
+    fix_paths(all_paths, root);
+
+    // cut sources if finds a more detailed but unqualifyed path
+    var dst = 0;
+    for (src_idx in 0 : srcs.size()) {
+        let min_len = str.len(paths[options_idx[src_idx]]); // original qualifyed len
+        let max_len = str.len(srcs[src_idx]);                         // src fullpath (directory path must be shorter)
+        var found = false;
+        for (path in all_paths) {
+            let pathlen = str.len(path);
+            if (pathlen > min_len && pathlen < max_len && str.hasPrefix(srcs[src_idx], path)) {
+                found = true;
+                break;
+            }
+        }
+
+        // if is ok, keep it !
+        if (!found) {
+            if (dst != src_idx) {
+                options_idx[dst] = options_idx[src_idx];
+                srcs[dst] = srcs[src_idx];
+            }
+            ++dst;
+        }
+    }
+    srcs.erase(dst, srcs.size());
+    options_idx.erase(dst, options_idx.size());
+    return(true);
+}
+
+fn fix_paths(io paths [*]string, root string) void
+{
+    for (path in paths) {
+        if (!str.hasPrefix(path, "/") && !str.hasPrefix(path, "\\")) {
+            path = root + "/" + path;
+        }
+        path = sio.pathFix(path);
+    }
+}
+
+fn findSources(out srcs [*]string, out options_idx [*]i32, paths [*]string, root string, extension string) bool
+{
+    let dotext = "." + extension;
+    for (path_idx in 0 : paths.size()) {
+        var path = paths[path_idx];
+        var tmp [*]string;
+        if (str.hasSuffix(path, dotext)) {
+            var nfo sio.FileInfo;
+            if (sio.fileGetInfo(path, nfo) != 0) {
+                sio.print("\r\nCan't find source " + path);
+                return(false);
+            } else {
+                tmp.push_back(path);
+            }
+        } else {
+            if (str.hasSuffix(path, "/*")) {
+                str.cutSuffix(path, "/*");
+            } else if (str.hasSuffix(path, "/**")) {
+                str.cutSuffix(path, "/**");
+            }
+            _ = sio.dirReadNames(path, sio.DirFilter.regular, tmp, true:recursive);         
+        }
+        for (name in tmp) {
+            if (str.hasSuffix(name, dotext)) {
+                let pos = find_string(srcs, name);
+                if (pos == -1) {
+                    srcs.push_back(name);
+                    options_idx.push_back(i32(path_idx));
+                } else {
+                    if (str.len(paths[options_idx[pos]]) < str.len(path)) {
+                        options_idx[pos] = i32(path_idx); 
+                    }
+                }
+            }
+        }
+    }
+    return(true);
+}
+
+fn osMask2Name(mask i32) string
+{
+    switch (mask) {
+    case cfg.win_mask: return("win");
+    case cfg.linux_mask: return("linux");
+    case cfg.macos_mask: return("macos");
+    case cfg.android_mask: return("android");
+    case cfg.ios_mask: return("ios");
+    }
+    return("win");
+}
+
+fn modeMask2Name(mask i32) string
+{
+    if (mask == cfg.debug_mask) {
+        return("debug");
+    } else {
+        return("release");
+    }
+}
+
+fn sing2cpp(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string, 
+                   sdk string, root string, mode_mask i32, os_mask i32) bool
+{
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    var base_command = "$sdk/" + platform + "/bin/sing -I $sdk/sing_headers -MF ";
+    if (mode_mask == cfg.debug_mask) {
+        base_command += "-g ";
+    }
+    let dst_prefix = "out/" + mode + "/";
+
+    for (src_idx in 0 : srcs.size()) {
+
+        // src relative to root
+        var local string;
+        try(sio.pathToRelative(local, srcs[src_idx], root));
+
+        // destination name
+        var destination = local;
+        while (str.hasPrefix(destination, "../")) {
+            str.cutPrefix(destination, "../");
+        }
+        destination = dst_prefix + destination;
+        sio.pathSetExtension(destination, "cpp");
+
+        if (!needsUpdate(checker, destination, local, true)) {
+            continue;
+        }
+
+        // add options to the command
+        var command = base_command + options[options_idx[src_idx]];
+
+        // and destination/source
+        command += " -o " + destination + " " + local;
+
+        // -S is a fake option
+        _ = str.replaceAll(command, "-S", "");
+
+        // print and execute
+        sio.print("\r\n" + command);
+        replaceVars(command, sdk, dst_prefix);
+        try(sys.system(command) == 0);
+    }
+    return(true);
+}
+
+fn needsUpdate(io checker dep.DependencyChecker, dst string, src string, has_dep_file bool) bool
+{
+    var need_rebuild bool;
+    var error string;
+    if (!checker.check(need_rebuild, error, dst, src, has_dep_file)) {
+        sio.print(error);
+        return(false);
+    }
+    return(need_rebuild);
+}
+
+/*
+fn singcpp2obj(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string, srcs_are_sing bool,
+                   sdk string, root string, mode_mask i32, os_mask i32, common_cpp_options string) bool
+{
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    let base_command = "g++ -I out/" + mode + " -I $sdk/inc " + common_cpp_options;
+    var range str.Range;
+    var assembler_wanted = str.find(base_command, "-S", range);
+    let obj_dir = "build/" +  platform + "/" + mode + "/";
+
+    var src_prefix = "";
+    if (srcs_are_sing) {
+        src_prefix = "out/" + mode + "/";
+    }
+
+    for (count, src in srcs) {
+
+        // src relative to root
+        var local string;
+        try(sio.pathToRelative(local, src, root));
+        if (srcs_are_sing) {
+            while (str.hasPrefix(local, "../")) {
+                str.cutPrefix(local, "../");
+            }
+        }
+        local = src_prefix + local;
+
+        // destination name
+        var drive string;
+        var path string;
+        var base string;
+        var extension string;
+        sio.pathSplit(local, drive, path, base, extension);
+        let destination_base = obj_dir + base;
+
+        if (!needsUpdate(checker, destination_base + ".o", local, true)) {
+            continue;
+        }
+
+        // add options to the command
+        var command = base_command; 
+        if (srcs_are_sing) {
+
+            // -S on this specific source (dummy option on specific sing file) ?
+            if (!assembler_wanted) {
+                assembler_wanted = str.find(options[options_idx[count]], "-S", range);
+                if (assembler_wanted) {
+                    command += "-S ";
+                }
+            } 
+        } else {
+            command += options[options_idx[count]];
+            assembler_wanted = str.find(base_command, "-S", range);
+        }
+
+        var dst_extension = ".S";
+        if (!assembler_wanted) {
+            command += "-c ";
+            dst_extension = ".o";
+        }
+
+        // and destination/source
+        command += "-MD -MF " + destination_base + ".d -o " + destination_base + dst_extension + " " + local;
+
+        // print and execute
+        sio.print("\r\n" + command);
+        replaceVars(command, sdk);
+        try(sys.system(command) == 0);
+
+        if (assembler_wanted) {
+
+            // create the .o too.
+            // being unsure of which options may be needed at assembly time we keep them all
+            command = base_command; 
+            _ = str.replace(command, "-S", "");
+            if (!srcs_are_sing) {
+                command += options[options_idx[count]];
+            }
+            command += " -c -o " + destination_base + ".o " + destination_base + ".S";
+
+            // print and execute
+            sio.print("\r\n" + command);
+            replaceVars(command, sdk);
+            try(sys.system(command) == 0);
+        }
+    }
+    return(true);
+}
+*/
+
+fn singCpp2obj(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string,
+                   sdk string, root string, mode_mask i32, os_mask i32, common_cpp_options string) bool
+{
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    let base_command = "g++ -I $sdk/inc " + common_cpp_options;
+    var range str.Range;
+    let assembler_wanted = str.find(base_command, "-S", range);
+    let obj_dir = "build/" +  platform + "/" + mode + "/";
+    let src_prefix = "out/" + mode + "/";
+
+    for (src_idx in 0 : srcs.size()) {
+
+        // src relative to root
+        var local string;
+        try(sio.pathToRelative(local, srcs[src_idx], root));
+        while (str.hasPrefix(local, "../")) {
+            str.cutPrefix(local, "../");
+        }
+        local = src_prefix + local;
+        sio.pathSetExtension(local, "cpp");
+
+        // -S on this specific source ? (dummy option on specific sing file) ?
+        // note: if assembler_wanted == true, then -S is already in base_command, no need to add it !!
+        if (!assembler_wanted && str.find(options[options_idx[src_idx]], "-S", range)) {
+            try(singleCpp2obj(checker, local, obj_dir, base_command + " -S", sdk, src_prefix));
+        } else {
+            try(singleCpp2obj(checker, local, obj_dir, base_command, sdk, src_prefix));
+        }
+    }
+    return(true);
+}
+
+fn nativeCpp2obj(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string, 
+                   sdk string, root string, mode_mask i32, os_mask i32, common_cpp_options string) bool
+{
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    let base_command = "g++ -I $sdk/inc " + common_cpp_options;
+    let obj_dir = "build/" +  platform + "/" + mode + "/";
+    let tmp = "out/" + mode + "/";
+
+    for (src_idx in 0 : srcs.size()) {
+
+        // src relative to root
+        var local string;
+        try(sio.pathToRelative(local, srcs[src_idx], root));
+
+        // add options to the command
+        var command = base_command; 
+        command += options[options_idx[src_idx]];
+
+        try(singleCpp2obj(checker, local, obj_dir, command, sdk, tmp));
+    }
+    return(true);
+}
+
+fn singleCpp2obj(io checker dep.DependencyChecker, src string, obj_dir string, base_command string, sdk string, tmp string) bool
+{
+    var range str.Range;
+
+    // destination name
+    var drive string;
+    var path string;
+    var base string;
+    var extension string;
+    sio.pathSplit(src, drive, path, base, extension);
+    let destination_base = obj_dir + base;
+
+    if (!needsUpdate(checker, destination_base + ".o", src, true)) {
+        return(true);
+    }
+
+    // add options to the command
+    var command = base_command; 
+    let assembler_wanted = str.find(base_command, "-S", range);
+
+    var dst_extension = ".S";
+    if (!assembler_wanted) {
+        command += " -c";
+        dst_extension = ".o";
+    }
+
+    // and destination/source
+    command += " -MD -MF " + destination_base + ".d -o " + destination_base + dst_extension + " " + src;
+
+    // print and execute
+    sio.print("\r\n" + command + "\r\n");
+    replaceVars(command, sdk, tmp);
+    try(sys.system(command) == 0);
+
+    if (assembler_wanted) {
+
+        // create the .o too.
+        // being unsure of which options may be needed at assembly time we keep them all
+        command = base_command; 
+        _ = str.replaceAll(command, "-S", "");
+        command += " -c -o " + destination_base + ".o " + destination_base + ".S";
+
+        // print and execute
+        sio.print("\r\n" + command + "\r\n");
+        replaceVars(command, sdk, tmp);
+        try(sys.system(command) == 0);
+    }
+    return(true);
+}
+
+/*
+// es. output
+// g++ -I out/debug -I $sdk/inc -fsigned-char -std=c++17 -fmax-errors=20 -I src -g -c 
+// -MD -MF build/win/debug/pippo.d -o build/win/debug/pippo.o src/pippo 
+//
+// g++ -I out/debug -I $sdk/inc -fsigned-char -std=c++17 -fmax-errors=20 -I src -g -c
+//  -o build/win/debug/.o build/win/debug/.S
+*/
+
+fn replaceVars(io command string, sdk string, tmp string) void
+{
+    _ = str.replaceAll(command, "$sdk", sdk);
+    _ = str.replaceAll(command, "$tmp", tmp);
+}
+
+fn objs2target(io checker dep.DependencyChecker, sing_srcs [*]string, cpp_srcs [*]string,
+                   sdk string, root string, mode_mask i32, os_mask i32, 
+                   link_options string, target_name string, target_type TargetType) bool
+{
+    let platform = osMask2Name(os_mask);
+    let mode = modeMask2Name(mode_mask);
+    let target_path =  "../../../bin/" + platform + "/" + mode + "/" + target_name + targetExtension(os_mask, target_type);
+
+    var need_rebuild bool;
+    var error string;
+    if (!checker.check_dst(need_rebuild, error, target_path)) {
+        sio.print(error);
+        return(false);
+    }
+
+    var inputs = "";
+    for (src in sing_srcs) {
+
+        // destination name
+        var drive string;
+        var path string;
+        var base string;
+        var extension string;
+        sio.pathSplit(src, drive, path, base, extension);
+        let obj_name = base + ".o ";
+        inputs += obj_name;
+
+        if (!need_rebuild) {
+            if (!checker.check_src(need_rebuild, error, obj_name)) {
+                sio.print(error);
+                return(false);
+            }
+        }
+    }
+    for (src in cpp_srcs) {
+
+        // destination name
+        var drive string;
+        var path string;
+        var base string;
+        var extension string;
+        sio.pathSplit(src, drive, path, base, extension);
+        let obj_name = base + ".o ";
+        inputs += obj_name;
+
+        if (!need_rebuild) {
+            if (!checker.check_src(need_rebuild, error, obj_name)) {
+                sio.print(error);
+                return(false);
+            }
+        }
+    }
+
+    if (!need_rebuild) {
+        return(true);
+    }
+
+    var command string;
+    if (target_type == TargetType.lib) {
+        command = "ar rvs " + target_path + " @" + target_name + ".rsp";
+    } else {
+        if (target_type == TargetType.dll) {
+            command = "g++  -o -shared ";
+        } else {
+            command = "g++  -o ";
+        }
+        command += target_path + " @" + target_name + ".rsp";
+        inputs += sdk + "/" + platform + "/lib/" + mode + "/singlib.a " + link_options;
+    }
+
+    if (sio.fileWriteText(target_name + ".rsp", inputs) != 0) {
+        sio.print("\r\nCan't write rsp file " + target_name + ".rsp");
+        return(false);
+    }
+
+    // print and execute
+    sio.print("\r\n" + command + "\r\n");
+    try(sys.system(command) == 0);
+    return(true);
+}
+
+fn targetExtension(os_mask i32, target_type TargetType) string
+{
+    if (target_type == TargetType.dll) {
+        if (os_mask == cfg.win_mask) {
+            return(".dll");
+        } else {
+            return(".so");
+        }
+    } else if (target_type == TargetType.lib) {
+        if (os_mask == cfg.win_mask) {
+            return(".lib");
+        } else {
+            return(".a");
+        }
+    } else {
+        if (os_mask == cfg.win_mask) {
+            return(".exe");
+        } else {
+            return("");
+        }
+    }
+}
+
+fn collectNames(io dst[*]string, srcs[*]string) void
+{
+    var drive string;
+    var path string;
+    var base string;
+    var ext string;
+    for (src in srcs) {
+        sio.pathSplit(src, drive, path, base, ext);
+        dst.push_back(base);
+    }
+}
+
+fn areThereDuplications(out idx1 i32, out idx2 i32, srcs [*]string) bool
+{
+    var base2idx map(string)i32;
+    for (idx in 0:srcs.size()) {
+        idx1 = base2idx.get_safe(srcs[idx], -1);
+        if (idx1 != -1) {
+            idx2 = idx;
+            return(true);
+        }
+        base2idx.insert(srcs[idx], idx);
+    }
+    return(false);
+}
+
+fn path_from_idx(src1 [*]string, src2 [*]string, idx i32) string
+{
+    let size1 = src1.size();
+    if (idx < size1) {
+        return(src1[idx]);
+    }
+    return(src2[idx - size1]);
+}
+
+fn find_string(vv [*]string, value string) i32
+{
+    for (ii in 0:vv.size()) {
+        if (vv[ii] == value) {
+            return(ii);
+        }
+    }
+    return(-1);
+}
