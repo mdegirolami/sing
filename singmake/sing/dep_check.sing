@@ -9,7 +9,8 @@ public:
     fn mut init(makefile_path string, buildall bool) void;
     fn mut check(out need_rebuild bool, out error string, dst string, src string, has_dep_file bool) bool;
     fn mut check_dst(out need_rebuild bool, out error string, dst string) bool;
-    fn mut check_src(out need_rebuild bool, out error string, src string) bool;
+    fn check_src(out need_rebuild bool, out error string, src string) bool;
+    fn checkInclude(out need_rebuild bool, src string) void;
 }
 
 fn DependencyChecker.init(makefile_path string, buildall bool) void
@@ -20,6 +21,8 @@ fn DependencyChecker.init(makefile_path string, buildall bool) void
     }
     this.buildall = buildall;
 }
+
+enum ParseStatus {skipping, spacer, path, backslash, dollar}
 
 fn DependencyChecker.check(out need_rebuild bool, out error string, dst string, src string, has_dep_file bool) bool
 {
@@ -33,7 +36,67 @@ fn DependencyChecker.check(out need_rebuild bool, out error string, dst string, 
     }
 
     // examine dep_file here;
-
+    // dep files escapes :
+    // ' ' -> '\ '
+    // # -> \#
+    // $ -> $$
+    // 
+    var depname = dst; 
+    if (str.hasSuffix(dst, ".o")) {
+        sio.pathSetExtension(depname, ".d");        
+    } else {
+        sio.pathSetExtension(depname, ".h.d");        
+    }
+    var content string;
+    if (sio.fileReadText(depname, content) != 0) {
+        return(true);
+    }
+    var cps [*]i32;
+    str.decode(content, cps);
+    var status = ParseStatus.skipping;
+    var path string;
+    for (cp in cps) {
+        switch (status) {
+            case ParseStatus.skipping: {
+                if (cp == str.toCp(":")) {
+                    status = ParseStatus.spacer;
+                }
+            }
+            case ParseStatus.spacer: {
+                if (!str.isSpace(cp) && cp >= 32 && cp != str.toCp("\\")) {
+                    if (cp == str.toCp("$")) {
+                        path = "";
+                        status = ParseStatus.dollar; 
+                    } else {
+                        path = str.encodeOne(cp);
+                        status = ParseStatus.path; 
+                    }
+                }
+            }
+            case ParseStatus.dollar:
+            case ParseStatus.path: {
+                if (cp == str.toCp("\\")) {
+                    status = ParseStatus.backslash;
+                } else if (status == ParseStatus.path && cp == str.toCp("$")) {
+                    status = ParseStatus.dollar;
+                } else if (!str.isSpace(cp) && cp >= 32) {
+                    path += str.encodeOne(cp);
+                } else {
+                    this.checkInclude(need_rebuild, path);
+                    if (need_rebuild) {
+                        return(true);
+                    }
+                    status = ParseStatus.spacer;
+                }
+            }
+            case ParseStatus.backslash: {
+                if (cp >= 32) {
+                    path += str.encodeOne(cp);
+                }
+                status = ParseStatus.path;
+            }
+        }
+    }
     return(true);
 }
 
@@ -73,4 +136,14 @@ fn DependencyChecker.check_src(out need_rebuild bool, out error string, src stri
         need_rebuild = true;
     }
     return(true);
+}
+
+fn DependencyChecker.checkInclude(out need_rebuild bool, src string) void
+{
+    var src_nfo sio.FileInfo;
+    if (sio.fileGetInfo(src, src_nfo) == 0) {
+        if (src_nfo.last_modification_time > this.dst_time) {
+            need_rebuild = true;
+        }
+    }
 }

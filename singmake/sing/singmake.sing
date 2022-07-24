@@ -159,52 +159,6 @@ fn getAllOptions(key string, mode_mask i32, os_mask i32, target cfg.TargetCfg) s
     return(all_options);
 }
 
-/*
-fn findSourcesFromKey(out srcs [*]string, out options_idx [*]i32, out options [*]string, 
-                    key string, extension string, root string, 
-                    mode_mask i32, os_mask i32, target cfg.TargetCfg) bool
-{
-    // get all source paths (must associate the source with the most detailed path)
-    var all_paths [*]string;
-    var all_options [*]string;
-    target.getValues(all_paths, all_options, key, 0xff, 0xff);
-
-    // fix paths (to be easily comparable)
-    fix_paths(all_paths, root);
-
-    // find sources from the paths
-    try(findSources(srcs, options_idx, all_paths, root, extension));
-
-    // get only qualifyed path
-    var paths [*]string;
-    target.getValues(paths, options, key, os_mask:platform, mode_mask:mode);
-
-    // fix paths (to be easily comparable)
-    fix_paths(paths, root);
-
-    // convert from index into all_options/paths to index into options/paths
-    var dst = 0;
-    for (src_idx, src in srcs) {
-        let path_idx = options_idx[src_idx];
-        for (new_path_idx, path in paths) {
-
-            // for every src find a qualifyed path equal to the path originally assigned
-            if (all_paths[path_idx] == path) {
-
-                // if found keep, else ignore
-                options_idx[dst] = i32(new_path_idx);
-                srcs[dst] = src;
-                ++dst;
-                break;
-            }
-        }
-    }
-    srcs.erase(dst, srcs.size());
-    options_idx.erase(dst, options_idx.size());
-    return(true);
-}
-*/
-
 fn findSourcesFromKey(out srcs [*]string, out options_idx [*]i32, out options [*]string, 
                     key string, extension string, root string, 
                     mode_mask i32, os_mask i32, target cfg.TargetCfg) bool
@@ -363,15 +317,26 @@ fn sing2cpp(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32
         var command = base_command + options[options_idx[src_idx]];
 
         // and destination/source
-        command += " -o " + destination + " " + local;
+        command += " -o \"" + destination + "\" \"" + local + "\"";
 
         // -S is a fake option
         _ = str.replaceAll(command, "-S", "");
+
+        // shouldn't be read-only
+        _ = sio.fileWriteProtect(destination, false);
+        sio.pathSetExtension(destination, "h");
+        _ = sio.fileWriteProtect(destination, false);
+        sio.pathSetExtension(destination, "cpp");
 
         // print and execute
         sio.print("\r\n" + command);
         replaceVars(command, sdk, dst_prefix);
         try(sys.system(command) == 0);
+
+        // make cpp and h write protected so that the programmer during debug doesn't directly change them.
+        _ = sio.fileWriteProtect(destination, true);
+        sio.pathSetExtension(destination, "h");
+        _ = sio.fileWriteProtect(destination, true);
     }
     return(true);
 }
@@ -386,97 +351,6 @@ fn needsUpdate(io checker dep.DependencyChecker, dst string, src string, has_dep
     }
     return(need_rebuild);
 }
-
-/*
-fn singcpp2obj(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string, srcs_are_sing bool,
-                   sdk string, root string, mode_mask i32, os_mask i32, common_cpp_options string) bool
-{
-    let platform = osMask2Name(os_mask);
-    let mode = modeMask2Name(mode_mask);
-    let base_command = "g++ -I out/" + mode + " -I $sdk/inc " + common_cpp_options;
-    var range str.Range;
-    var assembler_wanted = str.find(base_command, "-S", range);
-    let obj_dir = "build/" +  platform + "/" + mode + "/";
-
-    var src_prefix = "";
-    if (srcs_are_sing) {
-        src_prefix = "out/" + mode + "/";
-    }
-
-    for (count, src in srcs) {
-
-        // src relative to root
-        var local string;
-        try(sio.pathToRelative(local, src, root));
-        if (srcs_are_sing) {
-            while (str.hasPrefix(local, "../")) {
-                str.cutPrefix(local, "../");
-            }
-        }
-        local = src_prefix + local;
-
-        // destination name
-        var drive string;
-        var path string;
-        var base string;
-        var extension string;
-        sio.pathSplit(local, drive, path, base, extension);
-        let destination_base = obj_dir + base;
-
-        if (!needsUpdate(checker, destination_base + ".o", local, true)) {
-            continue;
-        }
-
-        // add options to the command
-        var command = base_command; 
-        if (srcs_are_sing) {
-
-            // -S on this specific source (dummy option on specific sing file) ?
-            if (!assembler_wanted) {
-                assembler_wanted = str.find(options[options_idx[count]], "-S", range);
-                if (assembler_wanted) {
-                    command += "-S ";
-                }
-            } 
-        } else {
-            command += options[options_idx[count]];
-            assembler_wanted = str.find(base_command, "-S", range);
-        }
-
-        var dst_extension = ".S";
-        if (!assembler_wanted) {
-            command += "-c ";
-            dst_extension = ".o";
-        }
-
-        // and destination/source
-        command += "-MD -MF " + destination_base + ".d -o " + destination_base + dst_extension + " " + local;
-
-        // print and execute
-        sio.print("\r\n" + command);
-        replaceVars(command, sdk);
-        try(sys.system(command) == 0);
-
-        if (assembler_wanted) {
-
-            // create the .o too.
-            // being unsure of which options may be needed at assembly time we keep them all
-            command = base_command; 
-            _ = str.replace(command, "-S", "");
-            if (!srcs_are_sing) {
-                command += options[options_idx[count]];
-            }
-            command += " -c -o " + destination_base + ".o " + destination_base + ".S";
-
-            // print and execute
-            sio.print("\r\n" + command);
-            replaceVars(command, sdk);
-            try(sys.system(command) == 0);
-        }
-    }
-    return(true);
-}
-*/
 
 fn singCpp2obj(io checker dep.DependencyChecker, srcs [*]string, options_idx [*]i32, options [*]string,
                    sdk string, root string, mode_mask i32, os_mask i32, common_cpp_options string) bool
@@ -562,7 +436,7 @@ fn singleCpp2obj(io checker dep.DependencyChecker, src string, obj_dir string, b
     }
 
     // and destination/source
-    command += " -MD -MF " + destination_base + ".d -o " + destination_base + dst_extension + " " + src;
+    command += " -MD -MF \"" + destination_base + ".d\" -o \"" + destination_base + dst_extension + "\" \"" + src + "\"";
 
     // print and execute
     sio.print("\r\n" + command + "\r\n");
@@ -575,7 +449,7 @@ fn singleCpp2obj(io checker dep.DependencyChecker, src string, obj_dir string, b
         // being unsure of which options may be needed at assembly time we keep them all
         command = base_command; 
         _ = str.replaceAll(command, "-S", "");
-        command += " -c -o " + destination_base + ".o " + destination_base + ".S";
+        command += " -c -o \"" + destination_base + ".o\" \"" + destination_base + ".S\"";
 
         // print and execute
         sio.print("\r\n" + command + "\r\n");
@@ -584,15 +458,6 @@ fn singleCpp2obj(io checker dep.DependencyChecker, src string, obj_dir string, b
     }
     return(true);
 }
-
-/*
-// es. output
-// g++ -I out/debug -I $sdk/inc -fsigned-char -std=c++17 -fmax-errors=20 -I src -g -c 
-// -MD -MF build/win/debug/pippo.d -o build/win/debug/pippo.o src/pippo 
-//
-// g++ -I out/debug -I $sdk/inc -fsigned-char -std=c++17 -fmax-errors=20 -I src -g -c
-//  -o build/win/debug/.o build/win/debug/.S
-*/
 
 fn replaceVars(io command string, sdk string, tmp string) void
 {
@@ -624,8 +489,8 @@ fn objs2target(io checker dep.DependencyChecker, sing_srcs [*]string, cpp_srcs [
         var base string;
         var extension string;
         sio.pathSplit(src, drive, path, base, extension);
-        let obj_name = base + ".o ";
-        inputs += obj_name;
+        let obj_name = base + ".o";
+        inputs += "\"" + obj_name + "\" ";
 
         if (!need_rebuild) {
             if (!checker.check_src(need_rebuild, error, obj_name)) {
@@ -642,8 +507,8 @@ fn objs2target(io checker dep.DependencyChecker, sing_srcs [*]string, cpp_srcs [
         var base string;
         var extension string;
         sio.pathSplit(src, drive, path, base, extension);
-        let obj_name = base + ".o ";
-        inputs += obj_name;
+        let obj_name = base + ".o";
+        inputs += "\"" + obj_name + "\" ";
 
         if (!need_rebuild) {
             if (!checker.check_src(need_rebuild, error, obj_name)) {
@@ -659,15 +524,15 @@ fn objs2target(io checker dep.DependencyChecker, sing_srcs [*]string, cpp_srcs [
 
     var command string;
     if (target_type == TargetType.lib) {
-        command = "ar rvs " + target_path + " @" + target_name + ".rsp";
+        command = "ar rvs \"" + target_path + "\" \"@" + target_name + ".rsp\"";
     } else {
         if (target_type == TargetType.dll) {
             command = "g++  -o -shared ";
         } else {
             command = "g++  -o ";
         }
-        command += target_path + " @" + target_name + ".rsp";
-        inputs += sdk + "/" + platform + "/lib/" + mode + "/singlib.a " + link_options;
+        command += "\"" + target_path + "\" \"@" + target_name + ".rsp\"";
+        inputs += "\"" + sdk + "/" + platform + "/lib/" + mode + "/singlib.a\" " + link_options;
     }
 
     if (sio.fileWriteText(target_name + ".rsp", inputs) != 0) {
@@ -748,3 +613,14 @@ fn find_string(vv [*]string, value string) i32
     }
     return(-1);
 }
+/*
+fn append_path(io command string, path string) void
+{
+    var range str.Range;
+    if (str.findAny(path, " \t", range)) {
+        command += "\"" + path + "\" ";
+    } else {
+        command += path + " ";
+    }
+}
+*/
